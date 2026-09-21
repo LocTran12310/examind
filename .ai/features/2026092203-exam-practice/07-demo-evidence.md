@@ -19,4 +19,4 @@ Run 2026-09-22 on the compose stack, org TrungtamA, class 10A1 (15 imported stud
 Findings fixed during the demo: shuffled options kept their original labels (C, B, D, A) → options are relabelled A–D
 per attempt and mapped back to the original key when saving and grading (ADR-06); PDF text kept Word's combining
 arrow (n⃗) which fonts render as a box → normalised to `$\vec{n}$` at extraction (questions parsed earlier keep the glyph).
-Test totals at close: API 187 passed, web 77 passed.
+Test totals at close: API 186 passed, web 77 passed.
