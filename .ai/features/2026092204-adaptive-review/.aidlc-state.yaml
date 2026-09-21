@@ -27,3 +27,48 @@ history:
     at: 2026-09-22T02:28:19
     by: Loc Tran
     evidence: graph valid - 3 UoW, 8 tickets, no cycles
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-22T02:28:19
+    by: Loc Tran
+    ticket: T-01-01
+  - gate: G4
+    action: evidence
+    at: 2026-09-22T02:29:42
+    by: Loc Tran
+    ticket: T-01-01
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-22T02:29:42
+    by: Loc Tran
+    ticket: T-01-01
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-22T02:29:42
+    by: Loc Tran
+    ticket: T-01-02
+  - gate: G4
+    action: evidence
+    at: 2026-09-22T02:29:54
+    by: Loc Tran
+    ticket: T-01-02
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-22T02:29:54
+    by: Loc Tran
+    ticket: T-01-02
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-22T02:30:27
+    by: Loc Tran
+    ticket: T-01-03
+  - gate: G4
+    action: evidence
+    at: 2026-09-22T02:30:37
+    by: Loc Tran
+    ticket: T-01-03
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-22T02:30:37
+    by: Loc Tran
+    ticket: T-01-03

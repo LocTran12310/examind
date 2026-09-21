@@ -136,7 +136,12 @@ def _fact(db: Session, att: Attempt, q: Question, ans: AttemptAnswer) -> None:
                       student_id=att.student_id, question_id=q.id, topic_path=_primary_path(db, q.id),
                       tag_ids=list(db.scalars(select(QuestionTag.tag_id).where(QuestionTag.question_id == q.id))),
                       qtype=q.type, difficulty=q.difficulty, points=ans.points, max_points=ans.max_points,
-                      correct_ratio=round(ans.points / ans.max_points, 4)))
+                      correct_ratio=round(ans.points / ans.max_points, 4), created_at=now()))
+    db.flush()
+    from app.services import mastery
+
+    fact = db.scalar(select(AnswerFact).where(AnswerFact.attempt_id == att.id, AnswerFact.question_id == q.id))
+    mastery.apply_fact(db, fact)
 
 
 def submit(db: Session, att: Attempt, auto: bool = False) -> Attempt:

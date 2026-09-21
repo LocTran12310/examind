@@ -409,3 +409,22 @@ export interface AssignmentReport {
   students: { student_id: string; full_name: string; username: string; status: string; attempt_id: string | null; score10: number | null; needs_grading: boolean; tab_switches: number }[];
   questions: { question_id: string; position: number; type: QuestionType; stem: string; answered: number; ratio: number | null; top_wrong: { label: string; count: number } | null }[];
 }
+
+export interface MasteryRow {
+  topic_id: string;
+  parent_id: string | null;
+  name: string;
+  path: string;
+  depth: number;
+  mastery: number | null;
+  answers: number;
+  tracked: boolean;
+}
+
+export interface ClassOverviewRow {
+  student_id: string;
+  full_name: string;
+  username: string;
+  weakest: { name: string; mastery: number; answers: number }[];
+  review: { assignment_id: string; title: string; status: string } | null;
+}

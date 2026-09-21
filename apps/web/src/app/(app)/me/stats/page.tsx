@@ -1,17 +1,17 @@
 "use client";
 
-import { Bar } from "@/components/exams/ResultView";
+import { MasteryList } from "@/components/adaptive/MasteryList";
 import { GroupStats } from "@/components/reports/GroupStats";
-import { TopicStatsTree, weakest } from "@/components/reports/TopicStatsTree";
+import { TopicStatsTree } from "@/components/reports/TopicStatsTree";
 import { Card, Empty, PageHeader } from "@/components/ui";
 import { useApi } from "@/lib/hooks";
-import type { GroupStat, TopicStat } from "@/lib/types";
+import type { GroupStat, MasteryRow, TopicStat } from "@/lib/types";
 
 export default function MyStatsPage() {
   const { data: topics } = useApi<TopicStat[]>("/stats/topics");
   const { data: types } = useApi<GroupStat[]>("/stats/groups?by=type");
-  if (!topics || !types) return null;
-  const weak = weakest(topics);
+  const { data: mastery } = useApi<MasteryRow[]>("/me/mastery");
+  if (!topics || !types || !mastery) return null;
   return (
     <>
       <PageHeader title="Tiến độ của tôi" subtitle="Tỉ lệ làm đúng theo chuyên đề và loại câu" />
@@ -20,16 +20,8 @@ export default function MyStatsPage() {
       ) : (
         <div className="space-y-4">
           <Card>
-            <h2 className="mb-2 font-medium">Cần ôn nhất</h2>
-            <ul className="space-y-2" data-testid="weakest">
-              {weak.map((t) => (
-                <li key={t.path} className="grid grid-cols-[1fr_120px_48px] items-center gap-2 text-sm">
-                  <span className="truncate">{t.name}</span>
-                  <Bar ratio={t.ratio ?? 0} />
-                  <span className="text-right">{Math.round((t.ratio ?? 0) * 100)}%</span>
-                </li>
-              ))}
-            </ul>
+            <h2 className="mb-2 font-medium">Mức nắm vững (cần ôn nhất trước)</h2>
+            <MasteryList rows={mastery} limit={8} />
           </Card>
           <Card>
             <h2 className="mb-2 font-medium">Theo chuyên đề</h2>

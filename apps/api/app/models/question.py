@@ -9,7 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.db import Base, IdMixin, TimestampMixin
 
 QUESTION_TYPES = ("mcq", "true_false", "short_answer", "essay")
-STATUSES = ("draft", "auto_approved", "needs_review", "approved", "rejected", "duplicate")
+STATUSES = ("draft", "auto_approved", "needs_review", "approved", "rejected", "duplicate", "flagged")
 USABLE = ("auto_approved", "approved")
 DIFFICULTIES = ("nb", "th", "vd", "vdc")
 
@@ -51,3 +51,4 @@ class Question(IdMixin, TimestampMixin, Base):
     reviewed_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), onupdate=func.now())
+    flag_evidence: Mapped[dict | None] = mapped_column(JSONB)  # key audit (adaptive-review)
