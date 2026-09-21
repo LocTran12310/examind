@@ -298,7 +298,7 @@ ticket:
     layer: worker
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on:
       - T-01-03
     blocks: []
@@ -313,7 +313,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-01-03
       - T-02-01
@@ -336,7 +336,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-04-01
       - T-01-05
@@ -358,7 +358,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-04-02
       - T-02-04
@@ -370,13 +370,14 @@ ticket:
       - apps/web/src/app/(app)/org/bank/[id]/page.tsx   # new
       - apps/web/src/app/(app)/org/bank/new/page.tsx   # new
       - apps/web/src/components/review/QuestionEditor.tsx   # new
+      - apps/web/src/components/bank/QuestionForm.tsx   # new
   - id: T-04-04
     uow: UOW-04
     title: 'Bulk actions and delete/restore in the bank'
     layer: web
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on:
       - T-04-02
     blocks: []

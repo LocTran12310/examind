@@ -3,7 +3,7 @@
 # Ticket graph — 2026092202-question-review
 
 - Units of Work: **4**
-- Tickets: **14** (9 done)
+- Tickets: **14** (14 done)
 - Total effort: **6.1d**
 - Critical path: **3.6d** across 8 tickets
 - Theoretical minimum duration with unlimited parallelism: **3.6d**
@@ -38,13 +38,13 @@ graph LR
     T_02_04["✓ T-02-04<br/>Inline question editor, answer-key and approve-all dialogs, review-flow test"]
   end
   subgraph UOW_03["UOW-03 · Approved questions teach topic suggestions"]
-    T_03_01["T-03-01<br/>kNN topic suggestion from approved questions"]
+    T_03_01["✓ T-03-01<br/>kNN topic suggestion from approved questions"]
   end
   subgraph UOW_04["UOW-04 · Teachers search, edit and create questions in the bank"]
-    T_04_01["T-04-01<br/>Bank API: search/filter (text, topic subtree, tags…), create, delete, bulk"]
-    T_04_02["T-04-02<br/>Bank list UI with filters and topic picker"]
-    T_04_03["T-04-03<br/>Question page: edit with image upload, create new"]
-    T_04_04["T-04-04<br/>Bulk actions and delete/restore in the bank"]
+    T_04_01["✓ T-04-01<br/>Bank API: search/filter (text, topic subtree, tags…), create, delete, bulk"]
+    T_04_02["✓ T-04-02<br/>Bank list UI with filters and topic picker"]
+    T_04_03["✓ T-04-03<br/>Question page: edit with image upload, create new"]
+    T_04_04["✓ T-04-04<br/>Bulk actions and delete/restore in the bank"]
   end
   T_01_01 --> T_01_02
   T_01_02 --> T_01_03
@@ -111,8 +111,8 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-02-02 | UOW-02 | api | feature | 3h | T-02-01 | AC-04, AC-08, AC-09 | done |
 | T-02-03 | UOW-02 | web | feature | 4h | T-02-01, T-01-05 | AC-04, AC-05, AC-06 | done |
 | T-02-04 | UOW-02 | web | feature | 4h | T-02-03, T-02-02 | AC-07, AC-08, AC-09 | done |
-| T-03-01 | UOW-03 | worker | feature | 3h | T-01-03 | AC-12 | todo |
-| T-04-01 | UOW-04 | api | feature | 4h | T-01-03, T-02-01 | AC-10, AC-15, AC-16, AC-18, AC-19, AC-20 | todo |
-| T-04-02 | UOW-04 | web | feature | 4h | T-04-01, T-01-05 | AC-15, AC-16 | todo |
-| T-04-03 | UOW-04 | web | feature | 4h | T-04-02, T-02-04 | AC-17, AC-18 | todo |
-| T-04-04 | UOW-04 | web | feature | 3h | T-04-02 | AC-10, AC-19 | todo |
+| T-03-01 | UOW-03 | worker | feature | 3h | T-01-03 | AC-12 | done |
+| T-04-01 | UOW-04 | api | feature | 4h | T-01-03, T-02-01 | AC-10, AC-15, AC-16, AC-18, AC-19, AC-20 | done |
+| T-04-02 | UOW-04 | web | feature | 4h | T-04-01, T-01-05 | AC-15, AC-16 | done |
+| T-04-03 | UOW-04 | web | feature | 4h | T-04-02, T-02-04 | AC-17, AC-18 | done |
+| T-04-04 | UOW-04 | web | feature | 3h | T-04-02 | AC-10, AC-19 | done |

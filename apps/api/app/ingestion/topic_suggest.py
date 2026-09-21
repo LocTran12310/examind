@@ -7,7 +7,7 @@ among the same nodes and, when valid, overrides the keywords (source `ai`).
 import re
 import unicodedata
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 from app.ingestion import llm
 from app.ingestion.pipeline import POST_PERSIST
@@ -123,12 +123,30 @@ def _label(t: Topic, by_id: dict) -> str:
     return " › ".join(reversed(names))
 
 
+KNN_MIN_SIMILARITY = 0.35
+WEAK_KEYWORD = 0.6
+
+
+def knn_topic(db, q) -> tuple[Topic, float] | None:
+    """A-08: the primary topic of the most similar teacher-approved question."""
+    if not q.search_text:
+        return None
+    row = db.execute(text("""
+        select qt.topic_id, similarity(o.search_text, :t) as s
+          from questions o join question_topics qt on qt.question_id = o.id and qt.is_primary
+         where o.organization_id = :org and o.status = 'approved' and o.id <> :id and o.search_text % :t
+         order by s desc limit 1"""), {"t": q.search_text, "org": q.organization_id, "id": q.id}).first()
+    if row is None or row[1] < KNN_MIN_SIMILARITY:
+        return None
+    return db.get(Topic, row[0]), round(float(row[1]), 2)
+
+
 def suggest_topics(db, doc, rows, ctx) -> None:
     topics = _candidates(db, doc)
     if not topics or not rows:
         return
     ai = _ai_choose(db, doc, rows, topics, ctx)
-    auto = with_ai = 0
+    auto = with_ai = knn = 0
     for p, q in rows:
         if q.id in ai:
             topic, score, _ = ai[q.id]
@@ -136,15 +154,23 @@ def suggest_topics(db, doc, rows, ctx) -> None:
             with_ai += 1
         else:
             scored = keyword_scores(q.stem + "\n" + " ".join(o.get("content", "") for o in q.options or []), topics)
-            if not scored:
+            topic, score, source = None, 0.0, "auto"
+            if scored:
+                weight, topic = scored[0]
+                score = round(min(0.95, weight / (weight + 1)), 2)
+            if score < WEAK_KEYWORD:
+                near = knn_topic(db, q)
+                if near and near[1] >= score:
+                    topic, score, source = near[0], near[1], "knn"
+            if topic is None:
                 continue
-            weight, topic = scored[0]
-            score = round(min(0.95, weight / (weight + 1)), 2)
-            source = "auto"
-            auto += 1
+            if source == "knn":
+                knn += 1
+            else:
+                auto += 1
         db.add(QuestionTopic(question_id=q.id, topic_id=topic.id, is_primary=True, source=source, score=round(score, 2)))
     db.flush()
-    ctx.step("suggest_topics", keyword=auto, ai=with_ai, none=len(rows) - auto - with_ai)
+    ctx.step("suggest_topics", keyword=auto, ai=with_ai, knn=knn, none=len(rows) - auto - with_ai - knn)
 
 
 POST_PERSIST.append(suggest_topics)

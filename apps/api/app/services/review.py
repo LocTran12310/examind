@@ -201,6 +201,13 @@ def edit(db: Session, scope: OrgScope, qid, changes: dict) -> Question:
     for f in ("difficulty", "grade"):
         if changes.get(f) is not None:
             setattr(q, f, changes[f] or None)
+    if changes.get("subject_id") is not None:
+        from app.models import Subject
+
+        subject = db.get(Subject, uuid.UUID(str(changes["subject_id"])))
+        if subject is None or subject.organization_id != scope.org_id:
+            raise AppError("validation_error", "Môn học không hợp lệ", 422, {"subject_id": "Môn học không hợp lệ"})
+        q.subject_id = subject.id
     if changes.get("topic_ids") is not None or changes.get("primary_topic_id") is not None:
         set_topics(db, scope, q, changes.get("topic_ids"), changes.get("primary_topic_id"))
     if changes.get("tag_ids") is not None:

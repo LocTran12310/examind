@@ -32,6 +32,7 @@ class QuestionPatch(BaseModel):
     solution: str | None = None
     difficulty: str | None = None
     grade: int | None = None
+    subject_id: uuid.UUID | None = None
     topic_ids: list[uuid.UUID] | None = None
     primary_topic_id: uuid.UUID | None = None
     tag_ids: list[uuid.UUID] | None = None
