@@ -1,0 +1,44 @@
+import uuid
+
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from app.core.db import get_db
+from app.deps import OrgScope, org_scope
+from app.services import stats
+
+router = APIRouter(tags=["stats"])
+
+
+def _filters(class_id, student_id, assignment_id, date_from, date_to):
+    return {"class_id": class_id, "student_id": student_id, "assignment_id": assignment_id,
+            "date_from": stats.parse_date(date_from), "date_to": stats.parse_date(date_to)}
+
+
+@router.get("/stats/topics")
+def topic_stats(subject_id: uuid.UUID | None = None, class_id: uuid.UUID | None = None, student_id: uuid.UUID | None = None,
+                assignment_id: uuid.UUID | None = None, date_from: str | None = None, date_to: str | None = None,
+                scope: OrgScope = Depends(org_scope), db: Session = Depends(get_db)):
+    return stats.topics(db, scope, subject_id=subject_id, **_filters(class_id, student_id, assignment_id, date_from, date_to))
+
+
+@router.get("/stats/groups")
+def group_stats(by: str = "type", class_id: uuid.UUID | None = None, student_id: uuid.UUID | None = None,
+                assignment_id: uuid.UUID | None = None, date_from: str | None = None, date_to: str | None = None,
+                scope: OrgScope = Depends(org_scope), db: Session = Depends(get_db)):
+    return stats.groups(db, scope, by, **_filters(class_id, student_id, assignment_id, date_from, date_to))
+
+
+@router.get("/stats/heatmap")
+def heatmap(class_id: uuid.UUID, level: int = 1, subject_id: uuid.UUID | None = None, scope: OrgScope = Depends(org_scope),
+            db: Session = Depends(get_db)):
+    return stats.heatmap(db, scope, class_id, level, subject_id)
+
+
+@router.get("/assignments/{aid}/report")
+def assignment_report(aid: uuid.UUID, scope: OrgScope = Depends(org_scope), db: Session = Depends(get_db)):
+    from app.core.errors import forbidden
+
+    if scope.role not in ("org_admin", "teacher"):
+        raise forbidden()
+    return stats.assignment_report(db, scope, aid)

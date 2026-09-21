@@ -376,3 +376,36 @@ export interface AttemptResult {
   sections?: { section: string; points: number; max_points: number }[];
   topics?: { topic: string; points: number; max_points: number; count: number }[];
 }
+
+export interface TopicStat {
+  id: string | null;
+  parent_id: string | null;
+  name: string;
+  path: string;
+  depth: number;
+  level_kind: string;
+  points: number;
+  max_points: number;
+  answered: number;
+  ratio: number | null;
+}
+
+export interface GroupStat {
+  key: string;
+  label: string;
+  points: number;
+  max_points: number;
+  answered: number;
+  ratio: number | null;
+}
+
+export interface AssignmentReport {
+  assignment_id: string;
+  title: string;
+  submitted: number;
+  total_students: number;
+  average: number | null;
+  distribution: { from: number; to: number; count: number }[];
+  students: { student_id: string; full_name: string; username: string; status: string; attempt_id: string | null; score10: number | null; needs_grading: boolean; tab_switches: number }[];
+  questions: { question_id: string; position: number; type: QuestionType; stem: string; answered: number; ratio: number | null; top_wrong: { label: string; count: number } | null }[];
+}

@@ -11,9 +11,10 @@ from tests.test_exams_api import bank_ready
 def exam_with_questions(client, db, mcq=4, tf=1, short=1, essay=False):
     admin, topics = bank_ready(client, db)
     exam = client.post("/api/exams", json={"title": "Kiểm tra"}).json()
-    ids = [q["id"] for q in client.get("/api/questions", params={"type": "mcq", "page_size": mcq}).json()["items"]]
-    ids += [q["id"] for q in client.get("/api/questions", params={"type": "true_false", "page_size": tf}).json()["items"]][:tf]
-    ids += [q["id"] for q in client.get("/api/questions", params={"type": "short_answer", "page_size": short}).json()["items"]][:short]
+    ids = []
+    for qtype, n in (("mcq", mcq), ("true_false", tf), ("short_answer", short)):
+        if n:
+            ids += [q["id"] for q in client.get("/api/questions", params={"type": qtype, "page_size": n}).json()["items"]][:n]
     if essay:
         e = client.post("/api/questions", json={"type": "essay", "stem": "Chứng minh bất đẳng thức", "solution": "…", "answer": {"text": "Mẫu"}}).json()
         ids.append(e["id"])

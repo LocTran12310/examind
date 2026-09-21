@@ -19,12 +19,12 @@
 | AC-13 | T-03-01, T-03-02 | UOW-03 | done |
 | AC-14 | T-03-01, T-03-02 | UOW-03 | done |
 | AC-15 | T-01-03, T-02-02 | UOW-01, UOW-02 | done |
-| AC-16 | T-04-01, T-04-02 | UOW-04 | open |
-| AC-17 | T-01-01, T-04-01, T-04-03 | UOW-01, UOW-04 | open |
-| AC-18 | T-04-01, T-04-03 | UOW-04 | open |
-| AC-19 | T-04-01, T-04-03 | UOW-04 | open |
+| AC-16 | T-04-01, T-04-02 | UOW-04 | done |
+| AC-17 | T-01-01, T-04-01, T-04-03 | UOW-01, UOW-04 | done |
+| AC-18 | T-04-01, T-04-03 | UOW-04 | done |
+| AC-19 | T-04-01, T-04-03 | UOW-04 | done |
 | AC-20 | T-02-01, T-02-03 | UOW-02 | done |
-| AC-21 | T-04-01, T-04-04 | UOW-04 | open |
+| AC-21 | T-04-01, T-04-04 | UOW-04 | done |
 | AC-22 | T-01-04 | UOW-01 | done |
 
 Coverage: **22/22** acceptance criteria.
