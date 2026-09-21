@@ -54,6 +54,11 @@ class ParsedQuestionOut(QuestionOut):
     exam_kind: str | None
     topics: list[TopicRef] = []
     tags: list[TagRef] = []
+    page: int | None = None
+    spot_check: bool = False
+    duplicate_of: uuid.UUID | None = None
+    source_document_id: uuid.UUID | None = None
+    group: str | None = None
 
 
 class ReparseIn(BaseModel):

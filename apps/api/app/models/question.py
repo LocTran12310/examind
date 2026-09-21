@@ -35,6 +35,7 @@ class Question(IdMixin, TimestampMixin, Base):
     # provenance from ingestion (exam-ingestion)
     source_document_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("source_documents.id", ondelete="SET NULL"), index=True)
     number: Mapped[int | None] = mapped_column(Integer)
+    page: Mapped[int | None] = mapped_column(Integer)  # first source page (PDF/scan)
     part: Mapped[str | None] = mapped_column(String(16))
     semester_code: Mapped[str | None] = mapped_column(String(16))
     exam_kind: Mapped[str | None] = mapped_column(String(32))

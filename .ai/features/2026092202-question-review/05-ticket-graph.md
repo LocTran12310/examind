@@ -3,7 +3,7 @@
 # Ticket graph — 2026092202-question-review
 
 - Units of Work: **4**
-- Tickets: **14** (5 done)
+- Tickets: **14** (9 done)
 - Total effort: **6.1d**
 - Critical path: **3.6d** across 8 tickets
 - Theoretical minimum duration with unlimited parallelism: **3.6d**
@@ -32,10 +32,10 @@ graph LR
     T_01_05["✓ T-01-05<br/>Review list UI with progress and assignment"]
   end
   subgraph UOW_02["UOW-02 · Teachers clear the review queue with single keys"]
-    T_02_01["T-02-01<br/>Queue, actions, question edit API; review events; spot-check threshold loop"]
-    T_02_02["T-02-02<br/>Answer-key paste, approve-confident, rendered PDF pages"]
-    T_02_03["T-02-03<br/>Keyboard review queue page"]
-    T_02_04["T-02-04<br/>Inline question editor, answer-key and approve-all dialogs, review-flow test"]
+    T_02_01["✓ T-02-01<br/>Queue, actions, question edit API; review events; spot-check threshold loop"]
+    T_02_02["✓ T-02-02<br/>Answer-key paste, approve-confident, rendered PDF pages"]
+    T_02_03["✓ T-02-03<br/>Keyboard review queue page"]
+    T_02_04["✓ T-02-04<br/>Inline question editor, answer-key and approve-all dialogs, review-flow test"]
   end
   subgraph UOW_03["UOW-03 · Approved questions teach topic suggestions"]
     T_03_01["T-03-01<br/>kNN topic suggestion from approved questions"]
@@ -83,7 +83,13 @@ Tickets in the same wave have no dependency between them and can run in parallel
 
 ## Write-conflict hazards
 
-None: every pair that writes a shared path is ordered by a dependency.
+These pairs have no ordering constraint, so a scheduler may run them at the
+same time — and they write the same path. Sequential execution is safe;
+parallel agents will lose one side's work.
+
+| A | B | Contested path |
+|---|---|---|
+| T-02-03 | T-04-02 | `apps/web/src/components/bank/TopicPicker.tsx` |
 
 ## Critical path
 
@@ -101,10 +107,10 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-01-03 | UOW-01 | worker | feature | 4h | T-01-02 | AC-01, AC-03, AC-11 | done |
 | T-01-04 | UOW-01 | api | feature | 3h | T-01-03 | AC-02, AC-14, AC-20 | done |
 | T-01-05 | UOW-01 | web | feature | 3h | T-01-04 | AC-02, AC-14 | done |
-| T-02-01 | UOW-02 | api | feature | 4h | T-01-04 | AC-04, AC-05, AC-07, AC-11, AC-13 | todo |
-| T-02-02 | UOW-02 | api | feature | 3h | T-02-01 | AC-04, AC-08, AC-09 | todo |
-| T-02-03 | UOW-02 | web | feature | 4h | T-02-01, T-01-05 | AC-04, AC-05, AC-06 | todo |
-| T-02-04 | UOW-02 | web | feature | 4h | T-02-03, T-02-02 | AC-07, AC-08, AC-09 | todo |
+| T-02-01 | UOW-02 | api | feature | 4h | T-01-04 | AC-04, AC-05, AC-07, AC-11, AC-13 | done |
+| T-02-02 | UOW-02 | api | feature | 3h | T-02-01 | AC-04, AC-08, AC-09 | done |
+| T-02-03 | UOW-02 | web | feature | 4h | T-02-01, T-01-05 | AC-04, AC-05, AC-06 | done |
+| T-02-04 | UOW-02 | web | feature | 4h | T-02-03, T-02-02 | AC-07, AC-08, AC-09 | done |
 | T-03-01 | UOW-03 | worker | feature | 3h | T-01-03 | AC-12 | todo |
 | T-04-01 | UOW-04 | api | feature | 4h | T-01-03, T-02-01 | AC-10, AC-15, AC-16, AC-18, AC-19, AC-20 | todo |
 | T-04-02 | UOW-04 | web | feature | 4h | T-04-01, T-01-05 | AC-15, AC-16 | todo |

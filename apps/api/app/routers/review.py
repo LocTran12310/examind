@@ -1,6 +1,7 @@
 import uuid
 
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
@@ -8,6 +9,9 @@ from app.core.errors import not_found
 from app.deps import OrgScope
 from app.routers.users import staff_scope
 from app.schemas.documents import document_out
+from app.routers.documents import parsed_many
+from app.schemas.documents import ParsedQuestionOut
+from app.schemas.questions import ActionIn
 from app.schemas.review import AssignIn, ReviewDocumentOut
 from app.services import review
 
@@ -36,3 +40,29 @@ def assign(doc_id: uuid.UUID, body: AssignIn, scope: OrgScope = Depends(staff_sc
     review.assign(db, scope, doc_id, body.assigned_to)
     db.flush()
     return _out(review.document_counts(db, scope, doc_id=doc_id)[0])
+
+
+@router.get("/documents/{doc_id}/queue", response_model=list[ParsedQuestionOut])
+def review_queue(doc_id: uuid.UUID, scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
+    qs = review.queue(db, scope, doc_id)
+    return parsed_many(db, qs, {q.id: review.group_of(q) for q in qs})
+
+
+@router.post("/questions/{qid}/action", response_model=ParsedQuestionOut)
+def question_action(qid: uuid.UUID, body: ActionIn, scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
+    q = review.act(db, scope, qid, body.action)
+    return parsed_many(db, [q])[0]
+
+
+class AnswerKeyIn(BaseModel):
+    text: str
+
+
+@router.post("/documents/{doc_id}/answer-key")
+def answer_key(doc_id: uuid.UUID, body: AnswerKeyIn, scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
+    return review.apply_answer_key(db, scope, doc_id, body.text)
+
+
+@router.post("/documents/{doc_id}/approve-confident")
+def approve_confident(doc_id: uuid.UUID, scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
+    return {"approved": review.approve_confident(db, scope, doc_id)}

@@ -58,7 +58,7 @@ def get_document(doc_id: uuid.UUID, scope: OrgScope = Depends(staff_scope), db: 
 def document_questions(doc_id: uuid.UUID, scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
     doc = documents.get_document(db, scope, doc_id)
     qs = db.scalars(select(Question).where(Question.source_document_id == doc.id).order_by(Question.part.nulls_first(), Question.number)).all()
-    return [parsed_out(q, *links) for q, links in zip(qs, question_links(db, [q.id for q in qs]))]
+    return parsed_many(db, qs)
 
 
 def question_links(db: Session, qids: list) -> list[tuple[list[TopicRef], list[TagRef]]]:
@@ -72,12 +72,18 @@ def question_links(db: Session, qids: list) -> list[tuple[list[TopicRef], list[T
     return [(sorted(topics[q], key=lambda r: not r.is_primary), tags[q]) for q in qids]
 
 
-def parsed_out(q: Question, topics=(), tags=()) -> ParsedQuestionOut:
+def parsed_out(q: Question, topics=(), tags=(), group: str | None = None) -> ParsedQuestionOut:
     base = question_out(q).model_dump()
     return ParsedQuestionOut(**base, number=q.number, part=q.part, confidence=q.confidence, issues=q.issues or [],
                              parse_method=q.parse_method, parse_model=q.parse_model, answer_source=q.answer_source,
                              subject_id=q.subject_id, semester_code=q.semester_code, exam_kind=q.exam_kind,
-                             topics=list(topics), tags=list(tags))
+                             topics=list(topics), tags=list(tags), page=q.page, spot_check=q.spot_check,
+                             duplicate_of=q.duplicate_of, source_document_id=q.source_document_id, group=group)
+
+
+def parsed_many(db: Session, qs: list[Question], groups: dict | None = None) -> list[ParsedQuestionOut]:
+    links = question_links(db, [q.id for q in qs])
+    return [parsed_out(q, t, g, (groups or {}).get(q.id)) for q, (t, g) in zip(qs, links)]
 
 
 @router.get("/{doc_id}/file")
@@ -101,3 +107,35 @@ def reparse(doc_id: uuid.UUID, body: ReparseIn, scope: OrgScope = Depends(staff_
 def delete_document(doc_id: uuid.UUID, scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
     documents.delete_document(db, scope, doc_id)
     return Response(status_code=204)
+
+
+@router.get("/{doc_id}/pages/{page}.png")
+def page_image(doc_id: uuid.UUID, page: int, scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
+    """Source page for the review queue: PDFs rendered once and cached in object storage; images served as-is."""
+    doc = documents.get_document(db, scope, doc_id)
+    if doc.mime.startswith("image/") and page == 1:
+        data, mime = storage.get(doc.storage_key)
+        return Response(content=data, media_type=mime, headers={"Cache-Control": "private, max-age=86400"})
+    if doc.mime != "application/pdf" or page < 1 or (doc.page_count and page > doc.page_count):
+        from app.core.errors import not_found
+
+        raise not_found("Không có ảnh trang")
+    key = f"{doc.storage_key.rsplit('/', 1)[0]}/pages/{page}.png"
+    try:
+        data, _ = storage.get(key)
+    except Exception:
+        import io
+
+        import pypdfium2 as pdfium
+
+        raw, _ = storage.get(doc.storage_key)
+        pdf = pdfium.PdfDocument(raw)
+        try:
+            img = pdf[page - 1].render(scale=1.5).to_pil()
+        finally:
+            pdf.close()
+        buf = io.BytesIO()
+        img.convert("RGB").save(buf, format="PNG", optimize=True)
+        data = buf.getvalue()
+        storage.put(key, data, "image/png")
+    return Response(content=data, media_type="image/png", headers={"Cache-Control": "private, max-age=86400, immutable"})

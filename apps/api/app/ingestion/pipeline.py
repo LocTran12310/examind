@@ -132,6 +132,7 @@ def persist(db: Session, doc: SourceDocument, parsed: list[ParsedQuestion]) -> l
             type=p.type, stem=p.stem, options=p.options, answer=p.answer, solution=p.solution,
             grade=meta.get("grade"), semester_code=meta.get("semester_code"), exam_kind=meta.get("exam_kind"),
             status="draft", source="document", source_document_id=doc.id, number=p.number, part=p.part,
+            page=p.pages[0] if p.pages else None,
             confidence=p.confidence, issues=p.issues, parse_method=getattr(p, "parse_method", None) or ("ocr" if p.ocr else "rule"),
             parse_model=getattr(p, "parse_model", None), answer_source=p.answer_source,
         )

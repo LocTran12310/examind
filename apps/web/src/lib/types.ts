@@ -95,7 +95,7 @@ export type QuestionType = "mcq" | "true_false" | "short_answer" | "essay";
 export interface QuestionOption {
   label: string;
   content: string;
-  is_true?: boolean;
+  is_true?: boolean | null;
 }
 
 export interface Question {
@@ -200,6 +200,11 @@ export interface ParsedQuestion extends Question {
   exam_kind: string | null;
   topics: { id: string; name: string; is_primary: boolean; source: string; score: number | null }[];
   tags: { id: string; group: string; name: string }[];
+  page?: number | null;
+  spot_check?: boolean;
+  duplicate_of?: string | null;
+  source_document_id?: string | null;
+  group?: string | null;
 }
 
 export const EXAM_KINDS = ["Giữa kỳ", "Cuối kỳ", "Khảo sát", "Thi thử", "Ôn tập", "Khác"];

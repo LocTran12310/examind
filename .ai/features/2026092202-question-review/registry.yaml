@@ -205,7 +205,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-01-04
     blocks:
@@ -223,13 +223,17 @@ ticket:
       - apps/api/app/routers/review.py   # new
       - apps/api/app/routers/questions.py   # new
       - apps/api/app/schemas/questions.py   # new
+      - apps/api/app/routers/documents.py   # new
+      - apps/api/app/schemas/documents.py   # new
+      - apps/api/migrations/versions/0008_question_page.py   # new
+      - apps/api/app/ingestion/pipeline.py   # new
   - id: T-02-02
     uow: UOW-02
     title: 'Answer-key paste, approve-confident, rendered PDF pages'
     layer: api
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on:
       - T-02-01
     blocks:
@@ -249,7 +253,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-02-01
       - T-01-05
@@ -263,13 +267,15 @@ ticket:
       - apps/web/src/app/(app)/org/review/[id]/page.tsx   # new
       - apps/web/src/components/review/ReviewQueue.tsx   # new
       - apps/web/src/components/review/useHotkeys.ts   # new
+      - apps/web/src/components/bank/TopicPicker.tsx   # new
+      - apps/web/src/lib/types.ts   # new
   - id: T-02-04
     uow: UOW-02
     title: 'Inline question editor, answer-key and approve-all dialogs, review-flow test'
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-02-03
       - T-02-02
@@ -284,6 +290,8 @@ ticket:
       - apps/web/src/components/review/AnswerKeyDialog.tsx   # new
       - apps/web/src/components/review/ReviewQueue.tsx   # new
       - apps/api/tests/test_review_flow.py   # new
+      - apps/web/src/app/(app)/org/review/[id]/page.tsx   # new
+      - apps/web/src/components/ui/index.tsx   # new
   - id: T-03-01
     uow: UOW-03
     title: 'kNN topic suggestion from approved questions'

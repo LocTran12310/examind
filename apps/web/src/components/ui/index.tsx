@@ -52,14 +52,15 @@ export function Select({ className, ...props }: React.SelectHTMLAttributes<HTMLS
   );
 }
 
-export function Textarea({ className, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+export const Textarea = forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(function Textarea({ className, ...props }, ref) {
   return (
     <textarea
+      ref={ref}
       className={clsx("w-full rounded-md border border-gray-300 bg-white p-2 text-sm outline-none focus:border-brand-500", className)}
       {...props}
     />
   );
-}
+});
 
 export function Field({ label, error, children, hint }: { label: string; error?: string; hint?: string; children: React.ReactNode }) {
   return (
