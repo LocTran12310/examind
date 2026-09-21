@@ -3,7 +3,7 @@
 # Ticket graph — 2026092202-question-review
 
 - Units of Work: **4**
-- Tickets: **14** (0 done)
+- Tickets: **14** (5 done)
 - Total effort: **6.1d**
 - Critical path: **3.6d** across 8 tickets
 - Theoretical minimum duration with unlimited parallelism: **3.6d**
@@ -25,11 +25,11 @@ slice — the floor on how fast it can finish no matter how many people work on 
 ```mermaid
 graph LR
   subgraph UOW_01["UOW-01 · Parsed questions are triaged and de-duplicated automatically"]
-    T_01_01["T-01-01<br/>Migration: review statuses, duplicate_of, search_text, review_events, pg_trgm/unaccent"]
-    T_01_02["T-01-02<br/>question_quality module shared by splitter and edits"]
-    T_01_03["T-01-03<br/>Triage hook: search_text, near-duplicates, status, spot-check sampling"]
-    T_01_04["T-01-04<br/>Review documents API (counts, progress, assignment)"]
-    T_01_05["T-01-05<br/>Review list UI with progress and assignment"]
+    T_01_01["✓ T-01-01<br/>Migration: review statuses, duplicate_of, search_text, review_events, pg_trgm/unaccent"]
+    T_01_02["✓ T-01-02<br/>question_quality module shared by splitter and edits"]
+    T_01_03["✓ T-01-03<br/>Triage hook: search_text, near-duplicates, status, spot-check sampling"]
+    T_01_04["✓ T-01-04<br/>Review documents API (counts, progress, assignment)"]
+    T_01_05["✓ T-01-05<br/>Review list UI with progress and assignment"]
   end
   subgraph UOW_02["UOW-02 · Teachers clear the review queue with single keys"]
     T_02_01["T-02-01<br/>Queue, actions, question edit API; review events; spot-check threshold loop"]
@@ -96,11 +96,11 @@ adding people to tickets off this path will not make the feature ship sooner.
 
 | ID | UoW | Layer | Type | Est | Depends on | Verifies | Status |
 |----|-----|-------|------|-----|-----------|----------|--------|
-| T-01-01 | UOW-01 | data | feature | 3h | — | AC-01, AC-03, AC-13, AC-14 | todo |
-| T-01-02 | UOW-01 | domain | feature | 3h | T-01-01 | AC-01, AC-07 | todo |
-| T-01-03 | UOW-01 | worker | feature | 4h | T-01-02 | AC-01, AC-03, AC-11 | todo |
-| T-01-04 | UOW-01 | api | feature | 3h | T-01-03 | AC-02, AC-14, AC-20 | todo |
-| T-01-05 | UOW-01 | web | feature | 3h | T-01-04 | AC-02, AC-14 | todo |
+| T-01-01 | UOW-01 | data | feature | 3h | — | AC-01, AC-03, AC-13, AC-14 | done |
+| T-01-02 | UOW-01 | domain | feature | 3h | T-01-01 | AC-01, AC-07 | done |
+| T-01-03 | UOW-01 | worker | feature | 4h | T-01-02 | AC-01, AC-03, AC-11 | done |
+| T-01-04 | UOW-01 | api | feature | 3h | T-01-03 | AC-02, AC-14, AC-20 | done |
+| T-01-05 | UOW-01 | web | feature | 3h | T-01-04 | AC-02, AC-14 | done |
 | T-02-01 | UOW-02 | api | feature | 4h | T-01-04 | AC-04, AC-05, AC-07, AC-11, AC-13 | todo |
 | T-02-02 | UOW-02 | api | feature | 3h | T-02-01 | AC-04, AC-08, AC-09 | todo |
 | T-02-03 | UOW-02 | web | feature | 4h | T-02-01, T-01-05 | AC-04, AC-05, AC-06 | todo |

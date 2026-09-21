@@ -423,52 +423,13 @@ def _answer_from_key(q: ParsedQuestion, value) -> dict:
 
 
 def _finalise(q: ParsedQuestion) -> None:
-    score = 1.0
-    issues = q.issues
-    if not q.stem:
-        score -= 0.5
-        issues.append("thiếu đề bài")
+    from app.services.question_quality import evaluate
+
+    extra = list(q.issues)
     if q.type == "mcq":
         n = len(q.options)
-        if n < 4:
-            score -= 0.4
-            issues.append("thiếu phương án")
-        elif n > 4:
-            score -= 0.3
-            issues.append("thừa phương án")
-        if any(not o["content"] for o in q.options):
-            score -= 0.2
-            issues.append("phương án trống")
-        if re.search(r"(?:^|\s)[B-D]\.\s", strip_markup(q.stem)):
-            score -= 0.2
-            issues.append("phương án có thể bị dính vào đề")
         if 1 < len(q.marked_labels) < n:  # all labels styled alike is decoration, not an answer
-            issues.append("nhiều phương án được đánh dấu")
+            extra.append("nhiều phương án được đánh dấu")
         if q.answer and q.answer_source != "format" and len(q.marked_labels) == 1 and q.marked_labels[0] != q.answer.get("key"):
-            issues.append("đáp án không khớp định dạng")
-        if q.answer and q.answer.get("key") not in {o["label"] for o in q.options}:
-            score -= 0.3
-            issues.append("đáp án không có trong phương án")
-    if q.type == "true_false":
-        if len(q.options) != 4:
-            score -= 0.3
-            issues.append("không đủ 4 mệnh đề")
-        if q.answer is not None and any(v is None for v in q.answer.values()):
-            score -= 0.1
-            issues.append("thiếu đáp án một số mệnh đề")
-    if "không nhận ra phương án" in issues:
-        score -= 0.4
-    if q.answer is None and q.type != "essay":
-        score -= 0.2
-        issues.append("thiếu đáp án")
-    if not q.solution:
-        issues.append("thiếu lời giải")  # informational: no penalty
-    if "đáp án không khớp bảng đáp án" in issues or "đáp án không khớp định dạng" in issues:
-        score -= 0.2
-    if q.ocr:
-        score = min(score, 0.8)
-        issues.append("OCR")
-    q.confidence = round(max(0.0, min(1.0, score)), 2)
-    # de-duplicate while keeping order
-    seen: set[str] = set()
-    q.issues = [i for i in issues if not (i in seen or seen.add(i))]
+            extra.append("đáp án không khớp định dạng")
+    q.issues, q.confidence = evaluate(q.type, q.stem, q.options, q.answer, q.solution, extra_issues=extra, ocr=q.ocr)

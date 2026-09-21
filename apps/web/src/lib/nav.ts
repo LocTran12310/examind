@@ -9,6 +9,7 @@ export interface NavItem {
 export const NAV: NavItem[] = [
   { href: "/admin/orgs", label: "Tổ chức", roles: ["super_admin"] },
   { href: "/org/documents", label: "Đề đã tải lên", roles: ["org_admin", "teacher"] },
+  { href: "/org/review", label: "Duyệt câu hỏi", roles: ["org_admin", "teacher"] },
   { href: "/org/users", label: "Người dùng", roles: ["org_admin", "teacher"] },
   { href: "/org/classes", label: "Lớp học", roles: ["org_admin", "teacher"] },
   { href: "/org/topics", label: "Chuyên đề", roles: ["org_admin", "teacher"] },

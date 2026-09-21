@@ -232,3 +232,24 @@ export const PROVIDER_LABEL: Record<Provider, string> = {
   openai: "Tương thích OpenAI",
   anthropic: "Anthropic",
 };
+
+export type QuestionStatus = "draft" | "auto_approved" | "needs_review" | "approved" | "rejected" | "duplicate";
+
+export const STATUS_LABEL: Record<QuestionStatus, string> = {
+  draft: "Nháp",
+  auto_approved: "Tự duyệt",
+  needs_review: "Cần xem",
+  approved: "Đã duyệt",
+  rejected: "Đã loại",
+  duplicate: "Trùng",
+};
+
+export interface ReviewDocument {
+  document: SourceDocument;
+  total: number;
+  counts: Record<"auto_approved" | "needs_review" | "approved" | "rejected" | "duplicate", number>;
+  spot_pending: number;
+  progress: number;
+  assigned_to: string | null;
+  assigned_name: string | null;
+}

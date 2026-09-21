@@ -21,4 +21,4 @@ Run 2026-09-22 on `docker compose --profile ai up` (Mac M-series, Docker 16 GB, 
 **Finding for final review:** the AI path is wired end to end, but a useful local model needs
 either native Ollama with Metal on the Mac (not Docker), a GPU/≥ 7B model on the VM, or a free
 API tier registered as an OpenAI-compatible model; raise `LLM_TIMEOUT_SECONDS` for slow CPUs.
-Test totals at close: API 116 passed, web 40 passed.
+Test totals at close: API 114 passed, web 40 passed.

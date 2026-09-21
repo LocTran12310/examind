@@ -41,6 +41,9 @@ def run() -> None:
     with dbmod.session_factory()() as db:
         seed_system(db)
         extra_seeders(db)
+        from app.services.triage import triage_legacy_drafts
+
+        triage_legacy_drafts(db)
         db.commit()
 
 

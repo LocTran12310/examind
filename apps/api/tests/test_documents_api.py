@@ -54,7 +54,7 @@ def test_upload_parse_and_list(client, db):
     assert len(qs) == 40
     q1 = qs[0]
     assert q1["number"] == 1 and q1["grade"] == 10 and q1["semester_code"] == "hk1" and q1["exam_kind"] == "Giữa kỳ"
-    assert q1["subject_id"] == str(math.id) and q1["status"] == "draft"
+    assert q1["subject_id"] == str(math.id) and q1["status"] in ("auto_approved", "needs_review")
     assert [t["name"] for t in q1["tags"]] == ["THPT Chu Văn An"]
     assert client.get("/api/documents").json()["total"] == 1
     got = client.get(f"/api/documents/{doc['id']}/file")
