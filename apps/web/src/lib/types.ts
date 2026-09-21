@@ -205,6 +205,17 @@ export interface ParsedQuestion extends Question {
   duplicate_of?: string | null;
   source_document_id?: string | null;
   group?: string | null;
+  flag_evidence?: FlagEvidence | null;
+}
+
+export interface FlagEvidence {
+  reason: string;
+  answers: number;
+  key: string;
+  overall_correct: number;
+  top_quartile: { size: number; choice: string; share: number };
+  option_counts: Record<string, number>;
+  dismissed?: boolean;
 }
 
 export const EXAM_KINDS = ["Giữa kỳ", "Cuối kỳ", "Khảo sát", "Thi thử", "Ôn tập", "Khác"];
@@ -238,7 +249,7 @@ export const PROVIDER_LABEL: Record<Provider, string> = {
   anthropic: "Anthropic",
 };
 
-export type QuestionStatus = "draft" | "auto_approved" | "needs_review" | "approved" | "rejected" | "duplicate";
+export type QuestionStatus = "draft" | "auto_approved" | "needs_review" | "approved" | "rejected" | "duplicate" | "flagged";
 
 export const STATUS_LABEL: Record<QuestionStatus, string> = {
   draft: "Nháp",
@@ -247,12 +258,13 @@ export const STATUS_LABEL: Record<QuestionStatus, string> = {
   approved: "Đã duyệt",
   rejected: "Đã loại",
   duplicate: "Trùng",
+  flagged: "Nghi sai đáp án",
 };
 
 export interface ReviewDocument {
   document: SourceDocument;
   total: number;
-  counts: Record<"auto_approved" | "needs_review" | "approved" | "rejected" | "duplicate", number>;
+  counts: Record<"auto_approved" | "needs_review" | "approved" | "rejected" | "duplicate" | "flagged", number>;
   spot_pending: number;
   progress: number;
   assigned_to: string | null;

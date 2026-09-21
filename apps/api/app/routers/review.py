@@ -66,3 +66,16 @@ def answer_key(doc_id: uuid.UUID, body: AnswerKeyIn, scope: OrgScope = Depends(s
 @router.post("/documents/{doc_id}/approve-confident")
 def approve_confident(doc_id: uuid.UUID, scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
     return {"approved": review.approve_confident(db, scope, doc_id)}
+
+
+@router.post("/key-audit")
+def key_audit(scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
+    from app.services import key_audit as audit_service
+
+    return {"flagged": [str(i) for i in audit_service.audit(db, scope.org_id)]}
+
+
+@router.get("/flagged", response_model=list[ParsedQuestionOut])
+def flagged(scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
+    qs = review.flagged_questions(db, scope)
+    return parsed_many(db, qs, {q.id: "Nghi sai đáp án" for q in qs})

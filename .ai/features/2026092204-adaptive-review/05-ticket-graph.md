@@ -3,7 +3,7 @@
 # Ticket graph — 2026092204-adaptive-review
 
 - Units of Work: **3**
-- Tickets: **8** (6 done)
+- Tickets: **8** (8 done)
 - Total effort: **2.9d**
 - Critical path: **1.6d** across 4 tickets
 - Theoretical minimum duration with unlimited parallelism: **1.6d**
@@ -34,8 +34,8 @@ graph LR
     T_02_03["✓ T-02-03<br/>Tạo đề ôn tập' and 'Giao đề ôn cá nhân' UI with the plan"]
   end
   subgraph UOW_03["UOW-03 · Suspect answer keys are flagged for review"]
-    T_03_01["T-03-01<br/>Key audit: detection, evidence, worker schedule, exclusion from exams"]
-    T_03_02["T-03-02<br/>Flagged questions in review list and queue with evidence"]
+    T_03_01["✓ T-03-01<br/>Key audit: detection, evidence, worker schedule, exclusion from exams"]
+    T_03_02["✓ T-03-02<br/>Flagged questions in review list and queue with evidence"]
   end
   T_01_01 --> T_01_02
   T_01_02 --> T_01_03
@@ -81,5 +81,5 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-02-01 | UOW-02 | domain | feature | 4h | T-01-01 | AC-04, AC-06 | done |
 | T-02-02 | UOW-02 | api | feature | 3h | T-02-01, T-01-02 | AC-05, AC-07 | done |
 | T-02-03 | UOW-02 | web | feature | 3h | T-02-02, T-01-03 | AC-04, AC-05, AC-07 | done |
-| T-03-01 | UOW-03 | worker | feature | 3h | T-01-01 | AC-09, AC-11, AC-12 | todo |
-| T-03-02 | UOW-03 | web | feature | 2h | T-03-01, T-01-03 | AC-10 | todo |
+| T-03-01 | UOW-03 | worker | feature | 3h | T-01-01 | AC-09, AC-11, AC-12 | done |
+| T-03-02 | UOW-03 | web | feature | 2h | T-03-01, T-01-03 | AC-10 | done |

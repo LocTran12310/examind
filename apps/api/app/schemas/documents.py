@@ -59,6 +59,7 @@ class ParsedQuestionOut(QuestionOut):
     duplicate_of: uuid.UUID | None = None
     source_document_id: uuid.UUID | None = None
     group: str | None = None
+    flag_evidence: dict | None = None
 
 
 class ReparseIn(BaseModel):

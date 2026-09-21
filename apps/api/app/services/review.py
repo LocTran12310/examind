@@ -11,7 +11,7 @@ from app.models import Organization, Question, QuestionTag, QuestionTopic, Revie
 from app.services.question_quality import blocking, blocking_manual, reevaluate, settle, triage_status
 from app.services.search_text import for_question
 
-STATUS_KEYS = ("auto_approved", "needs_review", "approved", "rejected", "duplicate")
+STATUS_KEYS = ("auto_approved", "needs_review", "approved", "rejected", "duplicate", "flagged")
 
 
 def document_counts(db: Session, scope: OrgScope, mine: bool = False, doc_id=None) -> list[dict]:
@@ -56,7 +56,7 @@ def assign(db: Session, scope: OrgScope, doc_id, user_id) -> SourceDocument:
 
 # ------------------------------------------------------------------ queue and actions
 
-GROUP_ORDER = ["thiếu đáp án", "thiếu phương án", "không nhận ra phương án", "đáp án không khớp bảng đáp án",
+GROUP_ORDER = ["Nghi sai đáp án", "thiếu đáp án", "thiếu phương án", "không nhận ra phương án", "đáp án không khớp bảng đáp án",
                "đáp án không khớp định dạng", "OCR", "AI không phản hồi"]
 SPOT_WINDOW, SPOT_FAILS, THRESHOLD_STEP, THRESHOLD_MAX = 20, 2, 0.05, 0.95
 
@@ -84,7 +84,7 @@ def queue(db: Session, scope: OrgScope, doc_id) -> list[Question]:
         raise not_found("Không tìm thấy tài liệu")
     qs = db.scalars(select(Question).where(
         Question.source_document_id == doc.id,
-        (Question.status == "needs_review") | (Question.spot_check.is_(True) & (Question.status == "auto_approved")),
+        Question.status.in_(("needs_review", "flagged")) | (Question.spot_check.is_(True) & (Question.status == "auto_approved")),
     )).all()
     order = {g: i for i, g in enumerate(GROUP_ORDER)}
 
@@ -115,6 +115,8 @@ def act(db: Session, scope: OrgScope, qid, action: str) -> Question:
     if action == "approve":
         if blocking_manual(q.issues or []):
             raise AppError("has_blocking_issues", "Câu còn lỗi: " + ", ".join(blocking_manual(q.issues)), 409)
+        if q.status == "flagged":  # the teacher confirmed (or fixed) the key: remember when, to avoid re-flagging at once
+            q.flag_evidence = {**(q.flag_evidence or {}), "dismissed": True, "answers_at_dismiss": (q.flag_evidence or {}).get("answers", 0)}
         settle(q)
         q.status, q.spot_check = "approved", False
         _mark_reviewed(q, scope)
@@ -126,7 +128,7 @@ def act(db: Session, scope: OrgScope, qid, action: str) -> Question:
         if was_spot:
             _spot_feedback(db, scope)
     elif action == "restore":
-        if q.status not in ("rejected", "duplicate"):
+        if q.status not in ("rejected", "duplicate", "flagged"):
             raise AppError("invalid_state", "Chỉ khôi phục câu đã loại hoặc trùng", 409)
         q.duplicate_of = None
         q.status = triage_status(q.confidence, q.issues or [], _threshold(db, scope))
@@ -300,3 +302,8 @@ def approve_confident(db: Session, scope: OrgScope, doc_id) -> int:
         record(db, scope, None, "bulk", {"status": "auto_approved"}, {"status": "approved", "count": len(qs), "document": str(doc.id)})
     db.flush()
     return len(qs)
+
+
+def flagged_questions(db: Session, scope: OrgScope) -> list[Question]:
+    return db.scalars(select(Question).where(Question.organization_id == scope.org_id, Question.status == "flagged")
+                      .order_by(Question.updated_at.desc().nulls_last())).all()

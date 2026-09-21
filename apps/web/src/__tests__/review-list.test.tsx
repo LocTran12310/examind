@@ -7,7 +7,7 @@ import type { ReviewDocument, User } from "@/lib/types";
 const row: ReviewDocument = {
   document: { id: "d1", filename: "de-kho.docx" } as ReviewDocument["document"],
   total: 8,
-  counts: { auto_approved: 3, needs_review: 5, approved: 0, rejected: 0, duplicate: 0 },
+  counts: { auto_approved: 3, needs_review: 5, approved: 0, rejected: 0, duplicate: 0, flagged: 0 },
   spot_pending: 1,
   progress: 0.25,
   assigned_to: null,

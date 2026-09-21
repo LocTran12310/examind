@@ -36,7 +36,7 @@ export function ReviewList({
       </thead>
       <tbody className="divide-y divide-gray-100">
         {rows.map((r) => {
-          const pending = r.counts.needs_review + r.spot_pending;
+          const pending = r.counts.needs_review + r.spot_pending + (r.counts.flagged ?? 0);
           return (
             <tr key={r.document.id} data-testid={`rev-${r.document.filename}`}>
               <td className={td}>
@@ -46,6 +46,7 @@ export function ReviewList({
               <td className={`${td} space-x-1`}>
                 <Badge tone="green">Tự duyệt {r.counts.auto_approved}</Badge>
                 <Badge tone={r.counts.needs_review ? "amber" : "gray"}>Cần xem {r.counts.needs_review}</Badge>
+                {(r.counts.flagged ?? 0) > 0 && <Badge tone="red">Nghi sai đáp án {r.counts.flagged}</Badge>}
                 {r.spot_pending > 0 && <Badge tone="blue">Kiểm tra ngẫu nhiên {r.spot_pending}</Badge>}
                 <Badge>Đã duyệt {r.counts.approved}</Badge>
                 {r.counts.duplicate > 0 && <Badge>Trùng {r.counts.duplicate}</Badge>}

@@ -78,7 +78,8 @@ def parsed_out(q: Question, topics=(), tags=(), group: str | None = None) -> Par
                              parse_method=q.parse_method, parse_model=q.parse_model, answer_source=q.answer_source,
                              subject_id=q.subject_id, semester_code=q.semester_code, exam_kind=q.exam_kind,
                              topics=list(topics), tags=list(tags), page=q.page, spot_check=q.spot_check,
-                             duplicate_of=q.duplicate_of, source_document_id=q.source_document_id, group=group)
+                             duplicate_of=q.duplicate_of, source_document_id=q.source_document_id, group=group,
+                             flag_evidence=q.flag_evidence)
 
 
 def parsed_many(db: Session, qs: list[Question], groups: dict | None = None) -> list[ParsedQuestionOut]:

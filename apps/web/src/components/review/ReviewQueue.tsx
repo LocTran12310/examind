@@ -18,6 +18,27 @@ const LEGEND: [string, string][] = [
   ["J / K", "câu sau / trước"],
 ];
 
+export function FlagPanel({ ev }: { ev: NonNullable<ParsedQuestion["flag_evidence"]> }) {
+  const total = Object.values(ev.option_counts).reduce((a, b) => a + b, 0) || 1;
+  return (
+    <div className="mb-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-900" data-testid="flag-panel">
+      <div className="font-medium">Nghi sai đáp án: {ev.reason}</div>
+      <div className="mt-2 flex flex-wrap gap-3">
+        {Object.entries(ev.option_counts)
+          .sort()
+          .map(([label, n]) => (
+            <span key={label}>
+              {label}: {Math.round((n / total) * 100)}%{label === ev.key ? " (đáp án hiện tại)" : ""}
+            </span>
+          ))}
+      </div>
+      <div className="mt-1 text-xs">
+        {ev.answers} lượt trả lời · nhóm giỏi ({ev.top_quartile.size} em) chọn {ev.top_quartile.choice} {Math.round(ev.top_quartile.share * 100)}%. Sửa đáp án (1–4) rồi Enter, hoặc Enter để giữ nguyên.
+      </div>
+    </div>
+  );
+}
+
 export interface EditorSlot {
   (props: { question: ParsedQuestion; onSaved: (q: ParsedQuestion) => void; onCancel: () => void }): React.ReactNode;
 }
@@ -146,6 +167,7 @@ export function ReviewQueue({
             <Alert tone={message.tone}>{message.text}</Alert>
           </div>
         )}
+        {q.flag_evidence && !q.flag_evidence.dismissed && <FlagPanel ev={q.flag_evidence} />}
         {editing && renderEditor ? (
           renderEditor({
             question: q,

@@ -15,7 +15,7 @@ export default function ReviewPage() {
   const { data, reload } = useApi<ReviewDocument[]>(`/review/documents${qs({ mine: mine || undefined })}`);
   const canAssign = me.role === "org_admin";
   const { data: teachers } = useApi<Page<User>>(canAssign ? "/users?role=teacher&page_size=200" : null);
-  const pending = (data ?? []).reduce((n, r) => n + r.counts.needs_review + r.spot_pending, 0);
+  const pending = (data ?? []).reduce((n, r) => n + r.counts.needs_review + r.spot_pending + (r.counts.flagged ?? 0), 0);
 
   return (
     <>

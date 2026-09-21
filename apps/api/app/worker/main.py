@@ -48,8 +48,22 @@ def main() -> None:
         t.start()
     log.info("worker.started", concurrency=concurrency)
     factory = dbmod.session_factory()
+    last_audit = 0.0
     while not stop.is_set():
         HEARTBEAT.touch()
+        if time.monotonic() - last_audit > 600:  # key audit every 10 minutes (adaptive-review A-09)
+            last_audit = time.monotonic()
+            with factory() as db:
+                try:
+                    from app.services.key_audit import audit
+
+                    flagged = audit(db)
+                    db.commit()
+                    if flagged:
+                        log.warning("worker.key_audit_flagged", count=len(flagged))
+                except Exception as exc:
+                    db.rollback()
+                    log.error("worker.key_audit_failed", error=str(exc))
         with factory() as db:
             recovered = queue.recover_stale(db)
             if recovered:

@@ -8,11 +8,12 @@ BLOCKING = frozenset({
     "thiếu đề bài", "thiếu phương án", "thừa phương án", "phương án trống", "phương án có thể bị dính vào đề",
     "đáp án không có trong phương án", "không đủ 4 mệnh đề", "thiếu đáp án", "thiếu đáp án một số mệnh đề",
     "đáp án không khớp bảng đáp án", "đáp án không khớp định dạng", "nhiều phương án được đánh dấu",
-    "không nhận ra phương án", "AI không phản hồi", "OCR",
+    "không nhận ra phương án", "AI không phản hồi", "OCR", "Nghi sai đáp án",
 })
 # Issues only a parser can raise; a teacher's edit clears them.
 PARSE_ONLY = frozenset({"đáp án không khớp bảng đáp án", "đáp án không khớp định dạng", "nhiều phương án được đánh dấu",
                         "không nhận ra phương án", "AI không phản hồi", "OCR"})
+KEEP_ON_EDIT = frozenset({"Nghi sai đáp án"})  # only an explicit approval settles it
 
 
 def evaluate(qtype: str, stem: str, options: list[dict], answer: dict | None, solution: str, *,
@@ -65,7 +66,7 @@ def evaluate(qtype: str, stem: str, options: list[dict], answer: dict | None, so
 
 # Flags that only ask for a human look: a teacher's approval settles them.
 NEEDS_EYES = frozenset({"OCR", "AI không phản hồi", "đáp án không khớp bảng đáp án", "đáp án không khớp định dạng",
-                        "nhiều phương án được đánh dấu", "phương án có thể bị dính vào đề"})
+                        "nhiều phương án được đánh dấu", "phương án có thể bị dính vào đề", "Nghi sai đáp án"})
 
 
 def blocking(issues: list[str]) -> list[str]:
@@ -89,5 +90,5 @@ def triage_status(confidence: float | None, issues: list[str], threshold: float)
 
 def reevaluate(q) -> None:
     """After a human edit: parse-only flags are dropped, the rest recomputed."""
-    keep = [i for i in (q.issues or []) if i not in PARSE_ONLY and i not in BLOCKING and i != "thiếu lời giải"]
+    keep = [i for i in (q.issues or []) if i in KEEP_ON_EDIT or (i not in PARSE_ONLY and i not in BLOCKING and i != "thiếu lời giải")]
     q.issues, q.confidence = evaluate(q.type, q.stem, q.options or [], q.answer, q.solution, extra_issues=keep)
