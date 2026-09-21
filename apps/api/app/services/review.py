@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.errors import AppError, forbidden, not_found, validation
 from app.deps import OrgScope
 from app.models import Organization, Question, QuestionTag, QuestionTopic, ReviewEvent, SourceDocument, Tag, Topic, User
-from app.services.question_quality import blocking, reevaluate, triage_status
+from app.services.question_quality import blocking, blocking_manual, reevaluate, settle, triage_status
 from app.services.search_text import for_question
 
 STATUS_KEYS = ("auto_approved", "needs_review", "approved", "rejected", "duplicate")
@@ -113,8 +113,9 @@ def act(db: Session, scope: OrgScope, qid, action: str) -> Question:
     before = snapshot(q)
     was_spot = q.spot_check and q.status == "auto_approved"
     if action == "approve":
-        if blocking(q.issues or []):
-            raise AppError("has_blocking_issues", "Câu còn lỗi: " + ", ".join(blocking(q.issues)), 409)
+        if blocking_manual(q.issues or []):
+            raise AppError("has_blocking_issues", "Câu còn lỗi: " + ", ".join(blocking_manual(q.issues)), 409)
+        settle(q)
         q.status, q.spot_check = "approved", False
         _mark_reviewed(q, scope)
         record(db, scope, q, "spot_ok" if was_spot else "approve", before, snapshot(q))
@@ -276,7 +277,8 @@ def apply_answer_key(db: Session, scope: OrgScope, doc_id, text: str) -> dict:
         q.answer, q.answer_source = {"key": letter}, "manual"
         reevaluate(q)
         applied += 1
-        if q.status == "needs_review" and not blocking(q.issues):
+        if q.status == "needs_review" and not blocking_manual(q.issues):
+            settle(q)
             q.status = "approved"
             _mark_reviewed(q, scope)
             approved += 1

@@ -105,8 +105,9 @@ def bulk(db: Session, scope: OrgScope, ids: list, changes: dict) -> int:
             current = set(db.scalars(select(QuestionTag.tag_id).where(QuestionTag.question_id == q.id)))
             review.set_tags(db, scope, q, list(current | {uuid.UUID(str(t)) for t in changes["add_tag_ids"]}))
         if status == "approved":
-            if review.blocking(q.issues or []):
-                raise AppError("has_blocking_issues", f"Câu {q.number or ''} còn lỗi: " + ", ".join(review.blocking(q.issues)), 409)
+            if review.blocking_manual(q.issues or []):
+                raise AppError("has_blocking_issues", f"Câu {q.number or ''} còn lỗi: " + ", ".join(review.blocking_manual(q.issues)), 409)
+            review.settle(q)
             q.status, q.spot_check = "approved", False
             review._mark_reviewed(q, scope)
         elif status == "rejected":

@@ -70,3 +70,12 @@ def test_spot_ok_is_recorded(client, db):
     spot = client.get(f"/api/review/documents/{doc}/queue").json()[-1]
     assert client.post(f"/api/review/questions/{spot['id']}/action", json={"action": "approve"}).json()["status"] == "approved"
     assert db.scalar(select(ReviewEvent.action).where(ReviewEvent.question_id == spot["id"])) == "spot_ok"
+
+
+def test_ocr_question_approved_by_teacher_clears_flag(client, db):
+    setup_admin(client, db)
+    doc = upload(client, "scan.pdf", sample("de-scan.pdf")).json()["document"]["id"]
+    run_jobs()
+    q = next(x for x in client.get(f"/api/review/documents/{doc}/queue").json() if x["group"] == "OCR" and len(x["options"]) == 4 and x["answer"])
+    r = client.post(f"/api/review/questions/{q['id']}/action", json={"action": "approve"})
+    assert r.status_code == 200 and r.json()["status"] == "approved" and "OCR" not in r.json()["issues"]

@@ -5,7 +5,7 @@ slug: 2026092202-question-review
 profile: none
 created: 2026-09-22T01:26:08
 ruleset: 5
-current_gate: G3
+current_gate: G5
 history:
   - gate: G0
     action: passed
@@ -237,3 +237,13 @@ history:
     at: 2026-09-22T01:52:55
     by: Loc Tran
     ticket: T-04-04
+  - gate: G4
+    action: passed
+    at: 2026-09-22T01:59:22
+    by: Loc Tran
+    evidence: every done ticket has a passing verification run; all 14 tickets done, all UoW checklists ticked
+  - gate: G5
+    action: passed
+    at: 2026-09-22T01:59:22
+    by: Loc Tran
+    evidence: assumptions resolved, ADRs settled, graph valid

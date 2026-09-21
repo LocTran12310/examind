@@ -247,3 +247,33 @@ Câu 2. Giá trị của $2^2$? Các lựa chọn: 3; 4; 5; 8.
 """))
     q2 = by_num(res)[2]
     assert q2.type == "essay" and "không nhận ra phương án" in q2.issues and q2.confidence < 0.85
+
+
+def test_ocr_options_without_space_after_label():
+    res = split(L("""
+Câu 6. Tam giác ABC có AB = 3, AC = 11. Diện tích bằng
+A. 33
+B. 17.5
+C. 16.5
+D.14
+"""))
+    q = res.questions[0]
+    assert [o["content"] for o in q.options] == ["33", "17.5", "16.5", "14"]
+
+
+def test_ocr_glued_symbol_options_and_no_false_split_inside_words():
+    res = split(L("""
+Câu 2. Tập A ∩ B là
+A. 1
+B. 1; 2; 7; 12
+C.Ø
+D.2;7
+Câu 3. Cho vectơ AB.AC = 0 và hai điểm M, N. Chọn đáp án đúng
+A. 1
+B. 2
+C. 3
+D. 4
+"""))
+    q2, q3 = res.questions
+    assert [o["content"] for o in q2.options] == ["1", "1; 2; 7; 12", "Ø", "2;7"]
+    assert "AB.AC" in q3.stem and len(q3.options) == 4

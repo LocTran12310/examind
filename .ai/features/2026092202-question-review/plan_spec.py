@@ -3,7 +3,7 @@
 
 UOWS = [
     dict(
-        id="UOW-01", slug="triage-and-duplicates", title="Parsed questions are triaged and de-duplicated automatically",
+        dod_done=True, id="UOW-01", slug="triage-and-duplicates", title="Parsed questions are triaged and de-duplicated automatically",
         requirements=["US-01", "US-05"], risk="medium",
         demo=[
             "Upload samples/exams/de-mau-toan10.docx and de-kho.docx",
@@ -15,7 +15,7 @@ UOWS = [
                   "Review documents API + assignment", "Review list UI"],
     ),
     dict(
-        id="UOW-02", slug="keyboard-review-queue", title="Teachers clear the review queue with single keys",
+        dod_done=True, id="UOW-02", slug="keyboard-review-queue", title="Teachers clear the review queue with single keys",
         requirements=["US-02", "US-03", "US-04"], depends_on=["UOW-01"], risk="high",
         demo=[
             "Open de-kho in /org/review → queue shows 'thiếu đáp án' group first, counter 1/5",
@@ -30,7 +30,7 @@ UOWS = [
                   "Queue page with keyboard map", "Inline editor + bulk dialogs + review-flow test"],
     ),
     dict(
-        id="UOW-03", slug="knn-learning", title="Approved questions teach topic suggestions",
+        dod_done=True, id="UOW-03", slug="knn-learning", title="Approved questions teach topic suggestions",
         requirements=["US-04"], depends_on=["UOW-01"],
         demo=[
             "Approve Câu 2 of de-kho with topic 'Lũy thừa với số mũ thực'",
@@ -39,7 +39,7 @@ UOWS = [
         in_scope=["kNN suggestion via trigram similarity to approved questions"],
     ),
     dict(
-        id="UOW-04", slug="question-bank", title="Teachers search, edit and create questions in the bank",
+        dod_done=True, id="UOW-04", slug="question-bank", title="Teachers search, edit and create questions in the bank",
         requirements=["US-06", "US-03"], depends_on=["UOW-01"],
         demo=[
             "Open /org/bank, search 'parabol', filter Lớp 10 and topic 'Đại số' → vertex questions listed",

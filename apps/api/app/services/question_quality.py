@@ -63,8 +63,24 @@ def evaluate(qtype: str, stem: str, options: list[dict], answer: dict | None, so
     return issues, round(max(0.0, min(1.0, score)), 2)
 
 
+# Flags that only ask for a human look: a teacher's approval settles them.
+NEEDS_EYES = frozenset({"OCR", "AI không phản hồi", "đáp án không khớp bảng đáp án", "đáp án không khớp định dạng",
+                        "nhiều phương án được đánh dấu", "phương án có thể bị dính vào đề"})
+
+
 def blocking(issues: list[str]) -> list[str]:
+    """Issues that stop auto-approval."""
     return [i for i in issues or [] if i in BLOCKING]
+
+
+def blocking_manual(issues: list[str]) -> list[str]:
+    """Issues a teacher must fix before approving (structural problems)."""
+    return [i for i in issues or [] if i in BLOCKING and i not in NEEDS_EYES]
+
+
+def settle(q) -> None:
+    """A teacher approved the question: flags that only asked for a look are resolved."""
+    q.issues = [i for i in q.issues or [] if i not in NEEDS_EYES]
 
 
 def triage_status(confidence: float | None, issues: list[str], threshold: float) -> str:

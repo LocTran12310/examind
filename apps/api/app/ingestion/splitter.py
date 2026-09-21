@@ -35,7 +35,8 @@ TF_VERDICT_RE = re.compile(r"([a-d])\s*[).]?\s*[:\-–]?\s*(Đúng|Sai|ĐÚNG|SA
 OPTION_RE = re.compile(
     r"(?:(?<=^)|(?<=\s)|(?<=\|))"
     r"(?P<mark>(?:\*\*)?(?:\[)?(?P<label>[A-D])(?P<delim>[.)])(?:\]\{\.(?:underline|mark)\})?(?:\*\*)?)"
-    r"(?=\s|$)", re.U)
+    # a space normally follows the label; OCR often drops it ("D.14", "B.(2;1)")
+    r"(?=\s|$|(?<=[.)])(?=[^\s.,;:]))", re.U)
 
 CHOICE_WORDS_RE = re.compile(r"(?:lựa\s+chọn|phương\s+án|đáp\s+án)", re.I | re.U)
 

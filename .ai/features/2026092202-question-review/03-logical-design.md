@@ -1,6 +1,6 @@
 ---
 feature: question-review
-adr_count: 4
+adr_count: 6
 ---
 
 # Logical design — Question review and bank
@@ -94,4 +94,16 @@ Rendered PDF pages are stored once in MinIO (`…/pages/{n}.png`) and served wit
 **Context:** Success signal is actions per flagged question.
 **Decision:** Queue page shows one question, pre-selects suggestions, maps every action to one key, saves on each action (optimistic UI, rollback on error).
 **Consequences:** Needs a visible key legend and focus management; mouse actions mirror keys.
+**Status:** accepted
+
+### ADR-05 — Two blocking levels: auto-approval vs manual approval
+**Context:** Live demo: OCR-flagged but correct questions could not be approved by a teacher.
+**Decision:** `blocking()` (stops auto-approval) includes "needs eyes" flags (OCR, AI failure, answer conflicts); `blocking_manual()` only structural problems. A teacher's approval settles the "needs eyes" flags.
+**Consequences:** OCR/AI questions always get a human look but never trap the reviewer.
+**Status:** accepted
+
+### ADR-06 — OCR-tolerant option labels
+**Context:** Tesseract drops the space after option labels ("D.14", "C.Ø").
+**Decision:** An option label may be followed directly by a non-space, non-punctuation character; a whitespace before the label is still required so "AB.AC" inside text is not split.
+**Consequences:** Scanned exams split fully; inline false positives stay guarded by the A→B→C→D sequence check.
 **Status:** accepted
