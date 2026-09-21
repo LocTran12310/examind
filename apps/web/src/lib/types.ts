@@ -428,3 +428,14 @@ export interface ClassOverviewRow {
   weakest: { name: string; mastery: number; answers: number }[];
   review: { assignment_id: string; title: string; status: string } | null;
 }
+
+export interface PracticeItem {
+  attempt_id: string;
+  title: string;
+  status: "in_progress" | "submitted";
+  started_at: string;
+  submitted_at: string | null;
+  score10: number | null;
+  note: string | null;
+  groups: { reason: string; topic: string | null; count: number }[];
+}

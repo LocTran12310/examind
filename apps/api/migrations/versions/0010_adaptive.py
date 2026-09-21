@@ -22,6 +22,7 @@ def upgrade() -> None:
         sa.Column("answers", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("last_at", sa.DateTime(timezone=True)),
     )
+    op.create_index("ix_answer_facts_student_question", "answer_facts", ["student_id", "question_id", "created_at"])
     op.add_column("questions", sa.Column("flag_evidence", pg.JSONB()))
     op.drop_constraint("ck_questions_status", "questions")
     op.create_check_constraint("ck_questions_status", "questions",
@@ -33,4 +34,5 @@ def downgrade() -> None:
     op.create_check_constraint("ck_questions_status", "questions",
                                "status in ('draft','auto_approved','needs_review','approved','rejected','duplicate')")
     op.drop_column("questions", "flag_evidence")
+    op.drop_index("ix_answer_facts_student_question", "answer_facts")
     op.drop_table("student_topic_mastery")

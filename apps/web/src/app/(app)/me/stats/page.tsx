@@ -1,6 +1,7 @@
 "use client";
 
 import { MasteryList } from "@/components/adaptive/MasteryList";
+import { PracticeButton, PracticeHistory } from "@/components/adaptive/PracticeButton";
 import { GroupStats } from "@/components/reports/GroupStats";
 import { TopicStatsTree } from "@/components/reports/TopicStatsTree";
 import { Card, Empty, PageHeader } from "@/components/ui";
@@ -14,11 +15,12 @@ export default function MyStatsPage() {
   if (!topics || !types || !mastery) return null;
   return (
     <>
-      <PageHeader title="Tiến độ của tôi" subtitle="Tỉ lệ làm đúng theo chuyên đề và loại câu" />
+      <PageHeader title="Tiến độ của tôi" subtitle="Tỉ lệ làm đúng theo chuyên đề và loại câu" actions={<PracticeButton />} />
       {topics.length === 0 ? (
         <Empty>Làm bài được giao để xem tiến độ của bạn.</Empty>
       ) : (
         <div className="space-y-4">
+          <PracticeHistory />
           <Card>
             <h2 className="mb-2 font-medium">Mức nắm vững (cần ôn nhất trước)</h2>
             <MasteryList rows={mastery} limit={8} />
