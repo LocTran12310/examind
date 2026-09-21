@@ -44,3 +44,48 @@ export interface OrgCreated {
   org: Org;
   admin: { username: string; temp_password: string };
 }
+
+export interface User {
+  id: string;
+  username: string;
+  full_name: string;
+  email: string | null;
+  role: Role;
+  is_active: boolean;
+  must_change_password: boolean;
+  last_login_at: string | null;
+  created_at: string;
+  class_ids: string[];
+}
+
+export interface Credential {
+  user_id: string;
+  username: string;
+  full_name: string;
+  temp_password: string;
+  role?: Role;
+  class?: string;
+}
+
+export interface SchoolClass {
+  id: string;
+  name: string;
+  grade: number | null;
+  school_year: string;
+  member_count: number;
+  created_at: string;
+}
+
+export interface ClassDetail extends SchoolClass {
+  members: User[];
+}
+
+export interface ImportRow {
+  row: number;
+  full_name: string;
+  username: string;
+  role: Role;
+  class: string;
+  errors: string[];
+  generated_username: boolean;
+}

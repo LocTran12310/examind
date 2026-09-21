@@ -323,7 +323,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-02-02
     blocks:
@@ -344,7 +344,7 @@ ticket:
     layer: domain
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-03-01
       - T-03-03
@@ -364,7 +364,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on:
       - T-02-02
     blocks:
@@ -385,7 +385,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-03-01
       - T-01-06
@@ -398,13 +398,15 @@ ticket:
     touches:
       - apps/web/src/app/(app)/org/users/page.tsx   # new
       - apps/web/src/components/org/UserForm.tsx   # new
+      - apps/web/src/components/org/UserTable.tsx   # new
+      - apps/web/src/lib/hooks.ts   # new
   - id: T-03-05
     uow: UOW-03
     title: 'Import UI with preview and temp-password download'
     layer: web
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on:
       - T-03-02
       - T-03-04
@@ -414,13 +416,15 @@ ticket:
       - AC-17
     touches:
       - apps/web/src/app/(app)/org/users/import/page.tsx   # new
+      - apps/web/src/components/org/ImportWizard.tsx   # new
+      - apps/web/src/lib/csv.ts   # new
   - id: T-03-06
     uow: UOW-03
     title: 'Classes UI'
     layer: web
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on:
       - T-03-03
       - T-03-04
@@ -430,6 +434,8 @@ ticket:
     touches:
       - apps/web/src/app/(app)/org/classes/page.tsx   # new
       - apps/web/src/app/(app)/org/classes/[id]/page.tsx   # new
+      - apps/web/src/components/org/ClassForms.tsx   # new
+      - apps/web/src/components/org/MemberManager.tsx   # new
   - id: T-04-01
     uow: UOW-04
     title: 'Topic service (create/rename/move/merge/delete) and tags API'

@@ -18,12 +18,12 @@
 | AC-12 | T-02-02, T-02-03 | UOW-02 | done |
 | AC-13 | T-02-02, T-02-03 | UOW-02 | done |
 | AC-14 | T-02-02 | UOW-02 | done |
-| AC-15 | T-03-01, T-03-04 | UOW-03 | open |
-| AC-16 | T-03-02, T-03-05 | UOW-03 | open |
-| AC-17 | T-03-02, T-03-05 | UOW-03 | open |
-| AC-18 | T-03-01, T-03-04 | UOW-03 | open |
-| AC-19 | T-03-01, T-03-03 | UOW-03 | open |
-| AC-20 | T-03-03, T-03-06 | UOW-03 | open |
+| AC-15 | T-03-01, T-03-04 | UOW-03 | done |
+| AC-16 | T-03-02, T-03-05 | UOW-03 | done |
+| AC-17 | T-03-02, T-03-05 | UOW-03 | done |
+| AC-18 | T-03-01, T-03-04 | UOW-03 | done |
+| AC-19 | T-03-01, T-03-03 | UOW-03 | done |
+| AC-20 | T-03-03, T-03-06 | UOW-03 | done |
 | AC-21 | T-04-01, T-04-03 | UOW-04 | open |
 | AC-22 | T-04-01, T-04-03 | UOW-04 | open |
 | AC-23 | T-04-01, T-04-04 | UOW-04 | open |
