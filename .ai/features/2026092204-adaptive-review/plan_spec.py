@@ -3,7 +3,7 @@
 
 UOWS = [
     dict(
-        id="UOW-01", slug="mastery", title="Mastery per topic follows every graded answer",
+        dod_done=True, id="UOW-01", slug="mastery", title="Mastery per topic follows every graded answer",
         requirements=["US-01"], risk="medium",
         demo=[
             "A student submits an exam → 'Tiến độ của tôi' shows mastery per topic, weakest first",
@@ -13,7 +13,7 @@ UOWS = [
         in_scope=["Mastery table + update hook + backfill", "Mastery API", "Mastery in my stats and the class overview"],
     ),
     dict(
-        id="UOW-02", slug="personal-review", title="Students and teachers get personalised review exams",
+        dod_done=True, id="UOW-02", slug="personal-review", title="Students and teachers get personalised review exams",
         requirements=["US-02", "US-03"], depends_on=["UOW-01"], risk="high",
         demo=[
             "Student presses 'Tạo đề ôn tập' → 20 questions, plan shows 'Chuyên đề yếu: …', runs in the exam page, results immediately",
@@ -23,7 +23,7 @@ UOWS = [
         in_scope=["Adaptive generator", "Practice + class assignment API", "Buttons and plan display"],
     ),
     dict(
-        id="UOW-03", slug="key-audit", title="Suspect answer keys are flagged for review",
+        dod_done=True, id="UOW-03", slug="key-audit", title="Suspect answer keys are flagged for review",
         requirements=["US-04"], depends_on=["UOW-01"],
         demo=[
             "Seed: flip the key of a question answered by ≥ 10 students → run 'Kiểm tra đáp án' → it appears as 'Nghi sai đáp án' with evidence",
@@ -42,7 +42,7 @@ TICKETS = [
          layer="domain", estimate="3h", verifies=["AC-01", "AC-03"],
          tests=[f"{API}/tests/test_mastery.py"],
          touches=[f"{API}/migrations/versions/0010_adaptive.py", f"{API}/app/models/mastery.py", f"{API}/app/models/__init__.py",
-                  f"{API}/app/services/mastery.py", f"{API}/app/services/attempts.py"],
+                  f"{API}/app/services/mastery.py", f"{API}/app/services/attempts.py", f"{API}/app/models/question.py", f"{API}/app/seed/bootstrap.py"],
          assumptions=["A-01"],
          context="ADR-01. Migration also adds question status 'flagged' and flag_evidence.",
          done_when=["EMA matches hand-computed values", "Backfill equals incremental"]),

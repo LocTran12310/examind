@@ -5,7 +5,7 @@ slug: 2026092204-adaptive-review
 profile: none
 created: 2026-09-22T02:26:40
 ruleset: 5
-current_gate: G3
+current_gate: G5
 history:
   - gate: G0
     action: passed
@@ -147,3 +147,13 @@ history:
     at: 2026-09-22T02:37:57
     by: Loc Tran
     ticket: T-03-02
+  - gate: G4
+    action: passed
+    at: 2026-09-22T02:43:17
+    by: Loc Tran
+    evidence: every done ticket has a passing verification run; all 8 tickets done, all UoW checklists ticked
+  - gate: G5
+    action: passed
+    at: 2026-09-22T02:43:17
+    by: Loc Tran
+    evidence: assumptions resolved, ADRs settled, graph valid

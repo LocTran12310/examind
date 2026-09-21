@@ -38,3 +38,15 @@ def test_grading_updates_mastery_and_backfill_matches(client, db):
 def test_wrong_answers_lower_mastery(client, db):
     take(client, db, right=False)
     assert all(r.mastery < 0.5 for r in db.scalars(select(StudentTopicMastery)))
+
+
+def test_bootstrap_backfills_when_table_is_empty(client, db):
+    from app.seed.bootstrap import backfill_mastery_if_missing
+
+    take(client, db, right=True)
+    db.execute(StudentTopicMastery.__table__.delete())
+    db.commit()
+    assert backfill_mastery_if_missing(db) >= 4
+    db.commit()
+    assert db.scalars(select(StudentTopicMastery)).first() is not None
+    assert backfill_mastery_if_missing(db) == 0

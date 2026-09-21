@@ -44,6 +44,7 @@ def run() -> None:
         from app.services.triage import triage_legacy_drafts
 
         triage_legacy_drafts(db)
+        backfill_mastery_if_missing(db)
         db.commit()
 
 
@@ -67,5 +68,17 @@ def seed_demo(db: Session, org_id) -> None:
         print(f"demo question skipped for {org_id}: {exc}")
 
 
+
+def backfill_mastery_if_missing(db: Session) -> int:
+    """Answers graded before mastery tracking existed (adaptive-review AC-03)."""
+    from app.models import AnswerFact, StudentTopicMastery
+    from app.services.mastery import backfill
+
+    if db.scalar(select(StudentTopicMastery.student_id).limit(1)) is None and db.scalar(select(AnswerFact.id).limit(1)) is not None:
+        return backfill(db)
+    return 0
+
+
 if __name__ == "__main__":
     run()
+
