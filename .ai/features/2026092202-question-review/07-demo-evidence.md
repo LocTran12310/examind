@@ -22,4 +22,4 @@ label followed directly by a non-space; OCR-flagged questions could not be appro
 "blocks auto-approval" from "blocks manual approval" (ADR-05).
 Legacy note: questions parsed before this feature were triaged once on API boot without dedupe (both the
 docx and the PDF copy of the sample remain usable in the dev DB).
-Test totals at close: API 146 passed, web 59 passed.
+Test totals at close: API 146 passed, web 56 passed.
