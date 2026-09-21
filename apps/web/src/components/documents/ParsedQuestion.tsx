@@ -7,7 +7,12 @@ import type { ParsedQuestion as PQ } from "@/lib/types";
 const PART = (p: string | null) => (p ? `Phần ${["", "I", "II", "III", "IV", "V"][Number(p)] ?? p} · ` : "");
 const METHOD: Record<string, string> = { rule: "Quy tắc", llm: "AI", ocr: "OCR" };
 
-export function ParsedQuestionCard({ q, threshold = 0.85 }: { q: PQ; threshold?: number }) {
+export function metaChips(q: PQ, subjectName?: string, semesterName?: string): string[] {
+  return [subjectName, q.grade ? `Lớp ${q.grade}` : null, semesterName, q.exam_kind].filter(Boolean) as string[];
+}
+
+export function ParsedQuestionCard({ q, threshold = 0.85, meta = [] }: { q: PQ; threshold?: number; meta?: string[] }) {
+  const primary = q.topics.find((t) => t.is_primary) ?? q.topics[0];
   const ok = (q.confidence ?? 0) >= threshold;
   const shownIssues = q.issues.filter((i) => i !== "thiếu lời giải" || !q.solution);
   return (
@@ -24,6 +29,23 @@ export function ParsedQuestionCard({ q, threshold = 0.85 }: { q: PQ; threshold?:
           </Badge>
         ))}
       </header>
+      <div className="mb-3 flex flex-wrap gap-2 text-xs" data-testid="chips">
+        {meta.length > 0 && <span className="rounded bg-gray-100 px-2 py-0.5 text-gray-700">{meta.join(" · ")}</span>}
+        {q.tags.map((t) => (
+          <span key={t.id} className="rounded bg-gray-100 px-2 py-0.5 text-gray-700">
+            #{t.name}
+          </span>
+        ))}
+        {primary ? (
+          <span className="rounded bg-brand-50 px-2 py-0.5 text-brand-700" data-testid="topic-chip">
+            Chuyên đề: {primary.name}
+            {primary.score !== null && ` · ${Math.round(primary.score * 100)}%`}
+            {primary.source === "ai" ? " · AI" : primary.source === "auto" ? " · gợi ý" : ""}
+          </span>
+        ) : (
+          <span className="rounded bg-amber-50 px-2 py-0.5 text-amber-800">Chưa có chuyên đề</span>
+        )}
+      </div>
       <QuestionView question={q} mode="review" solutionOpen={false} />
     </article>
   );

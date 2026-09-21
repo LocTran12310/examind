@@ -24,7 +24,7 @@
 | AC-18 | T-03-03 | UOW-03 | done |
 | AC-19 | T-03-03 | UOW-03 | done |
 | AC-20 | T-03-03, T-03-06 | UOW-03 | done |
-| AC-21 | T-01-02, T-01-07, T-04-02 | UOW-01, UOW-04 | open |
-| AC-22 | T-04-01, T-04-02 | UOW-04 | open |
+| AC-21 | T-01-02, T-01-07, T-04-02 | UOW-01, UOW-04 | done |
+| AC-22 | T-04-01, T-04-02 | UOW-04 | done |
 
 Coverage: **22/22** acceptance criteria.

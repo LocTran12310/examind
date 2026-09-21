@@ -35,15 +35,18 @@ def _client(timeout: float) -> httpx.Client:
     return httpx.Client(timeout=timeout, transport=TRANSPORT) if TRANSPORT else httpx.Client(timeout=timeout)
 
 
+MAX_OUTPUT_TOKENS = 1500  # bounds runaway generations (small local models in JSON mode can loop on whitespace)
+
+
 def chat(m: AiModel, system: str, user: str, images: list[bytes] | None = None, json_mode: bool = True,
-         timeout: float | None = None) -> ChatResult:
+         timeout: float | None = None, schema: dict | None = None) -> ChatResult:
     timeout = timeout or get_settings().llm_timeout_seconds
     key = crypto.decrypt(m.api_key_enc) if m.api_key_enc else None
     t0 = time.monotonic()
     try:
         with _client(timeout) as c:
             if m.provider == "ollama":
-                text = _ollama(c, m, system, user, images, json_mode)
+                text = _ollama(c, m, system, user, images, json_mode, schema)
             elif m.provider == "openai":
                 text = _openai(c, m, key, system, user, images, json_mode)
             elif m.provider == "anthropic":
@@ -72,14 +75,14 @@ def _b64(data: bytes) -> str:
     return base64.b64encode(data).decode()
 
 
-def _ollama(c, m, system, user, images, json_mode) -> str:
+def _ollama(c, m, system, user, images, json_mode, schema=None) -> str:
     msg = {"role": "user", "content": user}
     if images:
         msg["images"] = [_b64(i) for i in images]
-    body = {"model": m.model, "stream": False, "options": {"temperature": 0},
+    body = {"model": m.model, "stream": False, "options": {"temperature": 0, "num_predict": MAX_OUTPUT_TOKENS},
             "messages": [{"role": "system", "content": system}, msg]}
     if json_mode:
-        body["format"] = "json"
+        body["format"] = schema or "json"  # Ollama ≥ 0.5 accepts a JSON schema (structured outputs)
     return _check(c.post(f"{m.base_url}/api/chat", json=body))["message"]["content"]
 
 
@@ -88,7 +91,8 @@ def _openai(c, m, key, system, user, images, json_mode) -> str:
     if images:
         content = [{"type": "text", "text": user}] + [
             {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{_b64(i)}"}} for i in images]
-    body = {"model": m.model, "temperature": 0, "messages": [{"role": "system", "content": system}, {"role": "user", "content": content}]}
+    body = {"model": m.model, "temperature": 0, "max_tokens": MAX_OUTPUT_TOKENS,
+            "messages": [{"role": "system", "content": system}, {"role": "user", "content": content}]}
     if json_mode:
         body["response_format"] = {"type": "json_object"}
     headers = {"Authorization": f"Bearer {key}"} if key else {}
@@ -98,7 +102,7 @@ def _openai(c, m, key, system, user, images, json_mode) -> str:
 def _anthropic(c, m, key, system, user, images) -> str:
     content: list = [{"type": "image", "source": {"type": "base64", "media_type": "image/png", "data": _b64(i)}} for i in images or []]
     content.append({"type": "text", "text": user})
-    body = {"model": m.model, "max_tokens": 4096, "temperature": 0, "system": system, "messages": [{"role": "user", "content": content}]}
+    body = {"model": m.model, "max_tokens": MAX_OUTPUT_TOKENS, "temperature": 0, "system": system, "messages": [{"role": "user", "content": content}]}
     headers = {"x-api-key": key or "", "anthropic-version": "2023-06-01"}
     data = _check(c.post(f"{m.base_url}/v1/messages", json=body, headers=headers))
     return "".join(part.get("text", "") for part in data.get("content", []))

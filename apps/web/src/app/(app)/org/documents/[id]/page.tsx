@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { metaLabel, StatusBadge } from "@/components/documents/DocumentList";
-import { ParsedQuestionCard } from "@/components/documents/ParsedQuestion";
+import { metaChips, ParsedQuestionCard } from "@/components/documents/ParsedQuestion";
 import { ProcessingConfigFields } from "@/components/documents/ProcessingConfig";
 import { Alert, Button, Empty, Modal, PageHeader } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
@@ -107,7 +107,16 @@ export default function DocumentPage({ params }: { params: Promise<{ id: string 
           {shown.length === 0 && <Empty>Không có câu nào.</Empty>}
           <div className="space-y-4">
             {shown.map((q) => (
-              <ParsedQuestionCard key={q.id} q={q} threshold={threshold} />
+              <ParsedQuestionCard
+                key={q.id}
+                q={q}
+                threshold={threshold}
+                meta={metaChips(
+                  q,
+                  taxonomy?.subjects.find((s) => s.id === q.subject_id)?.name,
+                  taxonomy?.semesters.find((s) => s.code === q.semester_code)?.name,
+                )}
+              />
             ))}
           </div>
         </>

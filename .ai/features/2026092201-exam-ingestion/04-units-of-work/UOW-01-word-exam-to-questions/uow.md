@@ -43,8 +43,8 @@ rollback: revert the merge commit; migrations have downgrade()
 | Real exams deviate from the sample formats | Splitter rules isolated and table-tested; golden set extended with real files at final review |
 
 ## Definition of done
-- [ ] All of AC-01, AC-02, AC-03, AC-04, AC-05, AC-06, AC-07, AC-08, AC-09, AC-10, AC-21 pass
-- [ ] Worker image builds on arm64 with pandoc and tesseract
-- [ ] 40-question docx parsed < 60 s
-- [ ] Demo script executed end to end
-- [ ] Demoed and accepted at gate G4
+- [x] All of AC-01, AC-02, AC-03, AC-04, AC-05, AC-06, AC-07, AC-08, AC-09, AC-10, AC-21 pass
+- [x] Worker image builds on arm64 with pandoc and tesseract
+- [x] 40-question docx parsed < 60 s
+- [x] Demo script executed end to end
+- [x] Demoed and accepted at gate G4

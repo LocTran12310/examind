@@ -1,6 +1,6 @@
 ---
 feature: exam-ingestion
-adr_count: 7
+adr_count: 9
 ---
 
 # Logical design — Exam ingestion
@@ -139,4 +139,16 @@ with personal data beyond exam text, never API keys.
 **Context:** Paid providers need API keys stored per org.
 **Decision:** Fernet with `APP_ENCRYPTION_KEY` (env); API returns only `has_key`.
 **Consequences:** Losing the env key means re-entering provider keys.
+**Status:** accepted
+
+### ADR-08 — Pillow allowed in the API image
+**Context:** PDF crops and OCR preprocessing need image operations; pypdfium2 renders to PIL.
+**Decision:** Use Pillow (already a pdfplumber dependency); the stdlib PNG writer stays for generated demo images.
+**Consequences:** Supersedes the "no Pillow" note of platform-foundation ADR-07; SVG uploads remain rejected.
+**Status:** accepted
+
+### ADR-09 — Bounded LLM generations and schema-constrained output
+**Context:** Live test: small local models in JSON mode ran until the 120 s timeout and drifted from the schema.
+**Decision:** `num_predict`/`max_tokens` = 1500, Ollama structured outputs with a JSON schema, normalisation of common drifts (type aliases, numeric labels), timeout from `LLM_TIMEOUT_SECONDS`.
+**Consequences:** Failures degrade to rule results with an issue flag; quality depends on running a ≥ 7B model on adequate hardware.
 **Status:** accepted

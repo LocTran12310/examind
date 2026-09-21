@@ -3,7 +3,7 @@
 
 UOWS = [
     dict(
-        id="UOW-01", slug="word-exam-to-questions", title="A Word exam becomes complete draft questions",
+        dod_done=True, id="UOW-01", slug="word-exam-to-questions", title="A Word exam becomes complete draft questions",
         requirements=["US-01", "US-02"], risk="high",
         demo=[
             "docker compose up -d --build (worker included)",
@@ -23,7 +23,7 @@ UOWS = [
         dod=["Worker image builds on arm64 with pandoc and tesseract", "40-question docx parsed < 60 s"],
     ),
     dict(
-        id="UOW-02", slug="pdf-and-scans", title="Text PDFs and scanned exams are read",
+        dod_done=True, id="UOW-02", slug="pdf-and-scans", title="Text PDFs and scanned exams are read",
         requirements=["US-03"], depends_on=["UOW-01"],
         demo=[
             "Upload samples/exams/de-mau-toan10.pdf → 40 questions, figure cropped into the right question",
@@ -33,7 +33,7 @@ UOWS = [
         risks=[("Two-column PDFs mis-ordered", "Column detection by word x-gap; tested on a two-column sample")],
     ),
     dict(
-        id="UOW-03", slug="ai-model-choice", title="Admins register AI models; teachers choose them per upload",
+        dod_done=True, id="UOW-03", slug="ai-model-choice", title="Admins register AI models; teachers choose them per upload",
         requirements=["US-04", "US-05"], depends_on=["UOW-01"],
         demo=[
             "As org_admin open /org/ai-models → 'Phát hiện model Ollama' lists pulled models; add one; 'Kiểm tra' → ok",
@@ -48,7 +48,7 @@ UOWS = [
         risks=[("No local model on the dev machine", "Adapters tested against a stub HTTP server; smoke test with a small Ollama model")],
     ),
     dict(
-        id="UOW-04", slug="topic-suggestions", title="Parsed questions carry metadata and a suggested topic",
+        dod_done=True, id="UOW-04", slug="topic-suggestions", title="Parsed questions carry metadata and a suggested topic",
         requirements=["US-06"], depends_on=["UOW-01"],
         demo=[
             "Open the parsed de-mau-toan10 document",

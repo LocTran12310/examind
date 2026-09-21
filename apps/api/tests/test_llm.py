@@ -27,7 +27,7 @@ def stub(monkeypatch):
             return httpx.Response(200, json={"models": [{"name": "qwen2.5:7b", "size": 4, "details": {"family": "qwen2", "parameter_size": "7.6B"}},
                                                         {"name": "qwen2.5vl:7b", "details": {"families": ["qwen25vl"]}}]})
         if path == "/api/chat":
-            assert body["format"] == "json" and body["options"]["temperature"] == 0
+            assert body["format"] and body["options"]["temperature"] == 0 and body["options"]["num_predict"] == 1500
             return httpx.Response(200, json={"message": {"content": '{"ok": true}'}})
         if path == "/v1/chat/completions":
             if request.headers.get("authorization") != "Bearer sk-1":

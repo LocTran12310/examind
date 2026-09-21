@@ -40,11 +40,26 @@ def _models(ctx, ids: list[str], need: str = "text"):
     return out
 
 
-def _call_chain(models, system: str, user: str, ctx, images=None, json_mode=True):
+QUESTION_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "type": {"type": "string", "enum": ["mcq", "true_false", "short_answer", "essay"]},
+        "stem": {"type": "string"},
+        "options": {"type": "array", "items": {"type": "object", "properties": {
+            "label": {"type": "string"}, "content": {"type": "string"}, "is_true": {"type": ["boolean", "null"]}},
+            "required": ["label", "content"]}},
+        "answer": {"type": ["string", "object", "null"]},
+        "solution": {"type": ["string", "null"]},
+    },
+    "required": ["type", "stem", "options", "answer"],
+}
+
+
+def _call_chain(models, system: str, user: str, ctx, images=None, json_mode=True, schema=None):
     errors = []
     for m in models:
         try:
-            r = llm.chat(m, system, user, images=images, json_mode=json_mode)
+            r = llm.chat(m, system, user, images=images, json_mode=json_mode, schema=schema)
             return m, (llm.parse_json(r.text) if json_mode else r.text)
         except llm.LlmError as exc:
             errors.append(f"{m.name}: {exc}")
@@ -54,7 +69,33 @@ def _call_chain(models, system: str, user: str, ctx, images=None, json_mode=True
     return None, None
 
 
+TYPE_ALIASES = {"multiple_choice": "mcq", "multiple-choice": "mcq", "trac_nghiem": "mcq", "choice": "mcq",
+                "true/false": "true_false", "truefalse": "true_false", "dung_sai": "true_false",
+                "short": "short_answer", "fill": "short_answer", "open": "essay", "tu_luan": "essay"}
+
+
+def _normalise(data: dict) -> dict:
+    """Small local models drift from the schema: fix the common deviations before validating."""
+    data = dict(data)
+    t = str(data.get("type") or "").strip().lower()
+    data["type"] = TYPE_ALIASES.get(t, t)
+    opts = [o for o in (data.get("options") or []) if isinstance(o, dict)]
+    if data["type"] == "mcq" and opts and not all(str(o.get("label", "")).strip(" .)").upper() in "ABCD" for o in opts):
+        # labels given as 1..4 or as the option text: relabel in order, and map a numeric/text answer
+        old = [str(o.get("label", "")).strip() for o in opts]
+        ans = str(data.get("answer") or "").strip()
+        for i, o in enumerate(opts[:4]):
+            o["label"] = "ABCD"[i]
+        if ans in old[:4]:
+            data["answer"] = "ABCD"[old.index(ans)]
+        elif ans in [str(o.get("content", "")).strip() for o in opts[:4]]:
+            data["answer"] = "ABCD"[[str(o.get("content", "")).strip() for o in opts[:4]].index(ans)]
+        data["options"] = opts[:4]
+    return data
+
+
 def _from_json(data: dict, base: ParsedQuestion) -> ParsedQuestion | None:
+    data = _normalise(data)
     qtype = data.get("type")
     if qtype not in ("mcq", "true_false", "short_answer", "essay"):
         return None
@@ -108,7 +149,7 @@ def ai_stage(db, doc, questions: list[ParsedQuestion], ctx) -> None:
     for i in targets:
         base = questions[i]
         user = f"Câu {base.number}.\n{base.raw}"
-        model, data = _call_chain(models, SPLIT_SYSTEM, user, ctx)
+        model, data = _call_chain(models, SPLIT_SYSTEM, user, ctx, schema=QUESTION_SCHEMA)
         new = _from_json(data, base) if data else None
         if new is None:
             if model is None:

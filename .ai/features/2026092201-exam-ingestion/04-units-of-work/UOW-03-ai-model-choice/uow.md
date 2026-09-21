@@ -38,6 +38,6 @@ rollback: revert the merge commit; migrations have downgrade()
 | No local model on the dev machine | Adapters tested against a stub HTTP server; smoke test with a small Ollama model |
 
 ## Definition of done
-- [ ] All of AC-13, AC-14, AC-15, AC-16, AC-17, AC-18, AC-19, AC-20 pass
-- [ ] Demo script executed end to end
-- [ ] Demoed and accepted at gate G4
+- [x] All of AC-13, AC-14, AC-15, AC-16, AC-17, AC-18, AC-19, AC-20 pass
+- [x] Demo script executed end to end
+- [x] Demoed and accepted at gate G4

@@ -3,7 +3,7 @@
 # Ticket graph — 2026092201-exam-ingestion
 
 - Units of Work: **4**
-- Tickets: **18** (16 done)
+- Tickets: **18** (18 done)
 - Total effort: **7.4d**
 - Critical path: **3.9d** across 9 tickets
 - Theoretical minimum duration with unlimited parallelism: **3.9d**
@@ -47,8 +47,8 @@ graph LR
     T_03_06["✓ T-03-06<br/>Upload 'Cấu hình xử lý', org defaults page, re-parse action"]
   end
   subgraph UOW_04["UOW-04 · Parsed questions carry metadata and a suggested topic"]
-    T_04_01["T-04-01<br/>Topic suggester: keyword rules + LLM tagger; persist question_topics"]
-    T_04_02["T-04-02<br/>Document page shows metadata, source tag and suggested topics"]
+    T_04_01["✓ T-04-01<br/>Topic suggester: keyword rules + LLM tagger; persist question_topics"]
+    T_04_02["✓ T-04-02<br/>Document page shows metadata, source tag and suggested topics"]
   end
   T_01_01 --> T_01_02
   T_01_02 --> T_01_03
@@ -130,5 +130,5 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-03-04 | UOW-03 | api | feature | 2h | T-03-01 | AC-17 | done |
 | T-03-05 | UOW-03 | web | feature | 4h | T-03-02, T-01-08 | AC-13, AC-14, AC-15 | done |
 | T-03-06 | UOW-03 | web | feature | 4h | T-03-04, T-03-05, T-03-03 | AC-16, AC-17, AC-20 | done |
-| T-04-01 | UOW-04 | domain | feature | 4h | T-01-07, T-03-03 | AC-22 | todo |
-| T-04-02 | UOW-04 | web | feature | 2h | T-04-01, T-01-08 | AC-21, AC-22 | todo |
+| T-04-01 | UOW-04 | domain | feature | 4h | T-01-07, T-03-03 | AC-22 | done |
+| T-04-02 | UOW-04 | web | feature | 2h | T-04-01, T-01-08 | AC-21, AC-22 | done |

@@ -130,3 +130,13 @@ def test_vision_ocr_engine(client, db, monkeypatch):
     qs = client.get(f"/api/documents/{doc['id']}/questions").json()
     assert seen == [1] and len(qs) == 1
     assert qs[0]["answer"] == {"key": "B"} and qs[0]["parse_method"] == "ocr" and "OCR" in qs[0]["issues"]
+
+
+def test_normalises_small_model_drift():
+    from app.ingestion.ai_split import _from_json
+    from app.ingestion.splitter import ParsedQuestion
+
+    raw = {"type": "multiple_choice", "stem": "Giá trị của $2^{1}$?", "answer": "2",
+           "options": [{"label": "1", "content": "1"}, {"label": "2", "content": "2"}, {"label": "3", "content": "3"}, {"label": "4", "content": "4"}]}
+    q = _from_json(raw, ParsedQuestion(number=1))
+    assert q.type == "mcq" and [o["label"] for o in q.options] == list("ABCD") and q.answer == {"key": "B"}
