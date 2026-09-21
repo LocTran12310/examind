@@ -1,0 +1,9 @@
+profile: none
+ruleset: 5
+layers: [domain, data, api, worker, web, infra, test]
+
+evidence:
+  command: "./scripts/verify.sh {tests}"
+  timeout: 900
+  output_ceiling: 8192
+  aging_hours: 48

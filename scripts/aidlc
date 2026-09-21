@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Thin wrapper around the ai-dlc-core controller.
+exec python3 "$HOME/.claude/skills/ai-dlc-core/scripts/aidlc.py" "$@"
