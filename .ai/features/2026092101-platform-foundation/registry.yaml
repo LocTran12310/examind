@@ -110,7 +110,7 @@ ticket:
     layer: infra
     type: chore
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on: []
     blocks:
       - T-01-02
@@ -133,7 +133,7 @@ ticket:
     layer: data
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-01-01
     blocks:
@@ -163,7 +163,7 @@ ticket:
     layer: domain
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on:
       - T-01-02
     blocks:
@@ -184,7 +184,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on:
       - T-01-03
     blocks:
@@ -207,7 +207,7 @@ ticket:
     layer: web
     type: chore
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on:
       - T-01-01
     blocks:

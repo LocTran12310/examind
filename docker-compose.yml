@@ -1,0 +1,92 @@
+name: examind
+
+x-api-env: &api-env
+  DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-examind}:${POSTGRES_PASSWORD:-examind}@postgres:5432/${POSTGRES_DB:-examind}
+  S3_ENDPOINT: http://minio:9000
+  S3_ACCESS_KEY: ${MINIO_ROOT_USER:-examind}
+  S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-examind-secret}
+  S3_BUCKET: ${S3_BUCKET:-examind}
+  JWT_SECRET: ${JWT_SECRET:-change-me-in-production-please-32b}
+  COOKIE_SECURE: ${COOKIE_SECURE:-false}
+  SUPERADMIN_USERNAME: ${SUPERADMIN_USERNAME:-admin}
+  SUPERADMIN_PASSWORD: ${SUPERADMIN_PASSWORD:-admin12345}
+  OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-examind}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-examind}
+      POSTGRES_DB: ${POSTGRES_DB:-examind}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-examind}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-examind-secret}
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: ./apps/api
+    restart: unless-stopped
+    environment:
+      <<: *api-env
+    depends_on:
+      postgres: { condition: service_healthy }
+      minio: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/api/health').status==200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  web:
+    build: ./apps/web
+    restart: unless-stopped
+    environment:
+      API_INTERNAL_URL: http://api:8000
+    depends_on:
+      api: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/login"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    ports:
+      - "${HTTP_PORT:-8088}:80"
+      - "${HTTPS_PORT:-8448}:443"
+    volumes:
+      - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+    depends_on:
+      - api
+      - web
+
+volumes:
+  pgdata:
+  miniodata:
+  caddydata:

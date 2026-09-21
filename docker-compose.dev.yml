@@ -1,0 +1,9 @@
+# Dev override: expose internal ports for tests and tooling.
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+services:
+  postgres:
+    ports: ["${PG_PORT:-55442}:5432"]
+  minio:
+    ports: ["${MINIO_PORT:-59100}:9000", "${MINIO_CONSOLE_PORT:-59101}:9001"]
+  api:
+    ports: ["${API_PORT:-58100}:8000"]

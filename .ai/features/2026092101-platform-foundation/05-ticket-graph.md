@@ -3,7 +3,7 @@
 # Ticket graph — 2026092101-platform-foundation
 
 - Units of Work: **4**
-- Tickets: **20** (0 done)
+- Tickets: **20** (5 done)
 - Total effort: **8.6d**
 - Critical path: **3.5d** across 8 tickets
 - Theoretical minimum duration with unlimited parallelism: **3.5d**
@@ -25,11 +25,11 @@ slice — the floor on how fast it can finish no matter how many people work on 
 ```mermaid
 graph LR
   subgraph UOW_01["UOW-01 · Stack runs and users log in with org code"]
-    T_01_01["T-01-01<br/>Compose stack, Dockerfiles, Caddy, verify script"]
-    T_01_02["T-01-02<br/>API skeleton, config, DB, errors, health, base migration, seed"]
-    T_01_03["T-01-03<br/>Auth service: argon2, JWT, login, lockout, refresh rotation, change password"]
-    T_01_04["T-01-04<br/>Auth routes, cookies, deps (current_user, require_role, org scope)"]
-    T_01_05["T-01-05<br/>Next.js scaffold, UI primitives, API client"]
+    T_01_01["✓ T-01-01<br/>Compose stack, Dockerfiles, Caddy, verify script"]
+    T_01_02["✓ T-01-02<br/>API skeleton, config, DB, errors, health, base migration, seed"]
+    T_01_03["✓ T-01-03<br/>Auth service: argon2, JWT, login, lockout, refresh rotation, change password"]
+    T_01_04["✓ T-01-04<br/>Auth routes, cookies, deps (current_user, require_role, org scope)"]
+    T_01_05["✓ T-01-05<br/>Next.js scaffold, UI primitives, API client"]
     T_01_06["T-01-06<br/>Login, change-password pages, authenticated layout and role home"]
   end
   subgraph UOW_02["UOW-02 · Super admin manages organisations"]
@@ -113,11 +113,11 @@ adding people to tickets off this path will not make the feature ship sooner.
 
 | ID | UoW | Layer | Type | Est | Depends on | Verifies | Status |
 |----|-----|-------|------|-----|-----------|----------|--------|
-| T-01-01 | UOW-01 | infra | chore | 3h | — | AC-01 | todo |
-| T-01-02 | UOW-01 | data | feature | 4h | T-01-01 | AC-01, AC-02 | todo |
-| T-01-03 | UOW-01 | domain | feature | 3h | T-01-02 | AC-03, AC-04, AC-05, AC-06, AC-08, AC-09 | todo |
-| T-01-04 | UOW-01 | api | feature | 3h | T-01-03 | AC-03, AC-04, AC-05, AC-06, AC-08, AC-09 | todo |
-| T-01-05 | UOW-01 | web | chore | 3h | T-01-01 | AC-08 | todo |
+| T-01-01 | UOW-01 | infra | chore | 3h | — | AC-01 | done |
+| T-01-02 | UOW-01 | data | feature | 4h | T-01-01 | AC-01, AC-02 | done |
+| T-01-03 | UOW-01 | domain | feature | 3h | T-01-02 | AC-03, AC-04, AC-05, AC-06, AC-08, AC-09 | done |
+| T-01-04 | UOW-01 | api | feature | 3h | T-01-03 | AC-03, AC-04, AC-05, AC-06, AC-08, AC-09 | done |
+| T-01-05 | UOW-01 | web | chore | 3h | T-01-01 | AC-08 | done |
 | T-01-06 | UOW-01 | web | feature | 3h | T-01-04, T-01-05 | AC-03, AC-04, AC-07, AC-09 | todo |
 | T-02-01 | UOW-02 | data | feature | 4h | T-01-02 | AC-10 | todo |
 | T-02-02 | UOW-02 | api | feature | 4h | T-02-01, T-01-04 | AC-10, AC-11, AC-12, AC-13, AC-14 | todo |
