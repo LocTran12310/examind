@@ -160,7 +160,7 @@ TICKETS = [
     dict(id="T-03-03", uow="UOW-03", title="AI fallback in pipeline, model chain, vision OCR engine, re-parse",
          layer="worker", estimate="4h", depends_on=["T-03-02", "T-02-02"], verifies=["AC-16", "AC-18", "AC-19", "AC-20"],
          tests=[f"{API}/tests/test_ai_fallback.py"],
-         touches=[f"{ING}/pipeline.py", f"{ING}/ai_split.py", f"{ING}/ocr.py", f"{API}/app/routers/documents.py", f"{API}/app/services/documents.py"],
+         touches=[f"{ING}/pipeline.py", f"{ING}/ai_split.py", f"{ING}/ocr.py", f"{ING}/splitter.py", f"{ING}/jobs.py", f"{API}/app/routers/documents.py", f"{API}/app/services/documents.py"],
          assumptions=["A-14"],
          done_when=["Low-confidence blocks re-split by the model", "Chain fallback + issue on total failure", "Re-parse with new config"],
          context="Config resolved: upload > org default > system default."),

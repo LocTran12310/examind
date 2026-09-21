@@ -29,9 +29,11 @@ POST_PERSIST: list[Callable] = []   # fn(db, doc, rows: list[tuple[ParsedQuestio
 
 
 class Ctx:
-    def __init__(self, doc: SourceDocument):
+    def __init__(self, doc: SourceDocument, db: Session | None = None):
         self.doc = doc
+        self.db = db
         self.warnings: list[str] = []
+        self.lines: list[Line] = []
         self.log: list[dict] = []
         self._t = time.monotonic()
 
@@ -73,11 +75,12 @@ def ingest(db: Session, document_id: str) -> None:
         return
     doc.status, doc.error = "processing", None
     db.commit()
-    ctx = Ctx(doc)
+    ctx = Ctx(doc, db)
     try:
         data, _ = storage.get(doc.storage_key)
         ctx.step("download", bytes=len(data))
         lines = extract(db, doc, data, ctx)
+        ctx.lines = lines
         ctx.step("extract", lines=len(lines), pages=doc.page_count)
         result = split(lines)
         ctx.warnings += result.warnings

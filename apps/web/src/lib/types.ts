@@ -210,3 +210,25 @@ export const DOC_STATUS_LABEL: Record<DocStatus, string> = {
   parsed: "Đã tách",
   failed: "Lỗi",
 };
+
+export type Provider = "ollama" | "openai" | "anthropic";
+
+export interface AiModel {
+  id: string;
+  name: string;
+  provider: Provider;
+  model: string;
+  base_url: string | null;
+  capabilities: ("text" | "vision")[];
+  is_free: boolean;
+  enabled: boolean;
+  system: boolean;
+  has_key: boolean;
+  editable: boolean;
+}
+
+export const PROVIDER_LABEL: Record<Provider, string> = {
+  ollama: "Ollama (máy chủ riêng)",
+  openai: "Tương thích OpenAI",
+  anthropic: "Anthropic",
+};

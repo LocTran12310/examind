@@ -177,3 +177,93 @@ history:
     at: 2026-09-22T00:38:25
     by: Loc Tran
     ticket: T-02-02
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-22T00:38:25
+    by: Loc Tran
+    ticket: T-03-01
+  - gate: G4
+    action: evidence
+    at: 2026-09-22T00:40:10
+    by: Loc Tran
+    ticket: T-03-01
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-22T00:40:10
+    by: Loc Tran
+    ticket: T-03-01
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-22T00:40:10
+    by: Loc Tran
+    ticket: T-03-02
+  - gate: G4
+    action: evidence
+    at: 2026-09-22T00:41:01
+    by: Loc Tran
+    ticket: T-03-02
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-22T00:41:01
+    by: Loc Tran
+    ticket: T-03-02
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-22T00:41:01
+    by: Loc Tran
+    ticket: T-03-03
+  - gate: G4
+    action: evidence
+    at: 2026-09-22T00:43:43
+    by: Loc Tran
+    ticket: T-03-03
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-22T00:43:43
+    by: Loc Tran
+    ticket: T-03-03
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-22T00:43:43
+    by: Loc Tran
+    ticket: T-03-04
+  - gate: G4
+    action: evidence
+    at: 2026-09-22T00:44:46
+    by: Loc Tran
+    ticket: T-03-04
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-22T00:44:46
+    by: Loc Tran
+    ticket: T-03-04
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-22T00:44:47
+    by: Loc Tran
+    ticket: T-03-05
+  - gate: G4
+    action: evidence
+    at: 2026-09-22T00:45:36
+    by: Loc Tran
+    ticket: T-03-05
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-22T00:45:36
+    by: Loc Tran
+    ticket: T-03-05
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-22T00:45:36
+    by: Loc Tran
+    ticket: T-03-06
+  - gate: G4
+    action: evidence
+    at: 2026-09-22T00:46:16
+    by: Loc Tran
+    ticket: T-03-06
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-22T00:46:16
+    by: Loc Tran
+    ticket: T-03-06

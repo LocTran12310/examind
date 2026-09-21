@@ -3,7 +3,7 @@
 # Ticket graph — 2026092201-exam-ingestion
 
 - Units of Work: **4**
-- Tickets: **18** (10 done)
+- Tickets: **18** (16 done)
 - Total effort: **7.4d**
 - Critical path: **3.9d** across 9 tickets
 - Theoretical minimum duration with unlimited parallelism: **3.9d**
@@ -39,12 +39,12 @@ graph LR
     T_02_02["✓ T-02-02<br/>OCR provider interface + Tesseract; scanned PDF and image path"]
   end
   subgraph UOW_03["UOW-03 · Admins register AI models; teachers choose them per upload"]
-    T_03_01["T-03-01<br/>ai_models registry: schema, encryption, CRUD API, permissions"]
-    T_03_02["T-03-02<br/>LLM adapters (Ollama, OpenAI-compatible, Anthropic), discover and test"]
-    T_03_03["T-03-03<br/>AI fallback in pipeline, model chain, vision OCR engine, re-parse"]
-    T_03_04["T-03-04<br/>Org ingestion defaults API"]
-    T_03_05["T-03-05<br/>AI models UI (list, add, discover Ollama, test, edit, delete)"]
-    T_03_06["T-03-06<br/>Upload 'Cấu hình xử lý', org defaults page, re-parse action"]
+    T_03_01["✓ T-03-01<br/>ai_models registry: schema, encryption, CRUD API, permissions"]
+    T_03_02["✓ T-03-02<br/>LLM adapters (Ollama, OpenAI-compatible, Anthropic), discover and test"]
+    T_03_03["✓ T-03-03<br/>AI fallback in pipeline, model chain, vision OCR engine, re-parse"]
+    T_03_04["✓ T-03-04<br/>Org ingestion defaults API"]
+    T_03_05["✓ T-03-05<br/>AI models UI (list, add, discover Ollama, test, edit, delete)"]
+    T_03_06["✓ T-03-06<br/>Upload 'Cấu hình xử lý', org defaults page, re-parse action"]
   end
   subgraph UOW_04["UOW-04 · Parsed questions carry metadata and a suggested topic"]
     T_04_01["T-04-01<br/>Topic suggester: keyword rules + LLM tagger; persist question_topics"]
@@ -124,11 +124,11 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-01-08 | UOW-01 | web | feature | 3h | T-01-07 | AC-01, AC-02, AC-03 | done |
 | T-02-01 | UOW-02 | worker | feature | 4h | T-01-07 | AC-11 | done |
 | T-02-02 | UOW-02 | worker | feature | 4h | T-02-01 | AC-12 | done |
-| T-03-01 | UOW-03 | api | feature | 4h | T-01-02 | AC-13, AC-15 | todo |
-| T-03-02 | UOW-03 | worker | feature | 4h | T-03-01 | AC-14 | todo |
-| T-03-03 | UOW-03 | worker | feature | 4h | T-03-02, T-02-02 | AC-16, AC-18, AC-19, AC-20 | todo |
-| T-03-04 | UOW-03 | api | feature | 2h | T-03-01 | AC-17 | todo |
-| T-03-05 | UOW-03 | web | feature | 4h | T-03-02, T-01-08 | AC-13, AC-14, AC-15 | todo |
-| T-03-06 | UOW-03 | web | feature | 4h | T-03-04, T-03-05, T-03-03 | AC-16, AC-17, AC-20 | todo |
+| T-03-01 | UOW-03 | api | feature | 4h | T-01-02 | AC-13, AC-15 | done |
+| T-03-02 | UOW-03 | worker | feature | 4h | T-03-01 | AC-14 | done |
+| T-03-03 | UOW-03 | worker | feature | 4h | T-03-02, T-02-02 | AC-16, AC-18, AC-19, AC-20 | done |
+| T-03-04 | UOW-03 | api | feature | 2h | T-03-01 | AC-17 | done |
+| T-03-05 | UOW-03 | web | feature | 4h | T-03-02, T-01-08 | AC-13, AC-14, AC-15 | done |
+| T-03-06 | UOW-03 | web | feature | 4h | T-03-04, T-03-05, T-03-03 | AC-16, AC-17, AC-20 | done |
 | T-04-01 | UOW-04 | domain | feature | 4h | T-01-07, T-03-03 | AC-22 | todo |
 | T-04-02 | UOW-04 | web | feature | 2h | T-04-01, T-01-08 | AC-21, AC-22 | todo |

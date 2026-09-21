@@ -314,7 +314,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-01-02
     blocks:
@@ -336,7 +336,7 @@ ticket:
     layer: worker
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-03-01
     blocks:
@@ -353,7 +353,7 @@ ticket:
     layer: worker
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-03-02
       - T-02-02
@@ -369,6 +369,8 @@ ticket:
       - apps/api/app/ingestion/pipeline.py   # new
       - apps/api/app/ingestion/ai_split.py   # new
       - apps/api/app/ingestion/ocr.py   # new
+      - apps/api/app/ingestion/splitter.py   # new
+      - apps/api/app/ingestion/jobs.py   # new
       - apps/api/app/routers/documents.py   # new
       - apps/api/app/services/documents.py   # new
   - id: T-03-04
@@ -377,7 +379,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 2
-    status: todo
+    status: done
     depends_on:
       - T-03-01
     blocks:
@@ -393,7 +395,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-03-02
       - T-01-08
@@ -413,7 +415,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-03-04
       - T-03-05

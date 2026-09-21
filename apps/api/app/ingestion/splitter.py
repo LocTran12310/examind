@@ -37,6 +37,8 @@ OPTION_RE = re.compile(
     r"(?P<mark>(?:\*\*)?(?:\[)?(?P<label>[A-D])(?P<delim>[.)])(?:\]\{\.(?:underline|mark)\})?(?:\*\*)?)"
     r"(?=\s|$)", re.U)
 
+CHOICE_WORDS_RE = re.compile(r"(?:lựa\s+chọn|phương\s+án|đáp\s+án)", re.I | re.U)
+
 PART_TYPE_WORDS = [
     ("true_false", ("đúng sai", "đúng/sai", "đúng - sai", "đúng – sai")),
     ("short_answer", ("trả lời ngắn",)),
@@ -194,10 +196,10 @@ def _flag_odd_essays(result: list[ParsedQuestion], part_types: dict) -> None:
         if part_types.get(part) == "essay":
             continue
         mcq = sum(q.type == "mcq" for q in qs)
-        if mcq and mcq / len(qs) >= 0.5:
-            for q in qs:
-                if q.type == "essay":
-                    q.issues.append("không nhận ra phương án")
+        mostly_mcq = mcq and mcq / len(qs) >= 0.5
+        for q in qs:
+            if q.type == "essay" and (mostly_mcq or CHOICE_WORDS_RE.search(strip_markup(q.stem))):
+                q.issues.append("không nhận ra phương án")
 
 
 def _find_by_number(questions, n):

@@ -30,3 +30,24 @@ def resolve_config(db: Session, scope: OrgScope, override: dict | None) -> dict:
         cfg["threshold"] = SYSTEM_DEFAULT["threshold"]
     cfg["split_models"] = [str(m) for m in (cfg.get("split_models") or [])][:3]
     return cfg
+
+
+def save_org_defaults(db: Session, scope: OrgScope, values: dict) -> dict:
+    from app.core.errors import forbidden, validation
+    from app.services.ai_models import resolve_for_org
+    from app.services import audit
+
+    if scope.role != "org_admin":
+        raise forbidden()
+    cfg = resolve_config(db, scope, values)
+    for mid in cfg["split_models"] + ([cfg["tag_model"]] if cfg["tag_model"] else []):
+        if resolve_for_org(db, scope.org_id, mid) is None:
+            raise validation("Model không tồn tại hoặc đang tắt", "split_models")
+    if cfg["vision_model"]:
+        vm = resolve_for_org(db, scope.org_id, cfg["vision_model"])
+        if vm is None or "vision" not in (vm.capabilities or []):
+            raise validation("Model đọc ảnh phải có khả năng vision", "vision_model")
+    org = db.get(Organization, scope.org_id)
+    org.settings = {**(org.settings or {}), "ingestion": cfg}
+    audit.record(db, scope.user, scope.org_id, "org.ingestion_settings", "organization", org.id)
+    return cfg

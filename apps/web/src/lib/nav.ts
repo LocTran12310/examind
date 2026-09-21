@@ -13,6 +13,8 @@ export const NAV: NavItem[] = [
   { href: "/org/classes", label: "Lớp học", roles: ["org_admin", "teacher"] },
   { href: "/org/topics", label: "Chuyên đề", roles: ["org_admin", "teacher"] },
   { href: "/org/tags", label: "Tags", roles: ["org_admin", "teacher"] },
+  { href: "/org/ai-models", label: "Model AI", roles: ["org_admin", "super_admin"] },
+  { href: "/org/settings/ingestion", label: "Cấu hình tách đề", roles: ["org_admin"] },
 ];
 
 export function navFor(role: Role): NavItem[] {

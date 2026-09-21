@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     superadmin_username: str = "admin"
     superadmin_password: str = "admin12345"
     ollama_url: str = "http://localhost:11434"
+    app_encryption_key: str = ""
+    llm_timeout_seconds: int = 120
     log_level: str = "info"
     login_max_failures: int = 5
     login_lock_minutes: int = 15

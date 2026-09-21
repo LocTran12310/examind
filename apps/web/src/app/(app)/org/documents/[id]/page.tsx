@@ -5,9 +5,11 @@ import { useSearchParams } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { metaLabel, StatusBadge } from "@/components/documents/DocumentList";
 import { ParsedQuestionCard } from "@/components/documents/ParsedQuestion";
-import { Alert, Empty, PageHeader } from "@/components/ui";
+import { ProcessingConfigFields } from "@/components/documents/ProcessingConfig";
+import { Alert, Button, Empty, Modal, PageHeader } from "@/components/ui";
+import { api, ApiError } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
-import type { ParsedQuestion, SourceDocument, Taxonomy } from "@/lib/types";
+import type { AiModel, ParsedQuestion, ProcessingConfig, SourceDocument, Taxonomy } from "@/lib/types";
 
 export default function DocumentPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -17,6 +19,9 @@ export default function DocumentPage({ params }: { params: Promise<{ id: string 
   const parsed = doc?.status === "parsed";
   const { data: questions, reload: reloadQuestions } = useApi<ParsedQuestion[]>(parsed ? `/documents/${id}/questions` : null);
   const [onlyIssues, setOnlyIssues] = useState(false);
+  const [reparse, setReparse] = useState<ProcessingConfig | null>(null);
+  const [reparseError, setReparseError] = useState<string | null>(null);
+  const { data: models } = useApi<AiModel[]>(reparse ? "/ai-models?enabled=true" : null);
   const busy = doc && (doc.status === "queued" || doc.status === "processing");
 
   useEffect(() => {
@@ -39,7 +44,45 @@ export default function DocumentPage({ params }: { params: Promise<{ id: string 
       <Link href="/org/documents" className="text-sm text-gray-500 hover:underline">
         ← Đề đã tải lên
       </Link>
-      <PageHeader title={doc.filename} subtitle={metaLabel(doc, taxonomy)} actions={<StatusBadge doc={doc} />} />
+      <PageHeader
+        title={doc.filename}
+        subtitle={metaLabel(doc, taxonomy)}
+        actions={
+          <>
+            <StatusBadge doc={doc} />
+            {!busy && (
+              <Button size="sm" onClick={() => setReparse(doc.processing_config)}>
+                Tách lại
+              </Button>
+            )}
+          </>
+        }
+      />
+      <Modal open={!!reparse} title="Tách lại với cấu hình khác" wide onClose={() => setReparse(null)}>
+        {reparse && (
+          <div className="space-y-4">
+            <Alert tone="amber">Các câu chưa duyệt của đề này sẽ được thay bằng kết quả mới; câu đã duyệt được giữ nguyên.</Alert>
+            <ProcessingConfigFields value={reparse} onChange={setReparse} models={models ?? []} />
+            {reparseError && <Alert>{reparseError}</Alert>}
+            <div className="flex justify-end">
+              <Button
+                variant="primary"
+                onClick={async () => {
+                  try {
+                    await api(`/documents/${doc.id}/reparse`, { body: { config: reparse } });
+                    setReparse(null);
+                    void reload();
+                  } catch (e) {
+                    setReparseError(e instanceof ApiError ? e.message : "Có lỗi xảy ra");
+                  }
+                }}
+              >
+                Tách lại
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
       {dup && <div className="mb-4"><Alert tone="blue">File này đã được tải lên trước đó — đây là bản đã có.</Alert></div>}
       {busy && <Alert tone="amber">Đang tách câu hỏi… trang sẽ tự cập nhật.</Alert>}
       {doc.status === "failed" && <Alert>{doc.error}</Alert>}
