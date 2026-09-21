@@ -1,7 +1,7 @@
 """Question bank queries and mutations (US-06, A-10, A-11)."""
 import uuid
 
-from sqlalchemy import exists, func, select, text
+from sqlalchemy import exists, func, select
 from sqlalchemy.orm import Session
 
 from app.core.errors import AppError, validation
@@ -16,9 +16,9 @@ from app.services.search_text import for_question, query as normalise_query
 IN_USE_CHECKS: list = []
 
 
-def search(db: Session, scope: OrgScope, *, q: str = "", subject_id=None, grade=None, semester_code=None, exam_kind=None,
-           type=None, difficulty=None, status="usable", topic_id=None, tag_ids=None, document_id=None,
-           page: int = 1, page_size: int = 20):
+def filtered(db: Session, scope: OrgScope, *, q: str = "", subject_id=None, grade=None, semester_code=None, exam_kind=None,
+             type=None, difficulty=None, status="usable", topic_id=None, tag_ids=None, document_id=None):
+    """The bank's filter statement, shared by search and the exam builder."""
     stmt = select(Question).where(Question.organization_id == scope.org_id)
     if status == "usable":
         stmt = stmt.where(Question.status.in_(USABLE))
@@ -35,18 +35,29 @@ def search(db: Session, scope: OrgScope, *, q: str = "", subject_id=None, grade=
             raise validation("Chuyên đề không hợp lệ", "topic_id")
         stmt = stmt.where(exists(
             select(QuestionTopic.question_id).join(Topic, Topic.id == QuestionTopic.topic_id)
-            .where(QuestionTopic.question_id == Question.id, text("topics.path <@ cast(:root_path as ltree)"))
-        ).params(root_path=root.path))
+            .where(QuestionTopic.question_id == Question.id, Topic.path.op("<@")(func.text2ltree(root.path)))
+        ))
     if tag_ids:
         stmt = stmt.where(exists(select(QuestionTag.question_id).where(QuestionTag.question_id == Question.id, QuestionTag.tag_id.in_(tag_ids))))
     needle = normalise_query(q) if q else ""
-    order = [Question.created_at.desc(), Question.number]
     if needle:
         stmt = stmt.where(Question.search_text.contains(needle) | (func.similarity(Question.search_text, needle) > 0.3))
+    return stmt, needle
+
+
+def search(db: Session, scope: OrgScope, *, page: int = 1, page_size: int = 20, **filters):
+    stmt, needle = filtered(db, scope, **filters)
+    order = [Question.created_at.desc(), Question.number]
+    if needle:
         order = [func.similarity(Question.search_text, needle).desc()] + order
     total = db.scalar(select(func.count()).select_from(stmt.subquery()))
     items = db.scalars(stmt.order_by(*order).offset((page - 1) * page_size).limit(page_size)).all()
     return items, total
+
+
+def search_ids(db: Session, scope: OrgScope, **filters) -> list:
+    stmt, _ = filtered(db, scope, **filters)
+    return list(db.scalars(stmt.with_only_columns(Question.id).order_by(Question.id)))
 
 
 def create(db: Session, scope: OrgScope, data: dict) -> Question:

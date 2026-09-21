@@ -3,7 +3,7 @@
 # Ticket graph — 2026092203-exam-practice
 
 - Units of Work: **4**
-- Tickets: **15** (0 done)
+- Tickets: **15** (5 done)
 - Total effort: **6.5d**
 - Critical path: **3.1d** across 7 tickets
 - Theoretical minimum duration with unlimited parallelism: **3.1d**
@@ -25,11 +25,11 @@ slice — the floor on how fast it can finish no matter how many people work on 
 ```mermaid
 graph LR
   subgraph UOW_01["UOW-01 · Teachers build exams from blueprints or by hand"]
-    T_01_01["T-01-01<br/>Schema: exams, exam_questions, assignments, targets, attempts, answers, answer_facts"]
-    T_01_02["T-01-02<br/>Scoring module (MCQ, true/false partial credit, short answer normalisation, scaling)"]
-    T_01_03["T-01-03<br/>Exams API: CRUD, blueprint builder, add/remove/reorder/swap/points, in-use guard"]
-    T_01_04["T-01-04<br/>Grouped sidebar navigation (drawer on phones)"]
-    T_01_05["T-01-05<br/>Exams UI: list, builder (blueprint rows, bank add, reorder, swap, points), preview"]
+    T_01_01["✓ T-01-01<br/>Schema: exams, exam_questions, assignments, targets, attempts, answers, answer_facts"]
+    T_01_02["✓ T-01-02<br/>Scoring module (MCQ, true/false partial credit, short answer normalisation, scaling)"]
+    T_01_03["✓ T-01-03<br/>Exams API: CRUD, blueprint builder, add/remove/reorder/swap/points, in-use guard"]
+    T_01_04["✓ T-01-04<br/>Grouped sidebar navigation (drawer on phones)"]
+    T_01_05["✓ T-01-05<br/>Exams UI: list, builder (blueprint rows, bank add, reorder, swap, points), preview"]
   end
   subgraph UOW_02["UOW-02 · Students take assigned exams with a timer and autosave"]
     T_02_01["T-02-01<br/>Assignments API, student home API, start attempt"]
@@ -97,11 +97,11 @@ adding people to tickets off this path will not make the feature ship sooner.
 
 | ID | UoW | Layer | Type | Est | Depends on | Verifies | Status |
 |----|-----|-------|------|-----|-----------|----------|--------|
-| T-01-01 | UOW-01 | data | feature | 3h | — | AC-01, AC-05, AC-07, AC-17 | todo |
-| T-01-02 | UOW-01 | domain | feature | 3h | — | AC-03, AC-11 | todo |
-| T-01-03 | UOW-01 | api | feature | 4h | T-01-01, T-01-02 | AC-01, AC-02, AC-03, AC-15 | todo |
-| T-01-04 | UOW-01 | web | feature | 3h | — | AC-22 | todo |
-| T-01-05 | UOW-01 | web | feature | 4h | T-01-03, T-01-04 | AC-01, AC-02, AC-03, AC-04 | todo |
+| T-01-01 | UOW-01 | data | feature | 3h | — | AC-01, AC-05, AC-07, AC-17 | done |
+| T-01-02 | UOW-01 | domain | feature | 3h | — | AC-03, AC-11 | done |
+| T-01-03 | UOW-01 | api | feature | 4h | T-01-01, T-01-02 | AC-01, AC-02, AC-03, AC-15 | done |
+| T-01-04 | UOW-01 | web | feature | 3h | — | AC-22 | done |
+| T-01-05 | UOW-01 | web | feature | 4h | T-01-03, T-01-04 | AC-01, AC-02, AC-03, AC-04 | done |
 | T-02-01 | UOW-02 | api | feature | 4h | T-01-03 | AC-05, AC-06, AC-20 | todo |
 | T-02-02 | UOW-02 | api | feature | 4h | T-02-01 | AC-07, AC-08, AC-09, AC-10, AC-11, AC-15 | todo |
 | T-02-03 | UOW-02 | web | feature | 3h | T-02-01, T-01-05 | AC-05, AC-20 | todo |

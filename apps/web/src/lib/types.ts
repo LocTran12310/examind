@@ -261,3 +261,33 @@ export interface ReviewDocument {
 
 export const DIFFICULTY_LABEL: Record<string, string> = { nb: "Nhận biết", th: "Thông hiểu", vd: "Vận dụng", vdc: "Vận dụng cao" };
 export const TYPE_LABEL: Record<QuestionType, string> = { mcq: "Trắc nghiệm", true_false: "Đúng/Sai", short_answer: "Trả lời ngắn", essay: "Tự luận" };
+
+export interface BlueprintRow {
+  topic_id?: string | null;
+  tag_id?: string | null;
+  type: QuestionType;
+  difficulty?: string | null;
+  count: number;
+}
+
+export interface ExamQuestion extends ParsedQuestion {
+  position: number;
+  section: string;
+  points: number;
+  row: number | null;
+}
+
+export interface Exam {
+  id: string;
+  title: string;
+  subject_id: string | null;
+  grade: number | null;
+  description: string;
+  settings: { points_by_type: Record<QuestionType, number>; scale_to: number };
+  blueprint: BlueprintRow[];
+  source: string;
+  question_count: number;
+  total_points: number;
+  created_at: string;
+  questions: ExamQuestion[];
+}

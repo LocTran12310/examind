@@ -105,7 +105,7 @@ ticket:
     layer: data
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on: []
     blocks:
       - T-01-03
@@ -124,7 +124,7 @@ ticket:
     layer: domain
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on: []
     blocks:
       - T-01-03
@@ -139,7 +139,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-01-01
       - T-01-02
@@ -163,7 +163,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on: []
     blocks:
       - T-01-05
@@ -179,7 +179,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-01-03
       - T-01-04
