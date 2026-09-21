@@ -68,6 +68,9 @@ def create_org(db: Session, actor: User, code: str, name: str, admin_username: s
                  password_hash=hash_password(password), must_change_password=True)
     db.add(admin)
     db.flush()
+    from app.seed.bootstrap import seed_demo
+
+    seed_demo(db, org.id)
     audit.record(db, actor, org.id, "org.create", "organization", org.id, code=code)
     return org, admin, password
 

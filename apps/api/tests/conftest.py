@@ -49,7 +49,10 @@ def _clean(_database):
         ).scalars().all()
         if tables:
             conn.execute(text("TRUNCATE " + ", ".join(f'"{t}"' for t in tables) + " RESTART IDENTITY CASCADE"))
+    from app.routers.auth import ip_limiter
     from app.seed.bootstrap import extra_seeders, seed_system
+
+    ip_limiter.reset()
 
     with dbmod.session_factory()() as db:
         seed_system(db)

@@ -38,8 +38,8 @@ rollback: revert the merge commit; migrations have downgrade()
 | argon2 slow on ARM | tune time_cost; measured in T-01-04 |
 
 ## Definition of done
-- [ ] All of AC-01, AC-02, AC-03, AC-04, AC-05, AC-06, AC-07, AC-08, AC-09 pass
-- [ ] Images build on arm64
-- [ ] No token or password in logs
-- [ ] Demo script executed end to end
-- [ ] Demoed and accepted at gate G4
+- [x] All of AC-01, AC-02, AC-03, AC-04, AC-05, AC-06, AC-07, AC-08, AC-09 pass
+- [x] Images build on arm64
+- [x] No token or password in logs
+- [x] Demo script executed end to end
+- [x] Demoed and accepted at gate G4

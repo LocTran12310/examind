@@ -3,7 +3,7 @@
 
 UOWS = [
     dict(
-        id="UOW-01", slug="stack-and-login", title="Stack runs and users log in with org code",
+        dod_done=True, id="UOW-01", slug="stack-and-login", title="Stack runs and users log in with org code",
         requirements=["US-01", "US-02", "US-03"], risk="high",
         demo=[
             "cp .env.example .env && docker compose up -d --build",
@@ -21,7 +21,7 @@ UOWS = [
         dod=["Images build on arm64", "No token or password in logs"],
     ),
     dict(
-        id="UOW-02", slug="org-management", title="Super admin manages organisations",
+        dod_done=True, id="UOW-02", slug="org-management", title="Super admin manages organisations",
         requirements=["US-04"], depends_on=["UOW-01"],
         demo=[
             "Log in as super admin, open /admin/orgs",
@@ -35,7 +35,7 @@ UOWS = [
                   "Org service and /admin/orgs API", "Admin orgs UI"],
     ),
     dict(
-        id="UOW-03", slug="users-and-classes", title="Org admin imports users and manages classes",
+        dod_done=True, id="UOW-03", slug="users-and-classes", title="Org admin imports users and manages classes",
         requirements=["US-05"], depends_on=["UOW-02"],
         demo=[
             "Log in as trungtama/admin, open /org/users, create a teacher, edit, deactivate",
@@ -50,7 +50,7 @@ UOWS = [
                   "Users, import and classes UI"],
     ),
     dict(
-        id="UOW-04", slug="topics-tags-question-view", title="Topic tree, tags and full question rendering",
+        dod_done=True, id="UOW-04", slug="topics-tags-question-view", title="Topic tree, tags and full question rendering",
         requirements=["US-06", "US-07"], depends_on=["UOW-02"],
         demo=[
             "Log in as a teacher of trungtama, open /org/topics",
@@ -220,13 +220,13 @@ TICKETS = [
     dict(id="T-04-03", uow="UOW-04", title="Topic tree UI",
          layer="web", estimate="4h", depends_on=["T-04-01", "T-01-06"], verifies=["AC-21", "AC-22"],
          tests=[f"{WEB}/src/components/topics/TopicTree.test.tsx"],
-         touches=[f"{WEB}/src/app/(app)/org/topics/page.tsx", f"{WEB}/src/components/topics/TopicTree.tsx"],
+         touches=[f"{WEB}/src/app/(app)/org/topics/page.tsx", f"{WEB}/src/components/topics/TopicTree.tsx", f"{WEB}/src/components/topics/tree.ts"],
          context="Expandable tree, inline rename, add child, move-to dialog, merge dialog, delete.",
          done_when=["All operations reachable by keyboard and mouse"]),
     dict(id="T-04-04", uow="UOW-04", title="Tags UI",
          layer="web", estimate="2h", depends_on=["T-04-01", "T-01-06"], verifies=["AC-23"],
          tests=[f"{WEB}/src/__tests__/tags.test.tsx"],
-         touches=[f"{WEB}/src/app/(app)/org/tags/page.tsx"],
+         touches=[f"{WEB}/src/app/(app)/org/tags/page.tsx", f"{WEB}/src/components/tags/TagManager.tsx"],
          context="Grouped list with inline create/rename/delete.",
          done_when=["Duplicate error shown"]),
     dict(id="T-04-05", uow="UOW-04", title="QuestionView component and preview page",

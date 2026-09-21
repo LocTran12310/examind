@@ -34,14 +34,14 @@ def seed_system(db: Session) -> tuple[Organization, User]:
 def run() -> None:
     from app.core import storage
 
-    with dbmod.session_factory()() as db:
-        seed_system(db)
-        extra_seeders(db)
-        db.commit()
     try:
         storage.ensure_bucket()
     except Exception as exc:  # storage may come up later; health reports it
         print(f"bucket bootstrap skipped: {exc}")
+    with dbmod.session_factory()() as db:
+        seed_system(db)
+        extra_seeders(db)
+        db.commit()
 
 
 def extra_seeders(db: Session) -> None:
@@ -50,6 +50,18 @@ def extra_seeders(db: Session) -> None:
 
     for org_id in db.scalars(select(Organization.id).where(Organization.is_system.is_(False))):
         seed_org(db, org_id)
+        seed_demo(db, org_id)
+
+
+def seed_demo(db: Session, org_id) -> None:
+    """Demo content needs object storage; skip quietly when it is down (health reports it)."""
+    from app.seed.demo_question import seed_demo_question
+
+    try:
+        with db.begin_nested():
+            seed_demo_question(db, org_id)
+    except Exception as exc:
+        print(f"demo question skipped for {org_id}: {exc}")
 
 
 if __name__ == "__main__":

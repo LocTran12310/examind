@@ -35,6 +35,6 @@ rollback: revert the merge commit; migrations have downgrade()
 | None significant | — |
 
 ## Definition of done
-- [ ] All of AC-21, AC-22, AC-23, AC-24 pass
-- [ ] Demo script executed end to end
-- [ ] Demoed and accepted at gate G4
+- [x] All of AC-21, AC-22, AC-23, AC-24 pass
+- [x] Demo script executed end to end
+- [x] Demoed and accepted at gate G4

@@ -3,7 +3,7 @@
 # Ticket graph — 2026092101-platform-foundation
 
 - Units of Work: **4**
-- Tickets: **20** (15 done)
+- Tickets: **20** (20 done)
 - Total effort: **8.6d**
 - Critical path: **3.5d** across 8 tickets
 - Theoretical minimum duration with unlimited parallelism: **3.5d**
@@ -46,11 +46,11 @@ graph LR
     T_03_06["✓ T-03-06<br/>Classes UI"]
   end
   subgraph UOW_04["UOW-04 · Topic tree, tags and full question rendering"]
-    T_04_01["T-04-01<br/>Topic service (create/rename/move/merge/delete) and tags API"]
-    T_04_02["T-04-02<br/>Assets in MinIO, minimal question model, demo question seed"]
-    T_04_03["T-04-03<br/>Topic tree UI"]
-    T_04_04["T-04-04<br/>Tags UI"]
-    T_04_05["T-04-05<br/>QuestionView component and preview page"]
+    T_04_01["✓ T-04-01<br/>Topic service (create/rename/move/merge/delete) and tags API"]
+    T_04_02["✓ T-04-02<br/>Assets in MinIO, minimal question model, demo question seed"]
+    T_04_03["✓ T-04-03<br/>Topic tree UI"]
+    T_04_04["✓ T-04-04<br/>Tags UI"]
+    T_04_05["✓ T-04-05<br/>QuestionView component and preview page"]
   end
   T_01_01 --> T_01_02
   T_01_02 --> T_01_03
@@ -128,8 +128,8 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-03-04 | UOW-03 | web | feature | 4h | T-03-01, T-01-06 | AC-15, AC-18 | done |
 | T-03-05 | UOW-03 | web | feature | 3h | T-03-02, T-03-04 | AC-16, AC-17 | done |
 | T-03-06 | UOW-03 | web | feature | 3h | T-03-03, T-03-04 | AC-20 | done |
-| T-04-01 | UOW-04 | api | feature | 4h | T-02-02 | AC-21, AC-22, AC-23 | todo |
-| T-04-02 | UOW-04 | data | feature | 3h | T-02-01 | AC-24 | todo |
-| T-04-03 | UOW-04 | web | feature | 4h | T-04-01, T-01-06 | AC-21, AC-22 | todo |
-| T-04-04 | UOW-04 | web | feature | 2h | T-04-01, T-01-06 | AC-23 | todo |
-| T-04-05 | UOW-04 | web | feature | 4h | T-04-02, T-01-05 | AC-24 | todo |
+| T-04-01 | UOW-04 | api | feature | 4h | T-02-02 | AC-21, AC-22, AC-23 | done |
+| T-04-02 | UOW-04 | data | feature | 3h | T-02-01 | AC-24 | done |
+| T-04-03 | UOW-04 | web | feature | 4h | T-04-01, T-01-06 | AC-21, AC-22 | done |
+| T-04-04 | UOW-04 | web | feature | 2h | T-04-01, T-01-06 | AC-23 | done |
+| T-04-05 | UOW-04 | web | feature | 4h | T-04-02, T-01-05 | AC-24 | done |

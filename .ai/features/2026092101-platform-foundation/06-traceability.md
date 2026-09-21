@@ -24,9 +24,9 @@
 | AC-18 | T-03-01, T-03-04 | UOW-03 | done |
 | AC-19 | T-03-01, T-03-03 | UOW-03 | done |
 | AC-20 | T-03-03, T-03-06 | UOW-03 | done |
-| AC-21 | T-04-01, T-04-03 | UOW-04 | open |
-| AC-22 | T-04-01, T-04-03 | UOW-04 | open |
-| AC-23 | T-04-01, T-04-04 | UOW-04 | open |
-| AC-24 | T-04-02, T-04-05 | UOW-04 | open |
+| AC-21 | T-04-01, T-04-03 | UOW-04 | done |
+| AC-22 | T-04-01, T-04-03 | UOW-04 | done |
+| AC-23 | T-04-01, T-04-04 | UOW-04 | done |
+| AC-24 | T-04-02, T-04-05 | UOW-04 | done |
 
 Coverage: **24/24** acceptance criteria.

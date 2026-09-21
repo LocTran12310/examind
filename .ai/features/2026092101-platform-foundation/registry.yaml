@@ -442,7 +442,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-02-02
     blocks:
@@ -465,7 +465,7 @@ ticket:
     layer: data
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on:
       - T-02-01
     blocks:
@@ -485,7 +485,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-04-01
       - T-01-06
@@ -496,13 +496,14 @@ ticket:
     touches:
       - apps/web/src/app/(app)/org/topics/page.tsx   # new
       - apps/web/src/components/topics/TopicTree.tsx   # new
+      - apps/web/src/components/topics/tree.ts   # new
   - id: T-04-04
     uow: UOW-04
     title: 'Tags UI'
     layer: web
     type: feature
     estimate_hours: 2
-    status: todo
+    status: done
     depends_on:
       - T-04-01
       - T-01-06
@@ -511,13 +512,14 @@ ticket:
       - AC-23
     touches:
       - apps/web/src/app/(app)/org/tags/page.tsx   # new
+      - apps/web/src/components/tags/TagManager.tsx   # new
   - id: T-04-05
     uow: UOW-04
     title: 'QuestionView component and preview page'
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-04-02
       - T-01-05

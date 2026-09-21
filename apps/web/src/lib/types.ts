@@ -89,3 +89,64 @@ export interface ImportRow {
   errors: string[];
   generated_username: boolean;
 }
+
+export type QuestionType = "mcq" | "true_false" | "short_answer" | "essay";
+
+export interface QuestionOption {
+  label: string;
+  content: string;
+  is_true?: boolean;
+}
+
+export interface Question {
+  id: string;
+  type: QuestionType;
+  stem: string;
+  options: QuestionOption[];
+  answer: { key?: string; value?: string; text?: string; [k: string]: unknown } | null;
+  solution: string;
+  difficulty: string | null;
+  grade: number | null;
+  status: string;
+}
+
+export type LevelKind = "strand" | "topic" | "subtopic" | "type";
+
+export const LEVEL_LABEL: Record<LevelKind, string> = {
+  strand: "Mạch kiến thức",
+  topic: "Chuyên đề",
+  subtopic: "Chủ đề con",
+  type: "Dạng bài",
+};
+
+export interface Topic {
+  id: string;
+  subject_id: string;
+  parent_id: string | null;
+  name: string;
+  level_kind: LevelKind;
+  grade: number | null;
+  path: string;
+  depth: number;
+  sort: number;
+  child_count: number;
+}
+
+export interface Taxonomy {
+  subjects: { id: string; code: string; name: string }[];
+  grades: { id: string; level: number; name: string }[];
+  semesters: { id: string; code: string; name: string }[];
+}
+
+export interface Tag {
+  id: string;
+  group: "method" | "skill" | "source" | "custom";
+  name: string;
+}
+
+export const TAG_GROUP_LABEL: Record<Tag["group"], string> = {
+  method: "Phương pháp",
+  skill: "Kỹ năng",
+  source: "Nguồn đề",
+  custom: "Khác",
+};
