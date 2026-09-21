@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { use, useState } from "react";
+import { AssignDialog } from "@/components/exams/AssignDialog";
 import { BlueprintEditor } from "@/components/exams/BlueprintEditor";
 import { ExamQuestions, moved } from "@/components/exams/ExamQuestions";
 import { Markdown } from "@/components/question/Markdown";
@@ -9,7 +10,8 @@ import { QuestionView } from "@/components/question/QuestionView";
 import { Alert, Button, Card, Input, Modal, PageHeader } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
 import { qs, useApi } from "@/lib/hooks";
-import { TYPE_LABEL, type BlueprintRow, type Exam, type Page, type ParsedQuestion, type QuestionType, type Tag, type Topic } from "@/lib/types";
+import { fmt } from "@/lib/dates";
+import { TYPE_LABEL, type Assignment, type BlueprintRow, type Exam, type Page, type ParsedQuestion, type QuestionType, type SchoolClass, type Tag, type Topic } from "@/lib/types";
 
 export default function ExamBuilderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -22,6 +24,9 @@ export default function ExamBuilderPage({ params }: { params: Promise<{ id: stri
   const { data: found } = useApi<Page<ParsedQuestion>>(query ? `/questions${qs({ q: query, page_size: 10 })}` : null);
   const [preview, setPreview] = useState<null | "exam" | "review">(null);
   const [error, setError] = useState<string | null>(null);
+  const [assigning, setAssigning] = useState(false);
+  const { data: classes } = useApi<SchoolClass[]>("/classes");
+  const { data: assigned, reload: reloadAssigned } = useApi<Assignment[]>(`/assignments?exam_id=${id}`);
 
   async function run(fn: () => Promise<Exam | { exam: Exam; shortfalls: { row: number; missing: number }[] }>) {
     setError(null);
@@ -52,6 +57,9 @@ export default function ExamBuilderPage({ params }: { params: Promise<{ id: stri
           <>
             <Button onClick={() => setPreview("exam")} disabled={!exam.question_count}>
               Xem trước
+            </Button>
+            <Button variant="primary" onClick={() => setAssigning(true)} disabled={!exam.question_count}>
+              Giao bài
             </Button>
           </>
         }
@@ -85,6 +93,28 @@ export default function ExamBuilderPage({ params }: { params: Promise<{ id: stri
           </Card>
         </div>
         <div className="space-y-4">
+          {assigned && assigned.length > 0 && (
+            <Card>
+              <h2 className="mb-2 font-medium">Đã giao</h2>
+              <ul className="divide-y divide-gray-100 text-sm" data-testid="assigned">
+                {assigned.map((a) => (
+                  <li key={a.id} className="flex items-center justify-between py-2">
+                    <span>
+                      <Link href={`/org/assignments/${a.id}`} className="font-medium text-brand-700 hover:underline">
+                        {a.title}
+                      </Link>
+                      <span className="block text-xs text-gray-500">
+                        {a.classes.join(", ")} · {fmt(a.open_at)} → {fmt(a.close_at)}
+                      </span>
+                    </span>
+                    <span className="text-xs text-gray-600">
+                      {a.submitted}/{a.students} đã nộp
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
           <Card>
             <h2 className="mb-2 font-medium">Điểm mặc định theo loại câu</h2>
             <div className="grid grid-cols-2 gap-2 text-sm">
@@ -134,6 +164,19 @@ export default function ExamBuilderPage({ params }: { params: Promise<{ id: stri
           </Card>
         </div>
       </div>
+      <Modal open={assigning} title="Giao bài" wide onClose={() => setAssigning(false)}>
+        {assigning && (
+          <AssignDialog
+            examId={id}
+            title={exam.title}
+            classes={classes ?? []}
+            onDone={() => {
+              setAssigning(false);
+              void reloadAssigned();
+            }}
+          />
+        )}
+      </Modal>
       <Modal open={!!preview} title="Xem trước đề" wide onClose={() => setPreview(null)}>
         <label className="mb-4 flex items-center gap-2 text-sm">
           <input type="checkbox" checked={preview === "review"} onChange={(e) => setPreview(e.target.checked ? "review" : "exam")} /> Hiện đáp án và lời giải

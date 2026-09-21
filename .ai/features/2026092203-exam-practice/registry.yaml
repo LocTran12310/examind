@@ -202,7 +202,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-01-03
     blocks:
@@ -223,7 +223,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-02-01
     blocks:
@@ -248,7 +248,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on:
       - T-02-01
       - T-01-05
@@ -262,13 +262,15 @@ ticket:
       - apps/web/src/components/exams/AssignDialog.tsx   # new
       - apps/web/src/app/(app)/home/page.tsx   # new
       - apps/web/src/app/(app)/org/exams/[id]/page.tsx   # new
+      - apps/web/src/components/exams/StudentHome.tsx   # new
+      - apps/web/src/lib/dates.ts   # new
   - id: T-02-04
     uow: UOW-02
     title: 'Exam taking page: timer, navigator, autosave queue, submit, tab switch, mobile'
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-02-02
       - T-02-03

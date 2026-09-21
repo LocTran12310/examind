@@ -54,6 +54,16 @@ def main() -> None:
             recovered = queue.recover_stale(db)
             if recovered:
                 log.warning("worker.recovered_stale", count=recovered)
+            try:
+                from app.services.attempts import sweep_expired
+
+                closed = sweep_expired(db)
+                db.commit()
+                if closed:
+                    log.info("worker.closed_expired_attempts", count=closed)
+            except Exception as exc:  # never let the sweep kill the worker
+                db.rollback()
+                log.error("worker.sweep_failed", error=str(exc))
         stop.wait(10)
     for t in threads:
         t.join(timeout=30)

@@ -291,3 +291,61 @@ export interface Exam {
   created_at: string;
   questions: ExamQuestion[];
 }
+
+export type ResultsPolicy = "after_submit" | "after_close" | "never";
+
+export interface Assignment {
+  id: string;
+  exam_id: string;
+  title: string;
+  open_at: string;
+  close_at: string;
+  duration_minutes: number;
+  max_attempts: number;
+  shuffle_questions: boolean;
+  shuffle_options: boolean;
+  results_policy: ResultsPolicy;
+  students: number;
+  submitted: number;
+  classes: string[];
+}
+
+export interface AttemptBrief {
+  id: string;
+  status: "in_progress" | "submitted";
+  started_at: string;
+  deadline_at: string;
+  submitted_at: string | null;
+  score: number | null;
+  max_score: number | null;
+  score10: number | null;
+  needs_grading: boolean;
+}
+
+export interface MyAssignment {
+  assignment: Assignment;
+  state: "open" | "upcoming" | "closed";
+  attempts: AttemptBrief[];
+  attempts_left: number;
+}
+
+export interface AttemptQuestion extends Question {
+  number: number;
+  section: string;
+  points: number;
+  response: Record<string, unknown> | null;
+}
+
+export interface AttemptView {
+  id: string;
+  title: string;
+  status: "in_progress" | "submitted";
+  started_at: string;
+  deadline_at: string;
+  submitted_at: string | null;
+  server_now: string;
+  tab_switches: number;
+  student: { id: string; full_name: string; username: string };
+  assignment_id: string | null;
+  questions: AttemptQuestion[];
+}

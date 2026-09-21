@@ -8,22 +8,22 @@
 | AC-02 | T-01-03, T-01-05 | UOW-01 | done |
 | AC-03 | T-01-02, T-01-03, T-01-05 | UOW-01 | done |
 | AC-04 | T-01-05 | UOW-01 | done |
-| AC-05 | T-01-01, T-02-01, T-02-03 | UOW-01, UOW-02 | open |
-| AC-06 | T-02-01 | UOW-02 | open |
-| AC-07 | T-01-01, T-02-02, T-02-04 | UOW-01, UOW-02 | open |
-| AC-08 | T-02-02, T-02-04 | UOW-02 | open |
-| AC-09 | T-02-02, T-02-04 | UOW-02 | open |
-| AC-10 | T-02-02, T-02-04 | UOW-02 | open |
-| AC-11 | T-01-02, T-02-02 | UOW-01, UOW-02 | open |
+| AC-05 | T-01-01, T-02-01, T-02-03 | UOW-01, UOW-02 | done |
+| AC-06 | T-02-01 | UOW-02 | done |
+| AC-07 | T-01-01, T-02-02, T-02-04 | UOW-01, UOW-02 | done |
+| AC-08 | T-02-02, T-02-04 | UOW-02 | done |
+| AC-09 | T-02-02, T-02-04 | UOW-02 | done |
+| AC-10 | T-02-02, T-02-04 | UOW-02 | done |
+| AC-11 | T-01-02, T-02-02 | UOW-01, UOW-02 | done |
 | AC-12 | T-03-01, T-03-02 | UOW-03 | open |
 | AC-13 | T-03-01, T-03-02 | UOW-03 | open |
 | AC-14 | T-03-01, T-03-02 | UOW-03 | open |
-| AC-15 | T-01-03, T-02-02 | UOW-01, UOW-02 | open |
+| AC-15 | T-01-03, T-02-02 | UOW-01, UOW-02 | done |
 | AC-16 | T-04-01, T-04-02 | UOW-04 | open |
 | AC-17 | T-01-01, T-04-01, T-04-03 | UOW-01, UOW-04 | open |
 | AC-18 | T-04-01, T-04-03 | UOW-04 | open |
 | AC-19 | T-04-01, T-04-03 | UOW-04 | open |
-| AC-20 | T-02-01, T-02-03 | UOW-02 | open |
+| AC-20 | T-02-01, T-02-03 | UOW-02 | done |
 | AC-21 | T-04-01, T-04-04 | UOW-04 | open |
 | AC-22 | T-01-04 | UOW-01 | done |
 
