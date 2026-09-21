@@ -209,6 +209,156 @@ def build_kho(out_dir: str, media: dict) -> tuple[str, dict]:
     return "\n".join(md), {"questions": exp}
 
 
+LATEX_UNICODE = [
+    (r"\\dfrac\{([^{}]*)\}\{([^{}]*)\}", r"(\1)/(\2)"), (r"\\frac\{([^{}]*)\}\{([^{}]*)\}", r"(\1)/(\2)"),
+    (r"\\vec\{([^{}]*)\}", r"\1⃗"), (r"\\widehat\{([^{}]*)\}", r"∠\1"), (r"\\mathbb\{R\}", "ℝ"),
+    (r"C_\{(\d+)\}\^\{(\d+)\}", r"C(\1,\2)"), (r"A_\{(\d+)\}\^\{(\d+)\}", r"A(\1,\2)"),
+    (r"\^\\circ", "°"), (r"\^2", "²"), (r"\^3", "³"), (r"\\le\b", "≤"), (r"\\ge\b", "≥"), (r"\\forall", "∀"),
+    (r"\\exists", "∃"), (r"\\in\b", "∈"), (r"\\cap", "∩"), (r"\\cup", "∪"), (r"\\varnothing", "∅"), (r"\\emptyset", "∅"),
+    (r"\\cdot", "·"), (r"\\iff", "⇔"), (r"\\int_0\^\{(\d+)\}", r"∫₀^\1"), (r"\\displaystyle", ""), (r"\\,", " "), (r"\\ ", " "),
+    (r"\\\{", "{"), (r"\\\}", "}"), (r"\\mathrm\{d\}", "d"),
+]
+
+
+def latex_to_text(s: str) -> str:
+    import re as _re
+
+    def conv(m):
+        t = m.group(1)
+        for pat, rep in LATEX_UNICODE:
+            t = _re.sub(pat, rep, t)
+        return t.replace("{", "").replace("}", "")
+
+    return _re.sub(r"\$([^$]+)\$", conv, s)
+
+
+def md_to_pdf(markdown: str, path: str, media_dir: str, columns: int = 1) -> None:
+    """Render our sample markdown to a text PDF (fpdf2, DejaVu font) — images embedded where they appear."""
+    import re as _re
+
+    from fpdf import FPDF
+
+    pdf = FPDF(format="A4")
+    pdf.set_auto_page_break(True, margin=15)
+    font_dir = "/usr/share/fonts/truetype/dejavu"
+    pdf.add_font("DejaVu", "", f"{font_dir}/DejaVuSans.ttf")
+    pdf.add_font("DejaVu", "B", f"{font_dir}/DejaVuSans-Bold.ttf")
+    pdf.add_page()
+    pdf.set_font("DejaVu", size=10.5)
+    blocks = [b for b in markdown.split("\n")]
+
+    def emit(cols=None):
+        target = cols if cols is not None else pdf
+        rows = []
+        for raw in blocks:
+            line = raw.rstrip()
+            if not line.strip():
+                continue
+            parts = _re.split(r"(!\[\]\([^)]+\)(?:\{width=[\d.]+cm\})?)", line)
+            if len(parts) > 1:  # images inside a line: text before, image, text after
+                for part in parts:
+                    img = _re.match(r"^!\[\]\(([^)]+)\)(\{width=([\d.]+)cm\})?$", part.strip())
+                    if img:
+                        w = float(img.group(3) or 4) * 10
+                        if cols is None:
+                            pdf.image(os.path.join(media_dir, img.group(1)), w=w)
+                            pdf.ln(2)
+                        else:
+                            cols.image(os.path.join(media_dir, img.group(1)), width=w)
+                    elif part.strip():
+                        text = latex_to_text(part.replace("**", "").replace("\t", "    ").strip())
+                        if cols is None:
+                            pdf.set_font("DejaVu", "", 10.5)
+                            pdf.multi_cell(0, 6, text, new_x="LMARGIN", new_y="NEXT")
+                        else:
+                            cols.write(text + "\n")
+                continue
+            if line.startswith("|"):
+                cells = [c.strip() for c in line.strip("|").split("|")]
+                if all(set(c) <= set("-") for c in cells):
+                    continue
+                rows.append(cells)
+                continue
+            if rows:
+                _table(rows)
+                rows = []
+            bold = line.startswith("**") and line.count("**") >= 2
+            text = latex_to_text(line.replace("**", "").replace("*", "").replace("\t", "    "))
+            if cols is None:
+                pdf.set_font("DejaVu", "B" if bold and len(text) < 60 else "", 10.5)
+                pdf.multi_cell(0, 6, text, new_x="LMARGIN", new_y="NEXT")
+            else:
+                cols.write(text + "\n")
+        if rows:
+            _table(rows)
+
+    def _table(rows):
+        width = (pdf.w - pdf.l_margin - pdf.r_margin) / len(rows[0])
+        pdf.set_font("DejaVu", "", 8)
+        for r in rows:
+            for c in r:
+                pdf.cell(width, 6, c, border=1, align="C")
+            pdf.ln()
+        pdf.set_font("DejaVu", "", 10.5)
+        pdf.ln(2)
+
+    if columns == 1:
+        emit()
+    else:
+        with pdf.text_columns(ncols=columns, gutter=8) as cols:
+            emit(cols)
+    pdf.output(path)
+
+
+def pdf_to_scans(pdf_path: str, out_png: str, out_pdf: str, pages: int = 2) -> list[int]:
+    """Rasterise the first pages (≈200 dpi) as a fake scan; returns the question numbers visible on them."""
+    import re as _re
+
+    import pdfplumber
+    import pypdfium2 as pdfium
+    from fpdf import FPDF
+
+    doc = pdfium.PdfDocument(pdf_path)  # closed at the end
+    images = []
+    for i in range(min(pages, len(doc))):
+        img = doc[i].render(scale=200 / 72).to_pil().convert("L")
+        images.append(img)
+    images[0].save(out_png)
+    scan = FPDF(format="A4")
+    for i, img in enumerate(images):
+        tmp = out_png.replace(".png", f".p{i}.png")
+        img.save(tmp)
+        scan.add_page()
+        scan.image(tmp, x=0, y=0, w=210, h=297)
+        os.remove(tmp)
+    scan.output(out_pdf)
+    doc.close()
+    nums = []
+    with pdfplumber.open(pdf_path) as p:
+        for page in p.pages[:pages]:
+            nums += [int(n) for n in _re.findall(r"^Câu (\d+)\.", page.extract_text() or "", _re.M)]
+    return nums
+
+
+def build_two_column() -> tuple[str, dict]:
+    rng = random.Random(99)
+    qs = mcq_bank(rng)[:10]
+    md, exp = ["ĐỀ ÔN TẬP HAI CỘT", ""], []
+    for i, q in enumerate(qs, 1):
+        md += [f"Câu {i}. {q['stem']}"] + [f"{l}. {o}" for l, o in zip(LABELS, q["options"])] + [f"Đáp án: {q['answer']}", ""]
+        exp.append({"number": i, "part": None, "type": "mcq", "answer": {"key": q["answer"]}, "n_options": 4})
+    return "\n".join(md), {"questions": exp}
+
+
+def pdf_numbers(pdf_path: str, pages: int) -> list[int]:
+    import re as _re
+
+    import pdfplumber
+
+    with pdfplumber.open(pdf_path) as p:
+        return [int(n) for page in p.pages[:pages] for n in _re.findall(r"^Câu (\d+)\.", page.extract_text() or "", _re.M)]
+
+
 def pandoc_docx(markdown: str, path: str, resource_dir: str) -> None:
     subprocess.run(["pandoc", "-f", "markdown+tex_math_dollars+pipe_tables", "-t", "docx", "-o", path,
                     f"--resource-path={resource_dir}"], input=markdown.encode(), check=True)
@@ -231,6 +381,17 @@ def main(out_dir: str) -> None:
             with open(os.path.join(out_dir, f"{name}.expected.json"), "w", encoding="utf-8") as fh:
                 json.dump(expected, fh, ensure_ascii=False, indent=1)
             print("wrote", name)
+            if name == "de-mau-toan10":
+                md_to_pdf(md, os.path.join(out_dir, f"{name}.pdf"), tmp)
+                nums = pdf_to_scans(os.path.join(out_dir, f"{name}.pdf"), os.path.join(out_dir, "de-scan.png"), os.path.join(out_dir, "de-scan.pdf"))
+                with open(os.path.join(out_dir, "de-scan.expected.json"), "w", encoding="utf-8") as fh:
+                    json.dump({"numbers": nums, "png_numbers": pdf_numbers(os.path.join(out_dir, f"{name}.pdf"), 1)}, fh)
+                print("wrote pdf + scans", nums)
+        two_col = build_two_column()
+        md_to_pdf(two_col[0], os.path.join(out_dir, "de-2cot.pdf"), tmp, columns=2)
+        with open(os.path.join(out_dir, "de-2cot.expected.json"), "w", encoding="utf-8") as fh:
+            json.dump(two_col[1], fh, ensure_ascii=False, indent=1)
+        print("wrote de-2cot")
 
 
 if __name__ == "__main__":

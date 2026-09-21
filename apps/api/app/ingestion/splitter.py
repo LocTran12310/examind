@@ -377,7 +377,9 @@ def _parse_key(key_lines: list[tuple[str | None, str]], part_types: dict) -> dic
         text = strip_markup(raw)
         kind = part_types.get(part, "mcq")
         cells = [c.strip() for c in re.split(r"\s*\|\s*|\t+", text) if c.strip()]
-        if cells and not re.fullmatch(r"\d{1,3}", cells[0]) and not re.fullmatch(r"[A-D]", cells[0]):
+        if len(cells) == 1:  # PDF tables arrive as space-separated words
+            cells = cells[0].split()
+        while cells and not re.fullmatch(r"\d{1,3}", cells[0]) and not re.fullmatch(r"[A-D]", cells[0]):
             cells = cells[1:]  # row label such as "Câu" / "Đáp án"
         if cells and all(re.fullmatch(r"\d{1,3}", c) for c in cells) and len(cells) >= 2:
             pending_numbers = [int(c) for c in cells]

@@ -3,7 +3,7 @@
 # Ticket graph — 2026092201-exam-ingestion
 
 - Units of Work: **4**
-- Tickets: **18** (8 done)
+- Tickets: **18** (10 done)
 - Total effort: **7.4d**
 - Critical path: **3.9d** across 9 tickets
 - Theoretical minimum duration with unlimited parallelism: **3.9d**
@@ -35,8 +35,8 @@ graph LR
     T_01_08["✓ T-01-08<br/>Documents UI: upload, list with live status, detail with parsed questions"]
   end
   subgraph UOW_02["UOW-02 · Text PDFs and scanned exams are read"]
-    T_02_01["T-02-01<br/>Text PDF extractor (reading order, columns, image crops)"]
-    T_02_02["T-02-02<br/>OCR provider interface + Tesseract; scanned PDF and image path"]
+    T_02_01["✓ T-02-01<br/>Text PDF extractor (reading order, columns, image crops)"]
+    T_02_02["✓ T-02-02<br/>OCR provider interface + Tesseract; scanned PDF and image path"]
   end
   subgraph UOW_03["UOW-03 · Admins register AI models; teachers choose them per upload"]
     T_03_01["T-03-01<br/>ai_models registry: schema, encryption, CRUD API, permissions"]
@@ -122,8 +122,8 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-01-06 | UOW-01 | worker | feature | 3h | T-01-04, T-01-05 | AC-06, AC-07 | done |
 | T-01-07 | UOW-01 | api | feature | 4h | T-01-03, T-01-06 | AC-01, AC-02, AC-03, AC-21 | done |
 | T-01-08 | UOW-01 | web | feature | 3h | T-01-07 | AC-01, AC-02, AC-03 | done |
-| T-02-01 | UOW-02 | worker | feature | 4h | T-01-07 | AC-11 | todo |
-| T-02-02 | UOW-02 | worker | feature | 4h | T-02-01 | AC-12 | todo |
+| T-02-01 | UOW-02 | worker | feature | 4h | T-01-07 | AC-11 | done |
+| T-02-02 | UOW-02 | worker | feature | 4h | T-02-01 | AC-12 | done |
 | T-03-01 | UOW-03 | api | feature | 4h | T-01-02 | AC-13, AC-15 | todo |
 | T-03-02 | UOW-03 | worker | feature | 4h | T-03-01 | AC-14 | todo |
 | T-03-03 | UOW-03 | worker | feature | 4h | T-03-02, T-02-02 | AC-16, AC-18, AC-19, AC-20 | todo |

@@ -1,5 +1,5 @@
 """Job handlers registered with the worker queue."""
-from app.ingestion import pipeline
+from app.ingestion import extractors, pipeline  # noqa: F401  (extractors register themselves)
 from app.worker.queue import FAILURE_HOOKS, handler
 
 

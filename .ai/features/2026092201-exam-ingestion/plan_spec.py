@@ -137,7 +137,7 @@ TICKETS = [
     dict(id="T-02-02", uow="UOW-02", title="OCR provider interface + Tesseract; scanned PDF and image path",
          layer="worker", estimate="4h", depends_on=["T-02-01"], verifies=["AC-12"],
          tests=[f"{API}/tests/test_ocr.py"],
-         touches=[f"{ING}/ocr.py", f"{ING}/pipeline.py", f"{API}/scripts/make_samples.py", "samples/exams/"],
+         touches=[f"{ING}/ocr.py", f"{ING}/extractors.py", f"{ING}/jobs.py", f"{ING}/pipeline.py", f"{API}/scripts/make_samples.py", "samples/exams/"],
          assumptions=["A-06"],
          context="ADR-05. Pages without text layer → render 300 dpi → OCR; OCR'd questions flagged.",
          done_when=["Scan sample splits into questions", "OCR flag + confidence cap"]),

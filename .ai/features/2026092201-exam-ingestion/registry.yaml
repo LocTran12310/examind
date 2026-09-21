@@ -277,7 +277,7 @@ ticket:
     layer: worker
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-01-07
     blocks:
@@ -294,7 +294,7 @@ ticket:
     layer: worker
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-02-01
     blocks:
@@ -303,6 +303,8 @@ ticket:
       - AC-12
     touches:
       - apps/api/app/ingestion/ocr.py   # new
+      - apps/api/app/ingestion/extractors.py   # new
+      - apps/api/app/ingestion/jobs.py   # new
       - apps/api/app/ingestion/pipeline.py   # new
       - apps/api/scripts/make_samples.py   # new
       - samples/exams/   # new
