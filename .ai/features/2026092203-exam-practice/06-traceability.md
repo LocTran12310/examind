@@ -15,9 +15,9 @@
 | AC-09 | T-02-02, T-02-04 | UOW-02 | done |
 | AC-10 | T-02-02, T-02-04 | UOW-02 | done |
 | AC-11 | T-01-02, T-02-02 | UOW-01, UOW-02 | done |
-| AC-12 | T-03-01, T-03-02 | UOW-03 | open |
-| AC-13 | T-03-01, T-03-02 | UOW-03 | open |
-| AC-14 | T-03-01, T-03-02 | UOW-03 | open |
+| AC-12 | T-03-01, T-03-02 | UOW-03 | done |
+| AC-13 | T-03-01, T-03-02 | UOW-03 | done |
+| AC-14 | T-03-01, T-03-02 | UOW-03 | done |
 | AC-15 | T-01-03, T-02-02 | UOW-01, UOW-02 | done |
 | AC-16 | T-04-01, T-04-02 | UOW-04 | open |
 | AC-17 | T-01-01, T-04-01, T-04-03 | UOW-01, UOW-04 | open |

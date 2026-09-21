@@ -3,7 +3,7 @@
 # Ticket graph — 2026092203-exam-practice
 
 - Units of Work: **4**
-- Tickets: **15** (9 done)
+- Tickets: **15** (11 done)
 - Total effort: **6.5d**
 - Critical path: **3.1d** across 7 tickets
 - Theoretical minimum duration with unlimited parallelism: **3.1d**
@@ -38,8 +38,8 @@ graph LR
     T_02_04["✓ T-02-04<br/>Exam taking page: timer, navigator, autosave queue, submit, tab switch, mobile"]
   end
   subgraph UOW_03["UOW-03 · Students see feedback; teachers grade essays"]
-    T_03_01["T-03-01<br/>Result API with policies; essay grading"]
-    T_03_02["T-03-02<br/>Result page and teacher attempt/grading view"]
+    T_03_01["✓ T-03-01<br/>Result API with policies; essay grading"]
+    T_03_02["✓ T-03-02<br/>Result page and teacher attempt/grading view"]
   end
   subgraph UOW_04["UOW-04 · Teachers and students see where marks were lost"]
     T_04_01["T-04-01<br/>Stats API: topic tree roll-up, groups, heatmap, assignment report"]
@@ -106,8 +106,8 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-02-02 | UOW-02 | api | feature | 4h | T-02-01 | AC-07, AC-08, AC-09, AC-10, AC-11, AC-15 | done |
 | T-02-03 | UOW-02 | web | feature | 3h | T-02-01, T-01-05 | AC-05, AC-20 | done |
 | T-02-04 | UOW-02 | web | feature | 4h | T-02-02, T-02-03 | AC-07, AC-08, AC-09, AC-10 | done |
-| T-03-01 | UOW-03 | api | feature | 3h | T-02-02 | AC-12, AC-13, AC-14 | todo |
-| T-03-02 | UOW-03 | web | feature | 4h | T-03-01, T-02-04 | AC-12, AC-13, AC-14 | todo |
+| T-03-01 | UOW-03 | api | feature | 3h | T-02-02 | AC-12, AC-13, AC-14 | done |
+| T-03-02 | UOW-03 | web | feature | 4h | T-03-01, T-02-04 | AC-12, AC-13, AC-14 | done |
 | T-04-01 | UOW-04 | api | feature | 4h | T-02-02 | AC-16, AC-17, AC-18, AC-19, AC-21 | todo |
 | T-04-02 | UOW-04 | web | feature | 3h | T-04-01, T-02-03 | AC-16 | todo |
 | T-04-03 | UOW-04 | web | feature | 4h | T-04-01, T-01-04 | AC-17, AC-18, AC-19 | todo |

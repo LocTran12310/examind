@@ -349,3 +349,30 @@ export interface AttemptView {
   assignment_id: string | null;
   questions: AttemptQuestion[];
 }
+
+export interface ResultQuestion extends ParsedQuestion {
+  section: string;
+  response: Record<string, unknown> | null;
+  points: number | null;
+  max_points: number;
+  is_correct: boolean | null;
+  comment: string | null;
+}
+
+export interface AttemptResult {
+  id: string;
+  title: string;
+  status: string;
+  submitted_at: string | null;
+  needs_grading: boolean;
+  tab_switches: number;
+  hidden: boolean;
+  reason?: string;
+  available_at?: string | null;
+  score?: number;
+  max_score?: number;
+  score10?: number;
+  questions?: ResultQuestion[];
+  sections?: { section: string; points: number; max_points: number }[];
+  topics?: { topic: string; points: number; max_points: number; count: number }[];
+}
