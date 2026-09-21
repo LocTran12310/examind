@@ -52,6 +52,31 @@ def _ordered_options(att: Attempt, q: Question) -> list[dict]:
     return [by_label[l] for l in order if l in by_label]
 
 
+DISPLAY = "ABCDEFGH"
+
+
+def label_maps(att: Attempt, q: Question) -> tuple[dict, dict]:
+    """Shuffled MCQ options are shown as A, B, C, D in their new order: (display→original, original→display)."""
+    if q.type != "mcq":
+        return {}, {}
+    ordered = [o["label"] for o in _ordered_options(att, q)]
+    to_orig = {DISPLAY[i]: lab for i, lab in enumerate(ordered)}
+    return to_orig, {v: k for k, v in to_orig.items()}
+
+
+def display_options(att: Attempt, q: Question) -> list[dict]:
+    opts = _ordered_options(att, q)
+    if q.type != "mcq":
+        return opts
+    return [{**o, "label": DISPLAY[i]} for i, o in enumerate(opts)]
+
+
+def to_display(att: Attempt, q: Question, value: dict | None) -> dict | None:
+    if q.type != "mcq" or not value or "key" not in value:
+        return value
+    return {**value, "key": label_maps(att, q)[1].get(value["key"], value["key"])}
+
+
 def _check_response(q: Question, response) -> dict | None:
     if response is None:
         return None
@@ -77,6 +102,8 @@ def save_answer(db: Session, scope: OrgScope, att: Attempt, qid, response) -> At
     if str(qid) not in att.question_order:
         raise not_found("Câu hỏi không thuộc bài làm")
     q = db.get(Question, qid)
+    if q.type == "mcq" and isinstance(response, dict) and "key" in response:
+        response = {**response, "key": label_maps(att, q)[0].get(response["key"], "?")}
     clean = _check_response(q, response)
     ans = db.get(AttemptAnswer, (att.id, q.id))
     if ans is None:

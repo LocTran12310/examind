@@ -47,3 +47,15 @@ def login(client, org_code, username):
 
 def key_of(db, qid):
     return db.get(Question, qid).answer
+
+
+def display_key(db, view_q) -> dict:
+    """The correct MCQ answer as the student sees it (shuffled options are relabelled A–D)."""
+    q = db.get(Question, view_q["id"])
+    content = next(o["content"] for o in q.options if o["label"] == q.answer["key"])
+    return {"key": next(o["label"] for o in view_q["options"] if o["content"] == content)}
+
+
+def display_wrong(db, view_q) -> dict:
+    right = display_key(db, view_q)["key"]
+    return {"key": next(o["label"] for o in view_q["options"] if o["label"] != right)}

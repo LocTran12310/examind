@@ -51,3 +51,9 @@ def test_scanned_page_without_ocr_warns():
     warnings = []
     lines, n = extract_pdf(load("de-scan.pdf"), store_counter()[0], warnings)
     assert lines == [] and n == 2 and len(warnings) == 2
+
+
+def test_combining_arrow_becomes_latex():
+    from app.ingestion.pdf import _normalise
+
+    assert _normalise("vectơ pháp tuyến n⃗ = (1; 1) và AB⃗") == "vectơ pháp tuyến $\\vec{n}$ = (1; 1) và $\\vec{AB}$"

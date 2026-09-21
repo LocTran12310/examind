@@ -4,7 +4,7 @@ import uuid
 from sqlalchemy import select, text
 
 from app.models import AnswerFact, Topic
-from tests.exam_helpers import assign, exam_with_questions, key_of, klass_with_student, login
+from tests.exam_helpers import assign, display_key, display_wrong, exam_with_questions, klass_with_student, login
 
 
 def two_students(client, db):
@@ -18,9 +18,7 @@ def two_students(client, db):
         att = s.post(f"/api/assignments/{a['id']}/start").json()["attempt_id"]
         for q in s.get(f"/api/attempts/{att}").json()["questions"]:
             if q["type"] == "mcq":
-                key = key_of(db, q["id"])["key"]
-                pick = key if right else next(o["label"] for o in q["options"] if o["label"] != key)
-                s.put(f"/api/attempts/{att}/answers/{q['id']}", json={"response": {"key": pick}})
+                s.put(f"/api/attempts/{att}/answers/{q['id']}", json={"response": display_key(db, q) if right else display_wrong(db, q)})
         s.post(f"/api/attempts/{att}/submit")
     return admin, exam, klass, a
 

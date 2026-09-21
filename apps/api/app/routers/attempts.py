@@ -40,9 +40,10 @@ def get_attempt(attempt_id: uuid.UUID, response: Response, scope: OrgScope = Dep
     questions = []
     for i, (eq, q) in enumerate(attempts._questions(db, att), start=1):
         view = question_out(q, hide_answer=True).model_dump()
-        view["options"] = [{k: v for k, v in o.items() if k != "is_true"} for o in attempts._ordered_options(att, q)]
+        view["options"] = [{k: v for k, v in o.items() if k != "is_true"} for o in attempts.display_options(att, q)]
         ans = answers.get(q.id)
-        questions.append({**view, "number": i, "section": eq.section, "points": eq.points, "response": ans.response if ans else None})
+        questions.append({**view, "number": i, "section": eq.section, "points": eq.points,
+                          "response": attempts.to_display(att, q, ans.response) if ans else None})
     student = db.get(User, att.student_id)
     return {"id": att.id, "title": a.title if a else exam.title, "status": att.status, "started_at": att.started_at,
             "deadline_at": att.deadline_at, "submitted_at": att.submitted_at, "server_now": now(), "tab_switches": att.tab_switches,
@@ -56,7 +57,9 @@ def save_answer(attempt_id: uuid.UUID, qid: uuid.UUID, body: AnswerIn, response:
     att = attempts.get_for(db, scope, attempt_id)
     ans = attempts.save_answer(db, scope, att, qid, body.response)
     _header(response)
-    return {"question_id": ans.question_id, "response": ans.response, "saved_at": ans.updated_at}
+    from app.models import Question
+
+    return {"question_id": ans.question_id, "response": attempts.to_display(att, db.get(Question, qid), ans.response), "saved_at": ans.updated_at}
 
 
 @router.post("/{attempt_id}/submit")
@@ -99,10 +102,11 @@ def result(attempt_id: uuid.UUID, scope: OrgScope = Depends(org_scope), db: Sess
     for i, ((eq, q), p) in enumerate(zip(rows, parsed), start=1):
         ans = answers.get(q.id)
         item = p.model_dump()
-        item["options"] = attempts._ordered_options(att, q)
-        if ans and ans.key_snapshot is not None:
-            item["answer"] = ans.key_snapshot  # the key used for grading (ADR-03)
-        item.update({"number": i, "section": eq.section, "response": ans.response if ans else None, "points": ans.points if ans else 0,
+        item["options"] = attempts.display_options(att, q)
+        key = ans.key_snapshot if ans and ans.key_snapshot is not None else q.answer  # the key used for grading (ADR-03)
+        item["answer"] = attempts.to_display(att, q, key)
+        item.update({"number": i, "section": eq.section, "response": attempts.to_display(att, q, ans.response) if ans else None,
+                     "points": ans.points if ans else 0,
                      "max_points": eq.points, "is_correct": ans.is_correct if ans else False, "comment": ans.comment if ans else None})
         items.append(item)
         s = by_section.setdefault(eq.section, {"section": eq.section, "points": 0.0, "max_points": 0.0})

@@ -4,7 +4,7 @@ from sqlalchemy import select
 
 from app.core.security import now
 from app.models import AnswerFact, Attempt
-from tests.exam_helpers import assign, exam_with_questions, key_of, klass_with_student, login
+from tests.exam_helpers import assign, display_key, exam_with_questions, key_of, klass_with_student, login
 
 
 def started(client, db, **kw):
@@ -38,7 +38,7 @@ def test_submit_grades_and_writes_facts(client, db):
     for q in view["questions"]:
         key = key_of(db, q["id"])
         if q["type"] == "mcq":
-            s.put(f"/api/attempts/{att}/answers/{q['id']}", json={"response": key})
+            s.put(f"/api/attempts/{att}/answers/{q['id']}", json={"response": display_key(db, q)})
             expected += q["points"]
         elif q["type"] == "true_false":
             wrong_one = dict(key)
@@ -87,3 +87,23 @@ def test_other_students_cannot_see_attempt(client, db):
     assert other.get(f"/api/attempts/{att}").status_code == 404
     assert other.put(f"/api/attempts/{att}/answers/x", json={"response": None}).status_code in (404, 422)
     assert client.get(f"/api/attempts/{att}").status_code == 200  # teacher
+
+
+def test_shuffled_options_are_relabelled_for_students(client, db):
+    from app.models import Question
+
+    _, _, _, s, att = started(client, db)
+    a = db.get(Attempt, att)
+    view = s.get(f"/api/attempts/{att}").json()
+    q = next(x for x in view["questions"] if x["type"] == "mcq")
+    assert [o["label"] for o in q["options"]] == ["A", "B", "C", "D"]
+    original = db.get(Question, q["id"])
+    order = a.option_orders[q["id"]]
+    key_display = "ABCD"[order.index(original.answer["key"])]
+    assert next(o for o in q["options"] if o["label"] == key_display)["content"] == next(o["content"] for o in original.options if o["label"] == original.answer["key"])
+    s.put(f"/api/attempts/{att}/answers/{q['id']}", json={"response": {"key": key_display}})
+    s.post(f"/api/attempts/{att}/submit")
+    r = s.get(f"/api/attempts/{att}/result").json()
+    rq = next(x for x in r["questions"] if x["id"] == q["id"])
+    assert rq["is_correct"] and rq["answer"] == {"key": key_display} and rq["response"] == {"key": key_display}
+    assert [o["label"] for o in rq["options"]] == ["A", "B", "C", "D"]

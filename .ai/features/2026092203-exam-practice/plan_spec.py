@@ -3,7 +3,7 @@
 
 UOWS = [
     dict(
-        id="UOW-01", slug="exam-builder", title="Teachers build exams from blueprints or by hand",
+        dod_done=True, id="UOW-01", slug="exam-builder", title="Teachers build exams from blueprints or by hand",
         requirements=["US-01", "US-06"], risk="medium",
         demo=[
             "Staff pages use the new grouped sidebar (also on a 375 px phone as a drawer)",
@@ -16,7 +16,7 @@ UOWS = [
         in_scope=["Schema for exams, assignments, attempts, facts", "Scoring module", "Exams API + blueprint builder", "Sidebar nav", "Exams UI"],
     ),
     dict(
-        id="UOW-02", slug="assign-and-take", title="Students take assigned exams with a timer and autosave",
+        dod_done=True, id="UOW-02", slug="assign-and-take", title="Students take assigned exams with a timer and autosave",
         requirements=["US-02", "US-03", "US-04", "US-06"], depends_on=["UOW-01"], risk="high",
         demo=[
             "Assign 'Kiểm tra 15 phút' to 10A1: now → +1 day, 15 minutes, shuffle on, results after submit",
@@ -29,7 +29,7 @@ UOWS = [
         in_scope=["Assignments API + student home API", "Attempts: start, answers, submit, expiry, grading, facts", "Assign dialog + student home", "Exam page"],
     ),
     dict(
-        id="UOW-03", slug="results-and-grading", title="Students see feedback; teachers grade essays",
+        dod_done=True, id="UOW-03", slug="results-and-grading", title="Students see feedback; teachers grade essays",
         requirements=["US-04"], depends_on=["UOW-02"],
         demo=[
             "Student opens the result: each question shows their answer, the key and the solution; breakdown by section and topic",
@@ -39,7 +39,7 @@ UOWS = [
         in_scope=["Result API with policies", "Essay grading API", "Result page", "Teacher attempt view with grading"],
     ),
     dict(
-        id="UOW-04", slug="reports", title="Teachers and students see where marks were lost",
+        dod_done=True, id="UOW-04", slug="reports", title="Teachers and students see where marks were lost",
         requirements=["US-05", "US-06"], depends_on=["UOW-02"],
         demo=[
             "Assignment report: submitted/not submitted, average, distribution, per-question % correct and most-chosen wrong option",
@@ -123,7 +123,7 @@ TICKETS = [
     dict(id="T-03-01", uow="UOW-03", title="Result API with policies; essay grading",
          layer="api", estimate="3h", depends_on=["T-02-02"], verifies=["AC-12", "AC-13", "AC-14"],
          tests=[f"{API}/tests/test_results_api.py"],
-         touches=[f"{API}/app/services/attempts.py", f"{API}/app/routers/attempts.py"],
+         touches=[f"{API}/app/services/attempts.py", f"{API}/app/routers/attempts.py", f"{API}/app/ingestion/pdf.py"],
          assumptions=["A-08"],
          context="Breakdown by section and topic from answer_facts.",
          done_when=["Policies enforced", "Essay grade updates facts and totals"]),

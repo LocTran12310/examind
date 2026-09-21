@@ -5,7 +5,7 @@ slug: 2026092203-exam-practice
 profile: none
 created: 2026-09-22T02:00:04
 ruleset: 5
-current_gate: G3
+current_gate: G5
 history:
   - gate: G0
     action: passed
@@ -257,3 +257,13 @@ history:
     at: 2026-09-22T02:20:30
     by: Loc Tran
     ticket: T-04-04
+  - gate: G4
+    action: passed
+    at: 2026-09-22T02:26:32
+    by: Loc Tran
+    evidence: every done ticket has a passing verification run; all 15 tickets done, all UoW checklists ticked
+  - gate: G5
+    action: passed
+    at: 2026-09-22T02:26:33
+    by: Loc Tran
+    evidence: assumptions resolved, ADRs settled, graph valid

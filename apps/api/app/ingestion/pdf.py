@@ -6,6 +6,7 @@ Pages without a text layer are handed to the OCR callback.
 """
 from collections.abc import Callable
 import io
+import re
 
 import pdfplumber
 import pypdfium2 as pdfium
@@ -49,6 +50,14 @@ def _rows(words: list[dict]) -> list[list[dict]]:
     return [sorted(r, key=lambda w: w["x0"]) for r in rows]
 
 
+_COMBINING_ARROW = re.compile(r"([A-Za-z]{1,2})\u20d7")
+
+
+def _normalise(text: str) -> str:
+    """PDF text keeps Word's combining arrow (n⃗, AB⃗) which most fonts cannot draw: write it as LaTeX."""
+    return _COMBINING_ARROW.sub(lambda m: f"$\\vec{{{m.group(1)}}}$", text)
+
+
 def _row_text(row: list[dict]) -> str:
     parts = []
     for i, w in enumerate(row):
@@ -56,7 +65,7 @@ def _row_text(row: list[dict]) -> str:
         if "Bold" in (w.get("fontname") or "") and len(text) <= 2 and text[:1] in "ABCD" and text.endswith((".", ")")):
             text = f"**{text}**"
         parts.append(text)
-    return " ".join(parts)
+    return _normalise(" ".join(parts))
 
 
 def _is_two_column(rows: list[list[dict]], mid: float) -> bool:

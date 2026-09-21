@@ -1,6 +1,6 @@
 ---
 feature: exam-practice
-adr_count: 5
+adr_count: 6
 ---
 
 # Logical design — Exams, practice and statistics
@@ -106,4 +106,10 @@ Attempt events (start, submit, auto-close, tab switch) logged with ids; answer_f
 **Context:** Staff navigation outgrew a single top bar.
 **Decision:** Sidebar with groups (Đề & câu hỏi, Lớp & học sinh, Báo cáo, Cài đặt); collapses to a drawer on phones; students keep a minimal top bar.
 **Consequences:** Nav config becomes grouped data in `lib/nav.ts`.
+**Status:** accepted
+
+### ADR-06 — Shuffled options are relabelled per attempt
+**Context:** Live demo: shuffled MCQ options showed their original labels (C, B, D, A).
+**Decision:** The student view relabels options A–D in the attempt's order; answers are mapped back to the original label before storage; results map key and response back to display labels.
+**Consequences:** Grading and answer_facts always use original labels; students always see A–D in order.
 **Status:** accepted

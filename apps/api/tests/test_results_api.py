@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from app.core.security import now
 from app.models import Assignment
-from tests.exam_helpers import assign, exam_with_questions, key_of, klass_with_student, login
+from tests.exam_helpers import assign, display_key, exam_with_questions, klass_with_student, login
 
 
 def take(client, db, policy="after_submit", essay=False):
@@ -13,7 +13,7 @@ def take(client, db, policy="after_submit", essay=False):
     att = s.post(f"/api/assignments/{a['id']}/start").json()["attempt_id"]
     for q in s.get(f"/api/attempts/{att}").json()["questions"]:
         if q["type"] == "mcq":
-            s.put(f"/api/attempts/{att}/answers/{q['id']}", json={"response": key_of(db, q["id"])})
+            s.put(f"/api/attempts/{att}/answers/{q['id']}", json={"response": display_key(db, q)})
         if q["type"] == "essay":
             s.put(f"/api/attempts/{att}/answers/{q['id']}", json={"response": {"text": "Bài làm của em"}})
     s.post(f"/api/attempts/{att}/submit")
