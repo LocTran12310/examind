@@ -110,7 +110,7 @@ ticket:
     layer: infra
     type: chore
     estimate_hours: 2
-    status: todo
+    status: done
     depends_on: []
     blocks:
       - T-01-02
@@ -131,7 +131,7 @@ ticket:
     layer: data
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on:
       - T-01-01
     blocks:
@@ -153,7 +153,7 @@ ticket:
     layer: worker
     type: feature
     estimate_hours: 2
-    status: todo
+    status: done
     depends_on:
       - T-01-02
     blocks:
@@ -169,7 +169,7 @@ ticket:
     layer: domain
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-01-01
     blocks:
@@ -190,7 +190,7 @@ ticket:
     layer: test
     type: test
     estimate_hours: 2
-    status: todo
+    status: done
     depends_on:
       - T-01-01
     blocks:
@@ -208,7 +208,7 @@ ticket:
     layer: worker
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on:
       - T-01-04
       - T-01-05
@@ -226,7 +226,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-01-03
       - T-01-06
@@ -244,6 +244,8 @@ ticket:
       - apps/api/app/schemas/documents.py   # new
       - apps/api/app/services/documents.py   # new
       - apps/api/app/ingestion/pipeline.py   # new
+      - apps/api/app/ingestion/jobs.py   # new
+      - apps/api/app/services/ingestion_settings.py   # new
       - apps/api/app/routers/__init__.py   # new
   - id: T-01-08
     uow: UOW-01
@@ -251,7 +253,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on:
       - T-01-07
     blocks:

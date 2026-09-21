@@ -17,13 +17,11 @@ done
 
 status=0
 if ((${#api_tests[@]})); then
+  # ADR-06 (exam-ingestion): API tests run inside the api image (pandoc, tesseract available).
   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --wait postgres minio >/dev/null
-  (
-    cd apps/api
-    export TEST_DATABASE_URL="postgresql+psycopg://examind:examind@localhost:${PG_PORT:-55442}/examind_test"
-    export S3_ENDPOINT="http://localhost:${MINIO_PORT:-59100}"
-    uv run --quiet pytest -q "${api_tests[@]}"
-  ) || status=$?
+  docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile test build -q api-test >/dev/null
+  docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile test run --rm -T api-test \
+    pytest -q -p no:cacheprovider "${api_tests[@]}" || status=$?
 fi
 if ((${#web_tests[@]})); then
   (cd apps/web && pnpm exec vitest run "${web_tests[@]}") || status=$?

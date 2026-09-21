@@ -3,7 +3,7 @@
 # Ticket graph — 2026092201-exam-ingestion
 
 - Units of Work: **4**
-- Tickets: **18** (0 done)
+- Tickets: **18** (8 done)
 - Total effort: **7.4d**
 - Critical path: **3.9d** across 9 tickets
 - Theoretical minimum duration with unlimited parallelism: **3.9d**
@@ -25,14 +25,14 @@ slice — the floor on how fast it can finish no matter how many people work on 
 ```mermaid
 graph LR
   subgraph UOW_01["UOW-01 · A Word exam becomes complete draft questions"]
-    T_01_01["T-01-01<br/>Image with pandoc/tesseract, worker + api-test services, verify.sh in container"]
-    T_01_02["T-01-02<br/>Schema: jobs, source_documents, question provenance, question_topics/tags"]
-    T_01_03["T-01-03<br/>Postgres job queue and worker loop (retries, stale locks)"]
-    T_01_04["T-01-04<br/>Rule-based splitter over the line stream"]
-    T_01_05["T-01-05<br/>Sample exam files (docx) generator"]
-    T_01_06["T-01-06<br/>Docx extractor via Pandoc (math, images, underline marks)"]
-    T_01_07["T-01-07<br/>Documents API + ingest pipeline (persist, metadata, source tag) + golden test"]
-    T_01_08["T-01-08<br/>Documents UI: upload, list with live status, detail with parsed questions"]
+    T_01_01["✓ T-01-01<br/>Image with pandoc/tesseract, worker + api-test services, verify.sh in container"]
+    T_01_02["✓ T-01-02<br/>Schema: jobs, source_documents, question provenance, question_topics/tags"]
+    T_01_03["✓ T-01-03<br/>Postgres job queue and worker loop (retries, stale locks)"]
+    T_01_04["✓ T-01-04<br/>Rule-based splitter over the line stream"]
+    T_01_05["✓ T-01-05<br/>Sample exam files (docx) generator"]
+    T_01_06["✓ T-01-06<br/>Docx extractor via Pandoc (math, images, underline marks)"]
+    T_01_07["✓ T-01-07<br/>Documents API + ingest pipeline (persist, metadata, source tag) + golden test"]
+    T_01_08["✓ T-01-08<br/>Documents UI: upload, list with live status, detail with parsed questions"]
   end
   subgraph UOW_02["UOW-02 · Text PDFs and scanned exams are read"]
     T_02_01["T-02-01<br/>Text PDF extractor (reading order, columns, image crops)"]
@@ -95,7 +95,13 @@ Tickets in the same wave have no dependency between them and can run in parallel
 
 ## Write-conflict hazards
 
-None: every pair that writes a shared path is ordered by a dependency.
+These pairs have no ordering constraint, so a scheduler may run them at the
+same time — and they write the same path. Sequential execution is safe;
+parallel agents will lose one side's work.
+
+| A | B | Contested path |
+|---|---|---|
+| T-01-07 | T-03-04 | `apps/api/app/services/ingestion_settings.py` |
 
 ## Critical path
 
@@ -108,14 +114,14 @@ adding people to tickets off this path will not make the feature ship sooner.
 
 | ID | UoW | Layer | Type | Est | Depends on | Verifies | Status |
 |----|-----|-------|------|-----|-----------|----------|--------|
-| T-01-01 | UOW-01 | infra | chore | 2h | — | AC-01 | todo |
-| T-01-02 | UOW-01 | data | feature | 3h | T-01-01 | AC-01, AC-21 | todo |
-| T-01-03 | UOW-01 | worker | feature | 2h | T-01-02 | AC-04 | todo |
-| T-01-04 | UOW-01 | domain | feature | 4h | T-01-01 | AC-05, AC-07, AC-08, AC-09, AC-10 | todo |
-| T-01-05 | UOW-01 | test | test | 2h | T-01-01 | AC-05, AC-06, AC-09 | todo |
-| T-01-06 | UOW-01 | worker | feature | 3h | T-01-04, T-01-05 | AC-06, AC-07 | todo |
-| T-01-07 | UOW-01 | api | feature | 4h | T-01-03, T-01-06 | AC-01, AC-02, AC-03, AC-21 | todo |
-| T-01-08 | UOW-01 | web | feature | 3h | T-01-07 | AC-01, AC-02, AC-03 | todo |
+| T-01-01 | UOW-01 | infra | chore | 2h | — | AC-01 | done |
+| T-01-02 | UOW-01 | data | feature | 3h | T-01-01 | AC-01, AC-21 | done |
+| T-01-03 | UOW-01 | worker | feature | 2h | T-01-02 | AC-04 | done |
+| T-01-04 | UOW-01 | domain | feature | 4h | T-01-01 | AC-05, AC-07, AC-08, AC-09, AC-10 | done |
+| T-01-05 | UOW-01 | test | test | 2h | T-01-01 | AC-05, AC-06, AC-09 | done |
+| T-01-06 | UOW-01 | worker | feature | 3h | T-01-04, T-01-05 | AC-06, AC-07 | done |
+| T-01-07 | UOW-01 | api | feature | 4h | T-01-03, T-01-06 | AC-01, AC-02, AC-03, AC-21 | done |
+| T-01-08 | UOW-01 | web | feature | 3h | T-01-07 | AC-01, AC-02, AC-03 | done |
 | T-02-01 | UOW-02 | worker | feature | 4h | T-01-07 | AC-11 | todo |
 | T-02-02 | UOW-02 | worker | feature | 4h | T-02-01 | AC-12 | todo |
 | T-03-01 | UOW-03 | api | feature | 4h | T-01-02 | AC-13, AC-15 | todo |

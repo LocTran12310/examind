@@ -115,7 +115,7 @@ TICKETS = [
          layer="api", estimate="4h", depends_on=["T-01-03", "T-01-06"], verifies=["AC-01", "AC-02", "AC-03", "AC-21"],
          tests=[f"{API}/tests/test_documents_api.py", f"{API}/tests/test_ingestion_golden.py"],
          touches=[f"{API}/app/routers/documents.py", f"{API}/app/schemas/documents.py", f"{API}/app/services/documents.py",
-                  f"{ING}/pipeline.py", f"{API}/app/routers/__init__.py"],
+                  f"{ING}/pipeline.py", f"{ING}/jobs.py", f"{API}/app/services/ingestion_settings.py", f"{API}/app/routers/__init__.py"],
          assumptions=["A-07", "A-08", "A-12", "A-14"],
          context="Upload validation, dedupe by hash, job enqueue, pipeline orchestration and persistence.",
          done_when=["Golden: ≥ 95% questions exact on de-mau-toan10.docx", "Parse time < 60 s asserted", "Re-parse keeps approved questions"]),

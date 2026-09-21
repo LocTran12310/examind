@@ -11,6 +11,7 @@ x-api-env: &api-env
   SUPERADMIN_USERNAME: ${SUPERADMIN_USERNAME:-admin}
   SUPERADMIN_PASSWORD: ${SUPERADMIN_PASSWORD:-admin12345}
   OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
+  APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:-}
   LOG_LEVEL: ${LOG_LEVEL:-info}
 
 services:
@@ -45,7 +46,9 @@ services:
       retries: 20
 
   api:
-    build: ./apps/api
+    build:
+      context: ./apps/api
+      target: runtime
     restart: unless-stopped
     environment:
       <<: *api-env
@@ -57,6 +60,46 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
+
+  worker:
+    build:
+      context: ./apps/api
+      target: runtime
+    restart: unless-stopped
+    command: ["python", "-m", "app.worker.main"]
+    environment:
+      <<: *api-env
+      INGEST_CONCURRENCY: ${INGEST_CONCURRENCY:-1}
+    depends_on:
+      api: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os,sys,time; sys.exit(0 if time.time()-os.path.getmtime('/tmp/worker-heartbeat') < 30 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["ai"]
+    restart: unless-stopped
+    volumes:
+      - ollamadata:/root/.ollama
+
+  api-test:
+    build:
+      context: ./apps/api
+      target: test
+    profiles: ["test"]
+    environment:
+      <<: *api-env
+      PYTHONDONTWRITEBYTECODE: "1"
+      TEST_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-examind}:${POSTGRES_PASSWORD:-examind}@postgres:5432/examind_test
+    volumes:
+      - ./apps/api:/app
+      - ./samples:/samples:ro
+    depends_on:
+      postgres: { condition: service_healthy }
+      minio: { condition: service_healthy }
 
   web:
     build: ./apps/web
@@ -90,3 +133,4 @@ volumes:
   pgdata:
   miniodata:
   caddydata:
+  ollamadata:

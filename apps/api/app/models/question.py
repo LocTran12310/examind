@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import ForeignKey, SmallInteger, String, Text
+from sqlalchemy import Float, ForeignKey, Integer, SmallInteger, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -27,4 +27,15 @@ class Question(IdMixin, TimestampMixin, Base):
     difficulty: Mapped[str | None] = mapped_column(String(8))
     grade: Mapped[int | None] = mapped_column(SmallInteger)
     status: Mapped[str] = mapped_column(String(20), default="draft")
-    source: Mapped[str | None] = mapped_column(String(32))
+    source: Mapped[str | None] = mapped_column(String(32))  # demo | document | manual
+    # provenance from ingestion (exam-ingestion)
+    source_document_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("source_documents.id", ondelete="SET NULL"), index=True)
+    number: Mapped[int | None] = mapped_column(Integer)
+    part: Mapped[str | None] = mapped_column(String(16))
+    semester_code: Mapped[str | None] = mapped_column(String(16))
+    exam_kind: Mapped[str | None] = mapped_column(String(32))
+    confidence: Mapped[float | None] = mapped_column(Float)
+    issues: Mapped[list] = mapped_column(JSONB, default=list)
+    parse_method: Mapped[str | None] = mapped_column(String(16))  # rule | llm | ocr
+    parse_model: Mapped[str | None] = mapped_column(String(120))
+    answer_source: Mapped[str | None] = mapped_column(String(16))  # inline | key | format | llm

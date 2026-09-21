@@ -18,3 +18,5 @@ class Asset(IdMixin, TimestampMixin, Base):
     size: Mapped[int] = mapped_column(Integer)
     width: Mapped[int | None] = mapped_column(Integer)
     height: Mapped[int | None] = mapped_column(Integer)
+    source_document_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("source_documents.id", ondelete="SET NULL"), index=True)
+    page: Mapped[int | None] = mapped_column(Integer)
