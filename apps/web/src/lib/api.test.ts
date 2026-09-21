@@ -28,7 +28,7 @@ describe("api client", () => {
     fetchMock.mockResolvedValueOnce(
       json(422, { error: { code: "validation_error", message: "bad", fields: { code: "sai" } } }),
     );
-    const err = await api("/admin/orgs", { body: {} }).catch((e) => e);
+    const err = (await api("/admin/orgs", { body: {} }).catch((e) => e)) as ApiError;
     expect(err).toBeInstanceOf(ApiError);
     expect(err.code).toBe("validation_error");
     expect(err.fields).toEqual({ code: "sai" });

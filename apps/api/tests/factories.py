@@ -24,3 +24,20 @@ def make_user(db, org, username="hs01", role="student", password=PASSWORD, **kw)
     db.flush()
     db.refresh(user)
     return user
+
+
+def login_as(client, db, role="super_admin", org=None, username=None):
+    """Create (if needed) and log in a user; returns the user."""
+    from sqlalchemy import select
+
+    from app.models.org import SYSTEM_ORG_CODE
+
+    if role == "super_admin":
+        org = db.scalar(select(Organization).where(Organization.code == SYSTEM_ORG_CODE))
+        username = username or "root"
+    org = org or make_org(db)
+    user = make_user(db, org, username or f"{role}1", role=role)
+    db.commit()
+    r = client.post("/api/auth/login", json={"org_code": org.code, "username": user.username, "password": PASSWORD})
+    assert r.status_code == 200, r.text
+    return user

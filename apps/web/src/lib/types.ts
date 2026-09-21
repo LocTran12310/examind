@@ -28,3 +28,19 @@ export const ROLE_LABEL: Record<Role, string> = {
   teacher: "Giáo viên",
   student: "Học sinh",
 };
+
+export interface Org {
+  id: string;
+  code: string;
+  name: string;
+  status: "active" | "suspended";
+  is_system: boolean;
+  user_count: number;
+  created_at: string;
+  deleted_at: string | null;
+}
+
+export interface OrgCreated {
+  org: Org;
+  admin: { username: string; temp_password: string };
+}

@@ -45,7 +45,11 @@ def run() -> None:
 
 
 def extra_seeders(db: Session) -> None:
-    """Hook for later features (org templates, demo content)."""
+    """Backfill per-org reference data for every tenant org (idempotent)."""
+    from app.seed.org_template import seed_org
+
+    for org_id in db.scalars(select(Organization.id).where(Organization.is_system.is_(False))):
+        seed_org(db, org_id)
 
 
 if __name__ == "__main__":

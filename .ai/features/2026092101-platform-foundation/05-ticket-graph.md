@@ -3,7 +3,7 @@
 # Ticket graph — 2026092101-platform-foundation
 
 - Units of Work: **4**
-- Tickets: **20** (5 done)
+- Tickets: **20** (9 done)
 - Total effort: **8.6d**
 - Critical path: **3.5d** across 8 tickets
 - Theoretical minimum duration with unlimited parallelism: **3.5d**
@@ -30,12 +30,12 @@ graph LR
     T_01_03["✓ T-01-03<br/>Auth service: argon2, JWT, login, lockout, refresh rotation, change password"]
     T_01_04["✓ T-01-04<br/>Auth routes, cookies, deps (current_user, require_role, org scope)"]
     T_01_05["✓ T-01-05<br/>Next.js scaffold, UI primitives, API client"]
-    T_01_06["T-01-06<br/>Login, change-password pages, authenticated layout and role home"]
+    T_01_06["✓ T-01-06<br/>Login, change-password pages, authenticated layout and role home"]
   end
   subgraph UOW_02["UOW-02 · Super admin manages organisations"]
-    T_02_01["T-02-01<br/>Taxonomy, topic (ltree), tag schema and per-org seed template"]
-    T_02_02["T-02-02<br/>Org service and /admin/orgs API"]
-    T_02_03["T-02-03<br/>Admin organisations UI"]
+    T_02_01["✓ T-02-01<br/>Taxonomy, topic (ltree), tag schema and per-org seed template"]
+    T_02_02["✓ T-02-02<br/>Org service and /admin/orgs API"]
+    T_02_03["✓ T-02-03<br/>Admin organisations UI"]
   end
   subgraph UOW_03["UOW-03 · Org admin imports users and manages classes"]
     T_03_01["T-03-01<br/>User service + API: CRUD, deactivate, reset password, isolation"]
@@ -118,10 +118,10 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-01-03 | UOW-01 | domain | feature | 3h | T-01-02 | AC-03, AC-04, AC-05, AC-06, AC-08, AC-09 | done |
 | T-01-04 | UOW-01 | api | feature | 3h | T-01-03 | AC-03, AC-04, AC-05, AC-06, AC-08, AC-09 | done |
 | T-01-05 | UOW-01 | web | chore | 3h | T-01-01 | AC-08 | done |
-| T-01-06 | UOW-01 | web | feature | 3h | T-01-04, T-01-05 | AC-03, AC-04, AC-07, AC-09 | todo |
-| T-02-01 | UOW-02 | data | feature | 4h | T-01-02 | AC-10 | todo |
-| T-02-02 | UOW-02 | api | feature | 4h | T-02-01, T-01-04 | AC-10, AC-11, AC-12, AC-13, AC-14 | todo |
-| T-02-03 | UOW-02 | web | feature | 4h | T-02-02, T-01-06 | AC-10, AC-11, AC-12, AC-13 | todo |
+| T-01-06 | UOW-01 | web | feature | 3h | T-01-04, T-01-05 | AC-03, AC-04, AC-07, AC-09 | done |
+| T-02-01 | UOW-02 | data | feature | 4h | T-01-02 | AC-10 | done |
+| T-02-02 | UOW-02 | api | feature | 4h | T-02-01, T-01-04 | AC-10, AC-11, AC-12, AC-13, AC-14 | done |
+| T-02-03 | UOW-02 | web | feature | 4h | T-02-02, T-01-06 | AC-10, AC-11, AC-12, AC-13 | done |
 | T-03-01 | UOW-03 | api | feature | 4h | T-02-02 | AC-15, AC-18, AC-19 | todo |
 | T-03-02 | UOW-03 | domain | feature | 4h | T-03-01, T-03-03 | AC-16, AC-17 | todo |
 | T-03-03 | UOW-03 | api | feature | 3h | T-02-02 | AC-19, AC-20 | todo |

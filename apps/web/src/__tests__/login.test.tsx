@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { LoginForm, ORG_KEY } from "./LoginForm";
+import { LoginForm, ORG_KEY } from "@/app/(auth)/login/LoginForm";
 
 const me = { id: "1", username: "hs01", full_name: "HS", role: "student", must_change_password: false, org: { id: "o", code: "trungtama", name: "A" } };
 

@@ -16,8 +16,8 @@ rollback: revert the merge commit; migrations have downgrade()
 
 ## Demo script
 1. cp .env.example .env && docker compose up -d --build
-2. Open http://localhost:8080/api/health → status ok, db ok, storage ok
-3. Open http://localhost:8080/login, enter org `system`, `admin`, `admin12345` → forced to /change-password
+2. Open http://localhost:8088/api/health → status ok, db ok, storage ok
+3. Open http://localhost:8088/login, enter org `system`, `admin`, `admin12345` → forced to /change-password
 4. Set a new password → land on the super admin home
 5. Log out, log in with a wrong password → generic error; reload /login → org field prefilled
 
