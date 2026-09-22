@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Input } from "@/components/ui";
+import { Input } from "@/components/ui/input";
 import type { Topic } from "@/lib/types";
 
 export function topicLabel(t: Topic, byId: Map<string, Topic>): string {
@@ -50,20 +50,20 @@ export function TopicPicker({ topics, onPick, onClose, autoFocus = true }: { top
           }
         }}
       />
-      <ul className="max-h-72 overflow-y-auto rounded-md border border-gray-200 text-sm" role="listbox">
+      <ul className="max-h-72 overflow-y-auto rounded-md border border-border text-sm" role="listbox">
         {items.map((x, i) => (
           <li
             key={x.t.id}
             role="option"
             aria-selected={i === active}
-            className={i === active ? "cursor-pointer bg-brand-50 px-3 py-1.5 text-brand-700" : "cursor-pointer px-3 py-1.5 hover:bg-gray-50"}
+            className={i === active ? "cursor-pointer bg-primary/10 px-3 py-1.5 text-primary" : "cursor-pointer px-3 py-1.5 hover:bg-muted/50"}
             onMouseEnter={() => setActive(i)}
             onClick={() => onPick(x.t)}
           >
             {x.label}
           </li>
         ))}
-        {items.length === 0 && <li className="px-3 py-2 text-gray-500">Không tìm thấy</li>}
+        {items.length === 0 && <li className="px-3 py-2 text-muted-foreground">Không tìm thấy</li>}
       </ul>
     </div>
   );

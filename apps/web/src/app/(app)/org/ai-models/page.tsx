@@ -4,7 +4,13 @@ import { useState } from "react";
 import { useMe } from "@/app/(app)/AppShell";
 import { emptyDraft, ModelForm } from "@/components/ai/ModelForm";
 import { ModelTable, type TestState } from "@/components/ai/ModelTable";
-import { Alert, Button, Card, Empty, Input, Modal, PageHeader } from "@/components/ui";
+import { FormAlert } from "@/components/app/FormAlert";
+import { Button } from "@/components/ui/button";
+import { Panel } from "@/components/app/Panel";
+import { EmptyState } from "@/components/app/EmptyState";
+import { Input } from "@/components/ui/input";
+import { FormDialog } from "@/components/app/FormDialog";
+import { PageHeader } from "@/components/app/PageHeader";
 import { api, ApiError } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
 import type { AiModel } from "@/lib/types";
@@ -47,20 +53,20 @@ export default function AiModelsPage() {
     <>
       <PageHeader
         title="Model AI"
-        subtitle={me.role === "super_admin" ? "Model hệ thống — mọi trung tâm đều thấy" : "Model trung tâm dùng để tách câu, gắn chuyên đề và đọc ảnh"}
+        description={me.role === "super_admin" ? "Model hệ thống — mọi trung tâm đều thấy" : "Model trung tâm dùng để tách câu, gắn chuyên đề và đọc ảnh"}
         actions={
-          <Button variant="primary" onClick={() => setAdding(emptyDraft())}>
+          <Button onClick={() => setAdding(emptyDraft())}>
             Thêm model
           </Button>
         }
       />
-      <Card className="mb-4">
+      <Panel className="mb-4">
         <div className="flex flex-wrap items-end gap-2">
           <div className="min-w-64 flex-1">
-            <label className="text-sm font-medium text-gray-700">Máy chủ Ollama</label>
+            <label className="text-sm font-medium text-foreground/80">Máy chủ Ollama</label>
             <Input placeholder="Mặc định theo cấu hình máy chủ (OLLAMA_URL)" value={ollamaUrl} onChange={(e) => setOllamaUrl(e.target.value)} />
           </div>
-          <Button
+          <Button variant="outline"
             onClick={() =>
               act(async () => setFound(await api("/ai-models/discover", { body: { base_url: ollamaUrl || null } })))
             }
@@ -68,26 +74,26 @@ export default function AiModelsPage() {
             Phát hiện model Ollama
           </Button>
         </div>
-        {found?.error && <div className="mt-3"><Alert tone="amber">{found.error}</Alert></div>}
-        {found && !found.error && found.models.length === 0 && <p className="mt-3 text-sm text-gray-500">Ollama chưa có model nào — chạy `ollama pull qwen2.5:7b`.</p>}
+        {found?.error && <div className="mt-3"><FormAlert kind="warning">{found.error}</FormAlert></div>}
+        {found && !found.error && found.models.length === 0 && <p className="mt-3 text-sm text-muted-foreground">Ollama chưa có model nào — chạy `ollama pull qwen2.5:7b`.</p>}
         {found && found.models.length > 0 && (
-          <ul className="mt-3 divide-y divide-gray-100 text-sm" data-testid="discovered">
+          <ul className="mt-3 divide-y divide-border text-sm" data-testid="discovered">
             {found.models.map((d) => (
               <li key={d.model} className="flex items-center justify-between py-2">
                 <span>
-                  <span className="font-mono">{d.model}</span> <span className="text-gray-500">{d.parameter_size}</span>
-                  {d.capabilities.includes("vision") && <span className="ml-2 text-xs text-brand-700">đọc ảnh</span>}
+                  <span className="font-mono">{d.model}</span> <span className="text-muted-foreground">{d.parameter_size}</span>
+                  {d.capabilities.includes("vision") && <span className="ml-2 text-xs text-primary">đọc ảnh</span>}
                 </span>
-                <Button size="sm" onClick={() => setAdding(emptyDraft({ name: d.model, model: d.model, base_url: found.base_url, capabilities: d.capabilities }))}>
+                <Button variant="outline" size="sm" onClick={() => setAdding(emptyDraft({ name: d.model, model: d.model, base_url: found.base_url, capabilities: d.capabilities }))}>
                   Thêm
                 </Button>
               </li>
             ))}
           </ul>
         )}
-      </Card>
-      {error && <div className="mb-3"><Alert>{error}</Alert></div>}
-      {data && data.length === 0 && <Empty>Chưa có model nào. Hệ thống vẫn tách đề bằng quy tắc; thêm model để bật AI.</Empty>}
+      </Panel>
+      {error && <div className="mb-3"><FormAlert>{error}</FormAlert></div>}
+      {data && data.length === 0 && <EmptyState>Chưa có model nào. Hệ thống vẫn tách đề bằng quy tắc; thêm model để bật AI.</EmptyState>}
       {data && data.length > 0 && (
         <ModelTable
           models={data}
@@ -98,10 +104,10 @@ export default function AiModelsPage() {
           onDelete={(m) => window.confirm(`Xóa model ${m.name}?`) && act(() => api(`/ai-models/${m.id}`, { method: "DELETE" }))}
         />
       )}
-      <Modal open={!!adding} title="Thêm model" wide onClose={() => setAdding(null)}>
+      <FormDialog open={!!adding} title="Thêm model" wide onOpenChange={(o) => !o && setAdding(null)}>
         {adding && <ModelForm initial={adding} onDone={() => (setAdding(null), void reload())} />}
-      </Modal>
-      <Modal open={!!editing} title="Sửa model" wide onClose={() => setEditing(null)}>
+      </FormDialog>
+      <FormDialog open={!!editing} title="Sửa model" wide onOpenChange={(o) => !o && setEditing(null)}>
         {editing && (
           <ModelForm
             existing={editing}
@@ -109,7 +115,7 @@ export default function AiModelsPage() {
             onDone={() => (setEditing(null), void reload())}
           />
         )}
-      </Modal>
+      </FormDialog>
     </>
   );
 }

@@ -1,8 +1,13 @@
 "use client";
 
-import clsx from "clsx";
+import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { Alert, Badge, Button, Input, Modal, Select } from "@/components/ui";
+import { FormAlert } from "@/components/app/FormAlert";
+import { ToneBadge } from "@/components/app/ToneBadge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { FormDialog } from "@/components/app/FormDialog";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { api, ApiError } from "@/lib/api";
 import { LEVEL_LABEL, type Topic } from "@/lib/types";
 import { buildTree, flatten, isInSubtree, type TopicNode } from "./tree";
@@ -41,11 +46,11 @@ export function TopicTree({ topics, subjectId, onChange, readOnly }: { topics: T
     const expanded = open.has(node.id);
     return (
       <li key={node.id}>
-        <div className={clsx("group flex items-center gap-2 rounded-md py-1 pr-2 hover:bg-gray-50")} style={{ paddingLeft: depth * 20 + 4 }} data-testid={`topic-${node.name}`}>
+        <div className={cn("group flex items-center gap-2 rounded-md py-1 pr-2 hover:bg-muted/50")} style={{ paddingLeft: depth * 20 + 4 }} data-testid={`topic-${node.name}`}>
           <button
             type="button"
             aria-label={expanded ? "Thu gọn" : "Mở rộng"}
-            className={clsx("w-5 text-gray-500", !node.children.length && "invisible")}
+            className={cn("w-5 text-muted-foreground", !node.children.length && "invisible")}
             onClick={() => toggle(node.id)}
           >
             {expanded ? "▾" : "▸"}
@@ -57,12 +62,12 @@ export function TopicTree({ topics, subjectId, onChange, readOnly }: { topics: T
               onSave={(name) => run(() => api(`/topics/${node.id}`, { method: "PATCH", body: { name } })).then((ok) => ok && setEditing(null))}
             />
           ) : (
-            <span className={clsx(depth === 0 && "font-semibold")} onDoubleClick={() => !readOnly && setEditing(node.id)}>
+            <span className={cn(depth === 0 && "font-semibold")} onDoubleClick={() => !readOnly && setEditing(node.id)}>
               {node.name}
             </span>
           )}
-          <Badge>{LEVEL_LABEL[node.level_kind]}</Badge>
-          {node.grade && <span className="text-xs text-gray-400">Lớp {node.grade}</span>}
+          <ToneBadge>{LEVEL_LABEL[node.level_kind]}</ToneBadge>
+          {node.grade && <span className="text-xs text-muted-foreground/70">Lớp {node.grade}</span>}
           {!readOnly && editing !== node.id && (
             <div className="ml-auto flex gap-1 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100">
               <Button size="sm" variant="ghost" onClick={() => (setAdding(node.id), setOpen((s) => new Set(s).add(node.id)))}>
@@ -80,7 +85,7 @@ export function TopicTree({ topics, subjectId, onChange, readOnly }: { topics: T
               <Button
                 size="sm"
                 variant="ghost"
-                className="text-red-700"
+                className="text-destructive"
                 onClick={() => window.confirm(`Xóa "${node.name}"?`) && run(() => api(`/topics/${node.id}`, { method: "DELETE" }))}
               >
                 Xóa
@@ -109,8 +114,8 @@ export function TopicTree({ topics, subjectId, onChange, readOnly }: { topics: T
 
   return (
     <div>
-      {error && <div className="mb-3"><Alert>{error}</Alert></div>}
-      <ul className="rounded-xl border border-gray-200 bg-white p-2">
+      {error && <div className="mb-3"><FormAlert>{error}</FormAlert></div>}
+      <ul className="rounded-xl border border-border bg-card p-2">
         {roots.map((r) => renderRow(r, 0))}
         {adding === "root" && (
           <li className="py-1 pl-7">
@@ -124,11 +129,11 @@ export function TopicTree({ topics, subjectId, onChange, readOnly }: { topics: T
         )}
       </ul>
       {!readOnly && (
-        <Button className="mt-3" onClick={() => setAdding("root")}>
+        <Button variant="outline" className="mt-3" onClick={() => setAdding("root")}>
           + Mạch kiến thức
         </Button>
       )}
-      <Modal open={!!dialog} title={dialog?.kind === "move" ? "Di chuyển chuyên đề" : "Gộp chuyên đề"} onClose={() => setDialog(null)}>
+      <FormDialog open={!!dialog} title={dialog?.kind === "move" ? "Di chuyển chuyên đề" : "Gộp chuyên đề"} onOpenChange={(o) => !o && setDialog(null)}>
         {dialog && (
           <TargetPicker
             topics={topics}
@@ -146,7 +151,7 @@ export function TopicTree({ topics, subjectId, onChange, readOnly }: { topics: T
             }}
           />
         )}
-      </Modal>
+      </FormDialog>
     </div>
   );
 }
@@ -162,10 +167,10 @@ function InlineName({ initial, onSave, onCancel, placeholder }: { initial: strin
       }}
     >
       <Input autoFocus value={value} placeholder={placeholder} onChange={(e) => setValue(e.target.value)} onKeyDown={(e) => e.key === "Escape" && onCancel()} className="h-8 max-w-md" />
-      <Button size="sm" variant="primary" type="submit">
+      <Button size="sm" type="submit">
         Lưu
       </Button>
-      <Button size="sm" type="button" onClick={onCancel}>
+      <Button variant="outline" size="sm" type="button" onClick={onCancel}>
         Hủy
       </Button>
     </form>
@@ -191,17 +196,17 @@ function TargetPicker({
   const [target, setTarget] = useState<string>(allowRoot ? "" : options[0]?.node.id ?? "");
   return (
     <div className="space-y-4">
-      {note && <Alert tone="amber">{note}</Alert>}
-      <Select className="w-full" value={target} onChange={(e) => setTarget(e.target.value)} aria-label="Chuyên đề đích">
-        {allowRoot && <option value="">— Cấp gốc —</option>}
+      {note && <FormAlert kind="warning">{note}</FormAlert>}
+      <NativeSelect className="w-full" value={target} onChange={(e) => setTarget(e.target.value)} aria-label="Chuyên đề đích">
+        {allowRoot && <NativeSelectOption value="">— Cấp gốc —</NativeSelectOption>}
         {options.map(({ node, depth }) => (
-          <option key={node.id} value={node.id}>
+          <NativeSelectOption key={node.id} value={node.id}>
             {"  ".repeat(depth) + (depth ? "└ " : "") + node.name}
-          </option>
+          </NativeSelectOption>
         ))}
-      </Select>
+      </NativeSelect>
       <div className="flex justify-end">
-        <Button variant="primary" onClick={() => onPick(target || null)} disabled={!allowRoot && !target}>
+        <Button onClick={() => onPick(target || null)} disabled={!allowRoot && !target}>
           {action}
         </Button>
       </div>

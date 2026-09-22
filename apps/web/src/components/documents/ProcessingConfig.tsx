@@ -1,6 +1,8 @@
 "use client";
 
-import { Field, Input, Select } from "@/components/ui";
+import { FormField } from "@/components/app/FormField";
+import { Input } from "@/components/ui/input";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import type { AiModel, ProcessingConfig } from "@/lib/types";
 
 const MODES: [ProcessingConfig["split_mode"], string][] = [
@@ -33,74 +35,74 @@ export function ProcessingConfigFields({
 
   return (
     <div className="grid gap-3 sm:grid-cols-2">
-      <Field label="Chế độ tách câu">
-        <Select className="w-full" value={value.split_mode} onChange={(e) => set("split_mode", e.target.value as ProcessingConfig["split_mode"])}>
+      <FormField label="Chế độ tách câu">
+        <NativeSelect className="w-full" value={value.split_mode} onChange={(e) => set("split_mode", e.target.value as ProcessingConfig["split_mode"])}>
           {MODES.map(([k, v]) => (
-            <option key={k} value={k}>
+            <NativeSelectOption key={k} value={k}>
               {v}
-            </option>
+            </NativeSelectOption>
           ))}
-        </Select>
-      </Field>
-      <Field label="Đọc ảnh scan (OCR)">
-        <Select className="w-full" value={value.ocr} onChange={(e) => set("ocr", e.target.value as ProcessingConfig["ocr"])}>
+        </NativeSelect>
+      </FormField>
+      <FormField label="Đọc ảnh scan (OCR)">
+        <NativeSelect className="w-full" value={value.ocr} onChange={(e) => set("ocr", e.target.value as ProcessingConfig["ocr"])}>
           {OCR.map(([k, v]) => (
-            <option key={k} value={k} disabled={k === "vision" && vision.length === 0}>
+            <NativeSelectOption key={k} value={k} disabled={k === "vision" && vision.length === 0}>
               {v}
-            </option>
+            </NativeSelectOption>
           ))}
-        </Select>
-      </Field>
+        </NativeSelect>
+      </FormField>
       {value.split_mode !== "rule" && (
         <>
-          <Field label="Model tách câu" hint={text.length ? undefined : "Chưa có model — thêm ở trang Model AI"}>
-            <Select className="w-full" value={primary} onChange={(e) => set("split_models", [e.target.value, fallback].filter(Boolean))}>
-              <option value="">—</option>
+          <FormField label="Model tách câu" hint={text.length ? undefined : "Chưa có model — thêm ở trang Model AI"}>
+            <NativeSelect className="w-full" value={primary} onChange={(e) => set("split_models", [e.target.value, fallback].filter(Boolean))}>
+              <NativeSelectOption value="">—</NativeSelectOption>
               {text.map((m) => (
-                <option key={m.id} value={m.id}>
+                <NativeSelectOption key={m.id} value={m.id}>
                   {label(m)}
-                </option>
+                </NativeSelectOption>
               ))}
-            </Select>
-          </Field>
-          <Field label="Model dự phòng">
-            <Select className="w-full" value={fallback} onChange={(e) => set("split_models", [primary, e.target.value].filter(Boolean))}>
-              <option value="">—</option>
+            </NativeSelect>
+          </FormField>
+          <FormField label="Model dự phòng">
+            <NativeSelect className="w-full" value={fallback} onChange={(e) => set("split_models", [primary, e.target.value].filter(Boolean))}>
+              <NativeSelectOption value="">—</NativeSelectOption>
               {text.filter((m) => m.id !== primary).map((m) => (
-                <option key={m.id} value={m.id}>
+                <NativeSelectOption key={m.id} value={m.id}>
                   {label(m)}
-                </option>
+                </NativeSelectOption>
               ))}
-            </Select>
-          </Field>
+            </NativeSelect>
+          </FormField>
         </>
       )}
-      <Field label="Model gắn chuyên đề" hint="Để trống: chỉ dùng từ khóa">
-        <Select className="w-full" value={value.tag_model ?? ""} onChange={(e) => set("tag_model", e.target.value || null)}>
-          <option value="">—</option>
+      <FormField label="Model gắn chuyên đề" hint="Để trống: chỉ dùng từ khóa">
+        <NativeSelect className="w-full" value={value.tag_model ?? ""} onChange={(e) => set("tag_model", e.target.value || null)}>
+          <NativeSelectOption value="">—</NativeSelectOption>
           {text.map((m) => (
-            <option key={m.id} value={m.id}>
+            <NativeSelectOption key={m.id} value={m.id}>
               {label(m)}
-            </option>
+            </NativeSelectOption>
           ))}
-        </Select>
-      </Field>
+        </NativeSelect>
+      </FormField>
       {value.ocr === "vision" && (
-        <Field label="Model đọc ảnh">
-          <Select className="w-full" value={value.vision_model ?? ""} onChange={(e) => set("vision_model", e.target.value || null)}>
-            <option value="">—</option>
+        <FormField label="Model đọc ảnh">
+          <NativeSelect className="w-full" value={value.vision_model ?? ""} onChange={(e) => set("vision_model", e.target.value || null)}>
+            <NativeSelectOption value="">—</NativeSelectOption>
             {vision.map((m) => (
-              <option key={m.id} value={m.id}>
+              <NativeSelectOption key={m.id} value={m.id}>
                 {label(m)}
-              </option>
+              </NativeSelectOption>
             ))}
-          </Select>
-        </Field>
+          </NativeSelect>
+        </FormField>
       )}
       {showThreshold && (
-        <Field label="Ngưỡng tự duyệt" hint="Câu có độ tin cậy từ ngưỡng này trở lên được duyệt tự động">
+        <FormField label="Ngưỡng tự duyệt" hint="Câu có độ tin cậy từ ngưỡng này trở lên được duyệt tự động">
           <Input type="number" step="0.05" min={0.5} max={1} value={value.threshold} onChange={(e) => set("threshold", Number(e.target.value))} />
-        </Field>
+        </FormField>
       )}
     </div>
   );
@@ -108,8 +110,8 @@ export function ProcessingConfigFields({
 
 export function ProcessingConfigPanel(props: Parameters<typeof ProcessingConfigFields>[0]) {
   return (
-    <details className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2" data-testid="processing-config">
-      <summary className="cursor-pointer text-sm font-medium text-gray-700">Cấu hình xử lý</summary>
+    <details className="rounded-lg border border-border bg-muted/50 px-4 py-2" data-testid="processing-config">
+      <summary className="cursor-pointer text-sm font-medium text-foreground/80">Cấu hình xử lý</summary>
       <div className="pt-3">
         <ProcessingConfigFields {...props} />
       </div>

@@ -1,12 +1,16 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { ClassCreateForm, currentSchoolYear } from "@/components/org/ClassForms";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import ClassesPage from "@/app/(app)/org/classes/page";
+import { ClassForm, currentSchoolYear } from "@/components/org/ClassForms";
 import { MemberManager } from "@/components/org/MemberManager";
-import type { ClassDetail, User } from "@/lib/types";
-import { mockFetch, route } from "./helpers";
+import type { SchoolClass, User } from "@/lib/types";
+import { lastQuery, mockFetch, page, route } from "./helpers";
+import { searchOf, setUrl } from "./router-mock";
 
-const student = (username: string): User => ({
+vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);
+
+const student = (username: string, class_ids: string[] = []): User => ({
   id: username,
   username,
   full_name: username.toUpperCase(),
@@ -16,9 +20,11 @@ const student = (username: string): User => ({
   must_change_password: false,
   last_login_at: null,
   created_at: "",
-  class_ids: [],
+  class_ids,
 });
+const klass = (o: Partial<SchoolClass> = {}): SchoolClass => ({ id: "c1", name: "10A1", grade: 10, school_year: "2026-2027", member_count: 1, created_at: "", ...o });
 
+beforeEach(() => setUrl("/org/classes"));
 afterEach(() => vi.unstubAllGlobals());
 
 describe("classes", () => {
@@ -27,30 +33,56 @@ describe("classes", () => {
     expect(currentSchoolYear(new Date(2027, 2, 1))).toBe("2026-2027");
   });
 
-  it("creates a class", async () => {
+  it("creates a class with a grade", async () => {
     const f = mockFetch(route("POST", "/api/classes", { id: "c" }, 201));
-    const onCreated = vi.fn();
-    render(<ClassCreateForm onCreated={onCreated} />);
-    await userEvent.type(screen.getByLabelText("Tên lớp"), "10A1");
-    await userEvent.click(screen.getByRole("button", { name: "Tạo lớp" }));
-    await waitFor(() => expect(onCreated).toHaveBeenCalled());
-    expect(JSON.parse(String(f.mock.calls[0][1]?.body)).name).toBe("10A1");
+    const onDone = vi.fn();
+    const u = userEvent.setup();
+    render(<ClassForm onDone={onDone} />);
+    await u.type(screen.getByLabelText("Tên lớp"), "10A1");
+    await u.click(screen.getByLabelText("Khối"));
+    await u.click(await screen.findByRole("option", { name: "Khối 10" }));
+    await u.click(screen.getByRole("button", { name: "Tạo lớp" }));
+    await waitFor(() => expect(onDone).toHaveBeenCalled());
+    expect(JSON.parse(String(f.mock.calls[0][1]?.body))).toMatchObject({ name: "10A1", grade: 10 });
   });
 
-  it("adds and removes members", async () => {
-    const detail: ClassDetail = { id: "c1", name: "10A1", grade: 10, school_year: "2026-2027", member_count: 1, created_at: "", members: [student("hs01")] };
+  it("selecting a class shows its students in a detail table with its own URL params", async () => {
+    const fetch = mockFetch(
+      route("GET", /^\/api\/classes\?/, page([klass(), klass({ id: "c2", name: "11B", grade: 11 })])),
+      route("GET", /^\/api\/users\?.*class_id=c1/, page([student("hs01", ["c1"])])),
+    );
+    const u = userEvent.setup();
+    render(<ClassesPage />);
+    await u.click(await screen.findByText("10A1"));
+    expect(await screen.findByText("HS01")).toBeInTheDocument();
+    expect(lastQuery(fetch, "/users").get("class_id")).toBe("c1");
+    await u.type(screen.getAllByRole("textbox", { name: "Lọc Họ tên" })[0], "an");
+    await waitFor(() => expect(searchOf().get("m.full_name")).toBe("an"), { timeout: 1500 });
+    await waitFor(() => expect(lastQuery(fetch, "/users").get("full_name")).toBe("an"));
+    expect(lastQuery(fetch, "/classes").get("full_name")).toBeNull();
+  });
+
+  it("adds a student and removes one after confirmation", async () => {
     const f = mockFetch(
-      route("GET", /\/api\/users\?/, { items: [student("hs01"), student("hs02")], total: 2, page: 1, page_size: 20 }),
+      route("GET", /^\/api\/users\?.*class_id=c1/, page([student("hs01", ["c1"])])),
+      route("GET", /^\/api\/users\?q=hs/, page([student("hs01", ["c1"]), student("hs02")])),
       route("POST", "/api/classes/c1/members", undefined, 204),
       route("DELETE", "/api/classes/c1/members/hs01", undefined, 204),
     );
     const onChange = vi.fn();
-    render(<MemberManager detail={detail} onChange={onChange} />);
-    await userEvent.type(screen.getByPlaceholderText("Tìm tên hoặc tên đăng nhập"), "hs");
-    await userEvent.click(await screen.findByRole("button", { name: "Thêm" }));
+    const u = userEvent.setup();
+    render(<MemberManager classId="c1" onChange={onChange} />);
+    await screen.findByText("HS01");
+    await u.click(screen.getByRole("button", { name: "Thêm học sinh" }));
+    await u.type(screen.getByRole("textbox", { name: "Tìm học sinh" }), "hs");
+    const dialog = await screen.findByRole("dialog");
+    await u.click(await within(dialog).findByRole("button", { name: "Thêm" }));
     await waitFor(() => expect(onChange).toHaveBeenCalledTimes(1));
     expect(JSON.parse(String(f.mock.calls.find((c) => c[0] === "/api/classes/c1/members")?.[1]?.body)).user_ids).toEqual(["hs02"]);
-    await userEvent.click(screen.getByRole("button", { name: "Xóa khỏi lớp" }));
-    await waitFor(() => expect(onChange).toHaveBeenCalledTimes(2));
+    await u.keyboard("{Escape}");
+    await u.click(screen.getByRole("checkbox", { name: "Chọn dòng" }));
+    await u.click(screen.getByRole("button", { name: "Xóa" }));
+    await u.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Xóa" }));
+    await waitFor(() => expect(f.mock.calls.some(([url, init]) => url === "/api/classes/c1/members/hs01" && (init as RequestInit)?.method === "DELETE")).toBe(true));
   });
 });

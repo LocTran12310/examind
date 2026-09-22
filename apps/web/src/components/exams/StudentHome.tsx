@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Alert, Badge, Button, Card, Empty } from "@/components/ui";
+import { FormAlert } from "@/components/app/FormAlert";
+import { ToneBadge } from "@/components/app/ToneBadge";
+import { Button } from "@/components/ui/button";
+import { Panel } from "@/components/app/Panel";
+import { EmptyState } from "@/components/app/EmptyState";
 import { api, ApiError } from "@/lib/api";
 import { fmt } from "@/lib/dates";
 import { useApi } from "@/lib/hooks";
@@ -30,25 +34,25 @@ export function StudentHome() {
 
   return (
     <div className="space-y-6">
-      {error && <Alert>{error}</Alert>}
+      {error && <FormAlert>{error}</FormAlert>}
       <section>
         <h2 className="mb-2 font-medium">Đang mở</h2>
         {open.length === 0 ? (
-          <Empty>Không có bài nào đang mở.</Empty>
+          <EmptyState>Không có bài nào đang mở.</EmptyState>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             {open.map((x) => {
               const inProgress = x.attempts.find((a) => a.status === "in_progress");
               return (
-                <Card key={x.assignment.id} data-testid={`open-${x.assignment.title}`}>
+                <Panel key={x.assignment.id} data-testid={`open-${x.assignment.title}`}>
                   <div className="font-medium">{x.assignment.title}</div>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted-foreground">
                     {x.assignment.duration_minutes} phút · hạn {fmt(x.assignment.close_at)}
                   </p>
-                  <Button variant="primary" className="mt-3" onClick={() => void start(x.assignment.id)}>
+                  <Button className="mt-3" onClick={() => void start(x.assignment.id)}>
                     {inProgress ? "Làm tiếp" : "Bắt đầu"}
                   </Button>
-                </Card>
+                </Panel>
               );
             })}
           </div>
@@ -69,19 +73,19 @@ export function StudentHome() {
       {done.length > 0 && (
         <section>
           <h2 className="mb-2 font-medium">Đã làm</h2>
-          <ul className="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white">
+          <ul className="divide-y divide-border rounded-xl border border-border bg-card">
             {done.flatMap((x) =>
               x.attempts
                 .filter((a) => a.status === "submitted")
                 .map((a) => (
                   <li key={a.id} className="flex items-center justify-between px-4 py-3 text-sm" data-testid={`done-${x.assignment.title}`}>
                     <span>
-                      {x.assignment.title} <span className="text-gray-500">· nộp {fmt(a.submitted_at)}</span>
+                      {x.assignment.title} <span className="text-muted-foreground">· nộp {fmt(a.submitted_at)}</span>
                     </span>
                     <span className="flex items-center gap-2">
-                      {a.score10 !== null ? <Badge tone="blue">{a.score10} điểm</Badge> : <Badge>Chưa có điểm</Badge>}
-                      {a.needs_grading && <Badge tone="amber">Đang chấm tự luận</Badge>}
-                      <Link href={`/results/${a.id}`} className="text-brand-700 hover:underline">
+                      {a.score10 !== null ? <ToneBadge tone="blue">{a.score10} điểm</ToneBadge> : <ToneBadge>Chưa có điểm</ToneBadge>}
+                      {a.needs_grading && <ToneBadge tone="amber">Đang chấm tự luận</ToneBadge>}
+                      <Link href={`/results/${a.id}`} className="text-primary hover:underline">
                         Xem kết quả
                       </Link>
                     </span>

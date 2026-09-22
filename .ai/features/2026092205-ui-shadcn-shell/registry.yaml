@@ -205,7 +205,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-02-02
       - T-02-03
@@ -220,6 +220,8 @@ ticket:
       - apps/web/src/app/(app)/org/classes/page.tsx   # new
       - apps/web/src/components/org/UserForm.tsx   # new
       - apps/web/src/components/admin/OrgForm.tsx   # new
+      - apps/web/src/components/org/MemberManager.tsx   # new
+      - apps/web/src/components/org/ClassForms.tsx   # new
   - id: T-03-01
     uow: UOW-03
     title: 'Bare-list endpoints → Page (classes done; exams, assignments, tags, ai-models, review)'

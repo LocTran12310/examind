@@ -1,6 +1,8 @@
 "use client";
 
-import { Badge, Button, Table, td, th } from "@/components/ui";
+import { ToneBadge } from "@/components/app/ToneBadge";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PROVIDER_LABEL, type AiModel } from "@/lib/types";
 
 export type TestState = Record<string, { ok: boolean; latency_ms?: number | null; error?: string | null } | "running">;
@@ -21,67 +23,69 @@ export function ModelTable({
   onDelete: (m: AiModel) => void;
 }) {
   return (
-    <Table>
-      <thead className="bg-gray-50">
-        <tr>
-          <th className={th}>Model</th>
-          <th className={th}>Nhà cung cấp</th>
-          <th className={th}>Khả năng</th>
-          <th className={th}>Trạng thái</th>
-          <th className={th} />
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-gray-100">
+    <div className="rounded-lg border bg-card">
+<Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Model</TableHead>
+          <TableHead>Nhà cung cấp</TableHead>
+          <TableHead>Khả năng</TableHead>
+          <TableHead>Trạng thái</TableHead>
+          <TableHead />
+        </TableRow>
+      </TableHeader>
+      <TableBody>
         {models.map((m) => {
           const t = tests[m.id];
           return (
-            <tr key={m.id} data-testid={`model-${m.name}`} className={m.enabled ? "" : "opacity-60"}>
-              <td className={td}>
+            <TableRow key={m.id} data-testid={`model-${m.name}`} className={m.enabled ? "" : "opacity-60"}>
+              <TableCell>
                 <div className="font-medium">{m.name}</div>
-                <div className="font-mono text-xs text-gray-500">{m.model}</div>
-              </td>
-              <td className={td}>
+                <div className="font-mono text-xs text-muted-foreground">{m.model}</div>
+              </TableCell>
+              <TableCell>
                 <div>{PROVIDER_LABEL[m.provider]}</div>
-                <div className="text-xs text-gray-500">{m.base_url}</div>
-              </td>
-              <td className={`${td} space-x-1`}>
+                <div className="text-xs text-muted-foreground">{m.base_url}</div>
+              </TableCell>
+              <TableCell className="space-x-1">
                 {m.capabilities.map((c) => (
-                  <Badge key={c}>{c === "vision" ? "Đọc ảnh" : "Văn bản"}</Badge>
+                  <ToneBadge key={c}>{c === "vision" ? "Đọc ảnh" : "Văn bản"}</ToneBadge>
                 ))}
-              </td>
-              <td className={`${td} space-x-1`}>
-                <Badge tone={m.is_free ? "green" : "amber"}>{m.is_free ? "Free" : "Trả phí"}</Badge>
-                {m.system && <Badge tone="blue">Hệ thống</Badge>}
-                {m.has_key && <Badge>Có khóa</Badge>}
-                {!m.enabled && <Badge tone="red">Đã tắt</Badge>}
+              </TableCell>
+              <TableCell className="space-x-1">
+                <ToneBadge tone={m.is_free ? "green" : "amber"}>{m.is_free ? "Free" : "Trả phí"}</ToneBadge>
+                {m.system && <ToneBadge tone="blue">Hệ thống</ToneBadge>}
+                {m.has_key && <ToneBadge>Có khóa</ToneBadge>}
+                {!m.enabled && <ToneBadge tone="red">Đã tắt</ToneBadge>}
                 {t && t !== "running" && (
-                  <Badge tone={t.ok ? "green" : "red"}>{t.ok ? `OK · ${t.latency_ms} ms` : t.error}</Badge>
+                  <ToneBadge tone={t.ok ? "green" : "red"}>{t.ok ? `OK · ${t.latency_ms} ms` : t.error}</ToneBadge>
                 )}
-              </td>
-              <td className={`${td} whitespace-nowrap text-right`}>
+              </TableCell>
+              <TableCell className="whitespace-nowrap text-right">
                 <div className="flex justify-end gap-1">
-                  <Button size="sm" onClick={() => onTest(m)} disabled={t === "running"}>
+                  <Button variant="outline" size="sm" onClick={() => onTest(m)} disabled={t === "running"}>
                     {t === "running" ? "Đang kiểm tra…" : "Kiểm tra"}
                   </Button>
                   {m.editable && (
                     <>
-                      <Button size="sm" onClick={() => onEdit(m)}>
+                      <Button variant="outline" size="sm" onClick={() => onEdit(m)}>
                         Sửa
                       </Button>
-                      <Button size="sm" onClick={() => onToggle(m)}>
+                      <Button variant="outline" size="sm" onClick={() => onToggle(m)}>
                         {m.enabled ? "Tắt" : "Bật"}
                       </Button>
-                      <Button size="sm" variant="danger" onClick={() => onDelete(m)}>
+                      <Button size="sm" variant="destructive" onClick={() => onDelete(m)}>
                         Xóa
                       </Button>
                     </>
                   )}
                 </div>
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           );
         })}
-      </tbody>
+      </TableBody>
     </Table>
+</div>
   );
 }

@@ -2,7 +2,12 @@
 
 import { useRef, useState } from "react";
 import { QuestionView } from "@/components/question/QuestionView";
-import { Alert, Button, Field, Input, Select, Textarea } from "@/components/ui";
+import { FormAlert } from "@/components/app/FormAlert";
+import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/app/FormField";
+import { Input } from "@/components/ui/input";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { Textarea } from "@/components/ui/textarea";
 import { api, ApiError } from "@/lib/api";
 import type { ParsedQuestion, Question, QuestionOption, QuestionType } from "@/lib/types";
 
@@ -57,7 +62,7 @@ function MdArea({ label, value, onChange, rows = 3, testId }: { label: string; v
     return true;
   }
   return (
-    <Field label={label} hint={uploading ? "Đang tải ảnh…" : "Markdown, công thức $…$; dán hoặc kéo thả ảnh vào đây"}>
+    <FormField label={label} hint={uploading ? "Đang tải ảnh…" : "Markdown, công thức $…$; dán hoặc kéo thả ảnh vào đây"}>
       <Textarea
         ref={ref}
         data-testid={testId}
@@ -78,7 +83,7 @@ function MdArea({ label, value, onChange, rows = 3, testId }: { label: string; v
         }}
         className="font-mono"
       />
-    </Field>
+    </FormField>
   );
 }
 
@@ -87,8 +92,8 @@ export function QuestionFields({ draft, setDraft }: { draft: Draft; setDraft: (d
   const setOption = (i: number, patch: Partial<QuestionOption>) => set("options", draft.options.map((o, j) => (j === i ? { ...o, ...patch } : o)));
   return (
     <div className="space-y-3">
-      <Field label="Loại câu">
-        <Select
+      <FormField label="Loại câu">
+        <NativeSelect
           className="w-full"
           value={draft.type}
           onChange={(e) => {
@@ -97,12 +102,12 @@ export function QuestionFields({ draft, setDraft }: { draft: Draft; setDraft: (d
           }}
         >
           {TYPES.map(([k, v]) => (
-            <option key={k} value={k}>
+            <NativeSelectOption key={k} value={k}>
               {v}
-            </option>
+            </NativeSelectOption>
           ))}
-        </Select>
-      </Field>
+        </NativeSelect>
+      </FormField>
       <MdArea label="Đề bài" value={draft.stem} onChange={(v) => set("stem", v)} rows={4} testId="stem" />
       {(draft.type === "mcq" || draft.type === "true_false") &&
         draft.options.map((o, i) => (
@@ -116,7 +121,7 @@ export function QuestionFields({ draft, setDraft }: { draft: Draft; setDraft: (d
                 <input type="radio" name="answer" checked={draft.answer?.key === o.label} onChange={() => set("answer", { key: o.label })} /> đúng
               </label>
             ) : (
-              <Select
+              <NativeSelect
                 aria-label={`Đúng/sai ${o.label}`}
                 value={o.is_true === true ? "d" : o.is_true === false ? "s" : ""}
                 onChange={(e) => {
@@ -125,17 +130,17 @@ export function QuestionFields({ draft, setDraft }: { draft: Draft; setDraft: (d
                   setDraft({ ...draft, options, answer: Object.fromEntries(options.map((x) => [x.label, x.is_true ?? null])) as Question["answer"] });
                 }}
               >
-                <option value="">?</option>
-                <option value="d">Đ</option>
-                <option value="s">S</option>
-              </Select>
+                <NativeSelectOption value="">?</NativeSelectOption>
+                <NativeSelectOption value="d">Đ</NativeSelectOption>
+                <NativeSelectOption value="s">S</NativeSelectOption>
+              </NativeSelect>
             )}
           </div>
         ))}
       {draft.type === "short_answer" && (
-        <Field label="Đáp án">
+        <FormField label="Đáp án">
           <Input value={(draft.answer?.value as string) ?? ""} onChange={(e) => set("answer", e.target.value ? { value: e.target.value } : null)} />
-        </Field>
+        </FormField>
       )}
       {draft.type === "essay" && (
         <MdArea label="Đáp án mẫu" value={(draft.answer?.text as string) ?? ""} onChange={(v) => set("answer", v ? { text: v } : null)} />
@@ -177,15 +182,15 @@ export function QuestionEditor({ question, onSaved, onCancel }: { question: Pars
     >
       <div>
         <QuestionFields draft={draft} setDraft={setDraft} />
-        {error && <div className="mt-2"><Alert>{error}</Alert></div>}
+        {error && <div className="mt-2"><FormAlert>{error}</FormAlert></div>}
         <div className="mt-3 flex justify-end gap-2">
-          <Button onClick={onCancel}>Hủy (Esc)</Button>
-          <Button variant="primary" onClick={() => void save()} disabled={busy}>
+          <Button variant="outline" onClick={onCancel}>Hủy (Esc)</Button>
+          <Button onClick={() => void save()} disabled={busy}>
             Lưu (Ctrl+Enter)
           </Button>
         </div>
       </div>
-      <div className="rounded-lg border border-dashed border-gray-300 p-3" data-testid="preview">
+      <div className="rounded-lg border border-dashed border-input p-3" data-testid="preview">
         <QuestionView question={{ ...question, ...draft } as Question} mode="review" solutionOpen />
       </div>
     </div>

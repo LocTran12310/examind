@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, Button, Input, Textarea } from "@/components/ui";
+import { FormAlert } from "@/components/app/FormAlert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { api, ApiError } from "@/lib/api";
 
 export function EssayGrader({ attemptId, questionId, max, points, comment, onSaved }: {
@@ -11,17 +14,17 @@ export function EssayGrader({ attemptId, questionId, max, points, comment, onSav
   const [c, setC] = useState(comment ?? "");
   const [error, setError] = useState<string | null>(null);
   return (
-    <div className="mt-3 space-y-2 rounded-lg border border-amber-200 bg-amber-50 p-3" data-testid="essay-grader">
+    <div className="mt-3 space-y-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3" data-testid="essay-grader">
       <div className="flex items-center gap-2 text-sm">
         <span>Chấm điểm</span>
         <Input aria-label="Điểm tự luận" type="number" step="0.25" min={0} max={max} className="h-8 w-24" value={p} onChange={(e) => setP(e.target.value)} />
-        <span className="text-gray-500">/ {max}</span>
+        <span className="text-muted-foreground">/ {max}</span>
       </div>
       <Textarea aria-label="Nhận xét" rows={2} placeholder="Nhận xét cho học sinh" value={c} onChange={(e) => setC(e.target.value)} />
-      {error && <Alert>{error}</Alert>}
+      {error && <FormAlert>{error}</FormAlert>}
       <Button
         size="sm"
-        variant="primary"
+       
         onClick={async () => {
           setError(null);
           try {

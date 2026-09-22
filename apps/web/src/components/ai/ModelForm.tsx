@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, Button, Field, Input, Select } from "@/components/ui";
+import { FormAlert } from "@/components/app/FormAlert";
+import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/app/FormField";
+import { Input } from "@/components/ui/input";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { api } from "@/lib/api";
 import { useMutation } from "@/lib/hooks";
 import { PROVIDER_LABEL, type AiModel, type Provider } from "@/lib/types";
@@ -39,31 +43,31 @@ export function ModelForm({ initial, existing, onDone }: { initial: ModelDraft; 
         if (r) onDone();
       }}
     >
-      {m.message && !Object.keys(m.fields).length && <Alert>{m.message}</Alert>}
+      {m.message && !Object.keys(m.fields).length && <FormAlert>{m.message}</FormAlert>}
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Tên hiển thị" error={m.fields.name}>
+        <FormField label="Tên hiển thị" error={m.fields.name}>
           <Input value={d.name} onChange={(e) => set("name", e.target.value)} placeholder="Qwen 2.5 7B (máy chủ trung tâm)" required />
-        </Field>
-        <Field label="Nhà cung cấp" error={m.fields.provider}>
-          <Select className="w-full" value={d.provider} onChange={(e) => set("provider", e.target.value as Provider)}>
+        </FormField>
+        <FormField label="Nhà cung cấp" error={m.fields.provider}>
+          <NativeSelect className="w-full" value={d.provider} onChange={(e) => set("provider", e.target.value as Provider)}>
             {Object.entries(PROVIDER_LABEL).map(([k, v]) => (
-              <option key={k} value={k}>
+              <NativeSelectOption key={k} value={k}>
                 {v}
-              </option>
+              </NativeSelectOption>
             ))}
-          </Select>
-        </Field>
-        <Field label="Tên model" error={m.fields.model} hint="Ví dụ qwen2.5:7b, gpt-4o-mini, claude-sonnet-5">
+          </NativeSelect>
+        </FormField>
+        <FormField label="Tên model" error={m.fields.model} hint="Ví dụ qwen2.5:7b, gpt-4o-mini, claude-sonnet-5">
           <Input value={d.model} onChange={(e) => set("model", e.target.value)} required />
-        </Field>
-        <Field label="Base URL" error={m.fields.base_url} hint="Để trống để dùng mặc định của nhà cung cấp">
+        </FormField>
+        <FormField label="Base URL" error={m.fields.base_url} hint="Để trống để dùng mặc định của nhà cung cấp">
           <Input value={d.base_url} onChange={(e) => set("base_url", e.target.value)} placeholder="http://ollama:11434" />
-        </Field>
-        <Field label="Khóa API" error={m.fields.api_key} hint={existing?.has_key ? "Đã có khóa — để trống để giữ nguyên" : "Không cần với Ollama"}>
+        </FormField>
+        <FormField label="Khóa API" error={m.fields.api_key} hint={existing?.has_key ? "Đã có khóa — để trống để giữ nguyên" : "Không cần với Ollama"}>
           <Input type="password" autoComplete="off" value={d.api_key} onChange={(e) => set("api_key", e.target.value)} />
-        </Field>
+        </FormField>
         <div className="space-y-2 text-sm">
-          <span className="font-medium text-gray-700">Khả năng</span>
+          <span className="font-medium text-foreground/80">Khả năng</span>
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={d.capabilities.includes("text")} onChange={() => toggleCap("text")} /> Văn bản (tách câu, gắn chuyên đề)
           </label>
@@ -76,7 +80,7 @@ export function ModelForm({ initial, existing, onDone }: { initial: ModelDraft; 
         </div>
       </div>
       <div className="flex justify-end">
-        <Button variant="primary" type="submit" disabled={m.busy}>
+        <Button type="submit" disabled={m.busy}>
           {existing ? "Lưu" : "Thêm model"}
         </Button>
       </div>

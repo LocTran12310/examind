@@ -10,7 +10,7 @@ export function groupLabel(by: string, g: GroupStat): string {
 }
 
 export function GroupStats({ by, rows }: { by: string; rows: GroupStat[] }) {
-  if (!rows.length) return <p className="text-sm text-gray-500">Chưa có dữ liệu.</p>;
+  if (!rows.length) return <p className="text-sm text-muted-foreground">Chưa có dữ liệu.</p>;
   return (
     <ul className="space-y-2" data-testid={`groups-${by}`}>
       {rows.map((g) => (
@@ -18,7 +18,7 @@ export function GroupStats({ by, rows }: { by: string; rows: GroupStat[] }) {
           <span className="truncate">{groupLabel(by, g)}</span>
           <Bar ratio={g.ratio ?? 0} />
           <span className="text-right font-medium">{g.ratio === null ? "—" : `${Math.round(g.ratio * 100)}%`}</span>
-          <span className="text-right text-xs text-gray-500">{g.answered} lượt</span>
+          <span className="text-right text-xs text-muted-foreground">{g.answered} lượt</span>
         </li>
       ))}
     </ul>

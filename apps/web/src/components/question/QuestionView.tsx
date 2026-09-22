@@ -1,6 +1,6 @@
 "use client";
 
-import clsx from "clsx";
+import { cn } from "@/lib/utils";
 import { useState } from "react";
 import type { Question } from "@/lib/types";
 import { Markdown } from "./Markdown";
@@ -38,7 +38,7 @@ export function QuestionView({
     <article className="space-y-3" data-testid="question">
       <header className="flex items-baseline gap-2">
         {number !== undefined && <span className="font-semibold">Câu {number}.</span>}
-        {reveal && q.difficulty && <span className="text-xs text-gray-500">{DIFFICULTY[q.difficulty] ?? q.difficulty}</span>}
+        {reveal && q.difficulty && <span className="text-xs text-muted-foreground">{DIFFICULTY[q.difficulty] ?? q.difficulty}</span>}
       </header>
       <Markdown>{q.stem}</Markdown>
 
@@ -55,13 +55,13 @@ export function QuestionView({
                   onClick={() => onSelect?.(o.label)}
                   data-testid={`option-${o.label}`}
                   data-correct={isKey || undefined}
-                  className={clsx(
+                  className={cn(
                     "flex w-full items-start gap-2 rounded-lg border px-3 py-2 text-left",
-                    onSelect ? "cursor-pointer hover:border-brand-500" : "cursor-default",
-                    isKey && "border-green-500 bg-green-50",
-                    !isKey && isPicked && mode === "result" && "border-red-400 bg-red-50",
-                    !isKey && isPicked && mode !== "result" && "border-brand-500 bg-brand-50",
-                    !isKey && !isPicked && "border-gray-200",
+                    onSelect ? "cursor-pointer hover:border-primary" : "cursor-default",
+                    isKey && "border-green-500 bg-emerald-500/10",
+                    !isKey && isPicked && mode === "result" && "border-destructive bg-destructive/10",
+                    !isKey && isPicked && mode !== "result" && "border-primary bg-primary/10",
+                    !isKey && !isPicked && "border-border",
                   )}
                 >
                   <span className="font-semibold">{o.label}.</span>
@@ -69,7 +69,7 @@ export function QuestionView({
                     <Markdown>{o.content}</Markdown>
                   </div>
                   {reveal && q.type === "true_false" && o.is_true !== undefined && (
-                    <span className={clsx("text-sm font-medium", o.is_true ? "text-green-700" : "text-red-700")}>{o.is_true ? "Đúng" : "Sai"}</span>
+                    <span className={cn("text-sm font-medium", o.is_true ? "text-emerald-700 dark:text-emerald-400" : "text-destructive")}>{o.is_true ? "Đúng" : "Sai"}</span>
                   )}
                 </button>
               </li>
@@ -81,12 +81,12 @@ export function QuestionView({
       {reveal && q.answer && <AnswerBlock question={q} />}
 
       {reveal && q.solution?.trim() && (
-        <section className="rounded-lg border border-gray-200 bg-gray-50" data-testid="solution">
+        <section className="rounded-lg border border-border bg-muted/50" data-testid="solution">
           <button type="button" className="w-full px-3 py-2 text-left text-sm font-medium" onClick={() => setSolutionOpen((v) => !v)}>
             {solutionOpen ? "▾" : "▸"} Lời giải
           </button>
           {solutionOpen && (
-            <div className="border-t border-gray-200 px-3 py-2">
+            <div className="border-t border-border px-3 py-2">
               <Markdown>{q.solution}</Markdown>
             </div>
           )}
@@ -105,14 +105,14 @@ function AnswerBlock({ question: q }: { question: Question }) {
     text = "Đáp án: " + q.options.map((o) => `${o.label}) ${o.is_true ? "Đ" : "S"}`).join("  ");
   if (q.type === "essay" && a.text)
     return (
-      <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm" data-testid="answer">
+      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm" data-testid="answer">
         <div className="font-medium">Đáp án mẫu</div>
         <Markdown>{a.text}</Markdown>
       </div>
     );
   if (!text) return null;
   return (
-    <div className="text-sm font-medium text-green-700" data-testid="answer">
+    <div className="text-sm font-medium text-emerald-700 dark:text-emerald-400" data-testid="answer">
       {text}
     </div>
   );

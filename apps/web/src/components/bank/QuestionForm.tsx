@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { QuestionView } from "@/components/question/QuestionView";
 import { draftOf, QuestionFields, type Draft } from "@/components/review/QuestionEditor";
-import { Alert, Button, Field, Modal, Select } from "@/components/ui";
+import { FormAlert } from "@/components/app/FormAlert";
+import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/app/FormField";
+import { FormDialog } from "@/components/app/FormDialog";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { ApiError } from "@/lib/api";
 import { DIFFICULTY_LABEL, TAG_GROUP_LABEL, type ParsedQuestion, type Question, type Tag, type Taxonomy, type Topic } from "@/lib/types";
 import { TopicPicker, topicLabel } from "./TopicPicker";
@@ -77,70 +81,70 @@ export function QuestionForm({
       <div className="space-y-4">
         <QuestionFields draft={v} setDraft={(d) => setV({ ...v, ...d })} />
         <div className="grid gap-3 sm:grid-cols-3">
-          <Field label="Môn">
-            <Select className="w-full" value={v.subject_id ?? ""} onChange={(e) => setV({ ...v, subject_id: e.target.value || null })}>
-              <option value="">—</option>
+          <FormField label="Môn">
+            <NativeSelect className="w-full" value={v.subject_id ?? ""} onChange={(e) => setV({ ...v, subject_id: e.target.value || null })}>
+              <NativeSelectOption value="">—</NativeSelectOption>
               {taxonomy.subjects.map((s) => (
-                <option key={s.id} value={s.id}>
+                <NativeSelectOption key={s.id} value={s.id}>
                   {s.name}
-                </option>
+                </NativeSelectOption>
               ))}
-            </Select>
-          </Field>
-          <Field label="Lớp">
-            <Select className="w-full" value={v.grade ?? ""} onChange={(e) => setV({ ...v, grade: e.target.value ? Number(e.target.value) : null })}>
-              <option value="">—</option>
+            </NativeSelect>
+          </FormField>
+          <FormField label="Lớp">
+            <NativeSelect className="w-full" value={v.grade ?? ""} onChange={(e) => setV({ ...v, grade: e.target.value ? Number(e.target.value) : null })}>
+              <NativeSelectOption value="">—</NativeSelectOption>
               {taxonomy.grades.map((g) => (
-                <option key={g.id} value={g.level}>
+                <NativeSelectOption key={g.id} value={g.level}>
                   {g.name}
-                </option>
+                </NativeSelectOption>
               ))}
-            </Select>
-          </Field>
-          <Field label="Mức độ">
-            <Select className="w-full" value={v.difficulty ?? ""} onChange={(e) => setV({ ...v, difficulty: e.target.value || null })}>
-              <option value="">—</option>
+            </NativeSelect>
+          </FormField>
+          <FormField label="Mức độ">
+            <NativeSelect className="w-full" value={v.difficulty ?? ""} onChange={(e) => setV({ ...v, difficulty: e.target.value || null })}>
+              <NativeSelectOption value="">—</NativeSelectOption>
               {Object.entries(DIFFICULTY_LABEL).map(([k, l]) => (
-                <option key={k} value={k}>
+                <NativeSelectOption key={k} value={k}>
                   {l}
-                </option>
+                </NativeSelectOption>
               ))}
-            </Select>
-          </Field>
+            </NativeSelect>
+          </FormField>
         </div>
-        <Field label="Chuyên đề chính">
+        <FormField label="Chuyên đề chính">
           <div className="flex items-center gap-2">
-            <Button onClick={() => setPicking(true)} data-testid="pick-topic">
+            <Button variant="outline" onClick={() => setPicking(true)} data-testid="pick-topic">
               {topic ? topicLabel(topic, byId) : "Chọn chuyên đề"}
             </Button>
           </div>
-        </Field>
-        <Field label="Tags">
+        </FormField>
+        <FormField label="Tags">
           <div className="flex flex-wrap gap-2 text-sm" data-testid="tag-options">
             {tags.map((t) => (
-              <label key={t.id} className="flex items-center gap-1 rounded border border-gray-200 px-2 py-0.5">
+              <label key={t.id} className="flex items-center gap-1 rounded border border-border px-2 py-0.5">
                 <input
                   type="checkbox"
                   checked={v.tag_ids.includes(t.id)}
                   onChange={(e) => setV({ ...v, tag_ids: e.target.checked ? [...v.tag_ids, t.id] : v.tag_ids.filter((x) => x !== t.id) })}
                 />
-                {t.name} <span className="text-xs text-gray-400">{TAG_GROUP_LABEL[t.group]}</span>
+                {t.name} <span className="text-xs text-muted-foreground/70">{TAG_GROUP_LABEL[t.group]}</span>
               </label>
             ))}
           </div>
-        </Field>
-        {error && <Alert>{error}</Alert>}
+        </FormField>
+        {error && <FormAlert>{error}</FormAlert>}
         <div className="flex justify-end gap-2">
-          {onCancel && <Button onClick={onCancel}>Hủy</Button>}
-          <Button variant="primary" onClick={() => void submit()} disabled={busy}>
+          {onCancel && <Button variant="outline" onClick={onCancel}>Hủy</Button>}
+          <Button onClick={() => void submit()} disabled={busy}>
             {submitLabel} (Ctrl+Enter)
           </Button>
         </div>
       </div>
-      <div className="rounded-xl border border-dashed border-gray-300 bg-white p-4" data-testid="preview">
+      <div className="rounded-xl border border-dashed border-input bg-card p-4" data-testid="preview">
         <QuestionView question={{ ...v, id: "preview", status: "approved" } as Question} mode="review" solutionOpen />
       </div>
-      <Modal open={picking} title="Chọn chuyên đề" onClose={() => setPicking(false)}>
+      <FormDialog open={picking} title="Chọn chuyên đề" onOpenChange={(o) => !o && setPicking(false)}>
         <TopicPicker
           topics={topics}
           onPick={(t) => {
@@ -149,7 +153,7 @@ export function QuestionForm({
           }}
           onClose={() => setPicking(false)}
         />
-      </Modal>
+      </FormDialog>
     </div>
   );
 }

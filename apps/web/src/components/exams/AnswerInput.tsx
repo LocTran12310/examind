@@ -1,7 +1,8 @@
 "use client";
 
-import clsx from "clsx";
-import { Input, Textarea } from "@/components/ui";
+import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import type { AttemptQuestion } from "@/lib/types";
 
 type Resp = Record<string, unknown> | null;
@@ -22,7 +23,7 @@ export function AnswerInput({ q, value, onChange }: { q: AttemptQuestion; value:
                 aria-pressed={cur[o.label] === v}
                 aria-label={`${o.label} ${v ? "Đúng" : "Sai"}`}
                 onClick={() => onChange({ ...cur, [o.label]: v })}
-                className={clsx("rounded-md border px-3 py-1", cur[o.label] === v ? (v ? "border-green-600 bg-green-50 text-green-800" : "border-red-500 bg-red-50 text-red-700") : "border-gray-300")}
+                className={cn("rounded-md border px-3 py-1", cur[o.label] === v ? (v ? "border-green-600 bg-emerald-500/10 text-green-800" : "border-red-500 bg-destructive/10 text-destructive") : "border-input")}
               >
                 {v ? "Đúng" : "Sai"}
               </button>

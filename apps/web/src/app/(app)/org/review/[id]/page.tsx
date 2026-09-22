@@ -5,7 +5,10 @@ import { use, useState } from "react";
 import { AnswerKeyDialog } from "@/components/review/AnswerKeyDialog";
 import { QuestionEditor } from "@/components/review/QuestionEditor";
 import { ReviewQueue } from "@/components/review/ReviewQueue";
-import { Alert, Button, Modal, PageHeader } from "@/components/ui";
+import { FormAlert } from "@/components/app/FormAlert";
+import { Button } from "@/components/ui/button";
+import { FormDialog } from "@/components/app/FormDialog";
+import { PageHeader } from "@/components/app/PageHeader";
 import { api } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
 import type { ParsedQuestion, ReviewDocument, Topic } from "@/lib/types";
@@ -23,17 +26,17 @@ export default function ReviewDocumentPage({ params }: { params: Promise<{ id: s
 
   return (
     <>
-      <Link href="/org/review" className="text-sm text-gray-500 hover:underline">
+      <Link href="/org/review" className="text-sm text-muted-foreground hover:underline">
         ← Duyệt câu hỏi
       </Link>
       <PageHeader
         title={info.document.filename}
-        subtitle={`Tự duyệt ${info.counts.auto_approved} · Cần xem ${info.counts.needs_review} · Đã duyệt ${info.counts.approved}`}
+        description={`Tự duyệt ${info.counts.auto_approved} · Cần xem ${info.counts.needs_review} · Đã duyệt ${info.counts.approved}`}
         actions={
           <>
-            <Button onClick={() => setPasting(true)}>Dán đáp án</Button>
+            <Button variant="outline" onClick={() => setPasting(true)}>Dán đáp án</Button>
             {confident > 0 && (
-              <Button
+              <Button variant="outline"
                 onClick={async () => {
                   const r = await api<{ approved: number }>(`/review/documents/${id}/approve-confident`, { method: "POST" });
                   setNotice(`Đã duyệt ${r.approved} câu tin cậy cao.`);
@@ -46,7 +49,7 @@ export default function ReviewDocumentPage({ params }: { params: Promise<{ id: s
           </>
         }
       />
-      {notice && <div className="mb-3"><Alert tone="green">{notice}</Alert></div>}
+      {notice && <div className="mb-3"><FormAlert kind="success">{notice}</FormAlert></div>}
       <ReviewQueue
         key={version}
         doc={info.document}
@@ -55,7 +58,7 @@ export default function ReviewDocumentPage({ params }: { params: Promise<{ id: s
         onChange={reload}
         renderEditor={(p) => <QuestionEditor {...p} />}
       />
-      <Modal open={pasting} title="Dán bảng đáp án" onClose={() => setPasting(false)}>
+      <FormDialog open={pasting} title="Dán bảng đáp án" onOpenChange={(o) => !o && setPasting(false)}>
         <AnswerKeyDialog
           docId={id}
           onDone={async () => {
@@ -64,7 +67,7 @@ export default function ReviewDocumentPage({ params }: { params: Promise<{ id: s
             setVersion((v) => v + 1);
           }}
         />
-      </Modal>
+      </FormDialog>
     </>
   );
 }

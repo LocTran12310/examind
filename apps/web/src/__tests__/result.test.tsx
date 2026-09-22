@@ -26,7 +26,7 @@ describe("result view", () => {
     expect(screen.getAllByTestId("topic-row")[0]).toHaveTextContent("Vectơ");
     const first = screen.getByTestId("rq-1");
     expect(within(first).getByTestId("option-B")).toHaveAttribute("data-correct", "true");
-    expect(within(first).getByTestId("option-C")).toHaveClass("bg-red-50");
+    expect(within(first).getByTestId("option-C")).toHaveClass("bg-destructive/10");
     expect(within(first).getByTestId("solution")).toHaveTextContent("Lời giải");
     expect(screen.queryByText(/Rời tab/)).toBeNull();
   });

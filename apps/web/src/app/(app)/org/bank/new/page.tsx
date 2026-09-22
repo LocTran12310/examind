@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { formValueOf, payloadOf, QuestionForm } from "@/components/bank/QuestionForm";
-import { PageHeader } from "@/components/ui";
+import { PageHeader } from "@/components/app/PageHeader";
 import { api } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
 import type { ParsedQuestion, Tag, Taxonomy, Topic } from "@/lib/types";
@@ -16,7 +16,7 @@ export default function NewQuestionPage() {
   const initial = { ...formValueOf(), subject_id: taxonomy.subjects.find((s) => s.code === "toan")?.id ?? null };
   return (
     <>
-      <PageHeader title="Thêm câu hỏi" subtitle="Dán hoặc kéo thả ảnh trực tiếp vào ô đề bài / lời giải" />
+      <PageHeader title="Thêm câu hỏi" description="Dán hoặc kéo thả ảnh trực tiếp vào ô đề bài / lời giải" />
       <QuestionForm
         initial={initial}
         taxonomy={taxonomy}

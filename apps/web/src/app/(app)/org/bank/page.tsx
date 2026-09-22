@@ -6,7 +6,9 @@ import { useState } from "react";
 import { BankFilters, type BankQuery } from "@/components/bank/BankFilters";
 import { BulkBar } from "@/components/bank/BulkBar";
 import { QuestionRow } from "@/components/bank/QuestionRow";
-import { Button, Empty, PageHeader } from "@/components/ui";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/app/EmptyState";
+import { PageHeader } from "@/components/app/PageHeader";
 import { qs, useApi } from "@/lib/hooks";
 import type { Page, ParsedQuestion, Tag, Taxonomy, Topic } from "@/lib/types";
 
@@ -35,17 +37,17 @@ export default function BankPage() {
     <>
       <PageHeader
         title="Ngân hàng câu hỏi"
-        subtitle={data ? `${data.total} câu` : undefined}
+        description={data ? `${data.total} câu` : undefined}
         actions={
           <Link href="/org/bank/new">
-            <Button variant="primary">Thêm câu hỏi</Button>
+            <Button>Thêm câu hỏi</Button>
           </Link>
         }
       />
       {taxonomy && topics && tags && <BankFilters value={query} onChange={setQuery} taxonomy={taxonomy} topics={topics} tags={tags} />}
       <BulkBar ids={[...selected]} topics={topics ?? []} tags={tags ?? []} onDone={reload} onClear={() => setSelected(new Set())} />
       {data && data.items.length > 0 && (
-        <label className="mb-2 flex items-center gap-2 text-sm text-gray-600">
+        <label className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
           <input
             type="checkbox"
             checked={data.items.every((q) => selected.has(q.id))}
@@ -54,9 +56,9 @@ export default function BankPage() {
           Chọn cả trang
         </label>
       )}
-      {data && data.items.length === 0 && <Empty>Không có câu hỏi phù hợp.</Empty>}
+      {data && data.items.length === 0 && <EmptyState>Không có câu hỏi phù hợp.</EmptyState>}
       {data && data.items.length > 0 && (
-        <ul className="rounded-xl border border-gray-200 bg-white">
+        <ul className="rounded-xl border border-border bg-card">
           {data.items.map((q) => (
             <QuestionRow key={q.id} q={q} selected={selected.has(q.id)} onToggle={() => toggle(q.id)} />
           ))}
@@ -64,13 +66,13 @@ export default function BankPage() {
       )}
       {pages > 1 && (
         <div className="mt-4 flex items-center justify-center gap-2 text-sm">
-          <Button size="sm" disabled={page <= 1} onClick={() => setQuery({ ...query, page: String(page - 1) })}>
+          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setQuery({ ...query, page: String(page - 1) })}>
             ← Trước
           </Button>
           <span>
             Trang {page}/{pages}
           </span>
-          <Button size="sm" disabled={page >= pages} onClick={() => setQuery({ ...query, page: String(page + 1) })}>
+          <Button variant="outline" size="sm" disabled={page >= pages} onClick={() => setQuery({ ...query, page: String(page + 1) })}>
             Sau →
           </Button>
         </div>

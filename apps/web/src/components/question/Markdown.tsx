@@ -21,7 +21,7 @@ export function Markdown({ children, className }: { children: string; className?
         urlTransform={resolveUrl}
         components={{
           // eslint-disable-next-line @next/next/no-img-element
-          img: ({ src, alt }) => <img src={typeof src === "string" ? src : undefined} alt={alt || "Hình minh họa"} className="my-2 max-h-80 max-w-full rounded border border-gray-100" loading="lazy" />,
+          img: ({ src, alt }) => <img src={typeof src === "string" ? src : undefined} alt={alt || "Hình minh họa"} className="my-2 max-h-80 max-w-full rounded border border-border" loading="lazy" />,
           table: ({ children }) => <table className="my-2 border-collapse text-sm [&_td]:border [&_td]:px-2 [&_th]:border [&_th]:px-2">{children}</table>,
           p: ({ children }) => <p className="my-1.5 leading-relaxed">{children}</p>,
         }}

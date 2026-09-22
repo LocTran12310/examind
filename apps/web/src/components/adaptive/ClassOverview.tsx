@@ -1,41 +1,44 @@
 "use client";
 
-import { Badge, Table, td, th } from "@/components/ui";
+import { ToneBadge } from "@/components/app/ToneBadge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { ClassOverviewRow } from "@/lib/types";
 
 const STATUS: Record<string, string> = { submitted: "Đã làm", in_progress: "Đang làm", not_started: "Chưa làm" };
 
 export function ClassOverview({ rows }: { rows: ClassOverviewRow[] }) {
   return (
-    <Table>
-      <thead className="bg-gray-50">
-        <tr>
-          <th className={th}>Học sinh</th>
-          <th className={th}>Chuyên đề yếu nhất</th>
-          <th className={th}>Đề ôn cá nhân</th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-gray-100">
+    <div className="rounded-lg border bg-card">
+<Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Học sinh</TableHead>
+          <TableHead>Chuyên đề yếu nhất</TableHead>
+          <TableHead>Đề ôn cá nhân</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
         {rows.map((r) => (
-          <tr key={r.student_id} data-testid={`ov-${r.username}`}>
-            <td className={td}>
-              {r.full_name} <span className="font-mono text-xs text-gray-500">{r.username}</span>
-            </td>
-            <td className={`${td} space-x-1`}>
+          <TableRow key={r.student_id} data-testid={`ov-${r.username}`}>
+            <TableCell>
+              {r.full_name} <span className="font-mono text-xs text-muted-foreground">{r.username}</span>
+            </TableCell>
+            <TableCell className="space-x-1">
               {r.weakest.length === 0 ? (
-                <span className="text-xs text-gray-400">chưa có dữ liệu</span>
+                <span className="text-xs text-muted-foreground/70">chưa có dữ liệu</span>
               ) : (
                 r.weakest.map((w) => (
-                  <Badge key={w.name} tone={w.mastery < 0.5 ? "red" : "amber"}>
+                  <ToneBadge key={w.name} tone={w.mastery < 0.5 ? "red" : "amber"}>
                     {w.name} {Math.round(w.mastery * 100)}%
-                  </Badge>
+                  </ToneBadge>
                 ))
               )}
-            </td>
-            <td className={td}>{r.review ? <Badge tone={r.review.status === "submitted" ? "green" : "gray"}>{STATUS[r.review.status] ?? r.review.status}</Badge> : "—"}</td>
-          </tr>
+            </TableCell>
+            <TableCell>{r.review ? <ToneBadge tone={r.review.status === "submitted" ? "green" : "gray"}>{STATUS[r.review.status] ?? r.review.status}</ToneBadge> : "—"}</TableCell>
+          </TableRow>
         ))}
-      </tbody>
+      </TableBody>
     </Table>
+</div>
   );
 }

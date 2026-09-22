@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { useMe } from "@/app/(app)/AppShell";
 import { ReviewList } from "@/components/review/ReviewList";
-import { Alert, Empty, PageHeader } from "@/components/ui";
+import { FormAlert } from "@/components/app/FormAlert";
+import { EmptyState } from "@/components/app/EmptyState";
+import { PageHeader } from "@/components/app/PageHeader";
 import { api, ApiError } from "@/lib/api";
 import { qs, useApi } from "@/lib/hooks";
 import type { Page, ReviewDocument, User } from "@/lib/types";
@@ -19,12 +21,12 @@ export default function ReviewPage() {
 
   return (
     <>
-      <PageHeader title="Duyệt câu hỏi" subtitle={data ? `${pending} câu đang chờ xem` : undefined} />
-      <label className="mb-4 flex items-center gap-2 text-sm text-gray-600">
+      <PageHeader title="Duyệt câu hỏi" description={data ? `${pending} câu đang chờ xem` : undefined} />
+      <label className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
         <input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} /> Của tôi
       </label>
-      {error && <div className="mb-3"><Alert>{error}</Alert></div>}
-      {data && data.length === 0 && <Empty>Không có đề nào cần duyệt.</Empty>}
+      {error && <div className="mb-3"><FormAlert>{error}</FormAlert></div>}
+      {data && data.length === 0 && <EmptyState>Không có đề nào cần duyệt.</EmptyState>}
       {data && data.length > 0 && (
         <ReviewList
           rows={data}

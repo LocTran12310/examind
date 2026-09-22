@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { useMe } from "@/app/(app)/AppShell";
 import { TopicTree } from "@/components/topics/TopicTree";
-import { Empty, PageHeader, Select } from "@/components/ui";
+import { EmptyState } from "@/components/app/EmptyState";
+import { PageHeader } from "@/components/app/PageHeader";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { qs, useApi } from "@/lib/hooks";
 import type { Taxonomy, Topic } from "@/lib/types";
 
@@ -19,18 +21,18 @@ export default function TopicsPage() {
     <>
       <PageHeader
         title="Cây chuyên đề"
-        subtitle="Nhấp đúp vào tên để đổi tên. Câu hỏi gắn vào nhánh cuối; thống kê cộng dồn lên các cấp trên."
+        description="Nhấp đúp vào tên để đổi tên. Câu hỏi gắn vào nhánh cuối; thống kê cộng dồn lên các cấp trên."
         actions={
-          <Select value={subjectId} onChange={(e) => setSubjectId(e.target.value)} aria-label="Môn học">
+          <NativeSelect value={subjectId} onChange={(e) => setSubjectId(e.target.value)} aria-label="Môn học">
             {tax?.subjects.map((s) => (
-              <option key={s.id} value={s.id}>
+              <NativeSelectOption key={s.id} value={s.id}>
                 {s.name}
-              </option>
+              </NativeSelectOption>
             ))}
-          </Select>
+          </NativeSelect>
         }
       />
-      {topics && topics.length === 0 && <Empty>Môn này chưa có cây chuyên đề. Thêm mạch kiến thức đầu tiên bên dưới.</Empty>}
+      {topics && topics.length === 0 && <EmptyState>Môn này chưa có cây chuyên đề. Thêm mạch kiến thức đầu tiên bên dưới.</EmptyState>}
       {topics && <TopicTree key={subjectId} topics={topics} subjectId={subjectId} onChange={reload} readOnly={me.role === "student"} />}
     </>
   );

@@ -1,9 +1,12 @@
 "use client";
 
-import clsx from "clsx";
+import { cn } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { QuestionView } from "@/components/question/QuestionView";
-import { Alert, Badge, Button, Modal } from "@/components/ui";
+import { FormAlert } from "@/components/app/FormAlert";
+import { ToneBadge } from "@/components/app/ToneBadge";
+import { Button } from "@/components/ui/button";
+import { FormDialog } from "@/components/app/FormDialog";
 import { api, ApiError } from "@/lib/api";
 import type { AttemptQuestion, AttemptView } from "@/lib/types";
 import { AnswerInput, answered } from "./AnswerInput";
@@ -109,20 +112,20 @@ export function ExamRunner({ view, onFinished }: { view: AttemptView; onFinished
 
   return (
     <div className="mx-auto max-w-5xl">
-      <div className="sticky top-0 z-10 -mx-4 mb-4 flex flex-wrap items-center gap-3 border-b border-gray-200 bg-white/95 px-4 py-2 backdrop-blur">
+      <div className="sticky top-0 z-10 -mx-4 mb-4 flex flex-wrap items-center gap-3 border-b border-border bg-card/95 px-4 py-2 backdrop-blur">
         <span className="min-w-0 flex-1 truncate font-medium">{view.title}</span>
-        <span className={clsx("font-mono text-lg", left < 60_000 ? "text-red-600" : "text-gray-800")} data-testid="timer">
+        <span className={cn("font-mono text-lg", left < 60_000 ? "text-destructive" : "text-foreground")} data-testid="timer">
           {formatLeft(left)}
         </span>
-        {unsaved > 0 ? <Badge tone="amber">Chưa lưu {unsaved}</Badge> : <Badge tone="green">Đã lưu</Badge>}
-        <Button variant="primary" onClick={() => setConfirming(true)} disabled={closed}>
+        {unsaved > 0 ? <ToneBadge tone="amber">Chưa lưu {unsaved}</ToneBadge> : <ToneBadge tone="green">Đã lưu</ToneBadge>}
+        <Button onClick={() => setConfirming(true)} disabled={closed}>
           Nộp bài
         </Button>
       </div>
-      {error && <div className="mb-3"><Alert>{error}</Alert></div>}
+      {error && <div className="mb-3"><FormAlert>{error}</FormAlert></div>}
       <div className="grid gap-4 md:grid-cols-[1fr_220px]">
-        <section className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6" data-testid="exam-question">
-          <div className="mb-2 text-xs text-gray-500">
+        <section className="rounded-xl border border-border bg-card p-4 sm:p-6" data-testid="exam-question">
+          <div className="mb-2 text-xs text-muted-foreground">
             Phần {q.section} · {q.points} điểm
           </div>
           <QuestionView
@@ -134,16 +137,16 @@ export function ExamRunner({ view, onFinished }: { view: AttemptView; onFinished
           />
           <AnswerInput q={q} value={answers[q.id]} onChange={change} />
           <div className="mt-6 flex justify-between">
-            <Button disabled={index === 0} onClick={() => setIndex(index - 1)}>
+            <Button variant="outline" disabled={index === 0} onClick={() => setIndex(index - 1)}>
               ← Câu trước
             </Button>
-            <Button disabled={index === view.questions.length - 1} onClick={() => setIndex(index + 1)}>
+            <Button variant="outline" disabled={index === view.questions.length - 1} onClick={() => setIndex(index + 1)}>
               Câu sau →
             </Button>
           </div>
         </section>
-        <aside className="rounded-xl border border-gray-200 bg-white p-3">
-          <div className="mb-2 text-xs text-gray-500">Bảng câu · còn {unanswered} câu chưa làm</div>
+        <aside className="rounded-xl border border-border bg-card p-3">
+          <div className="mb-2 text-xs text-muted-foreground">Bảng câu · còn {unanswered} câu chưa làm</div>
           <div className="grid grid-cols-6 gap-1 md:grid-cols-5" data-testid="navigator">
             {view.questions.map((x, i) => (
               <button
@@ -152,10 +155,10 @@ export function ExamRunner({ view, onFinished }: { view: AttemptView; onFinished
                 aria-label={`Câu ${x.number}`}
                 aria-current={i === index ? "true" : undefined}
                 onClick={() => setIndex(i)}
-                className={clsx(
+                className={cn(
                   "rounded py-1 text-sm",
-                  i === index && "ring-2 ring-brand-500",
-                  answered(x, answers[x.id]) ? "bg-brand-600 text-white" : "border border-gray-300",
+                  i === index && "ring-2 ring-ring",
+                  answered(x, answers[x.id]) ? "bg-primary text-white" : "border border-input",
                 )}
               >
                 {x.number}
@@ -164,14 +167,14 @@ export function ExamRunner({ view, onFinished }: { view: AttemptView; onFinished
           </div>
         </aside>
       </div>
-      <Modal open={confirming} title="Nộp bài?" onClose={() => setConfirming(false)}>
+      <FormDialog open={confirming} title="Nộp bài?" onOpenChange={(o) => !o && setConfirming(false)}>
         <p className="mb-4 text-sm">
           {unanswered ? `Bạn còn ${unanswered} câu chưa làm. ` : ""}Sau khi nộp sẽ không sửa được nữa.
         </p>
         <div className="flex justify-end gap-2">
-          <Button onClick={() => setConfirming(false)}>Làm tiếp</Button>
+          <Button variant="outline" onClick={() => setConfirming(false)}>Làm tiếp</Button>
           <Button
-            variant="primary"
+           
             onClick={async () => {
               setConfirming(false);
               for (const [qid, v] of Object.entries(pending)) await flush(qid, v);
@@ -181,7 +184,7 @@ export function ExamRunner({ view, onFinished }: { view: AttemptView; onFinished
             Nộp bài
           </Button>
         </div>
-      </Modal>
+      </FormDialog>
     </div>
   );
 }

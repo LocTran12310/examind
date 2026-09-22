@@ -2,7 +2,7 @@
 
 import { use } from "react";
 import { AssignmentReport } from "@/components/reports/AssignmentReport";
-import { PageHeader } from "@/components/ui";
+import { PageHeader } from "@/components/app/PageHeader";
 import { useApi } from "@/lib/hooks";
 import type { AssignmentReport as Report } from "@/lib/types";
 
@@ -12,7 +12,7 @@ export default function AssignmentReportPage({ params }: { params: Promise<{ id:
   if (!data) return null;
   return (
     <>
-      <PageHeader title={data.title} subtitle="Báo cáo bài giao" />
+      <PageHeader title={data.title} description="Báo cáo bài giao" />
       <AssignmentReport report={data} />
     </>
   );

@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { ProcessingConfigFields } from "@/components/documents/ProcessingConfig";
-import { Alert, Button, Card, PageHeader } from "@/components/ui";
+import { FormAlert } from "@/components/app/FormAlert";
+import { Button } from "@/components/ui/button";
+import { Panel } from "@/components/app/Panel";
+import { PageHeader } from "@/components/app/PageHeader";
 import { api } from "@/lib/api";
 import { useApi, useMutation } from "@/lib/hooks";
 import type { AiModel, ProcessingConfig } from "@/lib/types";
@@ -19,14 +22,14 @@ export default function IngestionSettingsPage() {
   if (!value) return null;
   return (
     <>
-      <PageHeader title="Cấu hình tách đề" subtitle="Mặc định cho mọi lần tải đề của trung tâm; giáo viên vẫn đổi được khi tải lên" />
-      <Card className="max-w-3xl space-y-4">
+      <PageHeader title="Cấu hình tách đề" description="Mặc định cho mọi lần tải đề của trung tâm; giáo viên vẫn đổi được khi tải lên" />
+      <Panel className="max-w-3xl space-y-4">
         <ProcessingConfigFields value={value} onChange={(v) => (setValue(v), setSaved(false))} models={models ?? []} showThreshold />
-        {m.message && <Alert>{m.message}</Alert>}
-        {saved && <Alert tone="green">Đã lưu.</Alert>}
+        {m.message && <FormAlert>{m.message}</FormAlert>}
+        {saved && <FormAlert kind="success">Đã lưu.</FormAlert>}
         <div className="flex justify-end">
           <Button
-            variant="primary"
+           
             disabled={m.busy}
             onClick={async () => {
               const r = await m.run(() => api<ProcessingConfig>("/org/settings/ingestion", { method: "PUT", body: value }));
@@ -39,7 +42,7 @@ export default function IngestionSettingsPage() {
             Lưu
           </Button>
         </div>
-      </Card>
+      </Panel>
     </>
   );
 }

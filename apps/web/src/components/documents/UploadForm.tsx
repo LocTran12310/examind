@@ -1,9 +1,13 @@
 "use client";
 
-import clsx from "clsx";
+import { cn } from "@/lib/utils";
 import { useRef, useState } from "react";
 import { currentSchoolYear } from "@/components/org/ClassForms";
-import { Alert, Button, Field, Input, Select } from "@/components/ui";
+import { FormAlert } from "@/components/app/FormAlert";
+import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/app/FormField";
+import { Input } from "@/components/ui/input";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { api, ApiError } from "@/lib/api";
 import { EXAM_KINDS, type DocumentMeta, type ProcessingConfig, type SourceDocument, type Taxonomy } from "@/lib/types";
 
@@ -63,61 +67,61 @@ export function UploadForm({
           setDrag(false);
           setFile(e.dataTransfer.files?.[0] ?? null);
         }}
-        className={clsx("rounded-xl border-2 border-dashed p-6 text-center text-sm", drag ? "border-brand-500 bg-brand-50" : "border-gray-300")}
+        className={cn("rounded-xl border-2 border-dashed p-6 text-center text-sm", drag ? "border-primary bg-primary/10" : "border-input")}
       >
-        <p className="mb-2 text-gray-600">{file ? <b>{file.name}</b> : "Kéo thả file đề vào đây (.docx, .pdf, ảnh chụp)"}</p>
+        <p className="mb-2 text-muted-foreground">{file ? <b>{file.name}</b> : "Kéo thả file đề vào đây (.docx, .pdf, ảnh chụp)"}</p>
         <input ref={input} data-testid="file" type="file" accept={ACCEPT} className="mx-auto block text-sm" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-        {fields.file && <p className="mt-2 text-xs text-red-600">{fields.file}</p>}
+        {fields.file && <p className="mt-2 text-xs text-destructive">{fields.file}</p>}
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
-        <Field label="Môn" error={fields.subject_id}>
-          <Select className="w-full" value={meta.subject_id ?? ""} onChange={(e) => set("subject_id", e.target.value)}>
+        <FormField label="Môn" error={fields.subject_id}>
+          <NativeSelect className="w-full" value={meta.subject_id ?? ""} onChange={(e) => set("subject_id", e.target.value)}>
             {taxonomy.subjects.map((s) => (
-              <option key={s.id} value={s.id}>
+              <NativeSelectOption key={s.id} value={s.id}>
                 {s.name}
-              </option>
+              </NativeSelectOption>
             ))}
-          </Select>
-        </Field>
-        <Field label="Lớp" error={fields.grade}>
-          <Select className="w-full" value={meta.grade ?? ""} onChange={(e) => set("grade", e.target.value ? Number(e.target.value) : undefined)}>
-            <option value="">—</option>
+          </NativeSelect>
+        </FormField>
+        <FormField label="Lớp" error={fields.grade}>
+          <NativeSelect className="w-full" value={meta.grade ?? ""} onChange={(e) => set("grade", e.target.value ? Number(e.target.value) : undefined)}>
+            <NativeSelectOption value="">—</NativeSelectOption>
             {taxonomy.grades.map((g) => (
-              <option key={g.id} value={g.level}>
+              <NativeSelectOption key={g.id} value={g.level}>
                 {g.name}
-              </option>
+              </NativeSelectOption>
             ))}
-          </Select>
-        </Field>
-        <Field label="Học kỳ" error={fields.semester_code}>
-          <Select className="w-full" value={meta.semester_code ?? ""} onChange={(e) => set("semester_code", e.target.value)}>
-            <option value="">—</option>
+          </NativeSelect>
+        </FormField>
+        <FormField label="Học kỳ" error={fields.semester_code}>
+          <NativeSelect className="w-full" value={meta.semester_code ?? ""} onChange={(e) => set("semester_code", e.target.value)}>
+            <NativeSelectOption value="">—</NativeSelectOption>
             {taxonomy.semesters.map((s) => (
-              <option key={s.id} value={s.code}>
+              <NativeSelectOption key={s.id} value={s.code}>
                 {s.name}
-              </option>
+              </NativeSelectOption>
             ))}
-          </Select>
-        </Field>
-        <Field label="Loại đề" error={fields.exam_kind}>
-          <Select className="w-full" value={meta.exam_kind ?? ""} onChange={(e) => set("exam_kind", e.target.value)}>
-            <option value="">—</option>
+          </NativeSelect>
+        </FormField>
+        <FormField label="Loại đề" error={fields.exam_kind}>
+          <NativeSelect className="w-full" value={meta.exam_kind ?? ""} onChange={(e) => set("exam_kind", e.target.value)}>
+            <NativeSelectOption value="">—</NativeSelectOption>
             {EXAM_KINDS.map((k) => (
-              <option key={k}>{k}</option>
+              <NativeSelectOption key={k}>{k}</NativeSelectOption>
             ))}
-          </Select>
-        </Field>
-        <Field label="Năm học" error={fields.school_year}>
+          </NativeSelect>
+        </FormField>
+        <FormField label="Năm học" error={fields.school_year}>
           <Input value={meta.school_year ?? ""} onChange={(e) => set("school_year", e.target.value)} />
-        </Field>
-        <Field label="Nguồn đề" error={fields.source_name} hint="Ví dụ: THPT Chu Văn An">
+        </FormField>
+        <FormField label="Nguồn đề" error={fields.source_name} hint="Ví dụ: THPT Chu Văn An">
           <Input value={meta.source_name ?? ""} onChange={(e) => set("source_name", e.target.value)} />
-        </Field>
+        </FormField>
       </div>
       {configSlot}
-      {error && !Object.keys(fields).length && <Alert>{error}</Alert>}
+      {error && !Object.keys(fields).length && <FormAlert>{error}</FormAlert>}
       <div className="flex justify-end">
-        <Button variant="primary" type="submit" disabled={busy}>
+        <Button type="submit" disabled={busy}>
           {busy ? "Đang tải lên…" : "Tải lên và tách câu"}
         </Button>
       </div>

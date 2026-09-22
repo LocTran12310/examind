@@ -1,6 +1,6 @@
 "use client";
 
-import clsx from "clsx";
+import { cn } from "@/lib/utils";
 import { useMemo, useState } from "react";
 import { Bar } from "@/components/exams/ResultView";
 import type { TopicStat } from "@/lib/types";
@@ -41,20 +41,20 @@ export function TopicStatsTree({ rows }: { rows: TopicStat[] }) {
     return (
       <li key={n.path || n.name}>
         <div className="grid grid-cols-[1fr_120px_48px_60px] items-center gap-2 py-1 text-sm" style={{ paddingLeft: depth * 18 }} data-testid={`ts-${n.name}`}>
-          <button type="button" className={clsx("truncate text-left", depth === 0 && "font-semibold")} onClick={() => n.children.length && toggle(n.path)} aria-expanded={n.children.length ? expanded : undefined}>
-            <span className={clsx("mr-1 inline-block w-4 text-gray-400", !n.children.length && "invisible")}>{expanded ? "▾" : "▸"}</span>
+          <button type="button" className={cn("truncate text-left", depth === 0 && "font-semibold")} onClick={() => n.children.length && toggle(n.path)} aria-expanded={n.children.length ? expanded : undefined}>
+            <span className={cn("mr-1 inline-block w-4 text-muted-foreground/70", !n.children.length && "invisible")}>{expanded ? "▾" : "▸"}</span>
             {n.name}
           </button>
           <Bar ratio={n.ratio ?? 0} />
           <span className="text-right font-medium">{n.ratio === null ? "—" : `${Math.round(n.ratio * 100)}%`}</span>
-          <span className="text-right text-xs text-gray-500">{n.answered} lượt</span>
+          <span className="text-right text-xs text-muted-foreground">{n.answered} lượt</span>
         </div>
         {expanded && n.children.length > 0 && <ul>{n.children.map((c) => row(c, depth + 1))}</ul>}
       </li>
     );
   }
 
-  if (!rows.length) return <p className="text-sm text-gray-500">Chưa có dữ liệu làm bài.</p>;
+  if (!rows.length) return <p className="text-sm text-muted-foreground">Chưa có dữ liệu làm bài.</p>;
   return <ul data-testid="topic-stats">{roots.map((r) => row(r, 0))}</ul>;
 }
 

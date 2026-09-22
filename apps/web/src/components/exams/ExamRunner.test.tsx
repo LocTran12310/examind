@@ -33,7 +33,7 @@ describe("exam runner", () => {
   it("restores answers, autosaves after a debounce and shows the unsaved badge", async () => {
     const f = mockFetch((url, init) => (init?.method === "PUT" ? { body: { ok: true } } : undefined));
     render(<ExamRunner view={view()} onFinished={() => {}} />);
-    expect(screen.getByTestId("option-C")).toHaveClass("bg-brand-50");
+    expect(screen.getByTestId("option-C")).toHaveClass("bg-primary/10");
     fireEvent.click(within(screen.getByTestId("navigator")).getByRole("button", { name: "Câu 2" }));
     fireEvent.click(screen.getByTestId("option-B"));
     expect(screen.getByText("Chưa lưu 1")).toBeInTheDocument();

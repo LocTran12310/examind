@@ -64,7 +64,7 @@ t(id="T-02-03", uow="UOW-02", title="DataTable: filter row, toolbar, selection, 
   done_when=["Debounce + URL", "Initial load from URL", "Confirm delete", "Footer text"])
 t(id="T-02-04", uow="UOW-02", title="Users, organisations, classes screens on DataTable",
   layer="web", estimate="4h", depends_on=["T-02-02", "T-02-03", "T-01-02"], verifies=["AC-11"], tests=[f"{WEB}/src/__tests__/users.test.tsx", f"{WEB}/src/__tests__/orgs.test.tsx", f"{WEB}/src/__tests__/classes.test.tsx"],
-  touches=[f"{WEB}/src/app/(app)/org/users/page.tsx", f"{WEB}/src/app/(app)/admin/orgs/page.tsx", f"{WEB}/src/app/(app)/org/classes/page.tsx", f"{WEB}/src/components/org/UserForm.tsx", f"{WEB}/src/components/admin/OrgForm.tsx"],
+  touches=[f"{WEB}/src/app/(app)/org/users/page.tsx", f"{WEB}/src/app/(app)/admin/orgs/page.tsx", f"{WEB}/src/app/(app)/org/classes/page.tsx", f"{WEB}/src/components/org/UserForm.tsx", f"{WEB}/src/components/admin/OrgForm.tsx", f"{WEB}/src/components/org/MemberManager.tsx", f"{WEB}/src/components/org/ClassForms.tsx"],
   assumptions=["A-08"], context="Forms in Dialog; classes → students detail panel.", done_when=["Three screens", "Forms in dialogs", "Import/export kept on users"])
 t(id="T-03-01", uow="UOW-03", title="Bare-list endpoints → Page (classes done; exams, assignments, tags, ai-models, review)",
   layer="api", estimate="3h", depends_on=["T-02-01"], verifies=["AC-10"], tests=[f"{API}/tests/test_paging.py", f"{API}/tests/test_exams_api.py", f"{API}/tests/test_review_flow.py"],

@@ -13,7 +13,7 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
   useEffect(() => {
     if (data && data.status !== "in_progress") router.replace(`/results/${id}`);
   }, [data, id, router]);
-  if (error) return <p className="text-sm text-red-700">{error}</p>;
+  if (error) return <p className="text-sm text-destructive">{error}</p>;
   if (!data || data.status !== "in_progress") return null;
   return <ExamRunner view={data} onFinished={() => router.replace(`/results/${id}`)} />;
 }

@@ -6,7 +6,11 @@ import { use, useEffect, useState } from "react";
 import { metaLabel, StatusBadge } from "@/components/documents/DocumentList";
 import { metaChips, ParsedQuestionCard } from "@/components/documents/ParsedQuestion";
 import { ProcessingConfigFields } from "@/components/documents/ProcessingConfig";
-import { Alert, Button, Empty, Modal, PageHeader } from "@/components/ui";
+import { FormAlert } from "@/components/app/FormAlert";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/app/EmptyState";
+import { FormDialog } from "@/components/app/FormDialog";
+import { PageHeader } from "@/components/app/PageHeader";
 import { api, ApiError } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
 import type { AiModel, ParsedQuestion, ProcessingConfig, SourceDocument, Taxonomy } from "@/lib/types";
@@ -41,32 +45,32 @@ export default function DocumentPage({ params }: { params: Promise<{ id: string 
 
   return (
     <>
-      <Link href="/org/documents" className="text-sm text-gray-500 hover:underline">
+      <Link href="/org/documents" className="text-sm text-muted-foreground hover:underline">
         ← Đề đã tải lên
       </Link>
       <PageHeader
         title={doc.filename}
-        subtitle={metaLabel(doc, taxonomy)}
+        description={metaLabel(doc, taxonomy)}
         actions={
           <>
             <StatusBadge doc={doc} />
             {!busy && (
-              <Button size="sm" onClick={() => setReparse(doc.processing_config)}>
+              <Button variant="outline" size="sm" onClick={() => setReparse(doc.processing_config)}>
                 Tách lại
               </Button>
             )}
           </>
         }
       />
-      <Modal open={!!reparse} title="Tách lại với cấu hình khác" wide onClose={() => setReparse(null)}>
+      <FormDialog open={!!reparse} title="Tách lại với cấu hình khác" wide onOpenChange={(o) => !o && setReparse(null)}>
         {reparse && (
           <div className="space-y-4">
-            <Alert tone="amber">Các câu chưa duyệt của đề này sẽ được thay bằng kết quả mới; câu đã duyệt được giữ nguyên.</Alert>
+            <FormAlert kind="warning">Các câu chưa duyệt của đề này sẽ được thay bằng kết quả mới; câu đã duyệt được giữ nguyên.</FormAlert>
             <ProcessingConfigFields value={reparse} onChange={setReparse} models={models ?? []} />
-            {reparseError && <Alert>{reparseError}</Alert>}
+            {reparseError && <FormAlert>{reparseError}</FormAlert>}
             <div className="flex justify-end">
               <Button
-                variant="primary"
+               
                 onClick={async () => {
                   try {
                     await api(`/documents/${doc.id}/reparse`, { body: { config: reparse } });
@@ -82,29 +86,29 @@ export default function DocumentPage({ params }: { params: Promise<{ id: string 
             </div>
           </div>
         )}
-      </Modal>
-      {dup && <div className="mb-4"><Alert tone="blue">File này đã được tải lên trước đó — đây là bản đã có.</Alert></div>}
-      {busy && <Alert tone="amber">Đang tách câu hỏi… trang sẽ tự cập nhật.</Alert>}
-      {doc.status === "failed" && <Alert>{doc.error}</Alert>}
+      </FormDialog>
+      {dup && <div className="mb-4"><FormAlert kind="info">File này đã được tải lên trước đó — đây là bản đã có.</FormAlert></div>}
+      {busy && <FormAlert kind="warning">Đang tách câu hỏi… trang sẽ tự cập nhật.</FormAlert>}
+      {doc.status === "failed" && <FormAlert>{doc.error}</FormAlert>}
       {warnings.length > 0 && (
         <div className="mb-4">
-          <Alert tone="amber">{warnings.join(" · ")}</Alert>
+          <FormAlert kind="warning">{warnings.join(" · ")}</FormAlert>
         </div>
       )}
       {parsed && questions && (
         <>
-          <div className="mb-4 flex items-center gap-4 text-sm text-gray-600">
+          <div className="mb-4 flex items-center gap-4 text-sm text-muted-foreground">
             <span>
               {questions.length} câu · {low} câu cần xem
             </span>
             <label className="flex items-center gap-2">
               <input type="checkbox" checked={onlyIssues} onChange={(e) => setOnlyIssues(e.target.checked)} /> Chỉ hiện câu cần xem
             </label>
-            <a className="ml-auto text-brand-700 hover:underline" href={`/api/documents/${doc.id}/file`}>
+            <a className="ml-auto text-primary hover:underline" href={`/api/documents/${doc.id}/file`}>
               Tải file gốc
             </a>
           </div>
-          {shown.length === 0 && <Empty>Không có câu nào.</Empty>}
+          {shown.length === 0 && <EmptyState>Không có câu nào.</EmptyState>}
           <div className="space-y-4">
             {shown.map((q) => (
               <ParsedQuestionCard

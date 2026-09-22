@@ -5,7 +5,9 @@ import { useEffect, useState } from "react";
 import { DocumentList } from "@/components/documents/DocumentList";
 import { ProcessingConfigPanel } from "@/components/documents/ProcessingConfig";
 import { UploadForm } from "@/components/documents/UploadForm";
-import { Card, Empty, PageHeader } from "@/components/ui";
+import { Panel } from "@/components/app/Panel";
+import { EmptyState } from "@/components/app/EmptyState";
+import { PageHeader } from "@/components/app/PageHeader";
 import { useApi } from "@/lib/hooks";
 import type { AiModel, Page, ProcessingConfig, SourceDocument, Taxonomy } from "@/lib/types";
 
@@ -28,8 +30,8 @@ export default function DocumentsPage() {
 
   return (
     <>
-      <PageHeader title="Đề đã tải lên" subtitle="Tải file Word/PDF/ảnh; hệ thống tự tách từng câu với đáp án, lời giải và hình" />
-      <Card className="mb-6">
+      <PageHeader title="Đề đã tải lên" description="Tải file Word/PDF/ảnh; hệ thống tự tách từng câu với đáp án, lời giải và hình" />
+      <Panel className="mb-6">
         {taxonomy && (
           <UploadForm
             taxonomy={taxonomy}
@@ -38,8 +40,8 @@ export default function DocumentsPage() {
             configSlot={config && <ProcessingConfigPanel value={config} onChange={setConfig} models={models ?? []} />}
           />
         )}
-      </Card>
-      {data && data.items.length === 0 && <Empty>Chưa có đề nào. Tải lên file đầu tiên ở trên.</Empty>}
+      </Panel>
+      {data && data.items.length === 0 && <EmptyState>Chưa có đề nào. Tải lên file đầu tiên ở trên.</EmptyState>}
       {data && data.items.length > 0 && <DocumentList docs={data.items} taxonomy={taxonomy} />}
     </>
   );

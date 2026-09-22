@@ -7,7 +7,12 @@ import { BlueprintEditor } from "@/components/exams/BlueprintEditor";
 import { ExamQuestions, moved } from "@/components/exams/ExamQuestions";
 import { Markdown } from "@/components/question/Markdown";
 import { QuestionView } from "@/components/question/QuestionView";
-import { Alert, Button, Card, Input, Modal, PageHeader } from "@/components/ui";
+import { FormAlert } from "@/components/app/FormAlert";
+import { Button } from "@/components/ui/button";
+import { Panel } from "@/components/app/Panel";
+import { Input } from "@/components/ui/input";
+import { FormDialog } from "@/components/app/FormDialog";
+import { PageHeader } from "@/components/app/PageHeader";
 import { api, ApiError } from "@/lib/api";
 import { qs, useApi } from "@/lib/hooks";
 import { fmt } from "@/lib/dates";
@@ -47,27 +52,27 @@ export default function ExamBuilderPage({ params }: { params: Promise<{ id: stri
 
   return (
     <>
-      <Link href="/org/exams" className="text-sm text-gray-500 hover:underline">
+      <Link href="/org/exams" className="text-sm text-muted-foreground hover:underline">
         ← Đề thi
       </Link>
       <PageHeader
         title={exam.title}
-        subtitle={`${exam.question_count} câu · tổng ${exam.total_points} điểm (quy về thang ${exam.settings.scale_to})`}
+        description={`${exam.question_count} câu · tổng ${exam.total_points} điểm (quy về thang ${exam.settings.scale_to})`}
         actions={
           <>
-            <Button onClick={() => setPreview("exam")} disabled={!exam.question_count}>
+            <Button variant="outline" onClick={() => setPreview("exam")} disabled={!exam.question_count}>
               Xem trước
             </Button>
-            <Button variant="primary" onClick={() => setAssigning(true)} disabled={!exam.question_count}>
+            <Button onClick={() => setAssigning(true)} disabled={!exam.question_count}>
               Giao bài
             </Button>
           </>
         }
       />
-      {error && <div className="mb-3"><Alert>{error}</Alert></div>}
+      {error && <div className="mb-3"><FormAlert>{error}</FormAlert></div>}
       <div className="grid gap-6 xl:grid-cols-[3fr_2fr]">
         <div className="space-y-4">
-          <Card>
+          <Panel>
             <h2 className="mb-3 font-medium">Ma trận đề</h2>
             <BlueprintEditor
               initial={exam.blueprint}
@@ -76,11 +81,11 @@ export default function ExamBuilderPage({ params }: { params: Promise<{ id: stri
               shortfalls={shortfalls}
               onGenerate={(rows: BlueprintRow[]) => run(() => api(`/exams/${id}/blueprint`, { body: { rows } }))}
             />
-          </Card>
-          <Card>
+          </Panel>
+          <Panel>
             <h2 className="mb-2 font-medium">Câu hỏi trong đề</h2>
             {exam.questions.length === 0 ? (
-              <p className="text-sm text-gray-500">Chưa có câu nào — tạo theo ma trận hoặc thêm từ ngân hàng.</p>
+              <p className="text-sm text-muted-foreground">Chưa có câu nào — tạo theo ma trận hoặc thêm từ ngân hàng.</p>
             ) : (
               <ExamQuestions
                 questions={exam.questions}
@@ -90,32 +95,32 @@ export default function ExamBuilderPage({ params }: { params: Promise<{ id: stri
                 onPoints={(qid, points) => run(() => api(`/exams/${id}/questions/${qid}`, { method: "PATCH", body: { points } }))}
               />
             )}
-          </Card>
+          </Panel>
         </div>
         <div className="space-y-4">
           {assigned && assigned.length > 0 && (
-            <Card>
+            <Panel>
               <h2 className="mb-2 font-medium">Đã giao</h2>
-              <ul className="divide-y divide-gray-100 text-sm" data-testid="assigned">
+              <ul className="divide-y divide-border text-sm" data-testid="assigned">
                 {assigned.map((a) => (
                   <li key={a.id} className="flex items-center justify-between py-2">
                     <span>
-                      <Link href={`/org/assignments/${a.id}`} className="font-medium text-brand-700 hover:underline">
+                      <Link href={`/org/assignments/${a.id}`} className="font-medium text-primary hover:underline">
                         {a.title}
                       </Link>
-                      <span className="block text-xs text-gray-500">
+                      <span className="block text-xs text-muted-foreground">
                         {a.classes.join(", ")} · {fmt(a.open_at)} → {fmt(a.close_at)}
                       </span>
                     </span>
-                    <span className="text-xs text-gray-600">
+                    <span className="text-xs text-muted-foreground">
                       {a.submitted}/{a.students} đã nộp
                     </span>
                   </li>
                 ))}
               </ul>
-            </Card>
+            </Panel>
           )}
-          <Card>
+          <Panel>
             <h2 className="mb-2 font-medium">Điểm mặc định theo loại câu</h2>
             <div className="grid grid-cols-2 gap-2 text-sm">
               {(Object.keys(TYPE_LABEL) as QuestionType[]).map((t) => (
@@ -136,8 +141,8 @@ export default function ExamBuilderPage({ params }: { params: Promise<{ id: stri
                 </label>
               ))}
             </div>
-          </Card>
-          <Card>
+          </Panel>
+          <Panel>
             <h2 className="mb-2 font-medium">Thêm từ ngân hàng</h2>
             <form
               className="flex gap-2"
@@ -147,24 +152,24 @@ export default function ExamBuilderPage({ params }: { params: Promise<{ id: stri
               }}
             >
               <Input placeholder="Tìm câu hỏi…" value={search} onChange={(e) => setSearch(e.target.value)} />
-              <Button type="submit">Tìm</Button>
+              <Button variant="outline" type="submit">Tìm</Button>
             </form>
-            <ul className="mt-2 divide-y divide-gray-100 text-sm" data-testid="bank-results">
+            <ul className="mt-2 divide-y divide-border text-sm" data-testid="bank-results">
               {found?.items.map((q) => (
                 <li key={q.id} className="flex items-start gap-2 py-2">
                   <div className="line-clamp-2 min-w-0 flex-1">
                     <Markdown>{q.stem}</Markdown>
                   </div>
-                  <Button size="sm" disabled={inExam.has(q.id)} onClick={() => run(() => api(`/exams/${id}/questions`, { body: { question_ids: [q.id] } }))}>
+                  <Button variant="outline" size="sm" disabled={inExam.has(q.id)} onClick={() => run(() => api(`/exams/${id}/questions`, { body: { question_ids: [q.id] } }))}>
                     {inExam.has(q.id) ? "Đã có" : "Thêm"}
                   </Button>
                 </li>
               ))}
             </ul>
-          </Card>
+          </Panel>
         </div>
       </div>
-      <Modal open={assigning} title="Giao bài" wide onClose={() => setAssigning(false)}>
+      <FormDialog open={assigning} title="Giao bài" wide onOpenChange={(o) => !o && setAssigning(false)}>
         {assigning && (
           <AssignDialog
             examId={id}
@@ -176,8 +181,8 @@ export default function ExamBuilderPage({ params }: { params: Promise<{ id: stri
             }}
           />
         )}
-      </Modal>
-      <Modal open={!!preview} title="Xem trước đề" wide onClose={() => setPreview(null)}>
+      </FormDialog>
+      <FormDialog open={!!preview} title="Xem trước đề" wide onOpenChange={(o) => !o && setPreview(null)}>
         <label className="mb-4 flex items-center gap-2 text-sm">
           <input type="checkbox" checked={preview === "review"} onChange={(e) => setPreview(e.target.checked ? "review" : "exam")} /> Hiện đáp án và lời giải
         </label>
@@ -186,7 +191,7 @@ export default function ExamBuilderPage({ params }: { params: Promise<{ id: stri
             <QuestionView key={q.id} question={q} mode={preview === "review" ? "review" : "exam"} number={q.position} />
           ))}
         </div>
-      </Modal>
+      </FormDialog>
     </>
   );
 }

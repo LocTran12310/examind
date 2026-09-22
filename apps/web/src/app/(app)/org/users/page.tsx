@@ -84,7 +84,7 @@ export default function UsersPage() {
     q.set("page", "1");
     q.set("page_size", "all");
     const page = await api<Page<User>>(`/users?${q}`);
-    const rows = page.items.map((u) => ({ ...u, role: ROLE_LABEL[u.role], classes: u.class_ids.map((id) => classById.get(id)?.name).join(" ") }));
+    const rows = page.items.map((u) => ({ full_name: u.full_name, username: u.username, email: u.email ?? "", role: ROLE_LABEL[u.role], classes: u.class_ids.map((id) => classById.get(id)?.name).join(" ") }));
     downloadText("nguoi-dung.csv", toCsv(rows, [["full_name", "Họ tên"], ["username", "Tên đăng nhập"], ["email", "Email"], ["role", "Vai trò"], ["classes", "Lớp"]]));
   }
 

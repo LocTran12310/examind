@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Input, Modal, Select } from "@/components/ui";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { FormDialog } from "@/components/app/FormDialog";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { DIFFICULTY_LABEL, EXAM_KINDS, STATUS_LABEL, TYPE_LABEL, type Tag, type Taxonomy, type Topic } from "@/lib/types";
 import { TopicPicker, topicLabel } from "./TopicPicker";
 
@@ -35,73 +38,73 @@ export function BankFilters({
         }}
       >
         <Input placeholder="Tìm nội dung câu hỏi (không cần dấu)…" value={text} onChange={(e) => setText(e.target.value)} />
-        <Button type="submit">Tìm</Button>
+        <Button variant="outline" type="submit">Tìm</Button>
       </form>
       <div className="flex flex-wrap gap-2">
-        <Select aria-label="Môn" value={value.subject_id ?? ""} onChange={(e) => set("subject_id", e.target.value)}>
-          <option value="">Mọi môn</option>
+        <NativeSelect aria-label="Môn" value={value.subject_id ?? ""} onChange={(e) => set("subject_id", e.target.value)}>
+          <NativeSelectOption value="">Mọi môn</NativeSelectOption>
           {taxonomy.subjects.map((s) => (
-            <option key={s.id} value={s.id}>
+            <NativeSelectOption key={s.id} value={s.id}>
               {s.name}
-            </option>
+            </NativeSelectOption>
           ))}
-        </Select>
-        <Select aria-label="Lớp" value={value.grade ?? ""} onChange={(e) => set("grade", e.target.value)}>
-          <option value="">Mọi lớp</option>
+        </NativeSelect>
+        <NativeSelect aria-label="Lớp" value={value.grade ?? ""} onChange={(e) => set("grade", e.target.value)}>
+          <NativeSelectOption value="">Mọi lớp</NativeSelectOption>
           {taxonomy.grades.map((g) => (
-            <option key={g.id} value={g.level}>
+            <NativeSelectOption key={g.id} value={g.level}>
               {g.name}
-            </option>
+            </NativeSelectOption>
           ))}
-        </Select>
-        <Select aria-label="Học kỳ" value={value.semester_code ?? ""} onChange={(e) => set("semester_code", e.target.value)}>
-          <option value="">Mọi học kỳ</option>
+        </NativeSelect>
+        <NativeSelect aria-label="Học kỳ" value={value.semester_code ?? ""} onChange={(e) => set("semester_code", e.target.value)}>
+          <NativeSelectOption value="">Mọi học kỳ</NativeSelectOption>
           {taxonomy.semesters.map((s) => (
-            <option key={s.id} value={s.code}>
+            <NativeSelectOption key={s.id} value={s.code}>
               {s.name}
-            </option>
+            </NativeSelectOption>
           ))}
-        </Select>
-        <Select aria-label="Loại đề" value={value.exam_kind ?? ""} onChange={(e) => set("exam_kind", e.target.value)}>
-          <option value="">Mọi loại đề</option>
+        </NativeSelect>
+        <NativeSelect aria-label="Loại đề" value={value.exam_kind ?? ""} onChange={(e) => set("exam_kind", e.target.value)}>
+          <NativeSelectOption value="">Mọi loại đề</NativeSelectOption>
           {EXAM_KINDS.map((k) => (
-            <option key={k}>{k}</option>
+            <NativeSelectOption key={k}>{k}</NativeSelectOption>
           ))}
-        </Select>
-        <Select aria-label="Loại câu" value={value.type ?? ""} onChange={(e) => set("type", e.target.value)}>
-          <option value="">Mọi loại câu</option>
+        </NativeSelect>
+        <NativeSelect aria-label="Loại câu" value={value.type ?? ""} onChange={(e) => set("type", e.target.value)}>
+          <NativeSelectOption value="">Mọi loại câu</NativeSelectOption>
           {Object.entries(TYPE_LABEL).map(([k, v]) => (
-            <option key={k} value={k}>
+            <NativeSelectOption key={k} value={k}>
               {v}
-            </option>
+            </NativeSelectOption>
           ))}
-        </Select>
-        <Select aria-label="Mức độ" value={value.difficulty ?? ""} onChange={(e) => set("difficulty", e.target.value)}>
-          <option value="">Mọi mức độ</option>
+        </NativeSelect>
+        <NativeSelect aria-label="Mức độ" value={value.difficulty ?? ""} onChange={(e) => set("difficulty", e.target.value)}>
+          <NativeSelectOption value="">Mọi mức độ</NativeSelectOption>
           {Object.entries(DIFFICULTY_LABEL).map(([k, v]) => (
-            <option key={k} value={k}>
+            <NativeSelectOption key={k} value={k}>
               {v}
-            </option>
+            </NativeSelectOption>
           ))}
-        </Select>
-        <Select aria-label="Trạng thái" value={value.status ?? "usable"} onChange={(e) => set("status", e.target.value)}>
-          <option value="usable">Dùng được</option>
-          <option value="all">Tất cả</option>
+        </NativeSelect>
+        <NativeSelect aria-label="Trạng thái" value={value.status ?? "usable"} onChange={(e) => set("status", e.target.value)}>
+          <NativeSelectOption value="usable">Dùng được</NativeSelectOption>
+          <NativeSelectOption value="all">Tất cả</NativeSelectOption>
           {Object.entries(STATUS_LABEL).map(([k, v]) => (
-            <option key={k} value={k}>
+            <NativeSelectOption key={k} value={k}>
               {v}
-            </option>
+            </NativeSelectOption>
           ))}
-        </Select>
-        <Select aria-label="Tag" value={value.tag_ids ?? ""} onChange={(e) => set("tag_ids", e.target.value)}>
-          <option value="">Mọi tag</option>
+        </NativeSelect>
+        <NativeSelect aria-label="Tag" value={value.tag_ids ?? ""} onChange={(e) => set("tag_ids", e.target.value)}>
+          <NativeSelectOption value="">Mọi tag</NativeSelectOption>
           {tags.map((t) => (
-            <option key={t.id} value={t.id}>
+            <NativeSelectOption key={t.id} value={t.id}>
               {t.name}
-            </option>
+            </NativeSelectOption>
           ))}
-        </Select>
-        <Button onClick={() => setPicking(true)} data-testid="topic-filter">
+        </NativeSelect>
+        <Button variant="outline" onClick={() => setPicking(true)} data-testid="topic-filter">
           {topic ? `Chuyên đề: ${topic.name}` : "Chuyên đề…"}
         </Button>
         {topic && (
@@ -110,8 +113,8 @@ export function BankFilters({
           </Button>
         )}
       </div>
-      {topic && <p className="text-xs text-gray-500">Gồm cả các nhánh con của {topicLabel(topic, byId)}</p>}
-      <Modal open={picking} title="Lọc theo chuyên đề" onClose={() => setPicking(false)}>
+      {topic && <p className="text-xs text-muted-foreground">Gồm cả các nhánh con của {topicLabel(topic, byId)}</p>}
+      <FormDialog open={picking} title="Lọc theo chuyên đề" onOpenChange={(o) => !o && setPicking(false)}>
         <TopicPicker
           topics={topics}
           onPick={(t) => {
@@ -120,7 +123,7 @@ export function BankFilters({
           }}
           onClose={() => setPicking(false)}
         />
-      </Modal>
+      </FormDialog>
     </div>
   );
 }

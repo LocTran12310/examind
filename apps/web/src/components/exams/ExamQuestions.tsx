@@ -1,7 +1,9 @@
 "use client";
 
 import { Markdown } from "@/components/question/Markdown";
-import { Badge, Button, Input } from "@/components/ui";
+import { ToneBadge } from "@/components/app/ToneBadge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { TYPE_LABEL, type ExamQuestion } from "@/lib/types";
 
 export function ExamQuestions({
@@ -25,20 +27,20 @@ export function ExamQuestions({
         lastSection = q.section;
         return (
           <li key={q.id}>
-            {header && <h3 className="mb-1 mt-3 text-sm font-semibold text-gray-600">Phần {q.section}</h3>}
-            <div className="flex gap-3 rounded-lg border border-gray-200 bg-white p-3" data-testid={`eq-${q.position}`}>
+            {header && <h3 className="mb-1 mt-3 text-sm font-semibold text-muted-foreground">Phần {q.section}</h3>}
+            <div className="flex gap-3 rounded-lg border border-border bg-card p-3" data-testid={`eq-${q.position}`}>
               <span className="w-8 shrink-0 font-semibold">{q.position}.</span>
               <div className="min-w-0 flex-1 text-sm">
                 <div className="line-clamp-3">
                   <Markdown>{q.stem}</Markdown>
                 </div>
                 <div className="mt-1 flex flex-wrap gap-1 text-xs">
-                  <Badge>{TYPE_LABEL[q.type]}</Badge>
-                  {q.topics[0] && <span className="rounded bg-brand-50 px-2 py-0.5 text-brand-700">{q.topics[0].name}</span>}
+                  <ToneBadge>{TYPE_LABEL[q.type]}</ToneBadge>
+                  {q.topics[0] && <span className="rounded bg-primary/10 px-2 py-0.5 text-primary">{q.topics[0].name}</span>}
                 </div>
               </div>
               <div className="flex shrink-0 flex-col items-end gap-1">
-                <label className="flex items-center gap-1 text-xs text-gray-500">
+                <label className="flex items-center gap-1 text-xs text-muted-foreground">
                   điểm
                   <Input
                     aria-label={`Điểm câu ${q.position}`}
@@ -60,7 +62,7 @@ export function ExamQuestions({
                   <Button size="sm" variant="ghost" onClick={() => onSwap(q.id)}>
                     Đổi câu
                   </Button>
-                  <Button size="sm" variant="ghost" className="text-red-700" onClick={() => onRemove(q.id)}>
+                  <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onRemove(q.id)}>
                     Bỏ
                   </Button>
                 </div>

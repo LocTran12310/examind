@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { TopicPicker } from "@/components/bank/TopicPicker";
 import { QuestionView } from "@/components/question/QuestionView";
-import { Alert, Badge, Button, Empty, Modal } from "@/components/ui";
+import { FormAlert } from "@/components/app/FormAlert";
+import { ToneBadge } from "@/components/app/ToneBadge";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/app/EmptyState";
+import { FormDialog } from "@/components/app/FormDialog";
 import { api, ApiError } from "@/lib/api";
 import type { ParsedQuestion, SourceDocument, Topic } from "@/lib/types";
 import { useHotkeys } from "./useHotkeys";
@@ -21,7 +25,7 @@ const LEGEND: [string, string][] = [
 export function FlagPanel({ ev }: { ev: NonNullable<ParsedQuestion["flag_evidence"]> }) {
   const total = Object.values(ev.option_counts).reduce((a, b) => a + b, 0) || 1;
   return (
-    <div className="mb-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-900" data-testid="flag-panel">
+    <div className="mb-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-red-900" data-testid="flag-panel">
       <div className="font-medium">Nghi sai đáp án: {ev.reason}</div>
       <div className="mt-2 flex flex-wrap gap-3">
         {Object.entries(ev.option_counts)
@@ -137,34 +141,34 @@ export function ReviewQueue({
   );
 
   if (!q || remaining === 0) {
-    return <Empty>Đã xem hết các câu cần xem của đề này. 🎉</Empty>;
+    return <EmptyState>Đã xem hết các câu cần xem của đề này. 🎉</EmptyState>;
   }
   const primary = q.topics.find((t) => t.is_primary);
 
   return (
     <div className={showPage ? "grid gap-4 lg:grid-cols-2" : ""}>
-      <section className="rounded-xl border border-gray-200 bg-white p-5" data-testid="queue-card">
+      <section className="rounded-xl border border-border bg-card p-5" data-testid="queue-card">
         <header className="mb-3 flex flex-wrap items-center gap-2 text-sm">
           <span className="font-semibold" data-testid="counter">
             {index + 1}/{items.length}
           </span>
-          <Badge tone={q.group === "Kiểm tra ngẫu nhiên" ? "blue" : "amber"}>{q.group}</Badge>
-          <span className="text-gray-500">
+          <ToneBadge tone={q.group === "Kiểm tra ngẫu nhiên" ? "blue" : "amber"}>{q.group}</ToneBadge>
+          <span className="text-muted-foreground">
             Câu {q.number}
             {q.part ? ` · Phần ${q.part}` : ""}
           </span>
-          {done.has(q.id) && <Badge tone={q.status === "rejected" ? "red" : "green"}>{q.status === "rejected" ? "Đã loại" : "Đã xử lý"}</Badge>}
+          {done.has(q.id) && <ToneBadge tone={q.status === "rejected" ? "red" : "green"}>{q.status === "rejected" ? "Đã loại" : "Đã xử lý"}</ToneBadge>}
           {q.issues
             .filter((i) => i !== q.group && i !== "thiếu lời giải")
             .map((i) => (
-              <Badge key={i} tone="red">
+              <ToneBadge key={i} tone="red">
                 {i}
-              </Badge>
+              </ToneBadge>
             ))}
         </header>
         {message && (
           <div className="mb-3">
-            <Alert tone={message.tone}>{message.text}</Alert>
+            <FormAlert kind={message.tone === "red" ? "error" : "success"}>{message.text}</FormAlert>
           </div>
         )}
         {q.flag_evidence && !q.flag_evidence.dismissed && <FlagPanel ev={q.flag_evidence} />}
@@ -185,47 +189,47 @@ export function ReviewQueue({
             onSelect={["mcq", "true_false"].includes(q.type) ? (label) => void setAnswer(label) : undefined}
           />
         )}
-        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-3 text-sm">
-          <span className="text-gray-500">Chuyên đề:</span>
-          <button type="button" className="rounded bg-brand-50 px-2 py-0.5 text-brand-700" onClick={() => setPicking(true)} data-testid="topic-button">
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-3 text-sm">
+          <span className="text-muted-foreground">Chuyên đề:</span>
+          <button type="button" className="rounded bg-primary/10 px-2 py-0.5 text-primary" onClick={() => setPicking(true)} data-testid="topic-button">
             {primary ? primary.name : "Chọn chuyên đề"}
             {primary?.source && primary.source !== "manual" ? ` · gợi ý ${primary.score ? Math.round(primary.score * 100) + "%" : ""}` : ""}
           </button>
           <div className="ml-auto flex gap-2">
-            <Button size="sm" onClick={() => setIndex((i) => Math.max(i - 1, 0))}>
+            <Button variant="outline" size="sm" onClick={() => setIndex((i) => Math.max(i - 1, 0))}>
               ← K
             </Button>
-            <Button size="sm" variant="danger" onClick={() => void action("reject")}>
+            <Button size="sm" variant="destructive" onClick={() => void action("reject")}>
               Loại (X)
             </Button>
             {renderEditor && (
-              <Button size="sm" onClick={() => setEditing(true)}>
+              <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
                 Sửa (E)
               </Button>
             )}
-            <Button size="sm" variant="primary" onClick={() => void action("approve")}>
+            <Button size="sm" onClick={() => void action("approve")}>
               Duyệt (Enter)
             </Button>
           </div>
         </div>
-        <p className="mt-3 flex flex-wrap gap-3 text-xs text-gray-500" data-testid="legend">
+        <p className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground" data-testid="legend">
           {LEGEND.map(([k, v]) => (
             <span key={k}>
-              <kbd className="rounded border border-gray-300 px-1 font-mono">{k}</kbd> {v}
+              <kbd className="rounded border border-input px-1 font-mono">{k}</kbd> {v}
             </span>
           ))}
           <span>· còn {remaining} câu</span>
         </p>
       </section>
       {showPage && (
-        <aside className="rounded-xl border border-gray-200 bg-white p-2" data-testid="source-page">
+        <aside className="rounded-xl border border-border bg-card p-2" data-testid="source-page">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={`/api/documents/${doc.id}/pages/${q.page}.png`} alt={`Trang ${q.page} của đề gốc`} className="w-full" />
         </aside>
       )}
-      <Modal open={picking} title="Chọn chuyên đề (T)" onClose={() => setPicking(false)}>
+      <FormDialog open={picking} title="Chọn chuyên đề (T)" onOpenChange={(o) => !o && setPicking(false)}>
         <TopicPicker topics={topics} onPick={(t) => void pickTopic(t)} onClose={() => setPicking(false)} />
-      </Modal>
+      </FormDialog>
     </div>
   );
 }

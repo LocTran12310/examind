@@ -12,7 +12,7 @@ export function heatColor(r: number | null | undefined): string {
 }
 
 export function Heatmap({ data }: { data: HeatmapData }) {
-  if (!data.rows.length) return <p className="text-sm text-gray-500">Lớp chưa có học sinh.</p>;
+  if (!data.rows.length) return <p className="text-sm text-muted-foreground">Lớp chưa có học sinh.</p>;
   return (
     <div className="overflow-x-auto">
       <table className="border-separate border-spacing-1 text-xs" data-testid="heatmap">
@@ -20,7 +20,7 @@ export function Heatmap({ data }: { data: HeatmapData }) {
           <tr>
             <th />
             {data.columns.map((c) => (
-              <th key={c.id} className="max-w-28 truncate px-1 font-medium text-gray-600" title={c.name}>
+              <th key={c.id} className="max-w-28 truncate px-1 font-medium text-muted-foreground" title={c.name}>
                 {c.name}
               </th>
             ))}
