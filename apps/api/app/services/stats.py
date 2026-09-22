@@ -7,9 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.errors import forbidden
 from app.deps import OrgScope
-from app.models import Attempt, AttemptAnswer, Exam, ExamQuestion, Question, User
-from app.services import assignments as assignment_service
-from app.services.scoring import scaled
+from app.models import User
 
 
 def _where(scope: OrgScope, alias: str, class_id=None, student_id=None, assignment_id=None, date_from=None, date_to=None,
@@ -113,58 +111,6 @@ def heatmap(db: Session, scope: OrgScope, class_id, level: int = 1, subject_id=N
                          {"k": uuid.UUID(str(class_id)), "org": scope.org_id}).mappings().all()
     return {"columns": columns, "rows": [{"student_id": m["id"], "full_name": m["full_name"], "username": m["username"],
                                           "cells": cells.get(str(m["id"]), {})} for m in members]}
-
-
-def assignment_report(db: Session, scope: OrgScope, aid) -> dict:
-    a = assignment_service.get(db, scope, aid)
-    exam = db.get(Exam, a.exam_id)
-    scale_to = float((exam.settings or {}).get("scale_to", 10))
-    targets = assignment_service.student_ids(db, a)
-    attempts = db.query(Attempt).filter(Attempt.assignment_id == a.id).order_by(Attempt.started_at).all()
-    by_student: dict = {}
-    for t in attempts:
-        by_student.setdefault(t.student_id, []).append(t)
-    users = {u.id: u for u in db.query(User).filter(User.id.in_(targets | set(by_student) or {uuid.uuid4()}))}
-    students, scores = [], []
-    for sid in sorted(targets | set(by_student), key=lambda i: users[i].full_name if i in users else ""):
-        ts = by_student.get(sid, [])
-        best = max((t for t in ts if t.status == "submitted"), key=lambda t: t.score or 0, default=None)
-        latest = ts[-1] if ts else None
-        s10 = scaled(best.score or 0, best.max_score or 0, scale_to) if best else None
-        if s10 is not None:
-            scores.append(s10)
-        u = users.get(sid)
-        students.append({"student_id": sid, "full_name": u.full_name if u else "?", "username": u.username if u else "?",
-                         "status": "submitted" if best else ("in_progress" if latest else "not_started"),
-                         "attempt_id": (best or latest).id if (best or latest) else None, "score10": s10,
-                         "needs_grading": bool(best and best.needs_grading), "tab_switches": max((t.tab_switches for t in ts), default=0)})
-    buckets = [0] * 10
-    for s in scores:
-        buckets[min(9, int(s // (scale_to / 10)))] += 1
-    submitted_ids = [t.id for t in attempts if t.status == "submitted"]
-    per_question = []
-    rows = db.query(ExamQuestion, Question).join(Question, Question.id == ExamQuestion.question_id).filter(ExamQuestion.exam_id == a.exam_id).order_by(ExamQuestion.position).all()
-    answers: dict = {}
-    if submitted_ids:
-        for ans in db.query(AttemptAnswer).filter(AttemptAnswer.attempt_id.in_(submitted_ids)):
-            answers.setdefault(ans.question_id, []).append(ans)
-    for eq, q in rows:
-        got = answers.get(q.id, [])
-        graded = [x for x in got if x.points is not None]
-        wrong: dict = {}
-        if q.type == "mcq":
-            for x in got:
-                k = (x.response or {}).get("key")
-                if k and k != (x.key_snapshot or {}).get("key"):
-                    wrong[k] = wrong.get(k, 0) + 1
-        top_wrong = max(wrong.items(), key=lambda kv: kv[1]) if wrong else None
-        per_question.append({"question_id": q.id, "position": eq.position, "type": q.type, "stem": q.stem[:300],
-                             "answered": len(got), "ratio": round(sum(x.points for x in graded) / sum(x.max_points for x in graded), 4) if graded and sum(x.max_points for x in graded) else None,
-                             "top_wrong": {"label": top_wrong[0], "count": top_wrong[1]} if top_wrong else None})
-    return {"assignment_id": a.id, "title": a.title, "students": students, "submitted": len({t.student_id for t in attempts if t.status == "submitted"}),
-            "total_students": len(targets), "average": round(sum(scores) / len(scores), 2) if scores else None,
-            "distribution": [{"from": i * scale_to / 10, "to": (i + 1) * scale_to / 10, "count": c} for i, c in enumerate(buckets)],
-            "questions": per_question}
 
 
 def parse_date(v: str | None) -> datetime | None:

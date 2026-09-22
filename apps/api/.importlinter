@@ -19,6 +19,7 @@ containers =
     app.modules.identity
     app.modules.bank
     app.modules.ingestion
+    app.modules.assessment
 
 [importlinter:contract:pure-domain]
 name = Domain code imports no framework, ORM, web or storage library

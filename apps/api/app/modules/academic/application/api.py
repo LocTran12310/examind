@@ -54,3 +54,17 @@ class AcademicApi:
     def leave_org_classes(self, org_id: uuid.UUID, user_id: uuid.UUID) -> None:
         """The account leaves every class of the org (its membership there ended)."""
         self.classes.remove_from_org(org_id, user_id)
+
+    # ------------------------------------------------------------------ assessment (assignments, answer-fact snapshots)
+
+    def class_names(self, org_id: uuid.UUID, class_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
+        """{class_id: name} for the classes of the org among `class_ids` (unknown or foreign ids are left out)."""
+        return self.classes.names(org_id, list(class_ids))
+
+    def members_of(self, org_id: uuid.UUID, class_ids: list[uuid.UUID]) -> set[uuid.UUID]:
+        """Every account enrolled in one of these classes of the org (whatever the enrollment status)."""
+        return self.classes.members_of(org_id, list(class_ids))
+
+    def classes_of(self, org_id: uuid.UUID, user_id: uuid.UUID, year_id: uuid.UUID | None = None) -> list[uuid.UUID]:
+        """The classes of the org the account is enrolled in (of that school year when given)."""
+        return self.classes.classes_of(org_id, user_id, year_id)

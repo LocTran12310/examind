@@ -62,6 +62,18 @@ class ClassRepository(Protocol):
         """Delete the user's rows in every class of the org."""
         ...
 
+    def names(self, org_id: uuid.UUID, class_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
+        """{class_id: name} for the classes of the org among `class_ids`."""
+        ...
+
+    def members_of(self, org_id: uuid.UUID, class_ids: list[uuid.UUID]) -> set[uuid.UUID]:
+        """Every account enrolled (whatever the enrollment status) in one of these classes of the org."""
+        ...
+
+    def classes_of(self, org_id: uuid.UUID, user_id: uuid.UUID, year_id: uuid.UUID | None = None) -> list[uuid.UUID]:
+        """The classes of the org (of that school year when given) the account is enrolled in, whatever the status."""
+        ...
+
     def member_ids(self, class_id: uuid.UUID) -> list[uuid.UUID]:
         """By full name."""
         ...

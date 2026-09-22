@@ -133,3 +133,51 @@
 - Demo script: (1) re-uploading the 18 files is reported as duplicates (`/documents/check` → `same_file`; upload `skip` returns the
   existing document, `replace` re-parses it — the live golden run above); (2) golden numbers above; (3) exam from a document over HTTP in
   `test_exam_from_document.py` (draft in PHẦN / Câu order, 422 before approval, kept across a re-parse) — not repeated on the live data.
+
+## UOW-06 exams, assignments and attempts (2026-09-22)
+- API module `assessment` (4 layers): dataclasses `Exam`, `ExamQuestion`, `Assignment`, `AssignmentTarget`, `Attempt`, `AttemptAnswer`,
+  `AnswerFact` mapped on `shared/infrastructure/schema/assessment.py` (the only Table objects of `exams`, `exam_questions`, `assignments`,
+  `assignment_targets`, `attempts`, `attempt_answers`, `answer_facts`). Pure rules in `domain/services/`: `scoring` (THPT 2025 scale, moved
+  unchanged), `exam_rules` (settings, sections and numbering, blueprint rows, PHẦN / Câu order), `assignment_rules` (window, attempt limit,
+  deadline, results visibility), `attempt_rules` (question / option order, A–D relabelling, answer checks, grace, grading on submit,
+  essay grading). Handlers: 17 commands (exam create / update / delete, blueprint, add / remove / swap / reorder / points, exam from a
+  document, assignment create / update / delete, start, save answer, submit, tab switch, essay grade, sweep) and 9 queries (exam and
+  assignment search, exam, exam questions, assignment, student home, runner view, result, assignment report — moved here from the old
+  stats service). `Grading` (application service) writes one answer fact per graded answer with the school-year snapshot and reports it,
+  in grading order, to a `FactListener`.
+- Cross-module calls through `application/api.py` only, wired in `main.py` and the worker (`app/worker/handlers.py`): the bank API gained
+  `questions_of`, `of_document`, `pool`, `classification`; the academic API `class_names`, `members_of`, `classes_of`; the identity API
+  `active_member_ids`; the taxonomy's `subject_exists` is reused. Ingestion's `ExamDrafts` now calls `AssessmentApi.exam_from_document`
+  (the port receives the document's filename, status and meta); `ExamServiceDrafts` is gone. The bank's in-use check asks
+  `AssessmentApi.question_in_use`. Analytics (old layout) keeps the topic mastery through `services/mastery.MasteryFactListener`; the
+  worker's sweep calls `AssessmentApi.sweep_expired`. `lint-imports` 4 contracts kept with `app.modules.assessment` added;
+  `test_architecture.py` green.
+- Old layout kept working: `app/models/exam.py` re-exports the dataclasses; `services/scoring.py` re-exports the domain scoring,
+  `services/exams.points_for`, `services/assignments.new_attempt` (personal practice) and `services/attempts.sweep_expired` are thin
+  wrappers; `routers/{exams,assignments,attempts,presenters}.py`, `schemas/{exams,assignments}.py` removed; `services/stats.py` lost
+  the assignment report.
+- Endpoints moved to search (old GETs answer 405): `GET /exams` → `POST /exams/search` (title · grade · source · subject_id · created_at;
+  sort also question_count, total_points; adaptive exams left out), `GET /exams/{id}/questions` → `POST /exams/{id}/questions/search`
+  (stem · type, section · position, points), `GET /assignments` → `POST /assignments/search` (title · exam_id · open_at, close_at ·
+  duration_minutes). Every other exam / assignment / attempt path and JSON body unchanged, including `/me/assignments` (plain list),
+  `/assignments/{id}/report` (now served by assessment), `PUT /exams/{id}/order`, `X-Server-Time`.
+- API suite 392 passed (+1 skipped: official set needs EXAMIN_DIR; 368 before): new `tests/unit/test_assessment_handlers.py` (21 tests on
+  in-memory ports: THPT partial credit, blueprint seed / shortfalls, frozen exams, exam from a document, assignment validation, start
+  window / target / attempts left / deadline capped by close, results policy, shuffle inside sections, A–D relabelling, grading + facts
+  in order, essay grading, empty essay, lazy close + sweep dated at the deadline, hidden results) and `tests/test_assessment_search.py`
+  (typed filters, sort, paging, bad_filter / bad_sort, old GETs 405); existing tests changed only for the new URLs/shapes.
+- Web: exams list (server table, title → preview dialog fetched on click, row → questions table), exam detail (BlueprintEditor,
+  ExamQuestions draft ordering, ExamQuestionsTable, preview, points by type, bank search box, AssignDialog, the exam's assignments),
+  assignment report, student home, exam runner, result view and essay grader on `exam.service` / `assignment.service` /
+  `attempt.service` → `use-query-exam` / `use-query-assignment` / `use-query-attempt` → page hooks → page components; routes one line;
+  `components/exams/*` and `components/reports/AssignmentReport.tsx` removed; `Bar` → `components/common/ScoreBar`, `AnswerInput` →
+  `components/common/AnswerInput`. The resizable splits (MasterDetail, StructureSplit) no longer read `localStorage` during server
+  rendering (`/org/exams` and `/org/classes` answered 500 on the live stack). Web 166 tests, tsc and eslint clean.
+- Live (`docker compose up -d --build api worker web`, http://localhost:8088, trungtama/admin, read-only): `POST /exams/search` total 3
+  (the three exams from documents, 22 questions each); `POST /exams/{id}/questions/search` total 22 (positions 1.., section I, 0.25);
+  `GET /exams/{id}` 200; `POST /assignments/search` total 2 (class 10A1, 1 student each), filtered by exam 1; `GET /assignments/{id}/report`
+  1 student, 22 questions; `GET /exams`, `GET /assignments`, `GET /exams/{id}/questions` 405; pages `/org/exams`, `/org/exams/{id}`,
+  `/org/assignments/{id}`, `/home` 200; worker healthy.
+- Demo script: (1) matrix, order, preview over HTTP in `test_exams_api.py` (blueprint with shortfalls, manual edits, points, `PUT /order`,
+  swap) and the web tests; (2) assign, take, result, essay grading in `test_assignments_api.py`, `test_attempts_api.py`,
+  `test_results_api.py` — not repeated on the live data (no live exam, assignment or attempt was created or changed).

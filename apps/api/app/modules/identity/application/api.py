@@ -28,3 +28,7 @@ class IdentityApi:
         roles = self.roles_in(org_id, user_ids)
         wanted = None if not role else ((role,) if isinstance(role, str) else role)
         return {u for u, r in roles.items() if wanted is None or r in wanted}
+
+    def active_member_ids(self, org_id: uuid.UUID, user_ids, role: str | tuple[str, ...] | None = None) -> set[uuid.UUID]:
+        """member_ids restricted to active accounts (who is given an assignment through a class)."""
+        return {u for u in self.member_ids(org_id, user_ids, role) if (user := self.users.get(u)) is not None and user.is_active}

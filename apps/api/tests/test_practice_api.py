@@ -26,7 +26,7 @@ def test_student_practice_flow_updates_mastery(client, db):
     assert any(after[k] > before.get(k, 0) for k in after)
     history = s.get("/api/me/practice").json()
     assert history[0]["attempt_id"] == att and history[0]["score10"] == result["score10"]
-    assert all(e["source"] != "adaptive" for e in client.get("/api/exams").json()["items"])
+    assert all(e["source"] != "adaptive" for e in client.post("/api/exams/search", json={}).json()["data"])
 
 
 def test_teacher_assigns_personal_review_to_class(client, db):

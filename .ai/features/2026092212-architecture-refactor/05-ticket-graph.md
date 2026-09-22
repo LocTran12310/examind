@@ -3,7 +3,7 @@
 # Ticket graph — 2026092212-architecture-refactor
 
 - Units of Work: **7**
-- Tickets: **31** (24 done)
+- Tickets: **31** (28 done)
 - Total effort: **13.8d**
 - Critical path: **4.6d** across 10 tickets
 - Theoretical minimum duration with unlimited parallelism: **4.6d**
@@ -62,10 +62,10 @@ graph LR
     T_05_05["✓ T-05-05<br/>Web: AI models and processing settings"]
   end
   subgraph UOW_06["UOW-06 · Exams, assignments and attempts"]
-    T_06_01["T-06-01<br/>assessment: exams"]
-    T_06_02["T-06-02<br/>assessment: assignments, attempts, scoring"]
-    T_06_03["T-06-03<br/>Web: exams list and detail"]
-    T_06_04["T-06-04<br/>Web: assign, runner, results, student home"]
+    T_06_01["✓ T-06-01<br/>assessment: exams"]
+    T_06_02["✓ T-06-02<br/>assessment: assignments, attempts, scoring"]
+    T_06_03["✓ T-06-03<br/>Web: exams list and detail"]
+    T_06_04["✓ T-06-04<br/>Web: assign, runner, results, student home"]
   end
   subgraph UOW_07["UOW-07 · Analytics, audit and removal of the old layout"]
     T_07_01["T-07-01<br/>analytics and audit modules"]
@@ -183,10 +183,10 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-05-03 | UOW-05 | api | feature | 3h | T-05-01 | AC-01, AC-02, AC-06 | done |
 | T-05-04 | UOW-05 | web | feature | 4h | T-05-02, T-01-05 | AC-04, AC-05 | done |
 | T-05-05 | UOW-05 | web | feature | 2h | T-05-03, T-01-05 | AC-04 | done |
-| T-06-01 | UOW-06 | api | feature | 4h | T-04-01 | AC-01, AC-02, AC-06 | todo |
-| T-06-02 | UOW-06 | api | feature | 4h | T-06-01, T-02-03 | AC-01, AC-02, AC-06 | todo |
-| T-06-03 | UOW-06 | web | feature | 4h | T-06-01, T-04-04 | AC-04, AC-05 | todo |
-| T-06-04 | UOW-06 | web | feature | 4h | T-06-02, T-06-03 | AC-04, AC-05 | todo |
+| T-06-01 | UOW-06 | api | feature | 4h | T-04-01 | AC-01, AC-02, AC-06 | done |
+| T-06-02 | UOW-06 | api | feature | 4h | T-06-01, T-02-03 | AC-01, AC-02, AC-06 | done |
+| T-06-03 | UOW-06 | web | feature | 4h | T-06-01, T-04-04 | AC-04, AC-05 | done |
+| T-06-04 | UOW-06 | web | feature | 4h | T-06-02, T-06-03 | AC-04, AC-05 | done |
 | T-07-01 | UOW-07 | api | feature | 4h | T-06-02 | AC-01, AC-02, AC-06 | todo |
 | T-07-02 | UOW-07 | web | feature | 3h | T-07-01, T-06-04 | AC-04, AC-05 | todo |
 | T-07-03 | UOW-07 | infra | feature | 3h | T-07-02, T-05-04, T-05-05, T-03-04, T-02-05, T-04-05 | AC-01, AC-04, AC-06, AC-07, AC-08 | todo |

@@ -19,7 +19,7 @@ stop = threading.Event()
 
 
 def load_handlers() -> None:
-    import app.worker.handlers  # noqa: F401  (registers ingest_document)
+    import app.worker.handlers  # noqa: F401  (registers ingest_document, wires the modules)
 
 
 def loop(worker_id: str) -> None:
@@ -69,9 +69,9 @@ def main() -> None:
             if recovered:
                 log.warning("worker.recovered_stale", count=recovered)
             try:
-                from app.services.attempts import sweep_expired
+                from app.worker.handlers import sweep_expired_attempts
 
-                closed = sweep_expired(db)
+                closed = sweep_expired_attempts(db)
                 db.commit()
                 if closed:
                     log.info("worker.closed_expired_attempts", count=closed)

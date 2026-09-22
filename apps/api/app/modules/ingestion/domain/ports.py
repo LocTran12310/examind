@@ -212,6 +212,6 @@ class QuestionBank(Protocol):
 class ExamDrafts(Protocol):
     """The assessment context: a draft exam from a parsed document."""
 
-    def from_document(self, actor, document_id: uuid.UUID, title: str | None) -> dict:
-        """{exam_id, added, skipped}."""
+    def from_document(self, actor, document_id: uuid.UUID, filename: str, status: str, meta: dict, title: str | None) -> dict:
+        """{exam_id, added, skipped}; the document's usable questions in PHẦN / Câu order (flushed with the caller's transaction)."""
         ...

@@ -13,7 +13,8 @@ def test_assign_home_and_start(client, db):
     assert r.status_code == 200
     att = r.json()["attempt_id"]
     assert s.post(f"/api/assignments/{a['id']}/start").json()["attempt_id"] == att  # resumed
-    assert client.get("/api/assignments", params={"exam_id": exam["id"]}).json()["items"][0]["classes"] == [klass["name"]]
+    listed = client.post("/api/assignments/search", json={"filters": {"exam_id": {"value": exam["id"]}}}).json()["data"]
+    assert listed[0]["classes"] == [klass["name"]] and listed[0]["students"] == 1
 
 
 def test_window_and_attempt_limits(client, db):
@@ -42,7 +43,7 @@ def test_validation_and_permissions(client, db):
                                                  "duration_minutes": 10, "class_ids": [klass["id"]]}).status_code == 422
     a = assign(client, exam["id"], klass["id"])
     s = login(client, "trungtama", "hs01")
-    assert s.get("/api/assignments").status_code == 403
+    assert s.post("/api/assignments/search", json={}).status_code == 403
     outsider = klass_with_student(client, db, admin, "hs02")[1]
     o = login(client, "trungtama", "hs02")
     assert o.post(f"/api/assignments/{a['id']}/start").status_code == 404

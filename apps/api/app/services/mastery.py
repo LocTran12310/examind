@@ -36,6 +36,16 @@ def apply_fact(db: Session, fact: AnswerFact) -> None:
     db.flush()
 
 
+class MasteryFactListener:
+    """Assessment's FactListener (wired by the composition root): every new answer fact moves the topic mastery."""
+
+    def __init__(self, db: Session):
+        self.db = db
+
+    def recorded(self, fact: AnswerFact) -> None:
+        apply_fact(self.db, fact)
+
+
 def backfill(db: Session, org_id=None) -> int:
     stmt = delete(StudentTopicMastery)
     facts = select(AnswerFact).order_by(AnswerFact.created_at, AnswerFact.id)

@@ -54,5 +54,5 @@ def test_reparse_keeps_questions_used_in_an_exam(client, db):
     db.expire_all()
     d = client.get(f"/api/documents/{doc_id}").json()
     assert d["status"] == "parsed" and d["question_count"] == 22  # kept questions still count
-    assert client.get(f"/api/exams/{exam_id}/questions").json()["total"] == 22
+    assert client.post(f"/api/exams/{exam_id}/questions/search", json={}).json()["total"] == 22
     assert len(client.get(f"/api/documents/{doc_id}/questions").json()) == 22  # kept, not duplicated

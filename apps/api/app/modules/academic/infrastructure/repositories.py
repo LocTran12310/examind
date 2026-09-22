@@ -91,6 +91,25 @@ class SqlClassRepository(_Repo):
         self.session.execute(delete(class_members).where(
             class_members.c.user_id == user_id, class_members.c.class_id.in_(select(classes.c.id).where(classes.c.organization_id == org_id))))
 
+    def names(self, org_id: uuid.UUID, class_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
+        if not class_ids:
+            return {}
+        return dict(self.session.execute(select(classes.c.id, classes.c.name).where(
+            classes.c.organization_id == org_id, classes.c.id.in_(list(class_ids)))).all())
+
+    def members_of(self, org_id: uuid.UUID, class_ids: list[uuid.UUID]) -> set[uuid.UUID]:
+        if not class_ids:
+            return set()
+        return set(self.session.scalars(select(class_members.c.user_id).join(classes, classes.c.id == class_members.c.class_id)
+                                        .where(classes.c.organization_id == org_id, class_members.c.class_id.in_(list(class_ids)))))
+
+    def classes_of(self, org_id: uuid.UUID, user_id: uuid.UUID, year_id: uuid.UUID | None = None) -> list[uuid.UUID]:
+        stmt = (select(class_members.c.class_id).join(classes, classes.c.id == class_members.c.class_id)
+                .where(class_members.c.user_id == user_id, classes.c.organization_id == org_id))
+        if year_id is not None:
+            stmt = stmt.where(classes.c.school_year_id == year_id)
+        return list(self.session.scalars(stmt))
+
     def member_ids(self, class_id: uuid.UUID) -> list[uuid.UUID]:
         return list(self.session.scalars(select(users.c.id).join(class_members, class_members.c.user_id == users.c.id)
                                          .where(class_members.c.class_id == class_id).order_by(users.c.full_name)))

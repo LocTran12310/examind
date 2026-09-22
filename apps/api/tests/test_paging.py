@@ -106,13 +106,10 @@ def test_former_bare_lists_are_paged(client, db):
     assert client.post("/api/tags/search", json={"limit": 2}).json()["total"] == 3
     for title in ["Kiểm tra 15 phút", "Đề thi thử THPT"]:
         client.post("/api/exams", json={"title": title})
-    exams = client.get("/api/exams", params={"title": "thpt"}).json()
-    assert [e["title"] for e in exams["items"]] == ["Đề thi thử THPT"]
-    assert client.get("/api/exams", params={"sort": "question_count"}).status_code == 200
-    for path in ("/api/assignments",):
-        body = client.get(path).json()
-        assert set(body) == {"items", "total", "page", "page_size"}, path
+    exams = client.post("/api/exams/search", json={"filters": {"title": {"value": "thpt"}}}).json()
+    assert [e["title"] for e in exams["data"]] == ["Đề thi thử THPT"]
+    assert client.post("/api/exams/search", json={"sort": [{"field": "question_count"}]}).status_code == 200
     for path in ("/api/review/documents/search", "/api/review/flagged/search", "/api/questions/search", "/api/ai-models/search",
-                 "/api/documents/search"):
+                 "/api/documents/search", "/api/exams/search", "/api/assignments/search"):
         body = client.post(path, json={}).json()
         assert set(body) == {"data", "total", "page", "limit"}, path

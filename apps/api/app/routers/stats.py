@@ -37,12 +37,3 @@ def group_stats(by: str = "type", class_id: uuid.UUID | None = None, student_id:
 def heatmap(class_id: uuid.UUID, level: int = 1, subject_id: uuid.UUID | None = None, term_code: str | None = None,
             scope: OrgScope = Depends(org_scope), db: Session = Depends(get_db)):
     return stats.heatmap(db, scope, class_id, level, subject_id, term_code if term_code in ("hk1", "hk2") else None)
-
-
-@router.get("/assignments/{aid}/report")
-def assignment_report(aid: uuid.UUID, scope: OrgScope = Depends(org_scope), db: Session = Depends(get_db)):
-    from app.core.errors import forbidden
-
-    if scope.role not in ("org_admin", "teacher"):
-        raise forbidden()
-    return stats.assignment_report(db, scope, aid)

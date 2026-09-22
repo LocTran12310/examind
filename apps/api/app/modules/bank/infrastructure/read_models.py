@@ -113,6 +113,16 @@ class SqlQuestionReader:
         stmt, _ = _filtered(org_id, rf)
         return list(self.session.scalars(stmt.order_by(qc.id)))
 
+    def classification(self, ids: list[uuid.UUID]) -> dict[uuid.UUID, tuple[str | None, list[uuid.UUID]]]:
+        paths: dict = {}
+        tag_ids: dict = {i: [] for i in ids}
+        if ids:
+            paths = dict(self.session.execute(select(qt.question_id, topics.c.path).join(topics, topics.c.id == qt.topic_id)
+                                              .where(qt.question_id.in_(list(ids)), qt.is_primary.is_(True))).all())
+            for qid, tid in self.session.execute(select(qg.question_id, qg.tag_id).where(qg.question_id.in_(list(ids)))):
+                tag_ids[qid].append(tid)
+        return {i: (paths.get(i), tag_ids[i]) for i in ids}
+
     def demo(self, org_id: uuid.UUID) -> Question | None:
         return self.session.scalar(select(Question).where(qc.organization_id == org_id, qc.source == "demo").limit(1))
 

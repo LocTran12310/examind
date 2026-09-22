@@ -26,6 +26,10 @@ class QuestionReader(QuestionViews, Protocol):
 
     def ids(self, org_id: uuid.UUID, f: ResolvedFilters) -> list[uuid.UUID]: ...
 
+    def classification(self, ids: list[uuid.UUID]) -> dict[uuid.UUID, tuple[str | None, list[uuid.UUID]]]:
+        """{question id: (ltree path of its primary topic, its tag ids)}."""
+        ...
+
     def demo(self, org_id: uuid.UUID) -> Question | None: ...
 
 

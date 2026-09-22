@@ -9,16 +9,22 @@ setup_logging(get_settings().log_level)
 
 app = FastAPI(title="Examind API", docs_url="/api/docs", openapi_url="/api/openapi.json")
 from app.modules.academic.interface.deps import academic_api  # noqa: E402
+from app.modules.assessment.infrastructure.adapters.bank import BankQuestions  # noqa: E402
+from app.modules.assessment.infrastructure.adapters.roster import AcademicRoster  # noqa: E402
+from app.modules.assessment.infrastructure.adapters.subjects import TaxonomySubjects  # noqa: E402
+from app.modules.assessment.interface import deps as assessment_deps  # noqa: E402
 from app.modules.bank.infrastructure.adapters.staff import IdentityStaffDirectory  # noqa: E402
 from app.modules.bank.infrastructure.adapters.taxonomy import TaxonomyAdapter  # noqa: E402
+from app.modules.bank.infrastructure.repositories import IN_USE_CHECKS  # noqa: E402
 from app.modules.bank.interface import deps as bank_deps  # noqa: E402
 from app.modules.identity.infrastructure.adapters.classes import AcademicClassDirectory  # noqa: E402
 from app.modules.identity.interface import deps as identity_deps  # noqa: E402
+from app.modules.ingestion.infrastructure.adapters.assessment import AssessmentExamDrafts  # noqa: E402
 from app.modules.ingestion.infrastructure.adapters.bank import BankAdapter  # noqa: E402
 from app.modules.ingestion.interface import deps as ingestion_deps  # noqa: E402
 from app.modules.taxonomy.interface.deps import taxonomy_api  # noqa: E402
 from app.seed.org_seeder import SeedOrgSeeder  # noqa: E402
-from app.services.exams import ExamServiceDrafts  # noqa: E402
+from app.services.mastery import MasteryFactListener  # noqa: E402
 from app.shared.interface import errors, request_id  # noqa: E402
 from app.shared.interface.auth import register_actor_resolver  # noqa: E402
 
@@ -32,11 +38,19 @@ identity_deps.register_org_seeder(SeedOrgSeeder)
 # the bank checks topics / tags through the taxonomy API and reviewers through the identity API
 bank_deps.register_taxonomy(lambda db: TaxonomyAdapter(taxonomy_api(db)))
 bank_deps.register_staff_directory(lambda db: IdentityStaffDirectory(identity_deps.identity_api(db)))
-# ingestion stores parsed questions in the bank, source tags in the taxonomy, and drafts exams through the exam service
-# (assessment, old layout); the worker wires the same for its jobs (app/worker/handlers.py)
+# ingestion stores parsed questions in the bank, source tags in the taxonomy, and drafts exams through assessment;
+# the worker wires the same for its jobs (app/worker/handlers.py)
 ingestion_deps.register_bank(lambda db: BankAdapter(bank_deps.bank_api(db)))
 ingestion_deps.register_source_tags(taxonomy_api)
-ingestion_deps.register_exam_drafts(ExamServiceDrafts)
+ingestion_deps.register_exam_drafts(lambda db: AssessmentExamDrafts(assessment_deps.assessment_api(db)))
+# assessment draws and shows questions through the bank, targets classes (academic) and students (identity), checks
+# subjects (taxonomy) and tells analytics (old layout: topic mastery) about every answer fact; the bank keeps a question
+# an exam uses
+assessment_deps.register_bank(lambda db: BankQuestions(bank_deps.bank_api(db)))
+assessment_deps.register_roster(lambda db: AcademicRoster(academic_api(db), identity_deps.identity_api(db)))
+assessment_deps.register_subjects(lambda db: TaxonomySubjects(taxonomy_api(db)))
+assessment_deps.register_fact_listener(MasteryFactListener)
+IN_USE_CHECKS.append(lambda db, question_id: assessment_deps.assessment_api(db).question_in_use(question_id))
 
 api = APIRouter(prefix="/api")
 
@@ -55,7 +69,7 @@ def health():
 
 
 # each migrated module exposes app.modules.<context>.interface.router:router
-MODULES: list[str] = ["taxonomy", "academic", "identity", "bank", "ingestion"]
+MODULES: list[str] = ["taxonomy", "academic", "identity", "bank", "ingestion", "assessment"]
 
 
 def include_routers() -> None:

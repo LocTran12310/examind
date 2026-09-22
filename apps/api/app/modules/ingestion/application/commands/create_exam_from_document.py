@@ -22,6 +22,6 @@ class CreateExamFromDocumentHandler:
 
     def __call__(self, actor: Actor, cmd: CreateExamFromDocument) -> dict:
         doc = load_document(self.documents, actor.org_id, cmd.document_id)
-        out = self.exams.from_document(actor, doc.id, cmd.title)
+        out = self.exams.from_document(actor, doc.id, doc.filename, doc.status, doc.meta or {}, cmd.title)
         self.uow.commit()
         return out

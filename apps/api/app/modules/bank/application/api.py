@@ -25,6 +25,26 @@ class BankApi:
     def views(self, questions: list[Question], groups: dict[uuid.UUID, str] | None = None) -> list[QuestionView]:
         return self.reader.views(questions, groups)
 
+    # ------------------------------------------------------------------ assessment (exams draw, show and grade questions)
+
+    def questions_of(self, org_id: uuid.UUID | None, ids: list[uuid.UUID]) -> list[Question]:
+        """Questions among `ids` (of the org when given), in no particular order."""
+        return self.questions.many(org_id, list(ids)) if ids else []
+
+    def of_document(self, document_id: uuid.UUID) -> list[Question]:
+        """Every question parsed from a document, whatever its status."""
+        return self.questions.of_document(document_id)
+
+    def pool(self, org_id: uuid.UUID, *, subject_id: uuid.UUID | None = None, type: str | None = None, difficulty: str | None = None,
+             topic_id: uuid.UUID | None = None, tag_id: uuid.UUID | None = None) -> list[uuid.UUID]:
+        """Usable questions an exam blueprint row (or a swap) draws from, by id; unknown topic / tag: a validation error."""
+        return self.question_ids(org_id, BankFilters(subject_id=subject_id, type=type, difficulty=difficulty, status="usable",
+                                                     topic_ids=(topic_id,) if topic_id else (), tag_ids=(tag_id,) if tag_id else ()))
+
+    def classification(self, ids: list[uuid.UUID]) -> dict[uuid.UUID, tuple[str | None, list[uuid.UUID]]]:
+        """{question id: (ltree path of its primary topic, its tag ids)} — what an answer fact records."""
+        return self.reader.classification(list(ids))
+
     def triage(self, questions: list[Question], threshold: float, seed: str = "") -> TriageCounts:
         """Flushed with the caller's transaction (ingestion)."""
         return TriageQuestionsHandler(self.duplicates, self.uow)(TriageQuestions(questions, threshold, seed))
