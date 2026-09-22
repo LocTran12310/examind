@@ -37,3 +37,14 @@ def test_seed_org_is_idempotent(db):
     db.commit()
     assert db.scalar(select(func.count()).select_from(Topic).where(Topic.organization_id == org.id)) == _count(MATH_TREE)
     assert db.scalar(select(func.count()).select_from(Subject).where(Subject.organization_id == org.id)) == 6
+
+
+def test_taxonomy_grades_carry_their_level(client, db):
+    from tests.factories import login_as
+    from app.seed.org_template import seed_org
+
+    admin = login_as(client, db, "org_admin")
+    seed_org(db, admin.organization_id)
+    db.commit()
+    grades = {g["level"]: g["school_level_name"] for g in client.get("/api/taxonomy").json()["grades"]}
+    assert grades[8] == "Trung học cơ sở" and grades[12] == "Trung học phổ thông"

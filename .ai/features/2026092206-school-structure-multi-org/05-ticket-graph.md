@@ -3,8 +3,8 @@
 # Ticket graph — 2026092206-school-structure-multi-org
 
 - Units of Work: **3**
-- Tickets: **9** (8 done)
-- Total effort: **3.5d**
+- Tickets: **10** (10 done)
+- Total effort: **3.8d**
 - Critical path: **2.2d** across 6 tickets
 - Theoretical minimum duration with unlimited parallelism: **2.2d**
 
@@ -12,7 +12,7 @@
 
 | UoW | Title | Risk | Effort | Elapsed | Depends on | Status |
 |-----|-------|------|--------|---------|-----------|--------|
-| UOW-01 | Cấp học › Khối › Lớp › Học sinh | medium | 1.4d | 1.4d | — | todo |
+| UOW-01 | Cấp học › Khối › Lớp › Học sinh | medium | 1.6d | 1.4d | — | todo |
 | UOW-02 | Active organisation in the token, header selector | high | 1.0d | 1.0d | UOW-01 | todo |
 | UOW-03 | Accounts from other organisations | high | 1.1d | 1.1d | UOW-02 | todo |
 
@@ -27,6 +27,7 @@ graph LR
     T_01_01["✓ T-01-01<br/>Migration 0012: school_levels, grades.school_level_id, classes.grade_id + backfill; seed THCS/THPT"]
     T_01_02["✓ T-01-02<br/>Structure service + API (levels, grades, tree, class grade_id)"]
     T_01_03["✓ T-01-03<br/>/org/structure page: tree + contextual DataTable; GradeSelect in class form"]
+    T_01_04["✓ T-01-04<br/>Grade filters grouped by level (bank) and class filter grouped by grade (reports)"]
   end
   subgraph UOW_02["UOW-02 · Active organisation in the token, header selector"]
     T_02_01["✓ T-02-01<br/>Migration 0013 memberships + last_org_id; membership service"]
@@ -36,10 +37,11 @@ graph LR
   subgraph UOW_03["UOW-03 · Accounts from other organisations"]
     T_03_01["✓ T-03-01<br/>Per-org roles in user lists and cross-user checks (users, classes, review, assignments, adaptive, stats, orgs counts)"]
     T_03_02["✓ T-03-02<br/>link/unlink API"]
-    T_03_03["T-03-03<br/>Users page: 'Thêm tài khoản có sẵn', 'Gỡ khỏi tổ chức', home-org badge; admin 'Vào tổ chức"]
+    T_03_03["✓ T-03-03<br/>Users page: 'Thêm tài khoản có sẵn', 'Gỡ khỏi tổ chức', home-org badge; admin 'Vào tổ chức"]
   end
   T_01_01 --> T_01_02
   T_01_02 --> T_01_03
+  T_01_02 --> T_01_04
   T_01_01 --> T_02_01
   T_02_01 --> T_02_02
   T_02_02 --> T_02_03
@@ -57,7 +59,7 @@ Tickets in the same wave have no dependency between them and can run in parallel
 |------|---------|-------------------|-------------------------------|
 | W1 | T-01-01 | 1 | 3h |
 | W2 | T-01-02, T-02-01 | 2 | 4h |
-| W3 | T-01-03, T-02-02 | 2 | 4h |
+| W3 | T-01-03, T-01-04, T-02-02 | 3 | 4h |
 | W4 | T-02-03, T-03-01 | 2 | 4h |
 | W5 | T-03-02 | 1 | 2h |
 | W6 | T-03-03 | 1 | 3h |
@@ -86,9 +88,10 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-01-01 | UOW-01 | data | feature | 3h | — | AC-01, AC-03 | done |
 | T-01-02 | UOW-01 | api | feature | 4h | T-01-01 | AC-02, AC-04, AC-06 | done |
 | T-01-03 | UOW-01 | web | feature | 4h | T-01-02 | AC-04, AC-05, AC-06 | done |
+| T-01-04 | UOW-01 | web | feature | 2h | T-01-02 | AC-06 | done |
 | T-02-01 | UOW-02 | data | feature | 2h | T-01-01 | AC-08 | done |
 | T-02-02 | UOW-02 | api | feature | 4h | T-02-01 | AC-07, AC-08, AC-09, AC-10 | done |
 | T-02-03 | UOW-02 | web | feature | 2h | T-02-02 | AC-07 | done |
 | T-03-01 | UOW-03 | api | feature | 4h | T-02-02 | AC-13 | done |
 | T-03-02 | UOW-03 | api | feature | 2h | T-03-01 | AC-11, AC-12 | done |
-| T-03-03 | UOW-03 | web | feature | 3h | T-03-02, T-02-03 | AC-11, AC-12 | todo |
+| T-03-03 | UOW-03 | web | feature | 3h | T-03-02, T-02-03 | AC-11, AC-12 | done |

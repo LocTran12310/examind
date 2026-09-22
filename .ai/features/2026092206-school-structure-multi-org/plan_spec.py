@@ -41,6 +41,10 @@ t(id="T-01-03", uow="UOW-01", title="/org/structure page: tree + contextual Data
   layer="web", estimate="4h", depends_on=["T-01-02"], verifies=["AC-04", "AC-05", "AC-06"], tests=[f"{WEB}/src/__tests__/structure.test.tsx", f"{WEB}/src/__tests__/classes.test.tsx"],
   touches=[f"{WEB}/src/app/(app)/org/structure/page.tsx", f"{WEB}/src/components/structure/StructureTree.tsx", f"{WEB}/src/components/structure/GradeSelect.tsx", f"{WEB}/src/components/org/ClassForms.tsx", f"{WEB}/src/lib/nav.ts", f"{WEB}/src/components/structure/StructureForms.tsx"],
   context="Level → grades table, grade → classes table, class → students.", done_when=["Tree", "Three tables", "Grouped grade select"])
+t(id="T-01-04", uow="UOW-01", title="Grade filters grouped by level (bank) and class filter grouped by grade (reports)",
+  layer="web", estimate="2h", depends_on=["T-01-02"], verifies=["AC-06"], tests=[f"{WEB}/src/__tests__/bank.test.tsx", f"{API}/tests/test_taxonomy_seed.py"],
+  touches=[f"{API}/app/routers/taxonomy.py", f"{API}/app/schemas/taxonomy.py", f"{WEB}/src/components/app/OptionSelect.tsx", f"{WEB}/src/components/bank/BankFilters.tsx", f"{WEB}/src/app/(app)/org/reports/page.tsx"],
+  context="Added during construction: the approved plan lists grouped grade filters; missed at G3.", done_when=["Taxonomy grades carry their level", "Grouped selects"])
 t(id="T-02-01", uow="UOW-02", title="Migration 0013 memberships + last_org_id; membership service",
   layer="data", estimate="2h", depends_on=["T-01-01"], verifies=["AC-08"], tests=[f"{API}/tests/test_membership.py"],
   touches=[f"{API}/migrations/versions/0013_memberships.py", f"{API}/app/models/user.py", f"{API}/app/services/membership.py"],

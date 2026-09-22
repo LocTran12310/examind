@@ -65,6 +65,9 @@ export interface User {
   last_login_at: string | null;
   created_at: string;
   class_ids: string[];
+  /** false when the account lives in another org and was added here */
+  is_home?: boolean;
+  home_org_code?: string | null;
 }
 
 export interface Credential {
@@ -194,7 +197,7 @@ export interface Topic {
 
 export interface Taxonomy {
   subjects: { id: string; code: string; name: string }[];
-  grades: { id: string; level: number; name: string }[];
+  grades: { id: string; level: number; name: string; school_level_id?: string | null; school_level_name?: string | null }[];
   semesters: { id: string; code: string; name: string }[];
 }
 

@@ -7,6 +7,7 @@ import { Heatmap, type HeatmapData } from "@/components/reports/Heatmap";
 import { TopicStatsTree } from "@/components/reports/TopicStatsTree";
 import { Panel } from "@/components/app/Panel";
 import { PageHeader } from "@/components/app/PageHeader";
+import { OptionSelect } from "@/components/app/OptionSelect";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { qs, useApi } from "@/lib/hooks";
 import type { GroupStat, SchoolClass, TopicStat, Page } from "@/lib/types";
@@ -34,14 +35,16 @@ export default function ReportsPage() {
     <>
       <PageHeader title="Kết quả theo chuyên đề" description="Tỉ lệ đúng cộng dồn từ các nhánh con lên cấp trên" />
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <NativeSelect aria-label="Lớp" value={classId} onChange={(e) => setClassId(e.target.value)}>
-          <NativeSelectOption value="">Toàn trung tâm</NativeSelectOption>
-          {classes?.map((c) => (
-            <NativeSelectOption key={c.id} value={c.id}>
-              {c.name}
-            </NativeSelectOption>
-          ))}
-        </NativeSelect>
+        <OptionSelect
+          aria-label="Lớp"
+          className="w-56"
+          value={classId}
+          onValueChange={setClassId}
+          emptyLabel="Toàn trung tâm"
+          options={[...(classes ?? [])]
+            .sort((a, b) => (a.grade ?? 99) - (b.grade ?? 99) || a.name.localeCompare(b.name, "vi"))
+            .map((c) => ({ value: c.id, label: `${c.name} (${c.school_year})`, group: c.grade ? `Khối ${c.grade}` : "Chưa xếp khối" }))}
+        />
         <div className="flex flex-wrap gap-1" role="tablist">
           {TABS.map(([k, label]) => (
             <button

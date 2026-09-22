@@ -1,7 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { Lock, LockOpen } from "lucide-react";
+import { LogIn, Lock, LockOpen } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/app/ConfirmDialog";
@@ -57,6 +57,15 @@ export default function OrgsPage() {
     [],
   );
 
+  async function enter(o: Org) {
+    try {
+      await api("/auth/switch-org", { body: { org_id: o.id } });
+      window.location.assign(o.is_system ? "/admin/orgs" : "/org/users");
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : "Không vào được tổ chức");
+    }
+  }
+
   async function run(action: Action | "delete", orgs: Org[]) {
     try {
       for (const o of orgs.filter(editable)) {
@@ -92,6 +101,9 @@ export default function OrgsPage() {
         deleteLabel={(orgs) => `Xóa ${orgs.filter(editable).length} tổ chức? Tổ chức sẽ bị ẩn và không đăng nhập được.`}
         actions={({ selected }) => (
           <>
+            <ToolbarButton disabled={selected.length !== 1 || !!selected[0].deleted_at || selected[0].status !== "active"} onClick={() => void enter(selected[0])}>
+              <LogIn /> Vào tổ chức
+            </ToolbarButton>
             <ToolbarButton disabled={!selected.some((o) => editable(o) && o.status === "active")} onClick={() => setPending({ action: "suspend", orgs: selected })}>
               <Lock /> Khóa
             </ToolbarButton>

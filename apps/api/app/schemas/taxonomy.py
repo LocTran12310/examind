@@ -13,6 +13,8 @@ class GradeOut(BaseModel):
     id: uuid.UUID
     level: int
     name: str
+    school_level_id: uuid.UUID | None = None
+    school_level_name: str | None = None
 
 
 class SemesterOut(BaseModel):

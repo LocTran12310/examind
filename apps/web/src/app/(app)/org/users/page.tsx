@@ -1,7 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { Download, KeyRound, Lock, LockOpen, Upload } from "lucide-react";
+import { Download, KeyRound, Link2, Lock, LockOpen, Unlink, Upload } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ import { ToneBadge } from "@/components/app/ToneBadge";
 import { DataTable } from "@/components/data-table/DataTable";
 import { ToolbarButton } from "@/components/data-table/Toolbar";
 import { useTableQuery } from "@/components/data-table/useTableQuery";
+import { LinkAccountForm } from "@/components/org/LinkAccountForm";
 import { TempPassword, UserCreateForm, UserEditForm } from "@/components/org/UserForm";
 import { api, ApiError } from "@/lib/api";
 import { downloadText, toCsv } from "@/lib/csv";
@@ -33,6 +34,8 @@ export default function UsersPage() {
   const [editing, setEditing] = useState<User | null>(null);
   const [resetFor, setResetFor] = useState<User | null>(null);
   const [reset, setReset] = useState<Credential | null>(null);
+  const [linking, setLinking] = useState(false);
+  const [unlinking, setUnlinking] = useState<User[] | null>(null);
   const [version, setVersion] = useState(0);
   const { data: classes } = useApi<Page<SchoolClass>>("/classes?page_size=all");
   const classById = useMemo(() => new Map(classes?.items.map((c) => [c.id, c]) ?? []), [classes]);
@@ -40,7 +43,17 @@ export default function UsersPage() {
 
   const columns = useMemo<ColumnDef<User, unknown>[]>(
     () => [
-      { accessorKey: "full_name", header: "Họ tên", meta: { filter: { kind: "text" }, sort: "full_name" } },
+      {
+        accessorKey: "full_name",
+        header: "Họ tên",
+        cell: ({ row }) => (
+          <span className="inline-flex items-center gap-2">
+            {row.original.full_name}
+            {row.original.is_home === false && <ToneBadge tone="blue">Từ {row.original.home_org_code}</ToneBadge>}
+          </span>
+        ),
+        meta: { filter: { kind: "text" }, sort: "full_name" },
+      },
       { accessorKey: "username", header: "Tên đăng nhập", cell: ({ row }) => <span className="font-mono">{row.original.username}</span>, meta: { filter: { kind: "text" }, sort: "username" } },
       ...(me.role === "org_admin"
         ? [
@@ -100,7 +113,7 @@ export default function UsersPage() {
         onEdit={setEditing}
         actions={({ selected }) => (
           <>
-            <ToolbarButton disabled={selected.length !== 1} onClick={() => setResetFor(selected[0])}>
+            <ToolbarButton disabled={selected.length !== 1 || selected[0].is_home === false} onClick={() => setResetFor(selected[0])}>
               <KeyRound /> Đặt lại mật khẩu
             </ToolbarButton>
             <ToolbarButton disabled={!selected.some((u) => u.is_active && u.id !== me.id)} onClick={() => void setActive(selected, false)}>
@@ -109,6 +122,16 @@ export default function UsersPage() {
             <ToolbarButton disabled={!selected.some((u) => !u.is_active)} onClick={() => void setActive(selected, true)}>
               <LockOpen /> Mở khóa
             </ToolbarButton>
+            {me.role === "org_admin" && (
+              <>
+                <ToolbarButton onClick={() => setLinking(true)}>
+                  <Link2 /> Thêm tài khoản có sẵn
+                </ToolbarButton>
+                <ToolbarButton disabled={!selected.some((u) => u.is_home === false)} onClick={() => setUnlinking(selected.filter((u) => u.is_home === false))}>
+                  <Unlink /> Gỡ khỏi tổ chức
+                </ToolbarButton>
+              </>
+            )}
             <ToolbarButton asChild>
               <Link href="/org/users/import">
                 <Upload /> Nhập khẩu
@@ -138,6 +161,33 @@ export default function UsersPage() {
           setResetFor(null);
           try {
             setReset(await api<Credential>(`/users/${u.id}/reset-password`, { method: "POST" }));
+          } catch (e) {
+            toast.error(e instanceof ApiError ? e.message : "Có lỗi xảy ra");
+          }
+        }}
+      />
+      <FormDialog open={linking} onOpenChange={setLinking} title="Thêm tài khoản từ tổ chức khác">
+        <LinkAccountForm
+          onDone={(u) => {
+            setLinking(false);
+            toast.success(`Đã thêm ${u.full_name}`);
+            refresh();
+          }}
+        />
+      </FormDialog>
+      <ConfirmDialog
+        open={!!unlinking}
+        onOpenChange={(o) => !o && setUnlinking(null)}
+        destructive
+        title={`Gỡ ${unlinking?.length ?? 0} tài khoản khỏi tổ chức?`}
+        description="Tài khoản vẫn dùng được ở tổ chức gốc; họ sẽ rời các lớp của tổ chức này."
+        confirmLabel="Gỡ"
+        onConfirm={async () => {
+          const rows = unlinking ?? [];
+          setUnlinking(null);
+          try {
+            for (const u of rows) await api(`/users/${u.id}/membership`, { method: "DELETE" });
+            refresh();
           } catch (e) {
             toast.error(e instanceof ApiError ? e.message : "Có lỗi xảy ra");
           }

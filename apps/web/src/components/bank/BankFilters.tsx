@@ -29,7 +29,7 @@ export function BankFilters({ value, onChange, taxonomy, topics, tags }: { value
       </div>
       <div className="flex flex-wrap gap-2">
         <OptionSelect className={sel} aria-label="Môn" value={value.subject_id ?? ""} onValueChange={(v) => set("subject_id", v)} emptyLabel="Mọi môn" options={taxonomy.subjects.map((s) => ({ value: s.id, label: s.name }))} />
-        <OptionSelect className={sel} aria-label="Lớp" value={value.grade ?? ""} onValueChange={(v) => set("grade", v)} emptyLabel="Mọi lớp" options={taxonomy.grades.map((g) => ({ value: String(g.level), label: g.name }))} />
+        <OptionSelect className={sel} aria-label="Lớp" value={value.grade ?? ""} onValueChange={(v) => set("grade", v)} emptyLabel="Mọi lớp" options={taxonomy.grades.map((g) => ({ value: String(g.level), label: g.name, group: g.school_level_name ?? undefined }))} />
         <OptionSelect className={sel} aria-label="Học kỳ" value={value.semester_code ?? ""} onValueChange={(v) => set("semester_code", v)} emptyLabel="Mọi học kỳ" options={taxonomy.semesters.map((s) => ({ value: s.code, label: s.name }))} />
         <OptionSelect className={sel} aria-label="Loại đề" value={value.exam_kind ?? ""} onValueChange={(v) => set("exam_kind", v)} emptyLabel="Mọi loại đề" options={EXAM_KINDS.map((k) => ({ value: k, label: k }))} />
         <OptionSelect className={sel} aria-label="Loại câu" value={value.type ?? ""} onValueChange={(v) => set("type", v)} emptyLabel="Mọi loại câu" options={opts(TYPE_LABEL)} />

@@ -72,4 +72,16 @@ describe("admin orgs", () => {
     await waitFor(() => expect(lastQuery(fetch, "/admin/orgs").get("code")).toBe("tt"), { timeout: 1500 });
     expect(searchOf().get("include_deleted")).toBe("true");
   });
+
+  it("'Vào tổ chức' switches into the selected org", async () => {
+    const assign = vi.fn();
+    vi.stubGlobal("location", { ...window.location, assign });
+    const fetch = mockFetch(route("GET", /^\/api\/admin\/orgs\?/, page([org({ id: "a1", code: "trungtama" })])), route("POST", "/api/auth/switch-org", {}));
+    const u = userEvent.setup();
+    render(<OrgsPage />);
+    await u.click(await screen.findByRole("checkbox", { name: "Chọn dòng" }));
+    await u.click(screen.getByRole("button", { name: "Vào tổ chức" }));
+    await waitFor(() => expect(assign).toHaveBeenCalledWith("/org/users"));
+    expect(JSON.parse(String((fetch.mock.calls.find(([url]) => url === "/api/auth/switch-org")?.[1] as RequestInit).body))).toEqual({ org_id: "a1" });
+  });
 });

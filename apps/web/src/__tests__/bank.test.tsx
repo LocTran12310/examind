@@ -10,7 +10,7 @@ import { searchOf, setUrl } from "./router-mock";
 
 vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);
 
-const taxonomy: Taxonomy = { subjects: [{ id: "s", code: "toan", name: "Toán" }], grades: [{ id: "g", level: 10, name: "Lớp 10" }], semesters: [] };
+const taxonomy: Taxonomy = { subjects: [{ id: "s", code: "toan", name: "Toán" }], grades: [{ id: "g", level: 10, name: "Lớp 10", school_level_name: "Trung học phổ thông" }], semesters: [] };
 const topics: Topic[] = [
   { id: "ds", subject_id: "s", parent_id: null, name: "Đại số", level_kind: "strand", grade: null, path: "a", depth: 1, sort: 0, child_count: 1 },
   { id: "hs", subject_id: "s", parent_id: "ds", name: "Hàm số bậc hai và đồ thị", level_kind: "topic", grade: 10, path: "a.b", depth: 2, sort: 0, child_count: 0 },
@@ -24,6 +24,7 @@ describe("bank", () => {
     await u.type(screen.getByPlaceholderText(/Tìm nội dung/), "parabol");
     await waitFor(() => expect(onChange).toHaveBeenLastCalledWith({ q: "parabol" }), { timeout: 1500 });
     await u.click(screen.getByRole("combobox", { name: "Lớp" }));
+    expect(within(await screen.findByRole("listbox")).getByText("Trung học phổ thông")).toBeInTheDocument(); // grouped by level
     await u.click(await screen.findByRole("option", { name: "Lớp 10" }));
     expect(onChange).toHaveBeenLastCalledWith({ grade: "10" });
     await u.click(screen.getByTestId("topic-filter"));

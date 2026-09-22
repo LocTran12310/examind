@@ -1,6 +1,6 @@
 "use client";
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 const NONE = "__none";
@@ -8,6 +8,18 @@ const NONE = "__none";
 export interface Option {
   value: string;
   label: React.ReactNode;
+  /** options with the same group are listed under that heading, in first-seen order */
+  group?: string;
+}
+
+function grouped(options: Option[]): [string | undefined, Option[]][] {
+  const out: [string | undefined, Option[]][] = [];
+  for (const o of options) {
+    const last = out[out.length - 1];
+    if (last && last[0] === o.group) last[1].push(o);
+    else out.push([o.group, [o]]);
+  }
+  return out;
 }
 
 /**
@@ -45,11 +57,24 @@ export function OptionSelect({
       </SelectTrigger>
       <SelectContent>
         {emptyLabel !== undefined && <SelectItem value={NONE}>{emptyLabel}</SelectItem>}
-        {options.map((o) => (
-          <SelectItem key={o.value} value={o.value}>
-            {o.label}
-          </SelectItem>
-        ))}
+        {grouped(options).map(([group, items], i) =>
+          group ? (
+            <SelectGroup key={`${group}-${i}`}>
+              <SelectLabel>{group}</SelectLabel>
+              {items.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          ) : (
+            items.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))
+          ),
+        )}
       </SelectContent>
     </Select>
   );

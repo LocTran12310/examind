@@ -104,4 +104,34 @@ describe("users", () => {
     await u.click(within(confirm).getByRole("button", { name: "Đặt lại" }));
     expect(await screen.findByTestId("temp-cred")).toHaveTextContent("trungtama / hs01 / Tmp1234567");
   });
+
+  it("links an account from another org and shows where it comes from; unlinks after confirmation", async () => {
+    const linked = user({ id: "l", username: "gvlan", full_name: "Cô Lan", role: "teacher", is_home: false, home_org_code: "ttb" });
+    const fetch = mockFetch(
+      route("GET", /^\/api\/users\?/, page([...users, linked])),
+      route("GET", /^\/api\/classes\?/, classes),
+      route("POST", "/api/users/link", linked, 201),
+      route("DELETE", "/api/users/l/membership", undefined, 204),
+    );
+    const u = userEvent.setup();
+    renderPage();
+    const row = (await screen.findByText("Cô Lan")).closest("tr")!;
+    expect(row).toHaveTextContent("Từ ttb");
+    await u.click(screen.getByRole("button", { name: "Thêm tài khoản có sẵn" }));
+    const dialog = await screen.findByRole("dialog");
+    await u.type(within(dialog).getByLabelText("Mã tổ chức gốc"), "ttb");
+    await u.type(within(dialog).getByLabelText("Tên đăng nhập"), "gvlan");
+    await u.click(within(dialog).getByRole("button", { name: "Thêm vào tổ chức" }));
+    await waitFor(() => {
+      const call = fetch.mock.calls.find(([url]) => url === "/api/users/link");
+      expect(JSON.parse(String((call?.[1] as RequestInit).body))).toEqual({ org_code: "ttb", username: "gvlan", role: "teacher" });
+    });
+    // reset password is only for accounts owned here
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    await u.click(within(screen.getByText("Cô Lan").closest("tr")!).getByRole("checkbox"));
+    expect(screen.getByRole("button", { name: "Đặt lại mật khẩu" })).toBeDisabled();
+    await u.click(screen.getByRole("button", { name: "Gỡ khỏi tổ chức" }));
+    await u.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Gỡ" }));
+    await waitFor(() => expect(fetch.mock.calls.some(([url, init]) => url === "/api/users/l/membership" && (init as RequestInit)?.method === "DELETE")).toBe(true));
+  });
 });
