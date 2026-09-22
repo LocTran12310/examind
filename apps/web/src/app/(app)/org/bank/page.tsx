@@ -1,12 +1,16 @@
 "use client";
 
+import { Label } from "@/components/ui/label";
 import { ListLayout } from "@/components/app/ListLayout";
 import { Plus, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { EmptyState } from "@/components/app/EmptyState";
 import { PageHeader } from "@/components/app/PageHeader";
+import { useMeMaybe } from "@/app/(app)/AppShell";
 import { BankFilters } from "@/components/bank/BankFilters";
+import { SUBJECT_SCOPED } from "@/components/bank/filters";
+import { NO_SUBJECT, SubjectTabs } from "@/components/bank/SubjectTabs";
 import { BulkActions } from "@/components/bank/BulkBar";
 import { QuestionRow } from "@/components/bank/QuestionRow";
 import { Pagination } from "@/components/data-table/Pagination";
@@ -15,20 +19,54 @@ import { useTableQuery } from "@/components/data-table/useTableQuery";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useApi } from "@/lib/hooks";
-import type { Page, ParsedQuestion, Tag, Taxonomy, Topic } from "@/lib/types";
+import type { BankFacets, Page, ParsedQuestion, Tag, Taxonomy, Topic } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
+const subjectKey = (orgId: string) => `examind.bank.subject.${orgId}`;
+function storedSubject(orgId?: string): string | null {
+  try {
+    return orgId ? localStorage.getItem(subjectKey(orgId)) : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function BankPage() {
+  const me = useMeMaybe();
   const tq = useTableQuery();
+  const subject = tq.apiParams.get("subject_id") ?? "";
   const query = tq.apiParams.toString();
-  const { data, reload, loading } = useApi<Page<ParsedQuestion>>(`/questions?${query}`);
   const { data: taxonomy } = useApi<Taxonomy>("/taxonomy");
-  const { data: topics } = useApi<Topic[]>("/topics");
-  const { data: tagsPage } = useApi<Page<Tag>>("/tags?page_size=all");
+  // counts per subject/topic/tag… for the tabs and the sheet; also picks the default subject
+  const { data: facets } = useApi<BankFacets>(`/questions/facets?${query}`);
+  const { data, reload, loading } = useApi<Page<ParsedQuestion>>(subject ? `/questions?${query}` : null);
+  const scoped = subject && subject !== NO_SUBJECT ? subject : null;
+  const { data: topics } = useApi<Topic[]>(scoped ? `/topics?subject_id=${scoped}` : null);
+  const { data: tagsPage } = useApi<Page<Tag>>(scoped ? `/tags?page_size=all&subject_id=${scoped}` : subject ? "/tags?page_size=all&subject_id=shared" : null);
   const tags = tagsPage?.items;
   const [selected, setSelected] = useState<Set<string>>(new Set());
   useEffect(() => setSelected(new Set()), [query]);
-  const filters = useMemo(() => Object.fromEntries([...tq.apiParams.entries()].filter(([k]) => k !== "page" && k !== "page_size")), [tq.apiParams]);
+
+  // no subject in the URL: the last one used here, else the one with most questions (A-01, A-03)
+  useEffect(() => {
+    if (subject || !taxonomy || !facets) return;
+    const counts = facets.subjects;
+    const last = storedSubject(me?.org.id);
+    const best = [...taxonomy.subjects].sort((a, b) => (counts[b.id] ?? 0) - (counts[a.id] ?? 0))[0]?.id;
+    const pick = last && (taxonomy.subjects.some((x) => x.id === last) || last === NO_SUBJECT) ? last : best;
+    if (pick) tq.setFilters({ subject_id: pick });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subject, taxonomy, facets]);
+
+  function chooseSubject(id: string) {
+    try {
+      if (me) localStorage.setItem(subjectKey(me.org.id), id);
+    } catch {}
+    tq.setFilters({ subject_id: id, ...Object.fromEntries(SUBJECT_SCOPED.map((k) => [k, null])) });
+  }
+
+  const filters = useMemo(() => Object.fromEntries([...tq.apiParams.entries()].filter(([k]) => k !== "page" && k !== "page_size" && k !== "subject_id")), [tq.apiParams]);
+  const subjectName = taxonomy?.subjects.find((x) => x.id === subject)?.name ?? (subject === NO_SUBJECT ? "Chưa phân môn" : undefined);
   const items = data?.items ?? [];
   const allOnPage = items.length > 0 && items.every((q) => selected.has(q.id));
   const toggle = (id: string) =>
@@ -50,7 +88,7 @@ export default function BankPage() {
             </Link>
           </ToolbarButton>
           <ToolbarSeparator />
-          <BulkActions ids={[...selected]} topics={topics ?? []} tags={tags ?? []} onDone={reload} onClear={() => setSelected(new Set())} />
+          <BulkActions ids={[...selected]} topics={topics ?? []} tags={tags ?? []} onDone={() => void reload()} onClear={() => setSelected(new Set())} />
           <ToolbarSeparator />
           <ToolbarButton onClick={() => void reload()}>
             <RefreshCw className={cn(loading && "animate-spin")} /> Nạp
@@ -58,12 +96,19 @@ export default function BankPage() {
           {selected.size > 0 && <span className="ml-auto pr-2 text-xs opacity-80">Đã chọn {selected.size}</span>}
         </Toolbar>
         <div className="min-h-0 flex-1 overflow-auto">
-        {taxonomy && topics && tags && <BankFilters value={filters} onChange={tq.setFilters} taxonomy={taxonomy} topics={topics} tags={tags} />}
+        {taxonomy && (
+          <div className="border-b px-3 pt-3">
+            <SubjectTabs subjects={taxonomy.subjects} counts={facets?.subjects} value={subject} onChange={chooseSubject} />
+          </div>
+        )}
+        {taxonomy && tags && (topics || !scoped) && (
+          <BankFilters value={filters} onChange={tq.setFilters} taxonomy={taxonomy} topics={topics ?? []} tags={tags} facets={facets} subjectName={subjectName} />
+        )}
         {items.length > 0 && (
-          <label className="flex items-center gap-2 border-b px-3 py-2 text-sm text-muted-foreground">
+          <Label className="border-b px-3 py-2 font-normal text-muted-foreground">
             <Checkbox checked={allOnPage} onCheckedChange={(v) => setSelected(v ? new Set([...selected, ...items.map((q) => q.id)]) : new Set())} aria-label="Chọn cả trang" />
             Chọn cả trang
-          </label>
+          </Label>
         )}
         {!data && loading && (
           <div className="grid gap-2 p-3">

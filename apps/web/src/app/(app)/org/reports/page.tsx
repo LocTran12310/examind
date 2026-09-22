@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { GroupStats } from "@/components/reports/GroupStats";
 import { Heatmap, type HeatmapData } from "@/components/reports/Heatmap";
@@ -53,15 +54,17 @@ export default function ReportsPage() {
         />
         <div className="flex flex-wrap gap-1" role="tablist">
           {TABS.map(([k, label]) => (
-            <button
+            <Button
               key={k}
+              type="button"
+              variant="ghost"
               role="tab"
               aria-selected={tab === k}
               onClick={() => setTab(k)}
-              className={cn("rounded-md px-3 py-1.5 text-sm", tab === k ? "bg-primary/10 font-medium text-primary" : "text-muted-foreground hover:bg-muted")}
+              className={cn("font-normal", tab === k ? "bg-primary/10 font-medium text-primary hover:bg-primary/10 hover:text-primary" : "text-muted-foreground")}
             >
               {label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>

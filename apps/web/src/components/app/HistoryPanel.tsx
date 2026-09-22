@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { ToneBadge } from "@/components/app/ToneBadge";
 import { DataTable } from "@/components/data-table/DataTable";
 import type { AuditEntry } from "@/lib/types";
+import { formatDateTime } from "@/lib/datetime";
 
 export const ACTION_LABEL: Record<string, string> = {
   "year.create": "Tạo năm học",
@@ -43,7 +44,7 @@ export function HistoryPanel({ targetId, related, orgId, prefix = "h." }: { targ
   const params = useMemo(() => ({ target_id: targetId, related, organization_id: orgId }), [targetId, related, orgId]);
   const columns = useMemo<ColumnDef<AuditEntry, unknown>[]>(
     () => [
-      { accessorKey: "created_at", header: "Thời điểm", cell: ({ row }) => new Date(row.original.created_at).toLocaleString("vi-VN"), meta: { filter: { kind: "date" }, sort: "created_at" } },
+      { accessorKey: "created_at", header: "Thời điểm", cell: ({ row }) => formatDateTime(row.original.created_at, { withSeconds: true }), meta: { filter: { kind: "date" }, sort: "created_at" } },
       { accessorKey: "actor_name", header: "Người thực hiện", cell: ({ row }) => row.original.actor_name ?? "Hệ thống" },
       ...(orgId ? [] : [{ accessorKey: "organization_code", header: "Tổ chức" } as ColumnDef<AuditEntry, unknown>]),
       {

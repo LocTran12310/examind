@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { FilterSpec } from "./types";
 
@@ -9,7 +11,12 @@ export const DEBOUNCE_MS = 300;
 const ALL = "__all";
 
 /** Text input that writes to the URL after a pause; follows the URL when it changes elsewhere (Back). */
-export function DebouncedInput({ value, onChange, ...props }: { value: string; onChange: (v: string) => void } & Omit<React.ComponentProps<typeof Input>, "value" | "onChange">) {
+export function DebouncedInput({
+  value,
+  onChange,
+  as: Field = Input,
+  ...props
+}: { value: string; onChange: (v: string) => void; as?: typeof Input } & Omit<React.ComponentProps<typeof Input>, "value" | "onChange">) {
   const [draft, setDraft] = useState(value);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const last = useRef(value);
@@ -21,7 +28,7 @@ export function DebouncedInput({ value, onChange, ...props }: { value: string; o
   }, [value]);
   useEffect(() => () => void (timer.current && clearTimeout(timer.current)), []);
   return (
-    <Input
+    <Field
       {...props}
       value={draft}
       onChange={(e) => {
@@ -37,14 +44,78 @@ export function DebouncedInput({ value, onChange, ...props }: { value: string; o
   );
 }
 
+/** Operators of the header filters — the the reference symbols and labels (ui-standards ADR-01). */
+export const TEXT_OPS = [
+  { value: "*", label: "Chứa" },
+  { value: "=", label: "Bằng" },
+  { value: "+", label: "Bắt đầu bằng" },
+  { value: "-", label: "Kết thúc bằng" },
+  { value: "!", label: "Không chứa" },
+] as const;
+export const COMPARE_OPS = [
+  { value: "=", label: "Bằng" },
+  { value: "<", label: "Nhỏ hơn" },
+  { value: "<=", label: "Nhỏ hơn hoặc bằng" },
+  { value: ">", label: "Lớn hơn" },
+  { value: ">=", label: "Lớn hơn hoặc bằng" },
+] as const;
+const RANGE = "range";
+const SYMBOL: Record<string, string> = { "<=": "≤", ">=": "≥", [RANGE]: "↔" };
+const symbol = (op: string) => SYMBOL[op] ?? op;
+
+function OpMenu({ label, value, options, onChange }: { label: string; value: string; options: readonly { value: string; label: string }[]; onChange: (op: string) => void }) {
+  const current = options.find((o) => o.value === value) ?? options[0];
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <InputGroupButton size="icon-xs" className="w-6 font-mono text-xs" aria-label={`Kiểu lọc ${label}: ${current.label}`} title={`${symbol(current.value)}: ${current.label}`}>
+          {symbol(current.value)}
+        </InputGroupButton>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="min-w-48">
+        <DropdownMenuLabel className="text-xs">Chọn kiểu lọc</DropdownMenuLabel>
+        <DropdownMenuRadioGroup value={current.value} onValueChange={onChange}>
+          {options.map((o) => (
+            <DropdownMenuRadioItem key={o.value} value={o.value} className="text-xs">
+              <span className="w-5 font-mono">{symbol(o.value)}</span> {o.label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/** One header filter. Values go to the URL as `<key>` (+ `<key>_op` when not the default), a date
+ *  range as `<key>_from` / `<key>_to`; the server does the filtering. */
 export function FilterCell({ spec, name, label, get, set }: { spec: FilterSpec; name: string; label: string; get: (k: string) => string; set: (changes: Record<string, string | null>) => void }) {
   const key = spec.key ?? name;
+  const opKey = `${key}_op`;
   const cls = "h-7 text-xs font-normal";
+  const group = "h-7 min-w-0 [&_input]:text-xs";
   switch (spec.kind) {
-    case "text":
-      return <DebouncedInput aria-label={`Lọc ${label}`} className={cls} placeholder={spec.placeholder ?? "Giá trị…"} value={get(key)} onChange={(v) => set({ [key]: v || null })} />;
-    case "number":
-      return <DebouncedInput aria-label={`Lọc ${label}`} className={cls} inputMode="numeric" placeholder="=" value={get(key)} onChange={(v) => set({ [key]: v.replace(/[^\d.-]/g, "") || null })} />;
+    case "text": {
+      const op = get(opKey) || "*";
+      return (
+        <InputGroup className={group}>
+          <InputGroupAddon align="inline-start" className="pl-0.5">
+            <OpMenu label={label} value={op} options={TEXT_OPS} onChange={(v) => set({ [opKey]: v === "*" ? null : v })} />
+          </InputGroupAddon>
+          <DebouncedInput as={InputGroupInput} aria-label={`Lọc ${label}`} placeholder={spec.placeholder ?? "Giá trị…"} value={get(key)} onChange={(v) => set({ [key]: v || null })} />
+        </InputGroup>
+      );
+    }
+    case "number": {
+      const op = get(opKey) || "=";
+      return (
+        <InputGroup className={group}>
+          <InputGroupAddon align="inline-start" className="pl-0.5">
+            <OpMenu label={label} value={op} options={COMPARE_OPS} onChange={(v) => set({ [opKey]: v === "=" ? null : v })} />
+          </InputGroupAddon>
+          <DebouncedInput as={InputGroupInput} aria-label={`Lọc ${label}`} inputMode="decimal" placeholder="Giá trị…" value={get(key)} onChange={(v) => set({ [key]: v.replace(/[^\d.,-]/g, "").replace(",", ".") || null })} />
+        </InputGroup>
+      );
+    }
     case "select":
       return (
         <Select value={get(key) || ALL} onValueChange={(v) => set({ [key]: v === ALL ? null : v })}>
@@ -61,13 +132,36 @@ export function FilterCell({ spec, name, label, get, set }: { spec: FilterSpec; 
           </SelectContent>
         </Select>
       );
-    case "date":
+    case "date": {
+      // a range by default (and for old links with _from/_to); pick = < ≤ > ≥ for a single day
+      const op = get(opKey) || (get(key) ? "=" : RANGE);
+      const choose = (v: string) => {
+        const day = get(key) || get(`${key}_from`) || get(`${key}_to`) || null;
+        if (v === RANGE) set({ [opKey]: null, [key]: null, [`${key}_from`]: day, [`${key}_to`]: null });
+        else set({ [opKey]: v === "=" ? (day ? null : "=") : v, [key]: day, [`${key}_from`]: null, [`${key}_to`]: null });
+      };
+      const menu = <OpMenu label={label} value={op} options={[...COMPARE_OPS, { value: RANGE, label: "Trong khoảng" }]} onChange={choose} />;
+      if (op === RANGE)
+        return (
+          <div className="flex items-center gap-1">
+            <InputGroup className={group}>
+              <InputGroupAddon align="inline-start" className="pl-0.5">
+                {menu}
+              </InputGroupAddon>
+              <InputGroupInput type="date" aria-label={`${label} từ ngày`} className="px-1" value={get(`${key}_from`)} onChange={(e) => set({ [`${key}_from`]: e.target.value || null })} />
+            </InputGroup>
+            <span className="text-muted-foreground">–</span>
+            <Input type="date" aria-label={`${label} đến ngày`} className={`${cls} min-w-0 px-1`} value={get(`${key}_to`)} onChange={(e) => set({ [`${key}_to`]: e.target.value || null })} />
+          </div>
+        );
       return (
-        <div className="flex items-center gap-1">
-          <Input type="date" aria-label={`${label} từ ngày`} className={`${cls} min-w-0 px-1`} value={get(`${key}_from`)} onChange={(e) => set({ [`${key}_from`]: e.target.value || null })} />
-          <span className="text-muted-foreground">–</span>
-          <Input type="date" aria-label={`${label} đến ngày`} className={`${cls} min-w-0 px-1`} value={get(`${key}_to`)} onChange={(e) => set({ [`${key}_to`]: e.target.value || null })} />
-        </div>
+        <InputGroup className={group}>
+          <InputGroupAddon align="inline-start" className="pl-0.5">
+            {menu}
+          </InputGroupAddon>
+          <InputGroupInput type="date" aria-label={`Lọc ${label}`} className="px-1" value={get(key)} onChange={(e) => set({ [key]: e.target.value || null, [opKey]: op === "=" ? null : op })} />
+        </InputGroup>
       );
+    }
   }
 }

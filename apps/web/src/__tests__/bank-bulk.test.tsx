@@ -24,7 +24,7 @@ describe("bulk actions", () => {
     await u.click(screen.getByRole("button", { name: /Mức độ/ }));
     await u.click(await screen.findByRole("menuitem", { name: "Vận dụng" }));
     await u.click(screen.getByRole("button", { name: "Chuyên đề" }));
-    await u.click(within(await screen.findByRole("listbox")).getByText("Vectơ"));
+    await u.click(within(await screen.findByRole("tree", { name: "Cây chuyên đề" })).getByText("Vectơ"));
     await waitFor(() => expect(f).toHaveBeenCalledTimes(2));
     expect(JSON.parse(String(f.mock.calls[0][1]?.body))).toEqual({ ids: ["a", "b"], set: { difficulty: "vd" } });
     expect(JSON.parse(String(f.mock.calls[1][1]?.body))).toEqual({ ids: ["a", "b"], set: { primary_topic_id: "t1" } });

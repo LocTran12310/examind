@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { BackLink } from "@/components/app/BackLink";
 import { use, useState } from "react";
 import { ClassAdaptiveDialog } from "@/components/adaptive/ClassAdaptiveDialog";
 import { ClassOverview } from "@/components/adaptive/ClassOverview";
@@ -23,9 +23,7 @@ export default function ClassPage({ params }: { params: Promise<{ id: string }> 
   if (!data) return null;
   return (
     <>
-      <Link href="/org/classes" className="text-sm text-muted-foreground hover:underline">
-        ← Lớp học
-      </Link>
+      <BackLink href="/org/classes">Lớp học</BackLink>
       <PageHeader
         title={`Lớp ${data.name}`}
         description={`${data.school_year} · ${data.member_count} học sinh`}

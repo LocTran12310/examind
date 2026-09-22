@@ -1,7 +1,8 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
+import { rememberList } from "@/lib/list-memory";
 
 export type SortState = { key: string; desc: boolean } | null;
 
@@ -18,6 +19,12 @@ export function useTableQuery(prefix = "") {
   const router = useRouter();
   const pathname = usePathname();
   const k = useCallback((name: string) => prefix + name, [prefix]);
+  const searchText = search.toString();
+  useEffect(() => {
+    // the page's main table: remember where the list was left. Read the address bar, not the hooks:
+    // while Next swaps pages the old list renders once more with the new (empty) search.
+    if (!prefix && typeof window !== "undefined") rememberList(window.location.pathname, window.location.search.replace(/^\?/, ""));
+  }, [prefix, pathname, searchText]);
 
   const get = useCallback((name: string) => search.get(k(name)) ?? "", [search, k]);
   const page = Math.max(1, Number(get("page")) || 1);

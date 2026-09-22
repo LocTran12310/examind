@@ -1,14 +1,17 @@
 "use client";
 
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useRef, useState } from "react";
+import { useState } from "react";
+import { MarkdownEditor } from "@/components/question/MarkdownEditor";
+import { useSaveHint, useSaveShortcut } from "@/lib/shortcuts";
 import { QuestionView } from "@/components/question/QuestionView";
 import { FormAlert } from "@/components/app/FormAlert";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/app/FormField";
 import { Input } from "@/components/ui/input";
+import { Kbd } from "@/components/ui/kbd";
+import { Label } from "@/components/ui/label";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
-import { Textarea } from "@/components/ui/textarea";
 import { api, ApiError } from "@/lib/api";
 import type { ParsedQuestion, Question, QuestionOption, QuestionType } from "@/lib/types";
 
@@ -46,44 +49,21 @@ export async function uploadImage(file: File): Promise<string> {
 }
 
 function MdArea({ label, value, onChange, rows = 3, testId }: { label: string; value: string; onChange: (v: string) => void; rows?: number; testId?: string }) {
-  const ref = useRef<HTMLTextAreaElement>(null);
   const [uploading, setUploading] = useState(false);
-  async function insertFiles(files: FileList | File[]) {
-    const images = Array.from(files).filter((f) => f.type.startsWith("image/"));
-    if (!images.length) return false;
+  async function insertFiles(files: File[], at: number) {
+    const images = files.filter((f) => f.type.startsWith("image/"));
+    if (!images.length) return;
     setUploading(true);
     try {
       const refs = await Promise.all(images.map(uploadImage));
-      const el = ref.current;
-      const at = el?.selectionStart ?? value.length;
       onChange(value.slice(0, at) + "\n" + refs.join("\n") + "\n" + value.slice(at));
     } finally {
       setUploading(false);
     }
-    return true;
   }
   return (
-    <FormField label={label} hint={uploading ? "Đang tải ảnh…" : "Markdown, công thức $…$; dán hoặc kéo thả ảnh vào đây"}>
-      <Textarea
-        ref={ref}
-        data-testid={testId}
-        rows={rows}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onPaste={(e) => {
-          if (e.clipboardData.files.length) {
-            e.preventDefault();
-            void insertFiles(e.clipboardData.files);
-          }
-        }}
-        onDrop={(e) => {
-          if (e.dataTransfer.files.length) {
-            e.preventDefault();
-            void insertFiles(e.dataTransfer.files);
-          }
-        }}
-        className="font-mono"
-      />
+    <FormField label={label} hint="Markdown, công thức $…$ — xem trước ngay bên dưới; dán hoặc kéo thả ảnh">
+      {(f) => <MarkdownEditor {...f} value={value} onChange={onChange} rows={rows} data-testid={testId} aria-label={label} onFiles={insertFiles} uploading={uploading} />}
     </FormField>
   );
 }
@@ -116,12 +96,12 @@ export function QuestionFields({ draft, setDraft }: { draft: Draft; setDraft: (d
           <div key={i} className="flex items-start gap-2">
             <Input aria-label={`Nhãn ${i + 1}`} className="w-12" value={o.label} onChange={(e) => setOption(i, { label: e.target.value })} />
             <div className="flex-1">
-              <Textarea aria-label={`Phương án ${o.label}`} rows={1} className="font-mono" value={o.content} onChange={(e) => setOption(i, { content: e.target.value })} />
+              <MarkdownEditor compact aria-label={`Phương án ${o.label}`} rows={1} value={o.content} onChange={(v) => setOption(i, { content: v })} />
             </div>
             {draft.type === "mcq" ? (
-              <label className="mt-2 flex items-center gap-1 text-sm">
+              <Label className="mt-2 gap-1 font-normal">
                 <RadioGroupItem value={o.label} aria-label={`${o.label} đúng`} /> đúng
-              </label>
+              </Label>
             ) : (
               <NativeSelect
                 aria-label={`Đúng/sai ${o.label}`}
@@ -158,6 +138,10 @@ export function QuestionEditor({ question, onSaved, onCancel }: { question: Pars
   const [draft, setDraft] = useState<Draft>(draftOf(question));
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  useSaveShortcut(() => {
+    if (!busy) void save();
+  });
+  const hint = useSaveHint();
 
   async function save() {
     setBusy(true);
@@ -177,10 +161,6 @@ export function QuestionEditor({ question, onSaved, onCancel }: { question: Pars
       className="grid gap-4 lg:grid-cols-2"
       data-testid="editor"
       onKeyDown={(e) => {
-        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-          e.preventDefault();
-          void save();
-        }
         if (e.key === "Escape") onCancel();
       }}
     >
@@ -190,7 +170,7 @@ export function QuestionEditor({ question, onSaved, onCancel }: { question: Pars
         <div className="mt-3 flex justify-end gap-2">
           <Button variant="outline" onClick={onCancel}>Hủy (Esc)</Button>
           <Button onClick={() => void save()} disabled={busy}>
-            Lưu (Ctrl+Enter)
+            Lưu <Kbd className="ml-1 h-4 bg-primary-foreground/20 text-[10px] text-current">{hint}</Kbd>
           </Button>
         </div>
       </div>

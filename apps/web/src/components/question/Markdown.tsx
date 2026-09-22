@@ -4,6 +4,7 @@ import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 /** `asset:<uuid>` → the authenticated asset endpoint; everything else goes through the safe default. */
 export function resolveUrl(url: string): string {
@@ -22,7 +23,12 @@ export function Markdown({ children, className }: { children: string; className?
         components={{
           // eslint-disable-next-line @next/next/no-img-element
           img: ({ src, alt }) => <img src={typeof src === "string" ? src : undefined} alt={alt || "Hình minh họa"} className="my-2 max-h-80 max-w-full rounded border border-border" loading="lazy" />,
-          table: ({ children }) => <table className="my-2 border-collapse text-sm [&_td]:border [&_td]:px-2 [&_th]:border [&_th]:px-2">{children}</table>,
+          table: ({ children }) => <Table className="my-2 w-auto border-collapse">{children}</Table>,
+          thead: ({ children }) => <TableHeader>{children}</TableHeader>,
+          tbody: ({ children }) => <TableBody>{children}</TableBody>,
+          tr: ({ children }) => <TableRow className="hover:bg-transparent">{children}</TableRow>,
+          th: ({ children, style }) => <TableHead style={style} className="h-auto border px-2 py-1 whitespace-normal">{children}</TableHead>,
+          td: ({ children, style }) => <TableCell style={style} className="border px-2 py-1 whitespace-normal">{children}</TableCell>,
           p: ({ children }) => <p className="my-1.5 leading-relaxed">{children}</p>,
         }}
       >

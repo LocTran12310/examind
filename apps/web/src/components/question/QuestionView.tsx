@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import type { Question } from "@/lib/types";
+import { Button } from "@/components/ui/button";
 import { Markdown } from "./Markdown";
 
 export type QuestionMode = "exam" | "review" | "result";
@@ -49,19 +50,21 @@ export function QuestionView({
             const isPicked = selected === o.label;
             return (
               <li key={o.label}>
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   disabled={!onSelect}
                   onClick={() => onSelect?.(o.label)}
                   data-testid={`option-${o.label}`}
                   data-correct={isKey || undefined}
                   className={cn(
-                    "flex w-full items-start gap-2 rounded-lg border px-3 py-2 text-left",
-                    onSelect ? "cursor-pointer hover:border-primary" : "cursor-default",
-                    isKey && "border-emerald-500 bg-emerald-500/10",
-                    !isKey && isPicked && mode === "result" && "border-destructive bg-destructive/10",
-                    !isKey && isPicked && mode !== "result" && "border-primary bg-primary/10",
-                    !isKey && !isPicked && "border-border",
+                    // rich Markdown content: undo the button's single-line, centred, dimmed-when-disabled defaults
+                    "h-auto w-full items-start justify-start gap-2 px-3 py-2 text-left font-normal whitespace-normal select-text hover:text-foreground disabled:opacity-100",
+                    onSelect ? "cursor-pointer hover:border-primary dark:hover:border-primary" : "cursor-default",
+                    isKey && "border-emerald-500 bg-emerald-500/10 dark:border-emerald-500 hover:bg-emerald-500/10 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/10",
+                    !isKey && isPicked && mode === "result" && "border-destructive bg-destructive/10 dark:border-destructive hover:bg-destructive/10 dark:bg-destructive/10 dark:hover:bg-destructive/10",
+                    !isKey && isPicked && mode !== "result" && "border-primary bg-primary/10 dark:border-primary hover:bg-primary/10 dark:bg-primary/10 dark:hover:bg-primary/10",
+                    !isKey && !isPicked && "border-border bg-transparent hover:bg-transparent dark:border-border dark:bg-transparent dark:hover:bg-transparent",
                   )}
                 >
                   <span className="font-semibold">{o.label}.</span>
@@ -71,7 +74,7 @@ export function QuestionView({
                   {reveal && q.type === "true_false" && o.is_true !== undefined && (
                     <span className={cn("text-sm font-medium", o.is_true ? "text-emerald-700 dark:text-emerald-400" : "text-destructive")}>{o.is_true ? "Đúng" : "Sai"}</span>
                   )}
-                </button>
+                </Button>
               </li>
             );
           })}
@@ -82,9 +85,9 @@ export function QuestionView({
 
       {reveal && q.solution?.trim() && (
         <section className="rounded-lg border border-border bg-muted/50" data-testid="solution">
-          <button type="button" className="w-full px-3 py-2 text-left text-sm font-medium" onClick={() => setSolutionOpen((v) => !v)}>
+          <Button type="button" variant="ghost" className="h-auto w-full justify-start rounded-lg px-3 py-2 text-left" onClick={() => setSolutionOpen((v) => !v)}>
             {solutionOpen ? "▾" : "▸"} Lời giải
-          </button>
+          </Button>
           {solutionOpen && (
             <div className="border-t border-border px-3 py-2">
               <Markdown>{q.solution}</Markdown>

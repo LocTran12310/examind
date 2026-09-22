@@ -7,6 +7,9 @@ import { useState } from "react";
 import { FormAlert } from "@/components/app/FormAlert";
 import { ToneBadge } from "@/components/app/ToneBadge";
 import { Button } from "@/components/ui/button";
+import { FormField } from "@/components/app/FormField";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Panel } from "@/components/app/Panel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { api, ApiError } from "@/lib/api";
@@ -100,16 +103,9 @@ export function ImportWizard({ orgCode }: { orgCode: string }) {
   return (
     <div className="space-y-4">
       <Panel>
-        <label className="block text-sm font-medium">
-          Chọn file
-          <input
-            data-testid="file"
-            type="file"
-            accept=".csv,.xlsx"
-            className="mt-2 block text-sm"
-            onChange={(e) => onFile(e.target.files?.[0])}
-          />
-        </label>
+        <FormField label="Chọn file">
+          <Input data-testid="file" type="file" accept=".csv,.xlsx" className="max-w-sm" onChange={(e) => onFile(e.target.files?.[0])} />
+        </FormField>
         {busy && <p className="mt-2 text-sm text-muted-foreground">Đang xử lý…</p>}
       </Panel>
       {error && <FormAlert>{error}</FormAlert>}
@@ -119,9 +115,9 @@ export function ImportWizard({ orgCode }: { orgCode: string }) {
             <ToneBadge tone="green">{preview.valid_count} dòng hợp lệ</ToneBadge>
             {hasErrors && <ToneBadge tone="red">{preview.error_count} dòng lỗi</ToneBadge>}
             {hasErrors && (
-              <label className="flex items-center gap-2 text-sm">
+              <Label className="font-normal">
                 <Checkbox checked={skipErrors} onCheckedChange={(v) => setSkipErrors(v === true)} /> Bỏ qua các dòng lỗi
-              </label>
+              </Label>
             )}
             <Button disabled={!canCommit || busy} onClick={commit} className="ml-auto">
               Tạo {skipErrors || !hasErrors ? preview.valid_count : preview.rows.length} tài khoản

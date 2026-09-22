@@ -1,13 +1,16 @@
-/** `datetime-local` value (local time, minutes precision) ⇄ ISO string. */
+/** Older helpers, now on the business time zone (see ./datetime). */
+import { formatDateTime, fromBusinessInput, toBusinessInput } from "./datetime";
+
+/** `datetime-local` value in business time (Asia/Ho_Chi_Minh), minutes precision. */
 export function toLocalInput(d: Date): string {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return toBusinessInput(d);
 }
 
+/** `datetime-local` value (business time) → ISO UTC. */
 export function fromLocalInput(v: string): string {
-  return new Date(v).toISOString();
+  return fromBusinessInput(v);
 }
 
 export function fmt(iso: string | null | undefined): string {
-  return iso ? new Date(iso).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" }) : "—";
+  return formatDateTime(iso);
 }

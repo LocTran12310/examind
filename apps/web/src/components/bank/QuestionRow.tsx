@@ -24,11 +24,11 @@ export function QuestionRow({ q, selected, onToggle }: { q: ParsedQuestion; sele
           <ToneBadge tone={q.status === "approved" || q.status === "auto_approved" ? "green" : q.status === "rejected" ? "red" : "amber"}>
             {STATUS_LABEL[q.status as QuestionStatus] ?? q.status}
           </ToneBadge>
-          {primary && <span className="rounded bg-primary/10 px-2 py-0.5 text-primary">{primary.name}</span>}
+          {primary && <ToneBadge tone="blue" className="h-auto whitespace-normal">{primary.name}</ToneBadge>}
           {q.tags.map((t) => (
-            <span key={t.id} className="rounded bg-muted px-2 py-0.5 text-muted-foreground">
+            <ToneBadge key={t.id} className="font-normal">
               #{t.name}
-            </span>
+            </ToneBadge>
           ))}
         </div>
       </div>

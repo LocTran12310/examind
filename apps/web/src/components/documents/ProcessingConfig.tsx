@@ -1,6 +1,8 @@
 "use client";
 
 import { FormField } from "@/components/app/FormField";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import type { AiModel, ProcessingConfig } from "@/lib/types";
@@ -110,11 +112,14 @@ export function ProcessingConfigFields({
 
 export function ProcessingConfigPanel(props: Parameters<typeof ProcessingConfigFields>[0]) {
   return (
-    <details className="rounded-lg border border-border bg-muted/50 px-4 py-2" data-testid="processing-config">
-      <summary className="cursor-pointer text-sm font-medium text-foreground/80">Cấu hình xử lý</summary>
-      <div className="pt-3">
+    <Collapsible className="group/config rounded-lg border border-border bg-muted/50 px-4 py-2" data-testid="processing-config">
+      <CollapsibleTrigger className="flex w-full cursor-pointer items-center gap-1.5 text-left text-sm font-medium text-foreground/80">
+        <ChevronRight className="size-4 transition-transform group-data-[state=open]/config:rotate-90" />
+        Cấu hình xử lý
+      </CollapsibleTrigger>
+      <CollapsibleContent className="pt-3">
         <ProcessingConfigFields {...props} />
-      </div>
-    </details>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }

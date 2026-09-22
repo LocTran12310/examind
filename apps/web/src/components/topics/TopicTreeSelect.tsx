@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import type { Topic } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { expand, indexTree, state, toggle, topMost } from "./selection";
@@ -12,8 +13,24 @@ import { buildTree, type TopicNode } from "./tree";
 
 const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
 
-/** Checkbox tree of topics; choosing a parent includes all its children. `value`/`onApply` use top-most ids. */
-export function TopicTreeSelect({ topics, value, onApply, onCancel }: { topics: Topic[]; value: string[]; onApply: (ids: string[]) => void; onCancel?: () => void }) {
+/** Checkbox tree of topics; choosing a parent includes all its children. `value`/`onApply` use top-most ids.
+ *  With `onChange` instead of `onApply` it is embedded (no buttons, every tick reported); `counts`
+ *  shows the number of questions in each subtree. */
+export function TopicTreeSelect({
+  topics,
+  value,
+  onApply,
+  onChange,
+  onCancel,
+  counts,
+}: {
+  topics: Topic[];
+  value: string[];
+  onApply?: (ids: string[]) => void;
+  onChange?: (ids: string[]) => void;
+  onCancel?: () => void;
+  counts?: Record<string, number>;
+}) {
   const roots = useMemo(() => buildTree(topics), [topics]);
   const ix = useMemo(() => indexTree(roots), [roots]);
   const [checked, setChecked] = useState<Set<string>>(() => expand(ix, value));
@@ -56,11 +73,23 @@ export function TopicTreeSelect({ topics, value, onApply, onCancel }: { topics: 
           >
             <ChevronRight className={cn("transition-transform", expanded && "rotate-90")} />
           </Button>
-          <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-sm">
-            <Checkbox checked={st} onCheckedChange={() => setChecked((c) => toggle(ix, c, n.id))} aria-label={n.name} />
-            <span className={cn("truncate", depth === 0 && "font-medium")}>{n.name}</span>
-            {n.children.length > 0 && <span className="text-xs text-muted-foreground">{n.children.length}</span>}
-          </label>
+          <Label className="min-w-0 flex-1 cursor-pointer font-normal leading-normal">
+            <Checkbox
+              checked={st}
+              onCheckedChange={() => {
+                const next = toggle(ix, checked, n.id);
+                setChecked(next);
+                onChange?.(topMost(ix, next));
+              }}
+              aria-label={n.name}
+            />
+            <span className={cn("truncate", depth === 0 && "font-medium", counts && !counts[n.id] && "text-muted-foreground")}>{n.name}</span>
+            {counts ? (
+              <span className="ml-auto text-xs tabular-nums text-muted-foreground">{counts[n.id] ?? 0}</span>
+            ) : (
+              n.children.length > 0 && <span className="text-xs text-muted-foreground">{n.children.length}</span>
+            )}
+          </Label>
         </div>
         {expanded && n.children.length > 0 && <ul>{n.children.map((c) => row(c, depth + 1))}</ul>}
       </li>
@@ -70,13 +99,13 @@ export function TopicTreeSelect({ topics, value, onApply, onCancel }: { topics: 
   const count = topMost(ix, checked).length;
   return (
     <div className="grid gap-2" data-testid="topic-tree-select">
-      <Input autoFocus placeholder="Tìm chuyên đề… (ví dụ: nguyen ham)" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Tìm chuyên đề" />
+      <Input autoFocus={!onChange} placeholder="Tìm chuyên đề… (ví dụ: nguyen ham)" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Tìm chuyên đề" />
       <ul className="max-h-[50svh] overflow-y-auto rounded-md border p-1" role="tree" aria-label="Cây chuyên đề">
         {roots.map((r) => row(r, 0))}
         {visible && visible.size === 0 && <li className="px-3 py-2 text-sm text-muted-foreground">Không tìm thấy</li>}
       </ul>
       <p className="text-xs text-muted-foreground">Chọn một nhánh là chọn cả các nhánh con.</p>
-      <div className="flex justify-between gap-2">
+      {onApply && <div className="flex justify-between gap-2">
         <Button variant="ghost" size="sm" onClick={() => setChecked(new Set())} disabled={!checked.size}>
           Bỏ chọn tất cả
         </Button>
@@ -90,7 +119,7 @@ export function TopicTreeSelect({ topics, value, onApply, onCancel }: { topics: 
             Áp dụng{count ? ` (${count})` : ""}
           </Button>
         </div>
-      </div>
+      </div>}
     </div>
   );
 }

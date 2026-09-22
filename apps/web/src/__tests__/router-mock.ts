@@ -9,8 +9,11 @@ let url = new URL("http://test/");
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
+const syncAddressBar = () => window.history.replaceState(null, "", url.pathname + url.search);
+
 export function setUrl(path: string) {
   url = new URL(path, "http://test");
+  syncAddressBar();
   emit();
 }
 export const currentUrl = () => url.pathname + url.search;
@@ -18,6 +21,7 @@ export const searchOf = () => new URLSearchParams(url.search);
 
 const navigate = (to: string) => {
   url = new URL(to, "http://test");
+  syncAddressBar();
   emit();
 };
 export const router = { push: vi.fn(navigate), replace: vi.fn(navigate), refresh: vi.fn(), back: vi.fn(), prefetch: vi.fn() };

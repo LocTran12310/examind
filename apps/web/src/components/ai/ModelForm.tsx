@@ -4,6 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { FormAlert } from "@/components/app/FormAlert";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/app/FormField";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
@@ -69,15 +70,15 @@ export function ModelForm({ initial, existing, onDone }: { initial: ModelDraft; 
         </FormField>
         <div className="space-y-2 text-sm">
           <span className="font-medium text-foreground/80">Khả năng</span>
-          <label className="flex items-center gap-2">
+          <Label className="font-normal">
             <Checkbox checked={d.capabilities.includes("text")} onCheckedChange={() => toggleCap("text")} /> Văn bản (tách câu, gắn chuyên đề)
-          </label>
-          <label className="flex items-center gap-2">
+          </Label>
+          <Label className="font-normal">
             <Checkbox checked={d.capabilities.includes("vision")} onCheckedChange={() => toggleCap("vision")} /> Đọc ảnh (OCR bằng AI)
-          </label>
-          <label className="flex items-center gap-2">
+          </Label>
+          <Label className="font-normal">
             <Checkbox checked={d.is_free} onCheckedChange={(v) => set("is_free", v === true)} /> Miễn phí (tự host)
-          </label>
+          </Label>
         </div>
       </div>
       <div className="flex justify-end">

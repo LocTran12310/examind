@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { AttemptQuestion } from "@/lib/types";
@@ -17,16 +18,23 @@ export function AnswerInput({ q, value, onChange }: { q: AttemptQuestion; value:
           <div key={o.label} className="flex items-center gap-2 text-sm">
             <span className="w-6 font-semibold">{o.label})</span>
             {[true, false].map((v) => (
-              <button
+              <Button
                 key={String(v)}
                 type="button"
+                variant="outline"
                 aria-pressed={cur[o.label] === v}
                 aria-label={`${o.label} ${v ? "Đúng" : "Sai"}`}
                 onClick={() => onChange({ ...cur, [o.label]: v })}
-                className={cn("rounded-md border px-3 py-1", cur[o.label] === v ? (v ? "border-emerald-600 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" : "border-destructive bg-destructive/10 text-destructive") : "border-input")}
+                className={cn(
+                  "px-3 font-normal",
+                  cur[o.label] === v &&
+                    (v
+                      ? "border-emerald-600 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 hover:text-emerald-700 dark:border-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
+                      : "border-destructive bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive dark:border-destructive dark:bg-destructive/10"),
+                )}
               >
                 {v ? "Đúng" : "Sai"}
-              </button>
+              </Button>
             ))}
           </div>
         ))}

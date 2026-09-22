@@ -6,6 +6,7 @@ import { QuestionView } from "@/components/question/QuestionView";
 import { FormAlert } from "@/components/app/FormAlert";
 import { ToneBadge } from "@/components/app/ToneBadge";
 import { Button } from "@/components/ui/button";
+import { Kbd } from "@/components/ui/kbd";
 import { EmptyState } from "@/components/app/EmptyState";
 import { FormDialog } from "@/components/app/FormDialog";
 import { api, ApiError } from "@/lib/api";
@@ -191,10 +192,10 @@ export function ReviewQueue({
         )}
         <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-3 text-sm">
           <span className="text-muted-foreground">Chuyên đề:</span>
-          <button type="button" className="rounded bg-primary/10 px-2 py-0.5 text-primary" onClick={() => setPicking(true)} data-testid="topic-button">
+          <Button type="button" size="xs" variant="secondary" className="bg-primary/10 font-normal text-primary hover:bg-primary/20" onClick={() => setPicking(true)} data-testid="topic-button">
             {primary ? primary.name : "Chọn chuyên đề"}
             {primary?.source && primary.source !== "manual" ? ` · gợi ý ${primary.score ? Math.round(primary.score * 100) + "%" : ""}` : ""}
-          </button>
+          </Button>
           <div className="ml-auto flex gap-2">
             <Button variant="outline" size="sm" onClick={() => setIndex((i) => Math.max(i - 1, 0))}>
               ← K
@@ -215,7 +216,7 @@ export function ReviewQueue({
         <p className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground" data-testid="legend">
           {LEGEND.map(([k, v]) => (
             <span key={k}>
-              <kbd className="rounded border border-input px-1 font-mono">{k}</kbd> {v}
+              <Kbd className="border border-input bg-transparent font-mono">{k}</Kbd> {v}
             </span>
           ))}
           <span>· còn {remaining} câu</span>

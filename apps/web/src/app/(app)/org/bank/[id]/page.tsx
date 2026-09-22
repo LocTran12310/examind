@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { BackLink } from "@/components/app/BackLink";
 import { use, useState } from "react";
 import { formValueOf, payloadOf, QuestionForm } from "@/components/bank/QuestionForm";
 import { QuestionView } from "@/components/question/QuestionView";
@@ -16,17 +16,17 @@ export default function BankQuestionPage({ params }: { params: Promise<{ id: str
   const { id } = use(params);
   const { data: q, setData } = useApi<ParsedQuestion>(`/questions/${id}`);
   const { data: taxonomy } = useApi<Taxonomy>("/taxonomy");
-  const { data: topics } = useApi<Topic[]>("/topics");
-  const { data: tagsPage } = useApi<Page<Tag>>("/tags?page_size=all");
+  // a question with a subject only offers that subject's topics and tags (subject-scoped-bank, ui-polish A-04)
+  const sid = q?.subject_id;
+  const { data: topics } = useApi<Topic[]>(q ? (sid ? `/topics?subject_id=${sid}` : "/topics") : null);
+  const { data: tagsPage } = useApi<Page<Tag>>(q ? `/tags?page_size=all${sid ? `&subject_id=${sid}` : ""}` : null);
   const tags = tagsPage?.items;
   const [editing, setEditing] = useState(false);
   if (!q || !taxonomy || !topics || !tags) return null;
   const primary = q.topics.find((t) => t.is_primary);
   return (
     <>
-      <Link href="/org/bank" className="text-sm text-muted-foreground hover:underline">
-        ← Ngân hàng câu hỏi
-      </Link>
+      <BackLink href="/org/bank">Ngân hàng câu hỏi</BackLink>
       <PageHeader
         title={q.number ? `Câu ${q.number}` : "Câu hỏi"}
         description={[primary?.name, q.difficulty ? DIFFICULTY_LABEL[q.difficulty] : null, q.grade ? `Lớp ${q.grade}` : null].filter(Boolean).join(" · ")}

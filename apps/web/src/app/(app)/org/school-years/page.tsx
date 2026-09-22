@@ -18,8 +18,9 @@ import { ToolbarButton } from "@/components/data-table/Toolbar";
 import { nextYearCode, YearForm } from "@/components/years/YearForm";
 import { api, ApiError } from "@/lib/api";
 import { type SchoolYear, YEAR_STATUS_LABEL } from "@/lib/types";
+import { formatDate } from "@/lib/datetime";
 
-const d = (s: string) => new Date(s).toLocaleDateString("vi-VN");
+const d = (s: string) => formatDate(s);
 
 export default function SchoolYearsPage() {
   const me = useMe();

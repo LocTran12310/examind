@@ -24,6 +24,7 @@ export default function DocumentsPage() {
   const { data: models } = useApi<Page<AiModel>>("/ai-models?enabled=true&page_size=all");
   const [config, setConfig] = useState<ProcessingConfig | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   useEffect(() => {
     if (defaults && !config) setConfig(defaults);
   }, [defaults, config]);
@@ -37,6 +38,7 @@ export default function DocumentsPage() {
           columns={columns}
           getRowId={(d) => d.id}
           pollWhile={inFlight}
+          reloadKey={reloadKey}
           actions={() => (
             <ToolbarButton onClick={() => setUploading(true)}>
               <FileUp /> Tải đề lên
@@ -54,7 +56,11 @@ export default function DocumentsPage() {
         {taxonomy && (
           <UploadForm
             taxonomy={taxonomy}
-            onUploaded={(doc, duplicate) => router.push(`/org/documents/${doc.id}${duplicate ? "?dup=1" : ""}`)}
+            onFinished={(done) => {
+              // one file: open it; a batch: stay here, the list shows every file's progress
+              if (done.length === 1) router.push(`/org/documents/${done[0].doc.id}${done[0].duplicate ? "?dup=1" : ""}`);
+              else setReloadKey((k) => k + 1);
+            }}
             config={config ?? undefined}
             configSlot={config && <ProcessingConfigPanel value={config} onChange={setConfig} models={models?.items ?? []} />}
           />

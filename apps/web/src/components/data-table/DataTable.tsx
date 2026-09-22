@@ -52,6 +52,8 @@ export interface DataTableProps<T> {
   /** Reload every 2 s while this returns true (e.g. documents still being processed). */
   pollWhile?: (items: T[]) => boolean;
   rowClassName?: (row: T) => string | undefined;
+  /** false = no toolbar (read-only detail tables) */
+  toolbar?: boolean;
 }
 
 export function DataTable<T>({
@@ -74,6 +76,7 @@ export function DataTable<T>({
   reloadKey,
   pollWhile,
   rowClassName,
+  toolbar = true,
 }: DataTableProps<T>) {
   const tq = useTableQuery(prefix);
   const query = useMemo(() => {
@@ -150,7 +153,7 @@ export function DataTable<T>({
 
   return (
     <div data-slot="data-table" className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border bg-card">
-      <Toolbar className="shrink-0">
+      {toolbar && <Toolbar className="shrink-0">
         {onAdd && (
           <ToolbarButton onClick={onAdd}>
             <Plus /> {addLabel}
@@ -179,7 +182,7 @@ export function DataTable<T>({
             </Button>
           </span>
         )}
-      </Toolbar>
+      </Toolbar>}
       {/* only this area scrolls; the table's own x-scroll wrapper is disabled so the sticky header works */}
       <div className="min-h-0 flex-1 overflow-auto [&>[data-slot=table-container]]:overflow-visible">
       <Table>
@@ -194,14 +197,14 @@ export function DataTable<T>({
                 return (
                   <TableHead
                     key={h.id}
-                    className={cn("text-xs font-semibold", meta?.align === "right" && "text-right", meta?.align === "center" && "text-center", meta?.className)}
+                    className={cn("border-r text-xs font-semibold last:border-r-0", meta?.align === "right" && "text-right", meta?.align === "center" && "text-center", meta?.className)}
                     aria-sort={active ? (active.desc ? "descending" : "ascending") : undefined}
                   >
                     {sortKey ? (
-                      <button type="button" className="inline-flex items-center gap-1 hover:text-foreground" onClick={() => toggleSort(sortKey)}>
+                      <Button type="button" variant="ghost" size="xs" className="-mx-1.5 h-6 gap-1 px-1.5 text-xs font-semibold" onClick={() => toggleSort(sortKey)}>
                         {label}
                         {active ? active.desc ? <ArrowDown className="size-3" /> : <ArrowUp className="size-3" /> : <ArrowUpDown className="size-3 opacity-40" />}
-                      </button>
+                      </Button>
                     ) : (
                       label
                     )}
@@ -216,7 +219,7 @@ export function DataTable<T>({
                 const spec = h.column.columnDef.meta?.filter;
                 const header = h.column.columnDef.header;
                 return (
-                  <TableHead key={h.id} className="h-auto py-1">
+                  <TableHead key={h.id} className="h-auto border-r py-1 last:border-r-0">
                     {spec && <FilterCell spec={spec} name={h.column.id} label={typeof header === "string" ? header : h.column.id} get={tq.get} set={tq.setFilters} />}
                   </TableHead>
                 );
@@ -253,7 +256,7 @@ export function DataTable<T>({
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() ? "selected" : activeRowId === row.id ? "selected" : undefined}
-                className={cn(onRowActivate && "cursor-pointer", activeRowId === row.id && "bg-primary/5", rowClassName?.(row.original))}
+                className={cn("even:bg-muted/40", onRowActivate && "cursor-pointer", activeRowId === row.id && "bg-primary/10 even:bg-primary/10", rowClassName?.(row.original))}
                 onClick={onRowActivate ? () => onRowActivate(row.original) : undefined}
                 tabIndex={onRowActivate ? 0 : undefined}
                 onKeyDown={onRowActivate ? (e) => e.key === "Enter" && onRowActivate(row.original) : undefined}
@@ -261,7 +264,7 @@ export function DataTable<T>({
                 {row.getVisibleCells().map((cell) => {
                   const meta = cell.column.columnDef.meta;
                   return (
-                    <TableCell key={cell.id} className={cn(meta?.align === "right" && "text-right tabular-nums", meta?.align === "center" && "text-center", meta?.className)}>
+                    <TableCell key={cell.id} className={cn("border-r last:border-r-0", meta?.align === "right" && "text-right tabular-nums", meta?.align === "center" && "text-center", meta?.className)}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   );

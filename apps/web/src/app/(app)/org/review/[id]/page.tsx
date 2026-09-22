@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { BackLink } from "@/components/app/BackLink";
 import { use, useState } from "react";
 import { AnswerKeyDialog } from "@/components/review/AnswerKeyDialog";
 import { QuestionEditor } from "@/components/review/QuestionEditor";
@@ -26,9 +26,7 @@ export default function ReviewDocumentPage({ params }: { params: Promise<{ id: s
 
   return (
     <>
-      <Link href="/org/review" className="text-sm text-muted-foreground hover:underline">
-        ← Duyệt câu hỏi
-      </Link>
+      <BackLink href="/org/review">Duyệt câu hỏi</BackLink>
       <PageHeader
         title={info.document.filename}
         description={`Tự duyệt ${info.counts.auto_approved} · Cần xem ${info.counts.needs_review} · Đã duyệt ${info.counts.approved}`}

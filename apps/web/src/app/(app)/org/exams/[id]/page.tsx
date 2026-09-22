@@ -1,11 +1,13 @@
 "use client";
 
+import { BackLink } from "@/components/app/BackLink";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { use, useState } from "react";
 import { AssignDialog } from "@/components/exams/AssignDialog";
 import { BlueprintEditor } from "@/components/exams/BlueprintEditor";
-import { ExamQuestions, moved } from "@/components/exams/ExamQuestions";
+import { ExamQuestions } from "@/components/exams/ExamQuestions";
 import { Markdown } from "@/components/question/Markdown";
 import { QuestionView } from "@/components/question/QuestionView";
 import { FormAlert } from "@/components/app/FormAlert";
@@ -22,8 +24,10 @@ import { TYPE_LABEL, type Assignment, type BlueprintRow, type Exam, type Page, t
 export default function ExamBuilderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { data: exam, setData } = useApi<Exam>(`/exams/${id}`);
-  const { data: topics } = useApi<Topic[]>("/topics");
-  const { data: tagsPage } = useApi<Page<Tag>>("/tags?page_size=all");
+  // the matrix only offers the exam's subject (subject-scoped-bank A-07)
+  const sid = exam?.subject_id;
+  const { data: topics } = useApi<Topic[]>(exam ? (sid ? `/topics?subject_id=${sid}` : "/topics") : null);
+  const { data: tagsPage } = useApi<Page<Tag>>(exam ? `/tags?page_size=all${sid ? `&subject_id=${sid}` : ""}` : null);
   const tags = tagsPage?.items;
   const [shortfalls, setShortfalls] = useState<{ row: number; missing: number }[]>([]);
   const [search, setSearch] = useState("");
@@ -56,9 +60,7 @@ export default function ExamBuilderPage({ params }: { params: Promise<{ id: stri
 
   return (
     <>
-      <Link href="/org/exams" className="text-sm text-muted-foreground hover:underline">
-        ← Đề thi
-      </Link>
+      <BackLink href="/org/exams">Đề thi</BackLink>
       <PageHeader
         title={exam.title}
         description={`${exam.question_count} câu · tổng ${exam.total_points} điểm (quy về thang ${exam.settings.scale_to})`}
@@ -93,7 +95,7 @@ export default function ExamBuilderPage({ params }: { params: Promise<{ id: stri
             ) : (
               <ExamQuestions
                 questions={exam.questions}
-                onMove={(qid, d) => run(() => api(`/exams/${id}/order`, { method: "PUT", body: { question_ids: moved(ids, qid, d) } }))}
+                onSaveOrder={(order) => run(() => api(`/exams/${id}/order`, { method: "PUT", body: { question_ids: order } }))}
                 onSwap={(qid) => run(() => api(`/exams/${id}/questions/${qid}/swap`, { method: "POST" }))}
                 onRemove={(qid) => run(() => api(`/exams/${id}/questions/${qid}`, { method: "DELETE" }))}
                 onPoints={(qid, points) => run(() => api(`/exams/${id}/questions/${qid}`, { method: "PATCH", body: { points } }))}
@@ -128,7 +130,7 @@ export default function ExamBuilderPage({ params }: { params: Promise<{ id: stri
             <h2 className="mb-2 font-medium">Điểm mặc định theo loại câu</h2>
             <div className="grid grid-cols-2 gap-2 text-sm">
               {(Object.keys(TYPE_LABEL) as QuestionType[]).map((t) => (
-                <label key={t} className="flex items-center justify-between gap-2">
+                <Label key={t} className="justify-between font-normal">
                   {TYPE_LABEL[t]}
                   <Input
                     aria-label={`Điểm ${TYPE_LABEL[t]}`}
@@ -142,7 +144,7 @@ export default function ExamBuilderPage({ params }: { params: Promise<{ id: stri
                       run(() => api(`/exams/${id}`, { method: "PATCH", body: { settings: { points_by_type: { [t]: Number(e.target.value) } } } }))
                     }
                   />
-                </label>
+                </Label>
               ))}
             </div>
           </Panel>
@@ -187,10 +189,11 @@ export default function ExamBuilderPage({ params }: { params: Promise<{ id: stri
         )}
       </FormDialog>
       <FormDialog open={!!preview} title="Xem trước đề" wide onOpenChange={(o) => !o && setPreview(null)}>
-        <label className="mb-4 flex items-center gap-2 text-sm">
-          <Checkbox checked={preview === "review"} onCheckedChange={(v) => setPreview(v === true ? "review" : "exam")} /> Hiện đáp án và lời giải
-        </label>
-        <div className="max-h-[70vh] space-y-6 overflow-y-auto" data-testid="exam-preview">
+        <div className="mb-4 flex items-center gap-2 text-sm">
+          <Checkbox id="preview-answers" checked={preview === "review"} onCheckedChange={(v) => setPreview(v === true ? "review" : "exam")} />
+          <Label htmlFor="preview-answers" className="font-normal">Hiện đáp án và lời giải</Label>
+        </div>
+        <div className="space-y-6" data-testid="exam-preview">
           {exam.questions.map((q) => (
             <QuestionView key={q.id} question={q} mode={preview === "review" ? "review" : "exam"} number={q.position} />
           ))}

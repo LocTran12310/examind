@@ -22,7 +22,25 @@ describe("tags", () => {
     await u.type(screen.getByLabelText("Tên tag"), "đọc đồ thị");
     await u.click(screen.getByRole("button", { name: "Thêm tag" }));
     await waitFor(() => expect(onDone).toHaveBeenCalled());
-    expect(JSON.parse(String(f.mock.calls[0][1]?.body))).toEqual({ group: "skill", name: "đọc đồ thị" });
+    expect(JSON.parse(String(f.mock.calls.find(([u]) => u === "/api/tags")?.[1]?.body))).toEqual({ group: "skill", name: "đọc đồ thị", subject_id: null });
+  });
+
+  it("a tag belongs to the chosen subject; nguồn đề is always shared", async () => {
+    const f = mockFetch(route("POST", "/api/tags", { id: "t" }, 201), route("GET", "/api/taxonomy", { subjects: [{ id: "s-toan", code: "toan", name: "Toán" }], grades: [], semesters: [] }));
+    const onDone = vi.fn();
+    const u = userEvent.setup();
+    render(<TagForm onDone={onDone} subjectId="s-toan" />);
+    await waitFor(() => expect(screen.getByLabelText("Môn")).toHaveTextContent("Toán"));
+    await u.type(screen.getByLabelText("Tên tag"), "Đổi biến");
+    await u.click(screen.getByRole("button", { name: "Thêm tag" }));
+    await waitFor(() => expect(onDone).toHaveBeenCalled());
+    const body = () => JSON.parse(String([...f.mock.calls].reverse().find(([url]) => url === "/api/tags")?.[1]?.body));
+    expect(body()).toEqual({ group: "method", name: "Đổi biến", subject_id: "s-toan" });
+    await u.click(screen.getByLabelText("Nhóm"));
+    await u.click(await screen.findByRole("option", { name: "Nguồn đề" }));
+    expect(screen.getByLabelText("Môn")).toHaveTextContent("Dùng chung mọi môn");
+    await u.click(screen.getByRole("button", { name: "Thêm tag" }));
+    await waitFor(() => expect(body()).toEqual({ group: "source", name: "Đổi biến", subject_id: null }));
   });
 
   it("shows the duplicate error", async () => {
@@ -45,6 +63,7 @@ describe("tags", () => {
     await u.click(screen.getByRole("combobox", { name: "Lọc Nhóm" }));
     await u.click(await screen.findByRole("option", { name: "Phương pháp" }));
     await waitFor(() => expect(lastQuery(f, "/tags").get("group")).toBe("method"));
+    expect(lastQuery(f, "/tags").get("include_shared")).toBe("false");
     await u.click(screen.getByRole("checkbox", { name: "Chọn dòng" }));
     await u.click(screen.getByRole("button", { name: "Sửa" }));
     const input = await screen.findByLabelText("Tên tag");

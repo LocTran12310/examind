@@ -1,5 +1,6 @@
 "use client";
 
+import { listHref } from "@/lib/list-memory";
 import { useRouter } from "next/navigation";
 import { formValueOf, payloadOf, QuestionForm } from "@/components/bank/QuestionForm";
 import { PageHeader } from "@/components/app/PageHeader";
@@ -24,7 +25,7 @@ export default function NewQuestionPage() {
         topics={topics}
         tags={tags}
         submitLabel="Tạo câu hỏi"
-        onCancel={() => router.push("/org/bank")}
+        onCancel={() => router.push(listHref("/org/bank"))}
         onSubmit={async (v) => {
           const q = await api<ParsedQuestion>("/questions", { body: payloadOf(v) });
           router.push(`/org/bank/${q.id}`);

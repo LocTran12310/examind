@@ -1,10 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useSaveHint, useSaveShortcut } from "@/lib/shortcuts";
 import { QuestionView } from "@/components/question/QuestionView";
 import { draftOf, QuestionFields, type Draft } from "@/components/review/QuestionEditor";
 import { FormAlert } from "@/components/app/FormAlert";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Kbd } from "@/components/ui/kbd";
+import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/app/FormField";
 import { FormDialog } from "@/components/app/FormDialog";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
@@ -56,6 +60,11 @@ export function QuestionForm({
   const byId = new Map(topics.map((t) => [t.id, t]));
   const topic = v.primary_topic_id ? byId.get(v.primary_topic_id) : undefined;
 
+  useSaveShortcut(() => {
+    if (!busy) void submit();
+  }, !picking);
+  const hint = useSaveHint();
+
   async function submit() {
     setBusy(true);
     setError(null);
@@ -69,15 +78,7 @@ export function QuestionForm({
   }
 
   return (
-    <div
-      className="grid gap-6 lg:grid-cols-2"
-      onKeyDown={(e) => {
-        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-          e.preventDefault();
-          void submit();
-        }
-      }}
-    >
+    <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
       <div className="space-y-4">
         <QuestionFields draft={v} setDraft={(d) => setV({ ...v, ...d })} />
         <div className="grid gap-3 sm:grid-cols-3">
@@ -122,14 +123,13 @@ export function QuestionForm({
         <FormField label="Tags">
           <div className="flex flex-wrap gap-2 text-sm" data-testid="tag-options">
             {tags.map((t) => (
-              <label key={t.id} className="flex items-center gap-1 rounded border border-border px-2 py-0.5">
-                <input
-                  type="checkbox"
+              <Label key={t.id} className="gap-1.5 rounded border border-border px-2 py-1 font-normal">
+                <Checkbox
                   checked={v.tag_ids.includes(t.id)}
-                  onChange={(e) => setV({ ...v, tag_ids: e.target.checked ? [...v.tag_ids, t.id] : v.tag_ids.filter((x) => x !== t.id) })}
+                  onCheckedChange={(c) => setV({ ...v, tag_ids: c === true ? [...v.tag_ids, t.id] : v.tag_ids.filter((x) => x !== t.id) })}
                 />
                 {t.name} <span className="text-xs text-muted-foreground/70">{TAG_GROUP_LABEL[t.group]}</span>
-              </label>
+              </Label>
             ))}
           </div>
         </FormField>
@@ -137,7 +137,7 @@ export function QuestionForm({
         <div className="flex justify-end gap-2">
           {onCancel && <Button variant="outline" onClick={onCancel}>Hủy</Button>}
           <Button onClick={() => void submit()} disabled={busy}>
-            {submitLabel} (Ctrl+Enter)
+            {submitLabel} <Kbd className="ml-1 h-4 bg-primary-foreground/20 text-[10px] text-current">{hint}</Kbd>
           </Button>
         </div>
       </div>

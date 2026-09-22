@@ -16,42 +16,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { api } from "@/lib/api";
-import { useApi, useMutation } from "@/lib/hooks";
-import { type Exam, TYPE_LABEL } from "@/lib/types";
-
-const plain = (md: string) => md.replace(/!\[[^\]]*\]\([^)]*\)/g, "[hình]").replace(/\$([^$]*)\$/g, "$1").replace(/\s+/g, " ").trim();
-
-function ExamDetail({ id }: { id: string }) {
-  const { data } = useApi<Exam>(`/exams/${id}`);
-  if (!data) return <p className="text-sm text-muted-foreground">Đang tải…</p>;
-  if (!data.questions.length) return <p className="text-sm text-muted-foreground">Đề chưa có câu hỏi.</p>;
-  return (
-    <div className="rounded-lg border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-12">#</TableHead>
-            <TableHead>Câu hỏi</TableHead>
-            <TableHead>Loại</TableHead>
-            <TableHead className="text-right">Điểm</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.questions.map((q) => (
-            <TableRow key={q.id}>
-              <TableCell className="tabular-nums">{q.position}</TableCell>
-              <TableCell className="max-w-xl truncate">{plain(q.stem)}</TableCell>
-              <TableCell>{TYPE_LABEL[q.type]}</TableCell>
-              <TableCell className="text-right tabular-nums">{q.points}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
-}
+import { useMutation } from "@/lib/hooks";
+import { ExamPreviewDialog, ExamQuestionsTable } from "@/components/exams/ExamDetail";
+import { type Exam } from "@/lib/types";
+import { formatDateTime } from "@/lib/datetime";
 
 function NewExamForm() {
   const router = useRouter();
@@ -83,13 +52,32 @@ export default function ExamsPage() {
   const router = useRouter();
   const [creating, setCreating] = useState(false);
   const [active, setActive] = useState<Exam | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const columns = useMemo<ColumnDef<Exam, unknown>[]>(
     () => [
-      { accessorKey: "title", header: "Đề", cell: ({ row }) => <span className="font-medium">{row.original.title}</span>, meta: { filter: { kind: "text" }, sort: "title" } },
+      {
+        accessorKey: "title",
+        header: "Đề",
+        // the title opens the whole exam in a dialog; the row itself shows its questions below
+        cell: ({ row }) => (
+          <Button
+            type="button"
+            variant="link"
+            className="h-auto p-0 text-left font-medium whitespace-normal"
+            onClick={(e) => {
+              e.stopPropagation();
+              setPreview(row.original.id);
+            }}
+          >
+            {row.original.title}
+          </Button>
+        ),
+        meta: { filter: { kind: "text" }, sort: "title" },
+      },
       { accessorKey: "grade", header: "Lớp", meta: { filter: { kind: "number" }, sort: "grade", align: "right" } },
       { accessorKey: "question_count", header: "Số câu", meta: { sort: "question_count", align: "right" } },
       { accessorKey: "total_points", header: "Tổng điểm", meta: { sort: "total_points", align: "right" } },
-      { accessorKey: "created_at", header: "Tạo lúc", cell: ({ row }) => new Date(row.original.created_at).toLocaleDateString("vi-VN"), meta: { filter: { kind: "date" }, sort: "created_at" } },
+      { accessorKey: "created_at", header: "Tạo lúc", cell: ({ row }) => formatDateTime(row.original.created_at), meta: { filter: { kind: "date" }, sort: "created_at" } },
     ],
     [],
   );
@@ -116,8 +104,8 @@ export default function ExamsPage() {
       />
           }
           detail={active  && (
-            <Card className="min-h-full">
-          <CardHeader>
+            <Card className="flex h-full min-h-0 flex-col gap-2 py-3">
+          <CardHeader className="px-3">
             <CardTitle>Chi tiết · {active.title}</CardTitle>
             <CardAction>
               <Button variant="outline" size="sm" asChild>
@@ -127,13 +115,14 @@ export default function ExamsPage() {
               </Button>
             </CardAction>
           </CardHeader>
-          <CardContent>
-            <ExamDetail id={active.id} />
+          <CardContent className="min-h-0 flex-1 px-3">
+            <ExamQuestionsTable examId={active.id} />
           </CardContent>
         </Card>
           )}
         />
       </ListLayout>
+      <ExamPreviewDialog examId={preview} onClose={() => setPreview(null)} />
       <FormDialog open={creating} onOpenChange={setCreating} title="Tạo đề mới">
         <NewExamForm />
       </FormDialog>

@@ -12,9 +12,9 @@ const TONES: Record<Tone, string> = {
 };
 
 /** Status pill: shadcn Badge with a semantic colour that works in light and dark mode. */
-export function ToneBadge({ tone = "gray", className, children }: { tone?: Tone; className?: string; children: React.ReactNode }) {
+export function ToneBadge({ tone = "gray", className, children, ...props }: Omit<React.ComponentProps<"span">, "children"> & { tone?: Tone; children: React.ReactNode }) {
   return (
-    <Badge variant="secondary" className={cn("border-transparent", TONES[tone], className)}>
+    <Badge variant="secondary" className={cn("border-transparent", TONES[tone], className)} {...props}>
       {children}
     </Badge>
   );

@@ -38,9 +38,10 @@ describe("processing config", () => {
     const tax = { subjects: [{ id: "s", code: "toan", name: "Toán" }], grades: [], semesters: [] };
     render(<UploadForm taxonomy={tax} onUploaded={() => {}} config={{ ...base, split_mode: "rule_ai", split_models: ["qwen"] }} />);
     fireEvent.change(screen.getByTestId("file"), { target: { files: [new File(["x"], "a.docx")] } });
-    await userEvent.click(screen.getByRole("button", { name: "Tải lên và tách câu" }));
-    await waitFor(() => expect(f).toHaveBeenCalled());
-    const form = f.mock.calls[0][1]?.body as FormData;
+    await userEvent.click(await screen.findByRole("button", { name: "Tải lên và tách câu" })); // after the duplicate check
+    const upload = () => f.mock.calls.find(([url, init]) => url === "/api/documents" && init?.method === "POST");
+    await waitFor(() => expect(upload()).toBeDefined());
+    const form = upload()![1]?.body as FormData;
     expect(JSON.parse(String(form.get("config")))).toMatchObject({ split_mode: "rule_ai", split_models: ["qwen"] });
   });
 });

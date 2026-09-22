@@ -31,20 +31,20 @@ export function ParsedQuestionCard({ q, threshold = 0.85, meta = [] }: { q: PQ; 
         ))}
       </header>
       <div className="mb-3 flex flex-wrap gap-2 text-xs" data-testid="chips">
-        {meta.length > 0 && <span className="rounded bg-muted px-2 py-0.5 text-foreground/80">{meta.join(" · ")}</span>}
+        {meta.length > 0 && <ToneBadge className="font-normal text-foreground/80">{meta.join(" · ")}</ToneBadge>}
         {q.tags.map((t) => (
-          <span key={t.id} className="rounded bg-muted px-2 py-0.5 text-foreground/80">
+          <ToneBadge key={t.id} className="font-normal text-foreground/80">
             #{t.name}
-          </span>
+          </ToneBadge>
         ))}
         {primary ? (
-          <span className="rounded bg-primary/10 px-2 py-0.5 text-primary" data-testid="topic-chip">
+          <ToneBadge tone="blue" className="h-auto font-normal whitespace-normal" data-testid="topic-chip">
             Chuyên đề: {primary.name}
             {primary.score !== null && ` · ${Math.round(primary.score * 100)}%`}
             {primary.source === "ai" ? " · AI" : primary.source === "auto" ? " · gợi ý" : ""}
-          </span>
+          </ToneBadge>
         ) : (
-          <span className="rounded bg-amber-500/10 px-2 py-0.5 text-amber-800 dark:text-amber-400">Chưa có chuyên đề</span>
+          <ToneBadge tone="amber" className="font-normal">Chưa có chuyên đề</ToneBadge>
         )}
       </div>
       <QuestionView question={q} mode="review" solutionOpen={false} />

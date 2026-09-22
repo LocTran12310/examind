@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ToneBadge } from "@/components/app/ToneBadge";
 import { periodLabel } from "@/lib/exam-period";
 import { DOC_STATUS_LABEL, type SourceDocument, type Taxonomy } from "@/lib/types";
+import { formatDateTime } from "@/lib/datetime";
 
 export function StatusBadge({ doc }: { doc: SourceDocument }) {
   const tone = doc.status === "parsed" ? "green" : doc.status === "failed" ? "red" : "amber";
@@ -28,19 +29,24 @@ export function documentColumns(taxonomy?: Taxonomy | null): ColumnDef<SourceDoc
       accessorKey: "filename",
       header: "File",
       cell: ({ row }) => (
-        <Link className="font-medium text-primary hover:underline" href={`/org/documents/${row.original.id}`} onClick={(e) => e.stopPropagation()}>
+        <Link
+          className="block max-w-[22rem] truncate font-medium text-primary hover:underline xl:max-w-[32rem]"
+          title={row.original.filename}
+          href={`/org/documents/${row.original.id}`}
+          onClick={(e) => e.stopPropagation()}
+        >
           {row.original.filename}
         </Link>
       ),
       meta: { filter: { kind: "text" }, sort: "filename" },
     },
-    { id: "source_name", header: "Thông tin", cell: ({ row }) => <span className="text-muted-foreground">{metaLabel(row.original, taxonomy)}</span>, meta: { filter: { kind: "text", placeholder: "Nguồn đề…" } } },
+    { id: "source_name", header: "Thông tin", cell: ({ row }) => <span className="line-clamp-2 min-w-48 text-muted-foreground">{metaLabel(row.original, taxonomy)}</span>, meta: { filter: { kind: "text", placeholder: "Nguồn đề…" } } },
     {
       accessorKey: "status",
       header: "Trạng thái",
       cell: ({ row }) => <StatusBadge doc={row.original} />,
       meta: { filter: { kind: "select", options: Object.entries(DOC_STATUS_LABEL).map(([value, label]) => ({ value, label })) }, sort: "status" },
     },
-    { accessorKey: "created_at", header: "Tải lên", cell: ({ row }) => new Date(row.original.created_at).toLocaleString("vi-VN"), meta: { filter: { kind: "date" }, sort: "created_at" } },
+    { accessorKey: "created_at", header: "Tải lên", cell: ({ row }) => formatDateTime(row.original.created_at), meta: { filter: { kind: "date" }, sort: "created_at" } },
   ];
 }

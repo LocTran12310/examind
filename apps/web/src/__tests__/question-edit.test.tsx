@@ -17,7 +17,7 @@ describe("question form", () => {
     await userEvent.click(screen.getAllByRole("radio")[0]);
     await userEvent.selectOptions(screen.getByLabelText("Mức độ"), "th");
     await userEvent.click(screen.getByTestId("pick-topic"));
-    await userEvent.click(within(screen.getByRole("listbox")).getByText("Vectơ"));
+    await userEvent.click(within(screen.getByRole("tree", { name: "Cây chuyên đề" })).getByText("Vectơ"));
     await userEvent.click(within(screen.getByTestId("tag-options")).getByRole("checkbox"));
     expect(screen.getByTestId("preview").querySelector(".katex")).not.toBeNull();
     await userEvent.click(screen.getByText(/Tạo câu hỏi/)); // role+name queries trip jsdom on KaTeX markup
@@ -35,5 +35,32 @@ describe("question form", () => {
     expect(screen.getAllByRole("radio")[3]).toBeChecked();
     expect(screen.getByTestId("pick-topic")).toHaveTextContent("Vectơ");
     expect(within(screen.getByTestId("tag-options")).getByRole("checkbox")).toBeChecked();
+  });
+});
+
+describe("save shortcut (ui-polish AC-05)", () => {
+  it("⌘+Enter saves, also while a Vietnamese IME composes (key 'Process')", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(<QuestionForm initial={formValueOf()} taxonomy={taxonomy} topics={topics} tags={tags} submitLabel="Lưu" onSubmit={onSubmit} />);
+    fireEvent.keyDown(screen.getByTestId("stem"), { key: "Process", code: "Enter", metaKey: true, keyCode: 229 });
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    fireEvent.keyDown(document.body, { key: "Enter", code: "Enter", ctrlKey: true });
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(2));
+  });
+
+  it("the topic picker is a tree: search keeps ancestors, Enter picks the match", async () => {
+    const tree: Topic[] = [
+      { id: "gt", subject_id: "s", parent_id: null, name: "Giải tích", level_kind: "strand", grade: null, path: "a", depth: 1, sort: 0, child_count: 1 },
+      { id: "nh", subject_id: "s", parent_id: "gt", name: "Nguyên hàm", level_kind: "topic", grade: 12, path: "a.b", depth: 2, sort: 0, child_count: 0 },
+    ];
+    const u = userEvent.setup();
+    render(<QuestionForm initial={formValueOf()} taxonomy={taxonomy} topics={tree} tags={tags} submitLabel="Lưu" onSubmit={vi.fn()} />);
+    await u.click(screen.getByTestId("pick-topic"));
+    const t = screen.getByRole("tree", { name: "Cây chuyên đề" });
+    expect(within(t).getAllByRole("treeitem").map((x) => x.textContent)).toEqual(["Giải tích1"]); // collapsed
+    await u.type(screen.getByLabelText("Tìm chuyên đề"), "nguyen");
+    expect(within(t).getAllByRole("treeitem").map((x) => x.textContent)).toEqual(["Giải tích1", "Nguyên hàm"]);
+    await u.keyboard("{Enter}");
+    expect(screen.getByTestId("pick-topic")).toHaveTextContent("Giải tích › Nguyên hàm");
   });
 });

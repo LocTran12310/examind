@@ -1,5 +1,5 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import { act, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DataTable } from "@/components/data-table/DataTable";
@@ -30,6 +30,35 @@ describe("DataTable", () => {
     setUrl("/org/people");
     router.push.mockClear();
     router.replace.mockClear();
+  });
+
+  it("operators per column like the back-office: text * = + - !, dates = < ≤ > ≥ or a range (ui-standards AC-02)", async () => {
+    const fetch = serve();
+    const u = userEvent.setup();
+    const withDate: ColumnDef<Row, unknown>[] = [...cols, { id: "created_at", header: "Tạo lúc", meta: { filter: { kind: "date" } } }];
+    render(<DataTable path="/people" columns={withDate} getRowId={(r) => r.id} />);
+    await screen.findByText("Người 0");
+    await u.click(screen.getByRole("button", { name: "Kiểu lọc Họ tên: Chứa" }));
+    expect(screen.getByText("Chọn kiểu lọc")).toBeInTheDocument();
+    await u.click(screen.getByRole("menuitemradio", { name: /Bắt đầu bằng/ }));
+    expect(searchOf().get("name_op")).toBe("+");
+    expect(screen.getByRole("button", { name: "Kiểu lọc Họ tên: Bắt đầu bằng" })).toHaveTextContent("+");
+    // dates: a range by default; ≥ turns it into one day with the operator
+    expect(screen.getByLabelText("Tạo lúc từ ngày")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Tạo lúc từ ngày"), { target: { value: "2026-09-22" } });
+    await u.click(screen.getByRole("button", { name: "Kiểu lọc Tạo lúc: Trong khoảng" }));
+    await u.click(screen.getByRole("menuitemradio", { name: /Lớn hơn hoặc bằng/ }));
+    expect([searchOf().get("created_at"), searchOf().get("created_at_op"), searchOf().get("created_at_from")]).toEqual(["2026-09-22", ">=", null]);
+    await waitFor(() => expect(requested(fetch).get("created_at_op")).toBe(">="));
+  });
+
+  it("separates columns and tints every other row (ui-polish AC-02)", async () => {
+    serve(3);
+    render(<DataTable path="/people" columns={cols} getRowId={(r) => r.id} />);
+    const cell = await screen.findByText("Người 1");
+    expect(cell.closest("td")).toHaveClass("border-r");
+    expect(cell.closest("tr")).toHaveClass("even:bg-muted/40");
+    expect(screen.getByRole("columnheader", { name: /Họ tên/ })).toHaveClass("border-r");
   });
 
   it("types into a column filter → after the debounce the URL and the server request carry it", async () => {

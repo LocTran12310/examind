@@ -4,6 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { FormAlert } from "@/components/app/FormAlert";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/app/FormField";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
@@ -44,14 +45,13 @@ export function AssignDialog({ examId, title, classes, onDone }: { examId: strin
       <FormField label="Lớp" error={m.fields.class_ids}>
         <div className="flex flex-wrap gap-2 text-sm" data-testid="class-options">
           {classes.map((c) => (
-            <label key={c.id} className="flex items-center gap-1 rounded border border-border px-2 py-1">
-              <input
-                type="checkbox"
+            <Label key={c.id} className="gap-1.5 rounded border border-border px-2 py-1 font-normal">
+              <Checkbox
                 checked={v.class_ids.includes(c.id)}
-                onChange={(e) => set("class_ids", e.target.checked ? [...v.class_ids, c.id] : v.class_ids.filter((x) => x !== c.id))}
+                onCheckedChange={(on) => set("class_ids", on === true ? [...v.class_ids, c.id] : v.class_ids.filter((x) => x !== c.id))}
               />
               {c.name} <span className="text-xs text-muted-foreground/70">({c.member_count})</span>
-            </label>
+            </Label>
           ))}
         </div>
       </FormField>
@@ -76,12 +76,12 @@ export function AssignDialog({ examId, title, classes, onDone }: { examId: strin
           </NativeSelect>
         </FormField>
         <div className="space-y-1 pt-6 text-sm">
-          <label className="flex items-center gap-2">
+          <Label className="font-normal">
             <Checkbox checked={v.shuffle_questions} onCheckedChange={(v) => set("shuffle_questions", v === true)} /> Đảo thứ tự câu
-          </label>
-          <label className="flex items-center gap-2">
+          </Label>
+          <Label className="font-normal">
             <Checkbox checked={v.shuffle_options} onCheckedChange={(v) => set("shuffle_options", v === true)} /> Đảo phương án
-          </label>
+          </Label>
         </div>
       </div>
       <div className="flex justify-end">

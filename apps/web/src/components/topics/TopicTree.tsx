@@ -49,14 +49,16 @@ export function TopicTree({ topics, subjectId, onChange, readOnly }: { topics: T
     return (
       <li key={node.id}>
         <div className={cn("group flex items-center gap-2 rounded-md py-1 pr-2 hover:bg-muted/50")} style={{ paddingLeft: depth * 20 + 4 }} data-testid={`topic-${node.name}`}>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-xs"
             aria-label={expanded ? "Thu gọn" : "Mở rộng"}
-            className={cn("w-5 text-muted-foreground", !node.children.length && "invisible")}
+            className={cn("size-5 font-normal text-muted-foreground", !node.children.length && "invisible")}
             onClick={() => toggle(node.id)}
           >
             {expanded ? "▾" : "▸"}
-          </button>
+          </Button>
           {editing === node.id ? (
             <InlineName
               initial={node.name}

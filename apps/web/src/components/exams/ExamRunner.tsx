@@ -149,20 +149,18 @@ export function ExamRunner({ view, onFinished }: { view: AttemptView; onFinished
           <div className="mb-2 text-xs text-muted-foreground">Bảng câu · còn {unanswered} câu chưa làm</div>
           <div className="grid grid-cols-6 gap-1 md:grid-cols-5" data-testid="navigator">
             {view.questions.map((x, i) => (
-              <button
+              <Button
                 key={x.id}
                 type="button"
+                size="sm"
+                variant={answered(x, answers[x.id]) ? "default" : "outline"}
                 aria-label={`Câu ${x.number}`}
                 aria-current={i === index ? "true" : undefined}
                 onClick={() => setIndex(i)}
-                className={cn(
-                  "rounded py-1 text-sm",
-                  i === index && "ring-2 ring-ring",
-                  answered(x, answers[x.id]) ? "bg-primary text-white" : "border border-input",
-                )}
+                className={cn("px-0", i === index && "ring-2 ring-ring")}
               >
                 {x.number}
-              </button>
+              </Button>
             ))}
           </div>
         </aside>

@@ -18,6 +18,11 @@ const MeContext = createContext<Me | null>(null);
 /** Provides the signed-in user without the shell (tests, isolated widgets). */
 export const MeProvider = MeContext.Provider;
 
+/** The signed-in user when inside the shell, else null (components that also render standalone). */
+export function useMeMaybe(): Me | null {
+  return useContext(MeContext);
+}
+
 export function useMe(): Me {
   const me = useContext(MeContext);
   if (!me) throw new Error("useMe outside AppShell");
@@ -49,7 +54,7 @@ export function AppShell({ me, children, sidebarOpen = true }: { me: Me; childre
               <UserMenu me={me} />
             </div>
           </header>
-          <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto p-4 lg:p-6">{children}</main>
+          <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto p-2 sm:p-3 lg:p-4">{children}</main>
         </SidebarInset>
       </SidebarProvider>
       </YearProvider>

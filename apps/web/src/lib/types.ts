@@ -206,6 +206,8 @@ export interface Tag {
   id: string;
   group: "method" | "skill" | "source" | "custom";
   name: string;
+  /** null = shared by every subject */
+  subject_id?: string | null;
 }
 
 export const TAG_GROUP_LABEL: Record<Tag["group"], string> = {
@@ -217,6 +219,18 @@ export const TAG_GROUP_LABEL: Record<Tag["group"], string> = {
 
 export type DocStatus = "queued" | "processing" | "parsed" | "failed";
 
+/** What the exam header said (official-exam-ingestion AC-09); suggestions only. */
+export interface DetectedHeader {
+  issuer?: string;
+  province?: string;
+  school_year?: string;
+  subject_name?: string;
+  grade?: number;
+  exam_kind?: string;
+  attempt?: number;
+  duration?: number;
+}
+
 export interface DocumentMeta {
   subject_id?: string;
   grade?: number;
@@ -224,6 +238,7 @@ export interface DocumentMeta {
   exam_kind?: string;
   school_year?: string;
   source_name?: string;
+  detected?: DetectedHeader;
 }
 
 export interface ProcessingConfig {
@@ -571,4 +586,16 @@ export interface Account {
   home_org_name: string;
   is_active: boolean;
   org_count: number;
+}
+
+/** GET /questions/facets — counts per value; each facet ignores its own filter (subject-scoped-bank ADR-02). */
+export interface BankFacets {
+  subjects: Record<string, number>; // subject id or "none"
+  topics: Record<string, number>; // subtree totals
+  types: Record<string, number>;
+  difficulties: Record<string, number>;
+  grades: Record<string, number>;
+  periods: Record<string, number>; // "hk1|Giữa kỳ"
+  school_years: Record<string, number>;
+  tags: Record<string, number>;
 }

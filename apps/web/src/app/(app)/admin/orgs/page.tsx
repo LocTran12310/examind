@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { api, ApiError } from "@/lib/api";
 import type { Org } from "@/lib/types";
+import { formatDate } from "@/lib/datetime";
 
 type Action = "suspend" | "activate";
 const CONFIRM: Record<Action, string> = {
@@ -57,7 +58,7 @@ export default function OrgsPage() {
         meta: { filter: { kind: "select", options: [{ value: "active", label: "Hoạt động" }, { value: "suspended", label: "Tạm khóa" }] } },
       },
       { accessorKey: "user_count", header: "Người dùng", meta: { align: "right" } },
-      { accessorKey: "created_at", header: "Ngày tạo", cell: ({ row }) => new Date(row.original.created_at).toLocaleDateString("vi-VN"), meta: { filter: { kind: "date" }, sort: "created_at" } },
+      { accessorKey: "created_at", header: "Ngày tạo", cell: ({ row }) => formatDate(row.original.created_at), meta: { filter: { kind: "date" }, sort: "created_at" } },
     ],
     [],
   );
