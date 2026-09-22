@@ -182,3 +182,20 @@ Status in the registers is `confirmed` with the note "Accepted under blanket pre
 | `.ai/features/<slug>/07-demo-evidence.md` | What was demonstrated and how |
 | `apps/api`, `apps/web`, `docker-compose*.yml`, `infra/`, `samples/` | Code, stack, Caddy, sample exams with ground truth |
 
+
+## 9. Golden set with rule + AI fallback (qwen2.5:7b, Mac native) — 2026-09-22
+
+`scripts/golden_live.py` (runs against the live stack, logs in as trungtama/admin).
+
+| File | rule | rule_ai | AI calls | Needs review rule → rule_ai | Time rule_ai |
+| --- | --- | --- | --- | --- | --- |
+| de-mau-toan10.docx | 40/40 | 40/40 | 0 split, 2 tag | 0 → 0 | 8.6 s |
+| de-mau-toan10.pdf | 40/40 | 40/40 | 0 split, 3 tag | 0 → 0 | 7.7 s |
+| de-thpt2025-toan.docx | 22/22 | 22/22 | 0 split, 3 tag | 0 → 0 | 4.9 s |
+| de-2cot.pdf | 10/10 | 10/10 | 0 split, 1 tag | 0 → 0 | 1.9 s |
+| de-kho.docx | **3/8** | **8/8** | 5 split | 5 → 0 | 25 s |
+| de-scan.pdf (numbers found) | 10/10 | 10/10 | 10 split | 8 → 6 | 68 s |
+| de-scan.png (numbers found) | 5/5 | 5/5 | 5 split | 4 → 4 (Q5 answer now filled) | 33 s |
+
+- The AI is only called for low-confidence blocks, so clean files cost nothing extra; the remaining scan reviews are the deliberate `OCR` needs-eyes flag.
+- Topic (de-mau-toan10, 40 labelled): exact node 30/40 in both modes; the other 10 are a more specific child of the expected node, except **one AI pick that is wrong** (Q26 set intersection → "Đại số tổ hợp"). 7B topic choice is not better than keyword cues here — keep keyword/kNN first.
