@@ -56,7 +56,7 @@ The other 29 imported students still have temporary passwords (reset them from "
 | Item | Status | What is needed |
 | --- | --- | --- |
 | Real exam files golden set | Only generated samples (`samples/exams/`) | 10–20 of your real .docx/.pdf/scans; I will add them to the golden tests and tune the splitter |
-| Useful local LLM | Adapters, fallback and vision OCR verified with stubs; a real `qwen2.5:1.5b` in Docker (CPU) answered the connection test (22 s) but split calls timed out at 120 s (0.4 token/s with JSON schema) | Run Ollama natively on the Mac (Metal) or a ≥ 7B model on hardware with a GPU, or register a free API tier as an OpenAI-compatible model; raise `LLM_TIMEOUT_SECONDS` |
+| Local LLM | **Done 2026-09-22**: native Ollama (Homebrew, Metal) with `qwen2.5:7b` on the M2 Pro; stack reaches it at `http://host.docker.internal:11434` (`OLLAMA_URL`, `LLM_TIMEOUT_SECONDS=180` in `.env`). AI-only split of `de-kho.docx`: 8/8 correct, ~4.7 s per question, 0 failures (1.5B model disabled) | On the Oracle VM (CPU only) expect it to be much slower — keep rule-based as the main path there |
 | Oracle VM deployment | Documented in the plan; not executed | An Oracle account, a VM, and a domain (or use sslip.io) |
 | Backup scripts (`pg_dump` + `mc mirror` cron) | Not written | Decide the backup target (R2 or your machine) |
 | CI (GitHub Actions), Sentry | Not set up | A GitHub repo; a Sentry DSN (optional) |

@@ -4,6 +4,7 @@ Models come from the registry and the document's processing config; each call tr
 configured models in order and falls back to the rule result when none answers (AC-19).
 """
 import io
+import re
 
 import structlog
 
@@ -22,7 +23,7 @@ SPLIT_SYSTEM = """Bạn là trợ lý số hóa đề thi Việt Nam. Nhận n�
 {"type": "mcq|true_false|short_answer|essay", "stem": "...", "options": [{"label": "A", "content": "...", "is_true": null}],
  "answer": "C" | {"a": true, "b": false, "c": true, "d": true} | "giá trị" | null, "solution": "..." | null}
 Quy tắc: giữ nguyên công thức và thẻ ảnh; mcq có 4 phương án A-D; true_false có 4 mệnh đề a-d;
-short_answer không có options; không bịa đáp án — nếu đề không cho đáp án thì answer = null."""
+nếu đề liệt kê các lựa chọn (kể cả dạng "Các lựa chọn: 1; 2; 3; 4") thì type = mcq và gán nhãn A-D theo thứ tự;\nmcq: answer là MỘT chữ cái A-D (ví dụ "B"), không dùng object;\nshort_answer không có options; không bịa đáp án — nếu đề không cho đáp án thì answer = null."""
 
 MULTI_SYSTEM = SPLIT_SYSTEM.replace("MỘT câu hỏi", "một đoạn đề gồm NHIỀU câu").replace(
     "trả về DUY NHẤT một JSON:\n", 'trả về DUY NHẤT JSON {"questions": [ ... ]}, mỗi phần tử có thêm "number", dạng:\n')
@@ -91,7 +92,24 @@ def _normalise(data: dict) -> dict:
         elif ans in [str(o.get("content", "")).strip() for o in opts[:4]]:
             data["answer"] = "ABCD"[[str(o.get("content", "")).strip() for o in opts[:4]].index(ans)]
         data["options"] = opts[:4]
+    if data["type"] == "mcq":
+        data["answer"] = _mcq_key(data.get("answer"), opts)
     return data
+
+
+_KEY_RE = re.compile(r"^(?:chọn|đáp án|answer)?\s*[:\-]?\s*([A-Da-d])\b", re.I)
+
+
+def _mcq_key(ans, opts: list[dict]) -> str | None:
+    """7B models mark the key as {"b": true}, {"key": "B"}, "Chọn B", "B. 4" or only via is_true."""
+    labels = [str(o.get("label", "")).strip(" .)").upper() for o in opts]
+    if isinstance(ans, dict):
+        picked = [k for k, v in ans.items() if v is True]
+        ans = picked[0] if len(picked) == 1 else ans.get("key") or ans.get("label") or ans.get("answer")
+    if isinstance(ans, str) and (m := _KEY_RE.match(ans.strip())) and m.group(1).upper() in labels:
+        return m.group(1).upper()
+    marked = [labels[i] for i, o in enumerate(opts) if o.get("is_true") is True]
+    return marked[0] if len(marked) == 1 else None
 
 
 def _from_json(data: dict, base: ParsedQuestion) -> ParsedQuestion | None:

@@ -7,3 +7,6 @@ services:
     ports: ["${MINIO_PORT:-59100}:9000", "${MINIO_CONSOLE_PORT:-59101}:9001"]
   api:
     ports: ["${API_PORT:-58100}:8000"]
+    extra_hosts: ["host.docker.internal:host-gateway"]  # native Ollama on the host
+  worker:
+    extra_hosts: ["host.docker.internal:host-gateway"]

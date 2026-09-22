@@ -140,3 +140,16 @@ def test_normalises_small_model_drift():
            "options": [{"label": "1", "content": "1"}, {"label": "2", "content": "2"}, {"label": "3", "content": "3"}, {"label": "4", "content": "4"}]}
     q = _from_json(raw, ParsedQuestion(number=1))
     assert q.type == "mcq" and [o["label"] for o in q.options] == list("ABCD") and q.answer == {"key": "B"}
+
+
+def test_mcq_key_variants_from_7b_models():
+    from app.ingestion.ai_split import _from_json
+    from app.ingestion.splitter import ParsedQuestion
+
+    opts = [{"label": l, "content": c, "is_true": l == "B"} for l, c in zip("ABCD", ["3", "4", "5", "8"])]
+    for ans in ({"b": True}, {"key": "B"}, "Chọn B", "B. 4", "b", None):
+        q = _from_json({"type": "mcq", "stem": "Giá trị của $2^2$?", "options": opts, "answer": ans}, ParsedQuestion(number=2))
+        assert q.answer == {"key": "B"}, ans
+    unmarked = [{**o, "is_true": None} for o in opts]
+    q = _from_json({"type": "mcq", "stem": "x?", "options": unmarked, "answer": {"a": True, "b": True}}, ParsedQuestion(number=3))
+    assert q.answer is None
