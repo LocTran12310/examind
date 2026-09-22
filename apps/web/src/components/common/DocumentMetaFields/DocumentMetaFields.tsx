@@ -1,9 +1,9 @@
 "use client";
 
-import { FormField } from "@/components/app/FormField";
+import { FormField } from "@/components/common/FormField/FormField";
 import { Input } from "@/components/ui/input";
-import { OptionSelect } from "@/components/app/OptionSelect";
-import { parsePeriod, periodOptions, periodValue } from "@/lib/exam-period";
+import { OptionSelect } from "@/components/common/OptionSelect/OptionSelect";
+import { parsePeriod, periodOptions, periodValue } from "@/lib/common/exam-period";
 import type { DocumentMeta } from "@/interfaces/document.interface";
 import type { SchoolYear } from "@/interfaces/school-year.interface";
 import type { Taxonomy } from "@/interfaces/taxonomy.interface";

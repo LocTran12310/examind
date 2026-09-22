@@ -1,9 +1,9 @@
 "use client";
 
-import { EmptyState } from "@/components/app/EmptyState";
-import { FormAlert } from "@/components/app/FormAlert";
-import { FormDialog } from "@/components/app/FormDialog";
-import { ToneBadge } from "@/components/app/ToneBadge";
+import { EmptyState } from "@/components/common/EmptyState/EmptyState";
+import { FormAlert } from "@/components/common/FormAlert/FormAlert";
+import { FormDialog } from "@/components/common/FormDialog/FormDialog";
+import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import { QuestionView } from "@/components/common/QuestionView/QuestionView";
 import { TopicPicker } from "@/components/common/TopicPicker/TopicPicker";
 import { FlagPanel } from "@/components/page-components/ReviewDocument/FlagPanel/FlagPanel";

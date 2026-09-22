@@ -3,7 +3,7 @@ import { draftOf, type Draft } from "@/components/common/QuestionFields/Question
 import { useUpdateQuestionMutation } from "@/hooks/react-query/use-query-question";
 import type { ParsedQuestion } from "@/interfaces/question.interface";
 import { ApiError } from "@/lib/common/http";
-import { useSaveHint, useSaveShortcut } from "@/lib/shortcuts";
+import { useSaveHint, useSaveShortcut } from "@/lib/common/shortcuts";
 
 /** Inline edit of a queued question: the draft, saving (also ⌘/Ctrl+Enter) and its error. */
 export function useQuestionEditor(question: ParsedQuestion, onSaved: (q: ParsedQuestion) => void) {

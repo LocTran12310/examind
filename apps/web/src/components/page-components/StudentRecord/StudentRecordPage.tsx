@@ -2,10 +2,10 @@
 
 import { ArrowLeft, History } from "lucide-react";
 import Link from "next/link";
-import { FormDialog } from "@/components/app/FormDialog";
-import { HistoryPanel } from "@/components/app/HistoryPanel";
-import { PageHeader } from "@/components/app/PageHeader";
-import { ToneBadge } from "@/components/app/ToneBadge";
+import { FormDialog } from "@/components/common/FormDialog/FormDialog";
+import { HistoryPanel } from "@/components/common/HistoryPanel/HistoryPanel";
+import { PageHeader } from "@/components/common/PageHeader/PageHeader";
+import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import { ScoreBar } from "@/components/common/ScoreBar/ScoreBar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

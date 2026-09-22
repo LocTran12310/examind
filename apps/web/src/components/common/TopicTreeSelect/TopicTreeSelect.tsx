@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { Topic } from "@/lib/types";
+import type { Topic } from "@/interfaces/topic.interface";
 import { cn } from "@/lib/utils";
-import { expand, indexTree, state, toggle, topMost } from "./selection";
-import { buildTree, type TopicNode } from "./tree";
+import { expand, indexTree, state, toggle, topMost } from "@/lib/common/topic-selection";
+import { buildTree, type TopicNode } from "@/lib/common/topic-tree";
 
 const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
 

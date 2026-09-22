@@ -139,3 +139,24 @@ export const ATTEMPT_KEYS = {
   DETAIL: (id: string) => ["attempts", "detail", id] as const,
   RESULT: (id: string) => ["attempts", "result", id] as const,
 };
+
+/** Reports over the graded answers. */
+export const STATS_KEYS = {
+  ALL: ["stats"] as const,
+  TOPICS: (params: unknown) => ["stats", "topics", params] as const,
+  GROUPS: (by: string, params: unknown) => ["stats", "groups", by, params] as const,
+  HEATMAP: (params: unknown) => ["stats", "heatmap", params] as const,
+};
+
+/** The student's topic mastery and personal practice. */
+export const PRACTICE_KEYS = {
+  ALL: ["practice"] as const,
+  MASTERY: ["practice", "mastery"] as const,
+  HISTORY: ["practice", "history"] as const,
+};
+
+/** History entries (audit log). */
+export const AUDIT_KEYS = {
+  ALL: ["audit"] as const,
+  SEARCH: (body: unknown) => ["audit", "search", body] as const,
+};

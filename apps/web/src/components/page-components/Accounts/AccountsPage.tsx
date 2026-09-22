@@ -1,8 +1,8 @@
 "use client";
 
-import { ListLayout } from "@/components/app/ListLayout";
-import { MasterDetail } from "@/components/app/MasterDetail";
-import { PageHeader } from "@/components/app/PageHeader";
+import { ListLayout } from "@/components/common/ListLayout/ListLayout";
+import { MasterDetail } from "@/components/common/MasterDetail/MasterDetail";
+import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { DataTable } from "@/components/common/DataTable/DataTable";
 import { MembershipTable } from "@/components/page-components/Orgs/MembershipTable/MembershipTable";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { EmptyState } from "@/components/app/EmptyState";
-import { FormAlert } from "@/components/app/FormAlert";
-import { Panel } from "@/components/app/Panel";
-import { ToneBadge } from "@/components/app/ToneBadge";
+import { EmptyState } from "@/components/common/EmptyState/EmptyState";
+import { FormAlert } from "@/components/common/FormAlert/FormAlert";
+import { Panel } from "@/components/common/Panel/Panel";
+import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import { Button } from "@/components/ui/button";
 import { useStudentHome } from "@/hooks/page-hooks/student-home/use-student-home-page";
-import { formatDateTime } from "@/lib/datetime";
+import { formatDateTime } from "@/lib/common/datetime";
 
 export function StudentAssignments() {
   const h = useStudentHome();

@@ -1,11 +1,11 @@
 "use client";
 
 import { LogIn, Lock, LockOpen } from "lucide-react";
-import { ConfirmDialog } from "@/components/app/ConfirmDialog";
-import { FormDialog } from "@/components/app/FormDialog";
-import { ListLayout } from "@/components/app/ListLayout";
-import { MasterDetail } from "@/components/app/MasterDetail";
-import { PageHeader } from "@/components/app/PageHeader";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog/ConfirmDialog";
+import { FormDialog } from "@/components/common/FormDialog/FormDialog";
+import { ListLayout } from "@/components/common/ListLayout/ListLayout";
+import { MasterDetail } from "@/components/common/MasterDetail/MasterDetail";
+import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { DataTable } from "@/components/common/DataTable/DataTable";
 import { ToolbarButton } from "@/components/common/DataTable/Toolbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

@@ -1,9 +1,13 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { DataTable } from "@/components/data-table/DataTable";
-import { mockFetch } from "./helpers";
+import { DataTable as SearchTable, type DataTableProps } from "@/components/common/DataTable/DataTable";
+import type { SearchBody } from "@/dtos/search.dto";
+import { useSearchQuery } from "@/hooks/react-query/use-search-query";
+import type { RowsQueryOptions, SearchPage } from "@/interfaces/search-page.interface";
+import { http } from "@/lib/common/http";
+import { mockFetch, renderWithQuery as render } from "./helpers";
 import { currentUrl, router, searchOf, setUrl } from "./router-mock";
 
 vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);
@@ -15,15 +19,19 @@ const cols: ColumnDef<Row, unknown>[] = [
 ];
 const rows = (n: number, from = 0): Row[] => Array.from({ length: n }, (_, i) => ({ id: `r${from + i}`, name: `Người ${from + i}`, role: "student" }));
 
+// a resource on the search contract: POST /people/search {page, limit, sort, filters} → {data, total, page, limit}
+const usePeopleSearchQuery = (body: SearchBody, options?: RowsQueryOptions<Row>) =>
+  useSearchQuery(["people", body], (b: SearchBody) => http<SearchPage<Row>>("/people/search", { body: b }), body, options);
+const DataTable = (props: Omit<DataTableProps<Row>, "useRows">) => <SearchTable<Row> useRows={usePeopleSearchQuery} {...props} />;
+
 function serve(total = 45) {
-  return mockFetch((url) => {
-    if (!url.startsWith("/api/people")) return undefined;
-    const q = new URL(url, "http://x").searchParams;
-    const page = Number(q.get("page")), size = Number(q.get("page_size"));
-    return { body: { items: rows(Math.max(0, Math.min(size, total - (page - 1) * size)), (page - 1) * size), total, page, page_size: size } };
+  return mockFetch((url, init) => {
+    if (url !== "/api/people/search") return undefined;
+    const { page, limit } = JSON.parse(String(init?.body)) as SearchBody;
+    return { body: { data: rows(Math.max(0, Math.min(limit, total - (page - 1) * limit)), (page - 1) * limit), total, page, limit } };
   });
 }
-const requested = (fetch: ReturnType<typeof serve>) => new URL(String(fetch.mock.calls.at(-1)![0]), "http://x").searchParams;
+const requested = (fetch: ReturnType<typeof serve>) => JSON.parse(String(fetch.mock.calls.at(-1)![1]?.body)) as SearchBody;
 
 describe("DataTable", () => {
   beforeEach(() => {
@@ -36,7 +44,7 @@ describe("DataTable", () => {
     const fetch = serve();
     const u = userEvent.setup();
     const withDate: ColumnDef<Row, unknown>[] = [...cols, { id: "created_at", header: "Tạo lúc", meta: { filter: { kind: "date" } } }];
-    render(<DataTable path="/people" columns={withDate} getRowId={(r) => r.id} />);
+    render(<DataTable columns={withDate} getRowId={(r) => r.id} />);
     await screen.findByText("Người 0");
     await u.click(screen.getByRole("button", { name: "Kiểu lọc Họ tên: Chứa" }));
     expect(screen.getByText("Chọn kiểu lọc")).toBeInTheDocument();
@@ -53,12 +61,12 @@ describe("DataTable", () => {
     await u.click(screen.getByRole("button", { name: "Kiểu lọc Tạo lúc: Trong khoảng" }));
     await u.click(screen.getByRole("menuitemradio", { name: /Lớn hơn hoặc bằng/ }));
     expect([searchOf().get("created_at"), searchOf().get("created_at_op"), searchOf().get("created_at_from")]).toEqual([day, ">=", null]);
-    await waitFor(() => expect(requested(fetch).get("created_at_op")).toBe(">="));
+    await waitFor(() => expect(requested(fetch).filters?.created_at?.operator).toBe(">="));
   });
 
   it("separates columns and tints every other row (ui-polish AC-02)", async () => {
     serve(3);
-    render(<DataTable path="/people" columns={cols} getRowId={(r) => r.id} />);
+    render(<DataTable columns={cols} getRowId={(r) => r.id} />);
     const cell = await screen.findByText("Người 1");
     expect(cell.closest("td")).toHaveClass("border-r");
     expect(cell.closest("tr")).toHaveClass("even:bg-muted/40");
@@ -68,23 +76,23 @@ describe("DataTable", () => {
   it("types into a column filter → after the debounce the URL and the server request carry it", async () => {
     const fetch = serve();
     const user = userEvent.setup();
-    render(<DataTable path="/people" columns={cols} getRowId={(r) => r.id} />);
+    render(<DataTable columns={cols} getRowId={(r) => r.id} />);
     await screen.findByText("Người 0");
     await user.type(screen.getByRole("textbox", { name: "Lọc Họ tên" }), "bùi");
     expect(searchOf().get("full_name")).toBeNull(); // not before the pause
     await waitFor(() => expect(searchOf().get("name")).toBe("bùi"), { timeout: 1500 });
-    await waitFor(() => expect(requested(fetch).get("name")).toBe("bùi"));
+    await waitFor(() => expect(requested(fetch).filters?.name).toEqual({ value: "bùi" }));
     expect(router.replace).toHaveBeenCalled();
   });
 
   it("opens a link with state: the first request already has the filters, sort and page", async () => {
     setUrl("/org/people?name=an&role=teacher&sort=-full_name&page=2&page_size=50");
     const fetch = serve(120);
-    render(<DataTable path="/people" columns={cols} getRowId={(r) => r.id} />);
+    render(<DataTable columns={cols} getRowId={(r) => r.id} />);
     await screen.findByText("Người 50");
     expect(fetch).toHaveBeenCalledTimes(1);
-    const q = requested(fetch);
-    expect([q.get("name"), q.get("role"), q.get("sort"), q.get("page"), q.get("page_size")]).toEqual(["an", "teacher", "-full_name", "2", "50"]);
+    const b = requested(fetch);
+    expect([b.filters?.name, b.filters?.role, b.sort, b.page, b.limit]).toEqual([{ value: "an" }, { value: "teacher" }, [{ field: "full_name", desc: true }], 2, 50]);
     expect(screen.getByRole("textbox", { name: "Lọc Họ tên" })).toHaveValue("an");
     expect(screen.getByRole("combobox", { name: "Lọc Vai trò" })).toHaveTextContent("Giáo viên");
     expect(screen.getByRole("columnheader", { name: /Họ tên/ })).toHaveAttribute("aria-sort", "descending");
@@ -93,7 +101,7 @@ describe("DataTable", () => {
   it("pages on the server and shows the footer range", async () => {
     const fetch = serve(45);
     const user = userEvent.setup();
-    render(<DataTable path="/people" columns={cols} getRowId={(r) => r.id} />);
+    render(<DataTable columns={cols} getRowId={(r) => r.id} />);
     await screen.findByText("Người 0");
     expect(screen.getByText("Hiển thị 1–20 trên 45 kết quả")).toBeInTheDocument();
     expect(screen.getByText("trên 3")).toBeInTheDocument();
@@ -101,7 +109,7 @@ describe("DataTable", () => {
     await screen.findByText("Người 40");
     expect(currentUrl()).toBe("/org/people?page=3");
     expect(router.push).toHaveBeenCalled();
-    expect(requested(fetch).get("page")).toBe("3");
+    expect(requested(fetch).page).toBe(3);
     expect(screen.getByText("Hiển thị 41–45 trên 45 kết quả")).toBeInTheDocument();
     const pageBox = screen.getByRole("textbox", { name: "Số trang" });
     await user.clear(pageBox);
@@ -113,7 +121,7 @@ describe("DataTable", () => {
     setUrl("/org/people?page=3");
     serve(45);
     const user = userEvent.setup();
-    render(<DataTable path="/people" columns={cols} getRowId={(r) => r.id} />);
+    render(<DataTable columns={cols} getRowId={(r) => r.id} />);
     await screen.findByText("Người 40");
     await user.click(screen.getByRole("combobox", { name: "Lọc Vai trò" }));
     await user.click(await screen.findByRole("option", { name: "Giáo viên" }));
@@ -132,7 +140,7 @@ describe("DataTable", () => {
     const onEdit = vi.fn();
     const onDelete = vi.fn();
     const user = userEvent.setup();
-    render(<DataTable path="/people" columns={cols} getRowId={(r) => r.id} onAdd={() => {}} onEdit={onEdit} onDelete={onDelete} />);
+    render(<DataTable columns={cols} getRowId={(r) => r.id} onAdd={() => {}} onEdit={onEdit} onDelete={onDelete} />);
     await screen.findByText("Người 0");
     const edit = screen.getByRole("button", { name: "Sửa" });
     const del = screen.getByRole("button", { name: "Xóa" });
@@ -159,7 +167,7 @@ describe("DataTable", () => {
 
   it("URL change from outside (Back) updates the inputs", async () => {
     serve(10);
-    render(<DataTable path="/people" columns={cols} getRowId={(r) => r.id} />);
+    render(<DataTable columns={cols} getRowId={(r) => r.id} />);
     await screen.findByText("Người 0");
     act(() => setUrl("/org/people?name=lan"));
     await waitFor(() => expect(screen.getByRole("textbox", { name: "Lọc Họ tên" })).toHaveValue("lan"));

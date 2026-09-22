@@ -5,7 +5,8 @@ import ClassesPage from "@/app/(app)/org/classes/page";
 import { ClassForm } from "@/components/page-components/Classes/ClassForm/ClassForm";
 import { MemberManager } from "@/components/page-components/Classes/MemberManager/MemberManager";
 import { currentSchoolYear } from "@/lib/page-libs/classes/school-year";
-import type { SchoolClass, User } from "@/lib/types";
+import type { SchoolClass } from "@/interfaces/class.interface";
+import type { User } from "@/interfaces/user.interface";
 import { lastBody, mockFetch, renderWithQuery as render, route, searchPage } from "./helpers";
 import { searchOf, setUrl } from "./router-mock";
 

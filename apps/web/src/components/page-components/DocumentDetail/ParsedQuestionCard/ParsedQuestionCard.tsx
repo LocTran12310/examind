@@ -1,8 +1,8 @@
 "use client";
 
-import { periodLabel } from "@/lib/exam-period";
+import { periodLabel } from "@/lib/common/exam-period";
 import { QuestionView } from "@/components/common/QuestionView/QuestionView";
-import { ToneBadge } from "@/components/app/ToneBadge";
+import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import type { ParsedQuestion as PQ } from "@/interfaces/question.interface";
 
 const PART = (p: string | null) => (p ? `Phần ${["", "I", "II", "III", "IV", "V"][Number(p)] ?? p} · ` : "");

@@ -1,4 +1,4 @@
-import type { TopicNode } from "./tree";
+import type { TopicNode } from "@/lib/common/topic-tree";
 
 /**
  * Tree check state (bank filter): checking a node checks its whole subtree; a parent is checked

@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo } from "react";
-import { rememberList } from "@/lib/list-memory";
+import { rememberList } from "@/lib/common/list-memory";
 
 export type SortState = { key: string; desc: boolean } | null;
 

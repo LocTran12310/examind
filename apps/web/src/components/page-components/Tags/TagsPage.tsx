@@ -1,9 +1,9 @@
 "use client";
 
 import { DataTable } from "@/components/common/DataTable/DataTable";
-import { FormDialog } from "@/components/app/FormDialog";
-import { ListLayout } from "@/components/app/ListLayout";
-import { PageHeader } from "@/components/app/PageHeader";
+import { FormDialog } from "@/components/common/FormDialog/FormDialog";
+import { ListLayout } from "@/components/common/ListLayout/ListLayout";
+import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { useTagsPage } from "@/hooks/page-hooks/tags/use-tags-page";
 import { useTagSearchQuery } from "@/hooks/react-query/use-query-tag";
 import { TagForm } from "./TagForm/TagForm";

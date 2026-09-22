@@ -16,7 +16,7 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { APP_ICON, activeItem, groupsFor, homeFor } from "@/lib/nav";
+import { APP_ICON, activeItem, groupsFor, homeFor } from "@/lib/common/nav";
 import type { Me } from "@/interfaces/auth.interface";
 
 export function AppSidebar({ me }: { me: Me }) {

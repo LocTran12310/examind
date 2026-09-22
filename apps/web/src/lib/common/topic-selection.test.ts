@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { Topic } from "@/lib/types";
-import { expand, indexTree, state, toggle, topMost } from "./selection";
-import { buildTree } from "./tree";
+import type { Topic } from "@/interfaces/topic.interface";
+import { expand, indexTree, state, toggle, topMost } from "@/lib/common/topic-selection";
+import { buildTree } from "@/lib/common/topic-tree";
 
 const t = (id: string, parent: string | null): Topic => ({ id, subject_id: "s", parent_id: parent, name: id, level_kind: "topic", grade: null, path: id, depth: 1, sort: 0, child_count: 0 });
 // gt ─ nh ─ nh1, nh2 ; gt ─ tp

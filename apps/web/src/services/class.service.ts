@@ -2,7 +2,7 @@ import type { ClassBody } from "@/dtos/class.dto";
 import type { SearchBody } from "@/dtos/search.dto";
 import type { ClassDetail, SchoolClass } from "@/interfaces/class.interface";
 import type { SearchPage } from "@/interfaces/search-page.interface";
-import type { ClassOverviewRow } from "@/lib/types";
+import type { ClassOverviewRow } from "@/interfaces/mastery.interface";
 import { http } from "@/lib/common/http";
 
 export const classService = {

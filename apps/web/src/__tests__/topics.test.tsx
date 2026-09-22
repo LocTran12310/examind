@@ -2,10 +2,10 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Topic } from "@/interfaces/topic.interface";
-import { MeProvider } from "@/app/(app)/AppShell";
+import { MeProvider } from "@/hooks/common/use-me";
 import TopicsRoute from "@/app/(app)/org/topics/page";
 import { TopicTree } from "@/components/page-components/Topics/TopicTree/TopicTree";
-import { buildTree, flatten, isInSubtree } from "@/components/topics/tree";
+import { buildTree, flatten, isInSubtree } from "@/lib/common/topic-tree";
 import { me, mockFetch, renderWithQuery as render, route } from "./helpers";
 
 const t = (id: string, name: string, parent: string | null, path: string, kind: Topic["level_kind"] = "topic"): Topic => ({

@@ -1,11 +1,8 @@
 "use client";
 
+import type { HeatmapData } from "@/interfaces/stats.interface";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-export interface HeatmapData {
-  columns: { id: string; name: string; path: string }[];
-  rows: { student_id: string; full_name: string; username: string; cells: Record<string, { ratio: number | null; answered: number }> }[];
-}
 
 export function heatColor(r: number | null | undefined): string {
   if (r === null || r === undefined) return "var(--muted)";

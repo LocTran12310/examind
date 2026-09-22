@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useDeleteExamsMutation } from "@/hooks/react-query/use-query-exam";
 import type { Exam } from "@/interfaces/exam.interface";
-import { formatDateTime } from "@/lib/datetime";
+import { formatDateTime } from "@/lib/common/datetime";
 
 /** Columns, the row chosen for the detail pane, the preview dialog (title click), create and delete of the exams page. */
 export function useExamsPage() {

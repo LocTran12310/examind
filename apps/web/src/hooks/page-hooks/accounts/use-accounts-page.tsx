@@ -1,6 +1,6 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
-import { ToneBadge } from "@/components/app/ToneBadge";
+import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import type { Account } from "@/interfaces/org.interface";
 
 /** Columns and the selected account of the super admin's Accounts page. */

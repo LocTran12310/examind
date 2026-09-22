@@ -1,6 +1,6 @@
 "use client";
 
-import { PageHeader } from "@/components/app/PageHeader";
+import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { QuestionForm } from "@/components/common/QuestionForm/QuestionForm";
 import { useQuestionNewPage } from "@/hooks/page-hooks/question-new/use-question-new-page";
 

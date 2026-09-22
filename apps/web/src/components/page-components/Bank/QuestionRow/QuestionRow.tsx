@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Markdown } from "@/components/common/Markdown/Markdown";
-import { ToneBadge } from "@/components/app/ToneBadge";
+import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DIFFICULTY_LABEL, STATUS_LABEL, TYPE_LABEL } from "@/constants/question.constant";
 import type { ParsedQuestion, QuestionStatus } from "@/interfaces/question.interface";

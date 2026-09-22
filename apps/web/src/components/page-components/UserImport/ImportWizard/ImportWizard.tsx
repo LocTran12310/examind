@@ -3,13 +3,13 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { FormAlert } from "@/components/app/FormAlert";
-import { ToneBadge } from "@/components/app/ToneBadge";
+import { FormAlert } from "@/components/common/FormAlert/FormAlert";
+import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import { Button } from "@/components/ui/button";
-import { FormField } from "@/components/app/FormField";
+import { FormField } from "@/components/common/FormField/FormField";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Panel } from "@/components/app/Panel";
+import { Panel } from "@/components/common/Panel/Panel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ROLE_LABEL } from "@/constants/role.constant";
 import { useImportWizard } from "@/hooks/page-hooks/user-import/use-import-wizard";

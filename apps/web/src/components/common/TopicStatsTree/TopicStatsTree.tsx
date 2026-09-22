@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useMemo, useState } from "react";
 import { ScoreBar } from "@/components/common/ScoreBar/ScoreBar";
-import type { TopicStat } from "@/lib/types";
+import type { TopicStat } from "@/interfaces/stats.interface";
 
 interface Node extends TopicStat {
   children: Node[];

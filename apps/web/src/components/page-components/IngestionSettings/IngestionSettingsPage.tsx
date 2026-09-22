@@ -1,8 +1,8 @@
 "use client";
 
-import { FormAlert } from "@/components/app/FormAlert";
-import { PageHeader } from "@/components/app/PageHeader";
-import { Panel } from "@/components/app/Panel";
+import { FormAlert } from "@/components/common/FormAlert/FormAlert";
+import { PageHeader } from "@/components/common/PageHeader/PageHeader";
+import { Panel } from "@/components/common/Panel/Panel";
 import { ProcessingConfigFields } from "@/components/common/ProcessingConfig/ProcessingConfig";
 import { Button } from "@/components/ui/button";
 import { useIngestionSettingsPage } from "@/hooks/page-hooks/ingestion-settings/use-ingestion-settings-page";

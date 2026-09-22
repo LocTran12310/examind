@@ -5,7 +5,7 @@ import { useCreateQuestionMutation } from "@/hooks/react-query/use-query-questio
 import { useTagOptionsQuery } from "@/hooks/react-query/use-query-tag";
 import { useTaxonomyQuery } from "@/hooks/react-query/use-query-taxonomy";
 import { useTopicsQuery } from "@/hooks/react-query/use-query-topic";
-import { listHref } from "@/lib/list-memory";
+import { listHref } from "@/lib/common/list-memory";
 
 /** A new question written by hand (Toán by default); saved → its page. */
 export function useQuestionNewPage() {

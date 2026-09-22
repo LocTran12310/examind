@@ -3,9 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ModelForm } from "@/components/page-components/AiModels/ModelForm/ModelForm";
 import { emptyDraft } from "@/lib/page-libs/ai-models/model-draft";
-import { MeProvider } from "@/app/(app)/AppShell";
+import { MeProvider } from "@/hooks/common/use-me";
 import AiModelsPage from "@/app/(app)/org/ai-models/page";
-import type { AiModel } from "@/lib/types";
+import type { AiModel } from "@/interfaces/ai-model.interface";
 import { me, mockFetch, renderWithQuery as render, route, searchPage } from "./helpers";
 import { setUrl } from "./router-mock";
 

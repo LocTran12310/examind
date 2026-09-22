@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
-import { FormDialog } from "@/components/app/FormDialog";
+import { FormDialog } from "@/components/common/FormDialog/FormDialog";
 
 describe("FormDialog", () => {
   it("maximises, restores and resizes from its edges", async () => {

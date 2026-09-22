@@ -2,14 +2,14 @@
  * Bank filters kept in the URL (subject-scoped-bank). One place for their keys, chip labels and
  * how each one is removed, shared by the sheet, the chips and the subject tabs.
  */
-import { topicLabel } from "@/components/topics/tree";
+import { topicLabel } from "@/lib/common/topic-tree";
 import { DIFFICULTY_LABEL, STATUS_LABEL, TYPE_LABEL } from "@/constants/question.constant";
 import type { QuestionSearchBody } from "@/dtos/question.dto";
 import type { Tag } from "@/interfaces/tag.interface";
 import type { Taxonomy } from "@/interfaces/taxonomy.interface";
 import type { Topic } from "@/interfaces/topic.interface";
 import { toSearchBody } from "@/lib/common/search-body";
-import { periodLabel } from "@/lib/exam-period";
+import { periodLabel } from "@/lib/common/exam-period";
 
 export type BankQuery = Record<string, string>;
 export type Changes = Record<string, string | null>;

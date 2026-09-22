@@ -2,11 +2,11 @@
 
 import { ArrowRightLeft, CheckCircle2, History, Lock, LockOpen } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { ConfirmDialog } from "@/components/app/ConfirmDialog";
-import { FormDialog } from "@/components/app/FormDialog";
-import { HistoryPanel } from "@/components/app/HistoryPanel";
-import { ListLayout } from "@/components/app/ListLayout";
-import { PageHeader } from "@/components/app/PageHeader";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog/ConfirmDialog";
+import { FormDialog } from "@/components/common/FormDialog/FormDialog";
+import { HistoryPanel } from "@/components/common/HistoryPanel/HistoryPanel";
+import { ListLayout } from "@/components/common/ListLayout/ListLayout";
+import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { DataTable } from "@/components/common/DataTable/DataTable";
 import { ToolbarButton } from "@/components/common/DataTable/Toolbar";
 import { useSchoolYearsPage } from "@/hooks/page-hooks/school-years/use-school-years-page";

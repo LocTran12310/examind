@@ -1,6 +1,6 @@
 import { screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { MeProvider } from "@/app/(app)/AppShell";
+import { MeProvider } from "@/hooks/common/use-me";
 import { StudentRecordPage } from "@/components/page-components/StudentRecord/StudentRecordPage";
 import { me, mockFetch, renderWithQuery as render, route } from "./helpers";
 

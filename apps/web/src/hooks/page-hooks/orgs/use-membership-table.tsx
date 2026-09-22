@@ -1,7 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ToneBadge } from "@/components/app/ToneBadge";
+import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import { MEMBER_ROLE_OPTIONS, ROLE_LABEL } from "@/constants/role.constant";
 import type { UpdateMembershipBody } from "@/dtos/org.dto";
 import { useAddMembershipMutation, useRemoveMembershipsMutation, useUpdateMembershipsMutation } from "@/hooks/react-query/use-query-membership";

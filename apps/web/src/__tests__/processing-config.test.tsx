@@ -4,7 +4,8 @@ import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProcessingConfigFields } from "@/components/common/ProcessingConfig/ProcessingConfig";
 import { UploadForm } from "@/components/page-components/Documents/UploadForm/UploadForm";
-import type { AiModel, ProcessingConfig } from "@/lib/types";
+import type { AiModel } from "@/interfaces/ai-model.interface";
+import type { ProcessingConfig } from "@/interfaces/document.interface";
 import { mockFetch, renderWithQuery as render, route } from "./helpers";
 
 const base: ProcessingConfig = { split_mode: "rule", ocr: "auto", split_models: [], tag_model: null, vision_model: null, threshold: 0.85 };

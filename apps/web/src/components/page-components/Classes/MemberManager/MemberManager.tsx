@@ -4,7 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { UserPlus } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { FormDialog } from "@/components/app/FormDialog";
+import { FormDialog } from "@/components/common/FormDialog/FormDialog";
 import { ToolbarButton } from "@/components/common/DataTable/Toolbar";
 import { DataTable } from "@/components/common/DataTable/DataTable";
 import { Button } from "@/components/ui/button";

@@ -1,15 +1,15 @@
 "use client";
 
-import { ClassAdaptiveDialog } from "@/components/adaptive/ClassAdaptiveDialog";
-import { ClassOverview } from "@/components/adaptive/ClassOverview";
-import { BackLink } from "@/components/app/BackLink";
-import { FormAlert } from "@/components/app/FormAlert";
-import { FormDialog } from "@/components/app/FormDialog";
-import { PageHeader } from "@/components/app/PageHeader";
-import { Panel } from "@/components/app/Panel";
+import { BackLink } from "@/components/common/BackLink/BackLink";
+import { FormAlert } from "@/components/common/FormAlert/FormAlert";
+import { FormDialog } from "@/components/common/FormDialog/FormDialog";
+import { PageHeader } from "@/components/common/PageHeader/PageHeader";
+import { Panel } from "@/components/common/Panel/Panel";
 import { MemberManager } from "@/components/page-components/Classes/MemberManager/MemberManager";
 import { Button } from "@/components/ui/button";
 import { useClassDetailPage } from "@/hooks/page-hooks/class-detail/use-class-detail-page";
+import { ClassAdaptiveDialog } from "./ClassAdaptiveDialog/ClassAdaptiveDialog";
+import { ClassOverview } from "./ClassOverview/ClassOverview";
 
 export function ClassDetailPage({ id }: { id: string }) {
   const p = useClassDetailPage(id);

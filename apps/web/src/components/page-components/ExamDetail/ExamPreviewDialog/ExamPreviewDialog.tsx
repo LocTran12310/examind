@@ -2,7 +2,7 @@
 
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
-import { FormDialog } from "@/components/app/FormDialog";
+import { FormDialog } from "@/components/common/FormDialog/FormDialog";
 import { QuestionView } from "@/components/common/QuestionView/QuestionView";
 import { Button } from "@/components/ui/button";
 import { SECTION_LABEL } from "@/constants/exam.constant";

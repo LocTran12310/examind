@@ -1,10 +1,10 @@
 "use client";
 
-import { BackLink } from "@/components/app/BackLink";
-import { FormAlert } from "@/components/app/FormAlert";
-import { FormDialog } from "@/components/app/FormDialog";
-import { PageHeader } from "@/components/app/PageHeader";
-import { Panel } from "@/components/app/Panel";
+import { BackLink } from "@/components/common/BackLink/BackLink";
+import { FormAlert } from "@/components/common/FormAlert/FormAlert";
+import { FormDialog } from "@/components/common/FormDialog/FormDialog";
+import { PageHeader } from "@/components/common/PageHeader/PageHeader";
+import { Panel } from "@/components/common/Panel/Panel";
 import { QuestionView } from "@/components/common/QuestionView/QuestionView";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";

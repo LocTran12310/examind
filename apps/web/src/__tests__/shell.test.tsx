@@ -4,9 +4,9 @@ import { describe, expect, it, vi } from "vitest";
 import { AppShell } from "@/components/layout/AppShell/AppShell";
 import { OrgSwitcher } from "@/components/layout/OrgSwitcher/OrgSwitcher";
 import { mockFetch, renderWithQuery, route } from "./helpers";
-import { ThemeProvider } from "@/components/app/ThemeProvider";
-import { activeItem, groupsFor, homeFor } from "@/lib/nav";
-import type { Me } from "@/lib/types";
+import { ThemeProvider } from "@/components/layout/ThemeProvider/ThemeProvider";
+import { activeItem, groupsFor, homeFor } from "@/lib/common/nav";
+import type { Me } from "@/interfaces/auth.interface";
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({ usePathname: () => "/org/exams/123", useRouter: () => router }));

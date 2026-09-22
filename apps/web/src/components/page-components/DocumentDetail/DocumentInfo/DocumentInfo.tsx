@@ -1,8 +1,8 @@
 "use client";
 
 import { Pencil, ScanText } from "lucide-react";
-import { FormAlert } from "@/components/app/FormAlert";
-import { FormDialog } from "@/components/app/FormDialog";
+import { FormAlert } from "@/components/common/FormAlert/FormAlert";
+import { FormDialog } from "@/components/common/FormDialog/FormDialog";
 import { DocumentMetaFields } from "@/components/common/DocumentMetaFields/DocumentMetaFields";
 import { Button } from "@/components/ui/button";
 import { useDocumentInfo } from "@/hooks/page-hooks/document-detail/use-document-info";

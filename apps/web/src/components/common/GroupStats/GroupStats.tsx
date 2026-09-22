@@ -1,7 +1,9 @@
 "use client";
 
 import { ScoreBar } from "@/components/common/ScoreBar/ScoreBar";
-import { DIFFICULTY_LABEL, TYPE_LABEL, type GroupStat, type QuestionType } from "@/lib/types";
+import { DIFFICULTY_LABEL, TYPE_LABEL } from "@/constants/question.constant";
+import type { QuestionType } from "@/interfaces/question.interface";
+import type { GroupStat } from "@/interfaces/stats.interface";
 
 export function groupLabel(by: string, g: GroupStat): string {
   if (by === "type") return TYPE_LABEL[g.key as QuestionType] ?? g.label;

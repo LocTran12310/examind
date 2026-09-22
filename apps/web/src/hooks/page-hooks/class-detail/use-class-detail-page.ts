@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { ApiError } from "@/lib/common/http";
-import { useClassOverviewQuery, useClassQuery, useRefreshClassOverview } from "@/hooks/react-query/use-query-class";
+import { useClassOverviewQuery, useClassQuery } from "@/hooks/react-query/use-query-class";
 
 /** One class: header, learning overview and the personal-review dialog. */
 export function useClassDetailPage(id: string) {
   const klass = useClassQuery(id);
   const { data: overview } = useClassOverviewQuery(id);
-  const refreshOverview = useRefreshClassOverview(id);
   const [adaptive, setAdaptive] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   return {
@@ -18,8 +17,7 @@ export function useClassDetailPage(id: string) {
     notice,
     assigned: (n: number) => {
       setAdaptive(false);
-      setNotice(`Đã tạo ${n} đề ôn riêng cho học sinh.`);
-      void refreshOverview();
+      setNotice(`Đã tạo ${n} đề ôn riêng cho học sinh.`); // the mutation refreshed the overview
     },
   };
 }

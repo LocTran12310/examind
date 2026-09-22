@@ -1,6 +1,6 @@
-import { ThemeToggle } from "@/components/app/ThemeToggle";
+import { ThemeToggle } from "@/components/layout/ThemeToggle/ThemeToggle";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { APP_ICON } from "@/lib/nav";
+import { APP_ICON } from "@/lib/common/nav";
 import { LoginForm } from "./LoginForm/LoginForm";
 
 export function LoginPage() {

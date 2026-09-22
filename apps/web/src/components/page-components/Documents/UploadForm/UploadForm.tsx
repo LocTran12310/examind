@@ -1,8 +1,8 @@
 "use client";
 
 import { CheckCircle2, CircleAlert, Copy, Loader2, X } from "lucide-react";
-import { FormAlert } from "@/components/app/FormAlert";
-import { OptionSelect } from "@/components/app/OptionSelect";
+import { FormAlert } from "@/components/common/FormAlert/FormAlert";
+import { OptionSelect } from "@/components/common/OptionSelect/OptionSelect";
 import { DocumentMetaFields } from "@/components/common/DocumentMetaFields/DocumentMetaFields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { UPLOAD_ACCEPT } from "@/constants/document.constant";
 import { type UploadFormOptions, useUploadForm } from "@/hooks/page-hooks/documents/use-upload-form";
 import type { DuplicateChoice } from "@/interfaces/document.interface";
 import type { Taxonomy } from "@/interfaces/taxonomy.interface";
-import { formatDateTime } from "@/lib/datetime";
+import { formatDateTime } from "@/lib/common/datetime";
 import { choiceOptions, stateLabel, type UploadRow } from "@/lib/page-libs/documents/upload-rows";
 import { cn } from "@/lib/utils";
 

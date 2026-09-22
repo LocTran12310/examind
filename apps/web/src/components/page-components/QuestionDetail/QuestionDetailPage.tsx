@@ -1,9 +1,9 @@
 "use client";
 
-import { BackLink } from "@/components/app/BackLink";
-import { PageHeader } from "@/components/app/PageHeader";
-import { Panel } from "@/components/app/Panel";
-import { ToneBadge } from "@/components/app/ToneBadge";
+import { BackLink } from "@/components/common/BackLink/BackLink";
+import { PageHeader } from "@/components/common/PageHeader/PageHeader";
+import { Panel } from "@/components/common/Panel/Panel";
+import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import { formValueOf, QuestionForm } from "@/components/common/QuestionForm/QuestionForm";
 import { QuestionView } from "@/components/common/QuestionView/QuestionView";
 import { Button } from "@/components/ui/button";

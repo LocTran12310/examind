@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { formatDate } from "@/lib/datetime";
+import { formatDate } from "@/lib/common/datetime";
 import { cn } from "@/lib/utils";
 
 /** `YYYY-MM-DD` ⇄ a local Date used only to draw the calendar (a calendar day has no time zone). */

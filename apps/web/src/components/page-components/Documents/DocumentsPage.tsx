@@ -1,9 +1,9 @@
 "use client";
 
 import { FileUp } from "lucide-react";
-import { FormDialog } from "@/components/app/FormDialog";
-import { ListLayout } from "@/components/app/ListLayout";
-import { PageHeader } from "@/components/app/PageHeader";
+import { FormDialog } from "@/components/common/FormDialog/FormDialog";
+import { ListLayout } from "@/components/common/ListLayout/ListLayout";
+import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { DataTable } from "@/components/common/DataTable/DataTable";
 import { ToolbarButton } from "@/components/common/DataTable/Toolbar";
 import { ProcessingConfigPanel } from "@/components/common/ProcessingConfig/ProcessingConfig";

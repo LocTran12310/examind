@@ -2,10 +2,10 @@
 
 import { Download, KeyRound, Link2, Lock, LockOpen, Unlink, Upload } from "lucide-react";
 import Link from "next/link";
-import { ConfirmDialog } from "@/components/app/ConfirmDialog";
-import { FormDialog } from "@/components/app/FormDialog";
-import { ListLayout } from "@/components/app/ListLayout";
-import { PageHeader } from "@/components/app/PageHeader";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog/ConfirmDialog";
+import { FormDialog } from "@/components/common/FormDialog/FormDialog";
+import { ListLayout } from "@/components/common/ListLayout/ListLayout";
+import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { DataTable } from "@/components/common/DataTable/DataTable";
 import { ToolbarButton } from "@/components/common/DataTable/Toolbar";
 import { useUsersPage } from "@/hooks/page-hooks/users/use-users-page";

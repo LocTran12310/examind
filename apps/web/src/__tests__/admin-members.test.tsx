@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import AccountsPage from "@/app/(app)/admin/users/page";
 import { MembershipTable } from "@/components/page-components/Orgs/MembershipTable/MembershipTable";
-import type { Membership } from "@/lib/types";
+import type { Membership } from "@/interfaces/org.interface";
 import { mockFetch, renderWithQuery as render, route, searchPage } from "./helpers";
 import { setUrl } from "./router-mock";
 

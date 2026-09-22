@@ -1,4 +1,4 @@
-import { Panel } from "@/components/app/Panel";
+import { Panel } from "@/components/common/Panel/Panel";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TYPE_LABEL } from "@/constants/question.constant";

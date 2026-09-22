@@ -1,7 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import MyStatsPage from "@/app/(app)/me/stats/page";
-import { mockFetch, route } from "./helpers";
+import { mockFetch, renderWithQuery as render, route } from "./helpers";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 

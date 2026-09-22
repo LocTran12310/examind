@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { BankFacets } from "@/interfaces/question.interface";
 import type { Tag } from "@/interfaces/tag.interface";
-import { periodOptions, periodValue } from "@/lib/exam-period";
+import { periodOptions, periodValue } from "@/lib/common/exam-period";
 import { type BankQuery, type Changes, clearAll, list, SHEET_KEYS } from "@/lib/page-libs/bank/filters";
 
 /** The draft of the "Bộ lọc" sheet: edited freely, applied to the URL at once (A-04, A-05). */

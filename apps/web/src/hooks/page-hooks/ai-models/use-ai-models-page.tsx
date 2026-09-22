@@ -1,7 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ToneBadge } from "@/components/app/ToneBadge";
+import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import { MODEL_ENABLED_OPTIONS, PROVIDER_LABEL, PROVIDER_OPTIONS } from "@/constants/ai-model.constant";
 import { useMe } from "@/hooks/common/use-me";
 import { useDeleteAiModelsMutation, useTestAiModelMutation, useToggleAiModelsMutation } from "@/hooks/react-query/use-query-ai-model";

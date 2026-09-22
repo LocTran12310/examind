@@ -1,8 +1,8 @@
 "use client";
 
-import { EmptyState } from "@/components/app/EmptyState";
-import { OptionSelect } from "@/components/app/OptionSelect";
-import { PageHeader } from "@/components/app/PageHeader";
+import { EmptyState } from "@/components/common/EmptyState/EmptyState";
+import { OptionSelect } from "@/components/common/OptionSelect/OptionSelect";
+import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { useTopicsPage } from "@/hooks/page-hooks/topics/use-topics-page";
 import { TopicTree } from "./TopicTree/TopicTree";
 

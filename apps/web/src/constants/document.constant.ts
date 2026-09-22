@@ -18,3 +18,6 @@ export const DEFAULT_THRESHOLD = 0.85;
 
 /** ms between refreshes while a document is still being processed */
 export const PROCESSING_POLL_MS = 2000;
+
+/** Loại đề of a document (with the term it makes the "đợt kiểm tra", lib/common/exam-period). */
+export const EXAM_KINDS = ["Giữa kỳ", "Cuối kỳ", "Khảo sát", "Thi thử", "Ôn tập", "Khác"];

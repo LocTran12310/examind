@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { Panel } from "@/components/app/Panel";
+import { Panel } from "@/components/common/Panel/Panel";
 import type { Assignment } from "@/interfaces/assignment.interface";
-import { formatDateTime } from "@/lib/datetime";
+import { formatDateTime } from "@/lib/common/datetime";
 
 /** "Đã giao": the assignments of this exam with their classes, window and submissions. */
 export function AssignedList({ assigned }: { assigned: Assignment[] }) {

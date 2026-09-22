@@ -2,7 +2,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ToneBadge } from "@/components/app/ToneBadge";
+import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import { filterKinds } from "@/components/common/DataTable/DataTable";
 import { ROLE_LABEL } from "@/constants/role.constant";
 import { useMe } from "@/hooks/common/use-me";
@@ -12,8 +12,8 @@ import { useFetchAllUsers, useResetPasswordMutation, useSetUsersActiveMutation, 
 import type { Credential, User } from "@/interfaces/user.interface";
 import { ApiError } from "@/lib/common/http";
 import { toSearchBody } from "@/lib/common/search-body";
-import { downloadText, toCsv } from "@/lib/csv";
-import { fmt } from "@/lib/dates";
+import { downloadText, toCsv } from "@/lib/common/csv";
+import { fmt } from "@/lib/common/dates";
 
 const failed = (e: unknown) => toast.error(e instanceof ApiError ? e.message : "Có lỗi xảy ra");
 

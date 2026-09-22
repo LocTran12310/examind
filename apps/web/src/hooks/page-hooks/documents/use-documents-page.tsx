@@ -9,7 +9,7 @@ import { useDeleteDocumentsMutation } from "@/hooks/react-query/use-query-docume
 import { useIngestionSettingsQuery } from "@/hooks/react-query/use-query-ingestion-settings";
 import { useTaxonomyQuery } from "@/hooks/react-query/use-query-taxonomy";
 import type { ProcessingConfig, SourceDocument } from "@/interfaces/document.interface";
-import { formatDateTime } from "@/lib/datetime";
+import { formatDateTime } from "@/lib/common/datetime";
 import { metaLabel } from "@/lib/common/document-label";
 
 /** Some document still waits for the worker: keep the list refreshing. */

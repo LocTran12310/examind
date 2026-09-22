@@ -2,9 +2,9 @@
 
 import { Plus, RefreshCw } from "lucide-react";
 import Link from "next/link";
-import { EmptyState } from "@/components/app/EmptyState";
-import { ListLayout } from "@/components/app/ListLayout";
-import { PageHeader } from "@/components/app/PageHeader";
+import { EmptyState } from "@/components/common/EmptyState/EmptyState";
+import { ListLayout } from "@/components/common/ListLayout/ListLayout";
+import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { Pagination } from "@/components/common/DataTable/Pagination";
 import { Toolbar, ToolbarButton, ToolbarSeparator } from "@/components/common/DataTable/Toolbar";
 import { BankFilters } from "@/components/page-components/Bank/BankFilters/BankFilters";

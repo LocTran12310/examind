@@ -2,7 +2,7 @@
  * "Đợt kiểm tra" = học kỳ × loại đề (school-years A-10): Giữa kỳ 1, Cuối kỳ 1, Giữa kỳ 2, Cuối kỳ 2, …
  * Stored in the existing semester_code + exam_kind fields; the value here is "hk1|Giữa kỳ".
  */
-import { EXAM_KINDS } from "./types";
+import { EXAM_KINDS } from "@/constants/document.constant";
 
 const TERM_NO: Record<string, string> = { hk1: "1", hk2: "2" };
 const PERIODIC = ["Giữa kỳ", "Cuối kỳ"];

@@ -1,8 +1,8 @@
 "use client";
 
-import { CopyButton } from "@/components/app/CopyButton";
-import { FormAlert } from "@/components/app/FormAlert";
-import { FormField } from "@/components/app/FormField";
+import { CopyButton } from "@/components/common/CopyButton/CopyButton";
+import { FormAlert } from "@/components/common/FormAlert/FormAlert";
+import { FormField } from "@/components/common/FormField/FormField";
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";

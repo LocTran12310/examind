@@ -2,7 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
-import { DatePicker, DateRangePicker, DateTimePicker } from "@/components/app/DatePicker";
+import { DatePicker, DateRangePicker, DateTimePicker } from "@/components/common/DatePicker/DatePicker";
 
 function Day({ initial = "" }: { initial?: string }) {
   const [v, setV] = useState(initial);

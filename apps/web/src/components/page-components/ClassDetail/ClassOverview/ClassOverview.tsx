@@ -1,15 +1,15 @@
 "use client";
 
-import { ToneBadge } from "@/components/app/ToneBadge";
+import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import type { ClassOverviewRow } from "@/lib/types";
+import type { ClassOverviewRow } from "@/interfaces/mastery.interface";
 
 const STATUS: Record<string, string> = { submitted: "Đã làm", in_progress: "Đang làm", not_started: "Chưa làm" };
 
 export function ClassOverview({ rows }: { rows: ClassOverviewRow[] }) {
   return (
     <div className="rounded-lg border bg-card">
-<Table>
+      <Table>
       <TableHeader>
         <TableRow>
           <TableHead>Học sinh</TableHead>
@@ -38,7 +38,7 @@ export function ClassOverview({ rows }: { rows: ClassOverviewRow[] }) {
           </TableRow>
         ))}
       </TableBody>
-    </Table>
-</div>
+      </Table>
+    </div>
   );
 }

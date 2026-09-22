@@ -1,6 +1,6 @@
 "use client";
 
-import { FormAlert } from "@/components/app/FormAlert";
+import { FormAlert } from "@/components/common/FormAlert/FormAlert";
 import { QuestionFields } from "@/components/common/QuestionFields/QuestionFields";
 import { QuestionView } from "@/components/common/QuestionView/QuestionView";
 import { Button } from "@/components/ui/button";

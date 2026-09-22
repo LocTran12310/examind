@@ -1,7 +1,7 @@
 "use client";
 
-import { PracticeButton } from "@/components/adaptive/PracticeButton";
-import { PageHeader } from "@/components/app/PageHeader";
+import { PracticeButton } from "@/components/common/PracticeButton/PracticeButton";
+import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { useStudentHomePage } from "@/hooks/page-hooks/student-home/use-student-home-page";
 import { StudentAssignments } from "./StudentAssignments/StudentAssignments";
 

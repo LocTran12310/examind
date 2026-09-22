@@ -1,10 +1,10 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { MeProvider } from "@/app/(app)/AppShell";
+import { MeProvider } from "@/hooks/common/use-me";
 import StructurePage from "@/app/(app)/org/structure/page";
-import { ThemeProvider } from "@/components/app/ThemeProvider";
-import type { Structure } from "@/lib/types";
+import { ThemeProvider } from "@/components/layout/ThemeProvider/ThemeProvider";
+import type { Structure } from "@/interfaces/structure.interface";
 import { lastBody, me, mockFetch, renderWithQuery as render, route, searchPage } from "./helpers";
 import { searchOf, setUrl } from "./router-mock";
 

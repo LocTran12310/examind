@@ -2,14 +2,14 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useMe } from "@/hooks/common/use-me";
-import { ToneBadge } from "@/components/app/ToneBadge";
+import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import { YEAR_STATUS_LABEL, YEAR_STATUS_OPTIONS } from "@/constants/school-year.constant";
 import type { YearAction } from "@/dtos/school-year.dto";
 import { useYear } from "@/hooks/common/use-year";
 import { useDeleteSchoolYearsMutation, useSchoolYearStatusMutation } from "@/hooks/react-query/use-query-school-year";
 import type { SchoolYear } from "@/interfaces/school-year.interface";
 import { ApiError } from "@/lib/common/http";
-import { formatDate as d } from "@/lib/datetime";
+import { formatDate as d } from "@/lib/common/datetime";
 import { nextYearCode } from "@/lib/page-libs/school-years/year-code";
 
 const DONE: Record<YearAction, (code: string) => string> = {

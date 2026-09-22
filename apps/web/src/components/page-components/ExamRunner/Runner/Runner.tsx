@@ -1,8 +1,8 @@
 "use client";
 
-import { FormAlert } from "@/components/app/FormAlert";
-import { FormDialog } from "@/components/app/FormDialog";
-import { ToneBadge } from "@/components/app/ToneBadge";
+import { FormAlert } from "@/components/common/FormAlert/FormAlert";
+import { FormDialog } from "@/components/common/FormDialog/FormDialog";
+import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import { AnswerInput } from "@/components/common/AnswerInput/AnswerInput";
 import { QuestionView } from "@/components/common/QuestionView/QuestionView";
 import { Button } from "@/components/ui/button";

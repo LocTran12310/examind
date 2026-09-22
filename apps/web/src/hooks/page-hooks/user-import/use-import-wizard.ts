@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ROLE_LABEL } from "@/constants/role.constant";
 import { useImportCommitMutation, useImportPreviewMutation } from "@/hooks/react-query/use-query-user";
 import { ApiError } from "@/lib/common/http";
-import { downloadText, toCsv } from "@/lib/csv";
+import { downloadText, toCsv } from "@/lib/common/csv";
 
 const message = (e: unknown, fallback: string) => (e ? (e instanceof ApiError ? e.message : fallback) : null);
 

@@ -2,10 +2,10 @@
 
 import { ArrowLeft, ArrowRightLeft } from "lucide-react";
 import Link from "next/link";
-import { ConfirmDialog } from "@/components/app/ConfirmDialog";
-import { FormAlert } from "@/components/app/FormAlert";
-import { FormField } from "@/components/app/FormField";
-import { PageHeader } from "@/components/app/PageHeader";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog/ConfirmDialog";
+import { FormAlert } from "@/components/common/FormAlert/FormAlert";
+import { FormField } from "@/components/common/FormField/FormField";
+import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";

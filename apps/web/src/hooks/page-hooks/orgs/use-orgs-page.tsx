@@ -1,14 +1,14 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ToneBadge } from "@/components/app/ToneBadge";
+import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import type { OrgAction } from "@/dtos/org.dto";
 import { useSwitchOrg } from "@/hooks/common/use-switch-org";
 import { useTableQuery } from "@/hooks/common/use-table-query";
 import { useOrgActionMutation } from "@/hooks/react-query/use-query-org";
 import type { Org } from "@/interfaces/org.interface";
 import { ApiError } from "@/lib/common/http";
-import { formatDate } from "@/lib/datetime";
+import { formatDate } from "@/lib/common/datetime";
 
 type StatusAction = Exclude<OrgAction, "delete">;
 

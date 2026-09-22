@@ -1,7 +1,7 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { MeProvider } from "@/app/(app)/AppShell";
+import { MeProvider } from "@/hooks/common/use-me";
 import ReportsPage from "@/app/(app)/org/reports/page";
 import { lastBody, lastQuery, me, mockFetch, renderWithQuery as render, route, searchPage } from "./helpers";
 import { useYearStore } from "@/stores/common/year.store";

@@ -3,7 +3,7 @@ import { ORG_KEY } from "@/constants/auth.constant";
 import { useLoginMutation } from "@/hooks/react-query/use-query-auth";
 import type { Me } from "@/interfaces/auth.interface";
 import { ApiError } from "@/lib/common/http";
-import { homeFor } from "@/lib/nav";
+import { homeFor } from "@/lib/common/nav";
 
 function readOrg(): string {
   try {

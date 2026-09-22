@@ -1,11 +1,11 @@
 "use client";
 
 import { FilePlus2 } from "lucide-react";
-import { BackLink } from "@/components/app/BackLink";
-import { EmptyState } from "@/components/app/EmptyState";
-import { FormAlert } from "@/components/app/FormAlert";
-import { FormDialog } from "@/components/app/FormDialog";
-import { PageHeader } from "@/components/app/PageHeader";
+import { BackLink } from "@/components/common/BackLink/BackLink";
+import { EmptyState } from "@/components/common/EmptyState/EmptyState";
+import { FormAlert } from "@/components/common/FormAlert/FormAlert";
+import { FormDialog } from "@/components/common/FormDialog/FormDialog";
+import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { DocumentStatusBadge } from "@/components/common/DocumentStatusBadge/DocumentStatusBadge";
 import { ProcessingConfigFields } from "@/components/common/ProcessingConfig/ProcessingConfig";
 import { Button } from "@/components/ui/button";

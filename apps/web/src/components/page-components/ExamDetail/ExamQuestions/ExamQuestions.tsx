@@ -1,8 +1,8 @@
 "use client";
 
 import { ArrowDown, ArrowUp, ArrowUpDown, GripVertical, Save } from "lucide-react";
-import { OptionSelect } from "@/components/app/OptionSelect";
-import { ToneBadge } from "@/components/app/ToneBadge";
+import { OptionSelect } from "@/components/common/OptionSelect/OptionSelect";
+import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import { Markdown } from "@/components/common/Markdown/Markdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -1,8 +1,8 @@
 "use client";
 
-import { FormAlert } from "@/components/app/FormAlert";
-import { FormField } from "@/components/app/FormField";
-import { OptionSelect } from "@/components/app/OptionSelect";
+import { FormAlert } from "@/components/common/FormAlert/FormAlert";
+import { FormField } from "@/components/common/FormField/FormField";
+import { OptionSelect } from "@/components/common/OptionSelect/OptionSelect";
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";

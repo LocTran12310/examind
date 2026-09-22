@@ -7,7 +7,7 @@ import { StudentAssignments } from "@/components/page-components/StudentHome/Stu
 import type { Assignment, MyAssignment } from "@/interfaces/assignment.interface";
 import type { SchoolClass } from "@/interfaces/class.interface";
 import type { Exam } from "@/interfaces/exam.interface";
-import { toBusinessInput } from "@/lib/datetime";
+import { toBusinessInput } from "@/lib/common/datetime";
 import { lastBody, mockFetch, renderWithQuery, route, searchPage } from "./helpers";
 
 const push = vi.fn();

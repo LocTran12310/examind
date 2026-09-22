@@ -19,7 +19,7 @@ import {
   UserCog,
   Users,
 } from "lucide-react";
-import type { Role } from "./types";
+import type { Role } from "@/interfaces/auth.interface";
 
 export interface NavItem {
   href: string;

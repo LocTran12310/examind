@@ -1,6 +1,6 @@
 "use client";
 
-import { FormAlert } from "@/components/app/FormAlert";
+import { FormAlert } from "@/components/common/FormAlert/FormAlert";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAnswerKey } from "@/hooks/page-hooks/review-document/use-answer-key";

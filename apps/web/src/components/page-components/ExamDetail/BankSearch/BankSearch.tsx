@@ -1,4 +1,4 @@
-import { Panel } from "@/components/app/Panel";
+import { Panel } from "@/components/common/Panel/Panel";
 import { Markdown } from "@/components/common/Markdown/Markdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

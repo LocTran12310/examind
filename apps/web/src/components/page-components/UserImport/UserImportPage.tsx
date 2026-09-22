@@ -1,6 +1,6 @@
 "use client";
 
-import { PageHeader } from "@/components/app/PageHeader";
+import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { useMe } from "@/hooks/common/use-me";
 import { ImportWizard } from "./ImportWizard/ImportWizard";
 

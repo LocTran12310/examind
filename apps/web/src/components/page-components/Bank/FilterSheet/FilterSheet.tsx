@@ -3,7 +3,7 @@
 import { Label } from "@/components/ui/label";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
-import { TopicTreeSelect } from "@/components/topics/TopicTreeSelect";
+import { TopicTreeSelect } from "@/components/common/TopicTreeSelect/TopicTreeSelect";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -16,7 +16,7 @@ import type { BankFacets } from "@/interfaces/question.interface";
 import type { Tag } from "@/interfaces/tag.interface";
 import type { Taxonomy } from "@/interfaces/taxonomy.interface";
 import type { Topic } from "@/interfaces/topic.interface";
-import { periodValue, parsePeriod } from "@/lib/exam-period";
+import { periodValue, parsePeriod } from "@/lib/common/exam-period";
 import type { BankQuery, Changes } from "@/lib/page-libs/bank/filters";
 import { cn } from "@/lib/utils";
 

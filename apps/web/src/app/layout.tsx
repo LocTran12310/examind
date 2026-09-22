@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Be_Vietnam_Pro } from "next/font/google";
 import "katex/dist/katex.min.css";
 import "./globals.css";
-import { ThemeProvider } from "@/components/app/ThemeProvider";
+import { ThemeProvider } from "@/components/layout/ThemeProvider/ThemeProvider";
 import { Providers } from "@/components/layout/Providers/Providers";
 import { cn } from "@/lib/utils";
 

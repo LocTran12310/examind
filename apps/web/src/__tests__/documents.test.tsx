@@ -5,8 +5,10 @@ import DocumentsPage from "@/app/(app)/org/documents/page";
 import { ParsedQuestionCard } from "@/components/page-components/DocumentDetail/ParsedQuestionCard/ParsedQuestionCard";
 import { DocumentInfo } from "@/components/page-components/DocumentDetail/DocumentInfo/DocumentInfo";
 import { UploadForm } from "@/components/page-components/Documents/UploadForm/UploadForm";
-import { ThemeProvider } from "@/components/app/ThemeProvider";
-import type { ParsedQuestion, SourceDocument, Taxonomy } from "@/lib/types";
+import { ThemeProvider } from "@/components/layout/ThemeProvider/ThemeProvider";
+import type { SourceDocument } from "@/interfaces/document.interface";
+import type { ParsedQuestion } from "@/interfaces/question.interface";
+import type { Taxonomy } from "@/interfaces/taxonomy.interface";
 import { mockFetch, renderWithQuery as render, route, searchPage } from "./helpers";
 import { currentUrl, setUrl } from "./router-mock";
 

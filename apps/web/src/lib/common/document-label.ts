@@ -1,6 +1,6 @@
 import type { DetectedHeader, SourceDocument } from "@/interfaces/document.interface";
 import type { Taxonomy } from "@/interfaces/taxonomy.interface";
-import { periodLabel } from "@/lib/exam-period";
+import { periodLabel } from "@/lib/common/exam-period";
 
 /** Môn · Lớp · Đợt · Năm học · Nguồn đề of a document. */
 export function metaLabel(doc: SourceDocument, taxonomy?: Taxonomy | null): string {

@@ -1,15 +1,15 @@
 "use client";
 
-import { ConfirmDialog } from "@/components/app/ConfirmDialog";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog/ConfirmDialog";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { FormAlert } from "@/components/app/FormAlert";
-import { ToneBadge } from "@/components/app/ToneBadge";
+import { FormAlert } from "@/components/common/FormAlert/FormAlert";
+import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FormDialog } from "@/components/app/FormDialog";
-import { OptionSelect } from "@/components/app/OptionSelect";
-import { buildTree, flatten, isInSubtree, type TopicNode } from "@/components/topics/tree";
+import { FormDialog } from "@/components/common/FormDialog/FormDialog";
+import { OptionSelect } from "@/components/common/OptionSelect/OptionSelect";
+import { buildTree, flatten, isInSubtree, type TopicNode } from "@/lib/common/topic-tree";
 import { LEVEL_LABEL } from "@/constants/topic.constant";
 import { useTopicTree } from "@/hooks/page-hooks/topics/use-topic-tree";
 import type { Topic } from "@/interfaces/topic.interface";

@@ -1,10 +1,10 @@
 "use client";
 
-import { FormAlert } from "@/components/app/FormAlert";
-import { FormDialog } from "@/components/app/FormDialog";
-import { OptionSelect } from "@/components/app/OptionSelect";
+import { FormAlert } from "@/components/common/FormAlert/FormAlert";
+import { FormDialog } from "@/components/common/FormDialog/FormDialog";
+import { OptionSelect } from "@/components/common/OptionSelect/OptionSelect";
 import { TopicPicker } from "@/components/common/TopicPicker/TopicPicker";
-import { topicLabel } from "@/components/topics/tree";
+import { topicLabel } from "@/lib/common/topic-tree";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DIFFICULTY_LABEL, TYPE_LABEL } from "@/constants/question.constant";

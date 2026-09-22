@@ -1,12 +1,12 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { ThemeToggle } from "@/components/app/ThemeToggle";
+import { ThemeToggle } from "@/components/layout/ThemeToggle/ThemeToggle";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { MeProvider } from "@/hooks/common/use-me";
 import type { Me } from "@/interfaces/auth.interface";
-import { activeItem, groupsFor } from "@/lib/nav";
+import { activeItem, groupsFor } from "@/lib/common/nav";
 import { AppSidebar } from "@/components/layout/AppSidebar/AppSidebar";
 import { OrgSwitcher } from "@/components/layout/OrgSwitcher/OrgSwitcher";
 import { UserMenu } from "@/components/layout/UserMenu/UserMenu";

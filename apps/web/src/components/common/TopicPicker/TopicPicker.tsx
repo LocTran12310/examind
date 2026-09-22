@@ -2,7 +2,7 @@
 
 import { ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
-import { buildTree, type TopicNode } from "@/components/topics/tree";
+import { buildTree, type TopicNode } from "@/lib/common/topic-tree";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Topic } from "@/interfaces/topic.interface";

@@ -1,10 +1,10 @@
 "use client";
 
-import { FormField } from "@/components/app/FormField";
+import { FormField } from "@/components/common/FormField/FormField";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { OptionSelect } from "@/components/app/OptionSelect";
+import { OptionSelect } from "@/components/common/OptionSelect/OptionSelect";
 import type { AiModel } from "@/interfaces/ai-model.interface";
 import type { ProcessingConfig } from "@/interfaces/document.interface";
 

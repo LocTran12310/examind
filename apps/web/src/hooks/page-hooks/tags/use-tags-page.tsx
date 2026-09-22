@@ -1,6 +1,6 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
-import { ToneBadge } from "@/components/app/ToneBadge";
+import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import { SHARED_SUBJECT, TAG_GROUP_LABEL, TAG_GROUP_OPTIONS } from "@/constants/tag.constant";
 import { useTableQuery } from "@/hooks/common/use-table-query";
 import { useDeleteTagsMutation } from "@/hooks/react-query/use-query-tag";

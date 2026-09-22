@@ -1,11 +1,11 @@
 "use client";
 
 import { ArrowRight, GraduationCap } from "lucide-react";
-import { ToneBadge } from "@/components/app/ToneBadge";
+import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { OptionSelect } from "@/components/app/OptionSelect";
+import { OptionSelect } from "@/components/common/OptionSelect/OptionSelect";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ROLLOVER_ACTION_LABEL as ACTION_LABEL } from "@/constants/school-year.constant";
 import type { RolloverAction as Action, RolloverClass as PlanClass, RolloverPlan as Plan } from "@/interfaces/school-year.interface";

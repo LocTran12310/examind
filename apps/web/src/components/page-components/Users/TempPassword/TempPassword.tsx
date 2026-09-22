@@ -1,4 +1,4 @@
-import { CopyButton } from "@/components/app/CopyButton";
+import { CopyButton } from "@/components/common/CopyButton/CopyButton";
 
 /** A temporary password shown once, with a copy button for the whole sign-in. */
 export function TempPassword({ username, password, orgCode }: { username: string; password: string; orgCode: string }) {

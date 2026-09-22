@@ -1,11 +1,11 @@
 "use client";
 
 import { ChevronDown, History, Lock, LockOpen, UserCog } from "lucide-react";
-import { FormAlert } from "@/components/app/FormAlert";
-import { FormDialog } from "@/components/app/FormDialog";
-import { FormField } from "@/components/app/FormField";
-import { HistoryPanel } from "@/components/app/HistoryPanel";
-import { OptionSelect } from "@/components/app/OptionSelect";
+import { FormAlert } from "@/components/common/FormAlert/FormAlert";
+import { FormDialog } from "@/components/common/FormDialog/FormDialog";
+import { FormField } from "@/components/common/FormField/FormField";
+import { HistoryPanel } from "@/components/common/HistoryPanel/HistoryPanel";
+import { OptionSelect } from "@/components/common/OptionSelect/OptionSelect";
 import { DataTable } from "@/components/common/DataTable/DataTable";
 import { ToolbarButton } from "@/components/common/DataTable/Toolbar";
 import { Button } from "@/components/ui/button";

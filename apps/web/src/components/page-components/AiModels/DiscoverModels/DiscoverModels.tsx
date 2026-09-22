@@ -1,8 +1,8 @@
 "use client";
 
 import { Radar } from "lucide-react";
-import { FormAlert } from "@/components/app/FormAlert";
-import { FormField } from "@/components/app/FormField";
+import { FormAlert } from "@/components/common/FormAlert/FormAlert";
+import { FormField } from "@/components/common/FormField/FormField";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useDiscoverModels } from "@/hooks/page-hooks/ai-models/use-discover-models";

@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import OrgsPage from "@/app/(app)/admin/orgs/page";
 import { OrgCreateForm } from "@/components/page-components/Orgs/OrgForm/OrgForm";
-import type { Org } from "@/lib/types";
+import type { Org } from "@/interfaces/org.interface";
 import { lastBody, mockFetch, renderWithQuery as render, route, searchPage } from "./helpers";
 import { router, searchOf, setUrl } from "./router-mock";
 

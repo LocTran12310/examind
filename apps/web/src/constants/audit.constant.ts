@@ -1,0 +1,22 @@
+/** History entries in the teacher's words (the audit log's action codes). */
+export const ACTION_LABEL: Record<string, string> = {
+  "year.create": "Tạo năm học",
+  "year.update": "Sửa năm học",
+  "year.activate": "Đặt làm năm đang học",
+  "year.close": "Khóa năm học",
+  "year.reopen": "Mở lại năm học",
+  "year.delete": "Xóa năm học",
+  "class.create": "Tạo lớp",
+  "class.update": "Sửa lớp",
+  "class.delete": "Xóa lớp",
+  "class.members_add": "Thêm học sinh vào lớp",
+  "class.members_remove": "Xóa học sinh khỏi lớp",
+  "member.link": "Thêm vào tổ chức",
+  "member.unlink": "Gỡ khỏi tổ chức",
+  "member.update": "Đổi vai trò / trạng thái",
+  "org.switch": "Chuyển tổ chức",
+  "rollover.commit": "Chuyển năm học",
+  "user.create": "Tạo tài khoản",
+  "user.update": "Sửa tài khoản",
+  "user.reset_password": "Đặt lại mật khẩu",
+};

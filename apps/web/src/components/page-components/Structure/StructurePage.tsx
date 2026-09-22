@@ -2,9 +2,9 @@
 
 import { ExternalLink, Upload } from "lucide-react";
 import Link from "next/link";
-import { FormDialog } from "@/components/app/FormDialog";
-import { ListLayout } from "@/components/app/ListLayout";
-import { PageHeader } from "@/components/app/PageHeader";
+import { FormDialog } from "@/components/common/FormDialog/FormDialog";
+import { ListLayout } from "@/components/common/ListLayout/ListLayout";
+import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { DataTable } from "@/components/common/DataTable/DataTable";
 import { ClassForm } from "@/components/page-components/Classes/ClassForm/ClassForm";
 import { MemberManager } from "@/components/page-components/Classes/MemberManager/MemberManager";

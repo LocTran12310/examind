@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { BackLink } from "@/components/app/BackLink";
+import { BackLink } from "@/components/common/BackLink/BackLink";
 import { useTableQuery } from "@/hooks/common/use-table-query";
 import { setUrl } from "./router-mock";
 

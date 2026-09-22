@@ -1,8 +1,8 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
-import { ThemeProvider } from "@/components/app/ThemeProvider";
-import { ThemeToggle } from "@/components/app/ThemeToggle";
+import { ThemeProvider } from "@/components/layout/ThemeProvider/ThemeProvider";
+import { ThemeToggle } from "@/components/layout/ThemeToggle/ThemeToggle";
 
 describe("theme", () => {
   beforeEach(() => {

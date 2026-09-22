@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { FormField } from "@/components/app/FormField";
-import { OptionSelect } from "@/components/app/OptionSelect";
+import { FormField } from "@/components/common/FormField/FormField";
+import { OptionSelect } from "@/components/common/OptionSelect/OptionSelect";
 import { MarkdownEditor } from "@/components/common/MarkdownEditor/MarkdownEditor";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

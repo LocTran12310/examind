@@ -65,6 +65,3 @@ export async function http<T = unknown>(path: string, opts: Options = {}): Promi
   const type = res.headers.get("content-type") ?? "";
   return (type.includes("application/json") ? res.json() : res.blob()) as Promise<T>;
 }
-
-/** The old name, kept while the pre-refactor screens are moved to services. */
-export const api = http;

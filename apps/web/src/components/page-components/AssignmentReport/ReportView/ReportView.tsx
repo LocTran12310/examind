@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Markdown } from "@/components/common/Markdown/Markdown";
-import { ToneBadge } from "@/components/app/ToneBadge";
-import { Panel } from "@/components/app/Panel";
+import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
+import { Panel } from "@/components/common/Panel/Panel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { REPORT_STATUS_LABEL } from "@/constants/assignment.constant";
 import { TYPE_LABEL } from "@/constants/question.constant";

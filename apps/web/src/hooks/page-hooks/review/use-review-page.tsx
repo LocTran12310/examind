@@ -2,7 +2,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { useMemo } from "react";
 import { toast } from "sonner";
-import { OptionSelect } from "@/components/app/OptionSelect";
+import { OptionSelect } from "@/components/common/OptionSelect/OptionSelect";
 import { pendingOf, Progress, ReviewCounts } from "@/components/page-components/Review/ReviewCounts/ReviewCounts";
 import { useMe } from "@/hooks/common/use-me";
 import { useTableQuery } from "@/hooks/common/use-table-query";

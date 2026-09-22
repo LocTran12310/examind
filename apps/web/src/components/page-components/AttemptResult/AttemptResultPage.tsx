@@ -1,6 +1,6 @@
 "use client";
 
-import { PageHeader } from "@/components/app/PageHeader";
+import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { useAttemptResultPage } from "@/hooks/page-hooks/attempt-result/use-attempt-result-page";
 import { ResultView } from "./ResultView/ResultView";
 

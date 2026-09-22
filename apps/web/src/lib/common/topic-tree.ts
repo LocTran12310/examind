@@ -1,4 +1,4 @@
-import type { Topic } from "@/lib/types";
+import type { Topic } from "@/interfaces/topic.interface";
 
 export interface TopicNode extends Topic {
   children: TopicNode[];

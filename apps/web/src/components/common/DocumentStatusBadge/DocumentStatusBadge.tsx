@@ -1,6 +1,6 @@
 "use client";
 
-import { ToneBadge } from "@/components/app/ToneBadge";
+import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import { DOC_STATUS_LABEL } from "@/constants/document.constant";
 import type { SourceDocument } from "@/interfaces/document.interface";
 

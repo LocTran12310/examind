@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { FormAlert } from "@/components/app/FormAlert";
-import { FormDialog } from "@/components/app/FormDialog";
-import { FormField } from "@/components/app/FormField";
-import { OptionSelect } from "@/components/app/OptionSelect";
+import { FormAlert } from "@/components/common/FormAlert/FormAlert";
+import { FormDialog } from "@/components/common/FormDialog/FormDialog";
+import { FormField } from "@/components/common/FormField/FormField";
+import { OptionSelect } from "@/components/common/OptionSelect/OptionSelect";
 import { draftOf, QuestionFields, type Draft } from "@/components/common/QuestionFields/QuestionFields";
 import { QuestionView } from "@/components/common/QuestionView/QuestionView";
 import { TopicPicker } from "@/components/common/TopicPicker/TopicPicker";
-import { topicLabel } from "@/components/topics/tree";
+import { topicLabel } from "@/lib/common/topic-tree";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Kbd } from "@/components/ui/kbd";
@@ -21,7 +21,7 @@ import type { Tag } from "@/interfaces/tag.interface";
 import type { Taxonomy } from "@/interfaces/taxonomy.interface";
 import type { Topic } from "@/interfaces/topic.interface";
 import { ApiError } from "@/lib/common/http";
-import { useSaveHint, useSaveShortcut } from "@/lib/shortcuts";
+import { useSaveHint, useSaveShortcut } from "@/lib/common/shortcuts";
 
 export interface QuestionFormValue extends Draft {
   difficulty: string | null;

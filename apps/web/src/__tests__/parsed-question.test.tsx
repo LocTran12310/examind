@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { metaChips, ParsedQuestionCard } from "@/components/page-components/DocumentDetail/ParsedQuestionCard/ParsedQuestionCard";
-import type { ParsedQuestion } from "@/lib/types";
+import type { ParsedQuestion } from "@/interfaces/question.interface";
 
 const q = (o: Partial<ParsedQuestion> = {}): ParsedQuestion => ({
   id: "q", type: "mcq", stem: "Tọa độ đỉnh parabol", options: [], answer: { key: "A" }, solution: "x", difficulty: null, grade: 10,

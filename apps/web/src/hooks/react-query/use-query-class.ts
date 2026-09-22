@@ -5,7 +5,7 @@ import type { SearchBody } from "@/dtos/search.dto";
 import type { ClassDetail, SchoolClass } from "@/interfaces/class.interface";
 import type { RowsQueryOptions, SearchPage } from "@/interfaces/search-page.interface";
 import { LIMIT_ALL } from "@/lib/common/search-body";
-import type { ClassOverviewRow } from "@/lib/types";
+import type { ClassOverviewRow } from "@/interfaces/mastery.interface";
 import { classService } from "@/services/class.service";
 import { invalidate } from "@/lib/common/query-client";
 import { useSearchQuery } from "./use-search-query";
@@ -69,10 +69,4 @@ export function useRemoveClassMembersMutation(classId: string): UseMutationResul
     },
     onSettled: () => invalidate(qc, CLASS_KEYS.ALL, STRUCTURE_KEYS.ALL, USER_KEYS.ALL),
   });
-}
-
-/** Refetch the overview after work outside the class queries (personal reviews assigned). */
-export function useRefreshClassOverview(id: string): () => Promise<void> {
-  const qc = useQueryClient();
-  return () => qc.invalidateQueries({ queryKey: CLASS_KEYS.OVERVIEW(id) });
 }

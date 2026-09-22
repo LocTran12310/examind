@@ -2,10 +2,10 @@
 
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
-import { FormDialog } from "@/components/app/FormDialog";
-import { ListLayout } from "@/components/app/ListLayout";
-import { MasterDetail } from "@/components/app/MasterDetail";
-import { PageHeader } from "@/components/app/PageHeader";
+import { FormDialog } from "@/components/common/FormDialog/FormDialog";
+import { ListLayout } from "@/components/common/ListLayout/ListLayout";
+import { MasterDetail } from "@/components/common/MasterDetail/MasterDetail";
+import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { DataTable } from "@/components/common/DataTable/DataTable";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

@@ -1,7 +1,7 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { MeProvider } from "@/app/(app)/AppShell";
+import { MeProvider } from "@/hooks/common/use-me";
 import ReviewPage from "@/app/(app)/org/review/page";
 import type { ReviewDocument } from "@/interfaces/review.interface";
 import type { User } from "@/interfaces/user.interface";

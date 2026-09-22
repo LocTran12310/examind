@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { ClassOverview } from "@/components/adaptive/ClassOverview";
-import { level, MasteryList } from "@/components/adaptive/MasteryList";
+import { ClassOverview } from "@/components/page-components/ClassDetail/ClassOverview/ClassOverview";
+import { level, MasteryList } from "@/components/page-components/MyStats/MasteryList/MasteryList";
 
 describe("mastery UI", () => {
   it("lists tracked topics weakest first with levels", () => {

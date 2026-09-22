@@ -3,13 +3,13 @@
 import { cn } from "@/lib/utils";
 import { Markdown } from "@/components/common/Markdown/Markdown";
 import { QuestionView } from "@/components/common/QuestionView/QuestionView";
-import { FormAlert } from "@/components/app/FormAlert";
-import { ToneBadge } from "@/components/app/ToneBadge";
-import { Panel } from "@/components/app/Panel";
+import { FormAlert } from "@/components/common/FormAlert/FormAlert";
+import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
+import { Panel } from "@/components/common/Panel/Panel";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { ScoreBar } from "@/components/common/ScoreBar/ScoreBar";
 import type { AttemptResult, ResultQuestion } from "@/interfaces/attempt.interface";
-import { formatDateTime } from "@/lib/datetime";
+import { formatDateTime } from "@/lib/common/datetime";
 import { EssayGrader } from "@/components/page-components/AttemptResult/EssayGrader/EssayGrader";
 
 function YourAnswer({ q }: { q: ResultQuestion }) {

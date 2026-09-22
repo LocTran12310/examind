@@ -1,6 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
-import type { Me } from "./types";
+import type { Me } from "@/interfaces/auth.interface";
 
 const API = process.env.API_INTERNAL_URL ?? "http://localhost:58100";
 

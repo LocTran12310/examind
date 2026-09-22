@@ -1,6 +1,6 @@
 "use client";
 
-import { PageHeader } from "@/components/app/PageHeader";
+import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { useAssignmentReportPage } from "@/hooks/page-hooks/assignment-report/use-assignment-report-page";
 import { ReportView } from "./ReportView/ReportView";
 

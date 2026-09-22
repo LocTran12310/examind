@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import { homeFor } from "@/lib/nav";
-import { getMe } from "@/lib/session";
+import { homeFor } from "@/lib/common/nav";
+import { getMe } from "@/lib/common/session";
 
 export default async function Root() {
   const me = await getMe();

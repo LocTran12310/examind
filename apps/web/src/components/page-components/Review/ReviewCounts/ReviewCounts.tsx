@@ -1,6 +1,6 @@
 "use client";
 
-import { ToneBadge } from "@/components/app/ToneBadge";
+import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import { Progress as Bar } from "@/components/ui/progress";
 import type { ReviewDocument } from "@/interfaces/review.interface";
 

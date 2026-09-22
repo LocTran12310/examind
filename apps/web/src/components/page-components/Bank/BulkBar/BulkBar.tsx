@@ -1,8 +1,8 @@
 "use client";
 
 import { Check, ChevronDown, Gauge, Network, Tag as TagIcon, Trash2, X } from "lucide-react";
-import { ConfirmDialog } from "@/components/app/ConfirmDialog";
-import { FormDialog } from "@/components/app/FormDialog";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog/ConfirmDialog";
+import { FormDialog } from "@/components/common/FormDialog/FormDialog";
 import { ToolbarButton } from "@/components/common/DataTable/Toolbar";
 import { TopicPicker } from "@/components/common/TopicPicker/TopicPicker";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";

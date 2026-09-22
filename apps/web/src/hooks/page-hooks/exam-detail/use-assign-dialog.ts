@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useCreateAssignmentMutation } from "@/hooks/react-query/use-query-assignment";
 import type { Assignment } from "@/interfaces/assignment.interface";
 import { formErrors } from "@/lib/common/form-errors";
-import { fromBusinessInput, toBusinessInput } from "@/lib/datetime";
+import { fromBusinessInput, toBusinessInput } from "@/lib/common/datetime";
 import type { ResultsPolicy } from "@/types/assignment.type";
 
 const WEEK = 7 * 86400_000;

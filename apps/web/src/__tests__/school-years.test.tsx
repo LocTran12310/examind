@@ -1,14 +1,14 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { MeProvider } from "@/app/(app)/AppShell";
+import { MeProvider } from "@/hooks/common/use-me";
 import ClassesPage from "@/app/(app)/org/classes/page";
 import SchoolYearsPage from "@/app/(app)/org/school-years/page";
-import { HistoryPanel } from "@/components/app/HistoryPanel";
-import { ThemeProvider } from "@/components/app/ThemeProvider";
+import { HistoryPanel } from "@/components/common/HistoryPanel/HistoryPanel";
+import { ThemeProvider } from "@/components/layout/ThemeProvider/ThemeProvider";
 import { YearSwitcher } from "@/components/layout/YearSwitcher/YearSwitcher";
-import type { SchoolYear } from "@/lib/types";
-import { lastBody, lastQuery, me, mockFetch, page, renderWithQuery, route, searchPage } from "./helpers";
+import type { SchoolYear } from "@/interfaces/school-year.interface";
+import { lastBody, me, mockFetch, renderWithQuery, route, searchPage } from "./helpers";
 import { useYearStore } from "@/stores/common/year.store";
 import { setUrl } from "./router-mock";
 
@@ -79,13 +79,13 @@ describe("school years", () => {
   it("history lists audit entries with the closed-year flag", async () => {
     setUrl("/org/school-years");
     const fetch = mockFetch(
-      route("GET", /^\/api\/audit\?/, page([{ id: "a1", created_at: "2026-09-22T10:00:00Z", organization_id: "o1", organization_code: "trungtama", actor_id: "u", actor_name: "Cô Lan", action: "class.update", target_type: "class", target_id: "c1", data: { closed_year: true, changes: { name: ["10A1", "10A1-CLC"] } } }])),
+      route("POST", "/api/audit/search", searchPage([{ id: "a1", created_at: "2026-09-22T10:00:00Z", organization_id: "o1", organization_code: "trungtama", actor_id: "u", actor_name: "Cô Lan", action: "class.update", target_type: "class", target_id: "c1", data: { closed_year: true, changes: { name: ["10A1", "10A1-CLC"] } } }])),
     );
-    render(<HistoryPanel targetId="c1" />);
+    renderWithQuery(<HistoryPanel targetId="c1" />);
     const row = (await screen.findByText("Sửa lớp")).closest("tr")!;
     expect(row).toHaveTextContent("năm đã khóa");
     expect(row).toHaveTextContent("name: 10A1 → 10A1-CLC");
     expect(row).toHaveTextContent("Cô Lan");
-    expect(lastQuery(fetch, "/audit").get("target_id")).toBe("c1");
+    expect(lastBody(fetch, "/audit/search").target_id).toBe("c1");
   });
 });

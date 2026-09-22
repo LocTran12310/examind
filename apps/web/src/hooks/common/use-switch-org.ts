@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useSwitchOrgMutation } from "@/hooks/react-query/use-query-auth";
 import type { Me } from "@/interfaces/auth.interface";
-import { homeFor } from "@/lib/nav";
+import { homeFor } from "@/lib/common/nav";
 
 /** Move into another org: the API switches, the query cache is cleared (in the mutation), then the router
  *  re-renders the server layout (new `me`) and opens `to(next)` (default: the new role's home). */

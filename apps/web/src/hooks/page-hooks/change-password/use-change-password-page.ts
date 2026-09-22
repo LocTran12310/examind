@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useChangePasswordMutation } from "@/hooks/react-query/use-query-auth";
 import { ApiError } from "@/lib/common/http";
-import { homeFor } from "@/lib/nav";
+import { homeFor } from "@/lib/common/nav";
 
 /** New password twice (checked here), then the role's home page. */
 export function useChangePasswordPage() {

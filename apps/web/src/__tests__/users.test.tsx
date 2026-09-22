@@ -1,11 +1,11 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { MeProvider } from "@/app/(app)/AppShell";
+import { MeProvider } from "@/hooks/common/use-me";
 import UsersPage from "@/app/(app)/org/users/page";
 import { UserCreateForm } from "@/components/page-components/Users/UserForm/UserForm";
 import { rolesManagedBy } from "@/lib/page-libs/users/roles";
-import type { User } from "@/lib/types";
+import type { User } from "@/interfaces/user.interface";
 import { lastBody, me, mockFetch, renderWithQuery, route, searchPage } from "./helpers";
 import { searchOf, setUrl } from "./router-mock";
 

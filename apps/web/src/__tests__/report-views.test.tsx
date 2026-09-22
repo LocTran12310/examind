@@ -1,9 +1,9 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import type { TopicStat } from "@/lib/types";
-import { GroupStats } from "./GroupStats";
-import { Heatmap, heatColor } from "./Heatmap";
-import { statTree, TopicStatsTree, weakest } from "./TopicStatsTree";
+import type { TopicStat } from "@/interfaces/stats.interface";
+import { GroupStats } from "@/components/common/GroupStats/GroupStats";
+import { Heatmap, heatColor } from "@/components/page-components/Reports/Heatmap/Heatmap";
+import { statTree, TopicStatsTree, weakest } from "@/components/common/TopicStatsTree/TopicStatsTree";
 
 const s = (id: string, parent: string | null, name: string, path: string, ratio: number, answered = 4): TopicStat => ({
   id, parent_id: parent, name, path, depth: path.split(".").length, level_kind: "topic", points: ratio * answered, max_points: answered, answered, ratio,

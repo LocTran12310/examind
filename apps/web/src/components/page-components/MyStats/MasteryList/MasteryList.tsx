@@ -1,7 +1,7 @@
 "use client";
 
 import { ScoreBar } from "@/components/common/ScoreBar/ScoreBar";
-import type { MasteryRow } from "@/lib/types";
+import type { MasteryRow } from "@/interfaces/mastery.interface";
 
 export function level(m: number | null): string {
   if (m === null) return "—";

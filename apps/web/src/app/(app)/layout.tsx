@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { getMe } from "@/lib/session";
+import { getMe } from "@/lib/common/session";
 import { AppShell } from "@/components/layout/AppShell/AppShell";
 import { SessionRecovery } from "@/components/layout/SessionRecovery/SessionRecovery";
 

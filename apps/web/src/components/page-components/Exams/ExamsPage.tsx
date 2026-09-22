@@ -2,10 +2,10 @@
 
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
-import { FormDialog } from "@/components/app/FormDialog";
-import { ListLayout } from "@/components/app/ListLayout";
-import { MasterDetail } from "@/components/app/MasterDetail";
-import { PageHeader } from "@/components/app/PageHeader";
+import { FormDialog } from "@/components/common/FormDialog/FormDialog";
+import { ListLayout } from "@/components/common/ListLayout/ListLayout";
+import { MasterDetail } from "@/components/common/MasterDetail/MasterDetail";
+import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { DataTable } from "@/components/common/DataTable/DataTable";
 import { ExamPreviewDialog } from "@/components/page-components/ExamDetail/ExamPreviewDialog/ExamPreviewDialog";
 import { ExamQuestionsTable } from "@/components/page-components/ExamDetail/ExamQuestionsTable/ExamQuestionsTable";

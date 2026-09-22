@@ -33,7 +33,7 @@ export const route =
     return m === method && hit ? { status, body } : undefined;
   };
 
-export const me = (role: import("@/lib/types").Role = "org_admin", o: Partial<import("@/lib/types").Me> = {}): import("@/lib/types").Me => ({
+export const me = (role: import("@/interfaces/auth.interface").Role = "org_admin", o: Partial<import("@/interfaces/auth.interface").Me> = {}): import("@/interfaces/auth.interface").Me => ({
   id: "me",
   username: "admin",
   full_name: "Quản Trị",
@@ -49,8 +49,6 @@ export function lastQuery(fetch: { mock: { calls: unknown[][] } }, path: string)
   if (!call) throw new Error(`no request to ${path}`);
   return new URL(String(call[0]), "http://x").searchParams;
 }
-
-export const page = <T,>(items: T[], total = items.length, pageNo = 1, size = 20) => ({ items, total, page: pageNo, page_size: size });
 
 /** Search answer (`POST /<resource>/search`). */
 export const searchPage = <T,>(data: T[], total = data.length, pageNo = 1, limit = 20) => ({ data, total, page: pageNo, limit });

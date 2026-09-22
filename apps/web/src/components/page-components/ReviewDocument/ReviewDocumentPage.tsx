@@ -1,9 +1,9 @@
 "use client";
 
-import { BackLink } from "@/components/app/BackLink";
-import { FormAlert } from "@/components/app/FormAlert";
-import { FormDialog } from "@/components/app/FormDialog";
-import { PageHeader } from "@/components/app/PageHeader";
+import { BackLink } from "@/components/common/BackLink/BackLink";
+import { FormAlert } from "@/components/common/FormAlert/FormAlert";
+import { FormDialog } from "@/components/common/FormDialog/FormDialog";
+import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { AnswerKeyDialog } from "@/components/page-components/ReviewDocument/AnswerKeyDialog/AnswerKeyDialog";
 import { QuestionEditor } from "@/components/page-components/ReviewDocument/QuestionEditor/QuestionEditor";
 import { ReviewQueue } from "@/components/page-components/ReviewDocument/ReviewQueue/ReviewQueue";
