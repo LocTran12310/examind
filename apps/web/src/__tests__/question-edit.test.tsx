@@ -1,8 +1,15 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { formValueOf, payloadOf, QuestionForm } from "@/components/bank/QuestionForm";
-import type { ParsedQuestion, Tag, Taxonomy, Topic } from "@/lib/types";
+import { formValueOf, payloadOf, QuestionForm } from "@/components/common/QuestionForm/QuestionForm";
+import { QuestionDetailPage } from "@/components/page-components/QuestionDetail/QuestionDetailPage";
+import type { ParsedQuestion } from "@/interfaces/question.interface";
+import type { Tag } from "@/interfaces/tag.interface";
+import type { Taxonomy } from "@/interfaces/taxonomy.interface";
+import type { Topic } from "@/interfaces/topic.interface";
+import { mockFetch, renderWithQuery as render, route, searchPage } from "./helpers";
+
+vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);
 
 const taxonomy: Taxonomy = { subjects: [{ id: "s", code: "toan", name: "Toán" }], grades: [{ id: "g", level: 10, name: "Lớp 10" }], semesters: [] };
 const topics: Topic[] = [{ id: "t1", subject_id: "s", parent_id: null, name: "Vectơ", level_kind: "topic", grade: 10, path: "a", depth: 1, sort: 0, child_count: 0 }];
@@ -64,5 +71,30 @@ describe("save shortcut (ui-polish AC-05)", () => {
     expect(within(t).getAllByRole("treeitem").map((x) => x.textContent)).toEqual(["Giải tích1", "Nguyên hàm"]);
     await u.keyboard("{Enter}");
     expect(screen.getByTestId("pick-topic")).toHaveTextContent("Giải tích › Nguyên hàm");
+  });
+});
+
+describe("question detail page", () => {
+  it("edits the question: PATCH with the whole form, then shows the saved version", async () => {
+    const q = { id: "q", number: 3, type: "mcq", stem: "Đề cũ", options: "ABCD".split("").map((l) => ({ label: l, content: l })), answer: { key: "D" },
+      solution: "", difficulty: "vd", grade: 10, status: "approved", subject_id: "s", topics: [{ id: "t1", name: "Vectơ", is_primary: true, source: "manual", score: 1 }],
+      tags: [] } as unknown as ParsedQuestion;
+    let saved = q;
+    const fetch = mockFetch(
+      (url, init) => (url === "/api/questions/q" && init?.method === "GET" ? { body: saved } : undefined),
+      (url, init) => (url === "/api/questions/q" && init?.method === "PATCH" ? { body: (saved = { ...q, stem: "Đề mới" }) } : undefined),
+      route("GET", "/api/taxonomy", taxonomy),
+      route("GET", "/api/topics?subject_id=s", topics),
+      route("POST", "/api/tags/search", searchPage(tags)),
+    );
+    const u = userEvent.setup();
+    render(<QuestionDetailPage id="q" />);
+    await u.click(await screen.findByRole("button", { name: "Sửa" }));
+    fireEvent.change(screen.getByTestId("stem"), { target: { value: "Đề mới" } });
+    await u.click(screen.getByText(/^Lưu/));
+    await waitFor(() => expect(screen.queryByTestId("stem")).toBeNull());
+    const call = fetch.mock.calls.find(([url, init]) => url === "/api/questions/q" && (init as RequestInit | undefined)?.method === "PATCH");
+    expect(JSON.parse(String((call?.[1] as RequestInit).body))).toMatchObject({ stem: "Đề mới", answer: { key: "D" }, subject_id: "s", primary_topic_id: "t1", topic_ids: ["t1"] });
+    expect(await screen.findByText("Đề mới")).toBeInTheDocument();
   });
 });

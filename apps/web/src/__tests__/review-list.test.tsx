@@ -3,8 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MeProvider } from "@/app/(app)/AppShell";
 import ReviewPage from "@/app/(app)/org/review/page";
-import type { ReviewDocument, User } from "@/lib/types";
-import { lastBody, lastQuery, me, mockFetch, page, renderWithQuery as render, route, searchPage } from "./helpers";
+import type { ReviewDocument } from "@/interfaces/review.interface";
+import type { User } from "@/interfaces/user.interface";
+import { lastBody, me, mockFetch, renderWithQuery as render, route, searchPage } from "./helpers";
 import { searchOf, setUrl } from "./router-mock";
 
 vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);
@@ -32,7 +33,7 @@ beforeEach(() => setUrl("/org/review"));
 
 describe("review list", () => {
   it("shows counts, spot checks, progress and the pending link", async () => {
-    mockFetch(route("GET", /^\/api\/review\/documents\?/, page([reviewRow()])));
+    mockFetch(route("POST", "/api/review/documents/search", searchPage([reviewRow()])));
     renderPage("teacher");
     const r = await screen.findByTestId("rev-de-kho.docx");
     const row = r.closest("tr")!;
@@ -44,18 +45,18 @@ describe("review list", () => {
   });
 
   it("'Của tôi' goes to the server and the URL", async () => {
-    const fetch = mockFetch(route("GET", /^\/api\/review\/documents\?/, page([reviewRow()])));
+    const fetch = mockFetch(route("POST", "/api/review/documents/search", searchPage([reviewRow()])));
     const u = userEvent.setup();
     renderPage("teacher");
     await screen.findByTestId("rev-de-kho.docx");
     await u.click(screen.getByRole("switch", { name: "Của tôi" }));
-    await waitFor(() => expect(lastQuery(fetch, "/review/documents").get("mine")).toBe("true"));
+    await waitFor(() => expect(lastBody(fetch, "/review/documents/search").mine).toBe(true));
     expect(searchOf().get("mine")).toBe("true");
   });
 
   it("org admins assign a reviewer", async () => {
     const fetch = mockFetch(
-      route("GET", /^\/api\/review\/documents\?/, page([reviewRow()])),
+      route("POST", "/api/review/documents/search", searchPage([reviewRow()])),
       route("POST", "/api/users/search", searchPage([gv])),
       route("PATCH", "/api/review/documents/d1", reviewRow({ assigned_to: "u1" })),
     );

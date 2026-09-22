@@ -3,7 +3,7 @@
 import { ArrowDown, ArrowUp, ArrowUpDown, GripVertical, Save } from "lucide-react";
 import { useMemo, useState } from "react";
 import { OptionSelect } from "@/components/app/OptionSelect";
-import { Markdown } from "@/components/question/Markdown";
+import { Markdown } from "@/components/common/Markdown/Markdown";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { ToneBadge } from "@/components/app/ToneBadge";

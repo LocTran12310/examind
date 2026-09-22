@@ -1,9 +1,9 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { BulkActions } from "@/components/bank/BulkBar";
-import type { Topic } from "@/lib/types";
-import { mockFetch, route } from "./helpers";
+import { BulkActions } from "@/components/page-components/Bank/BulkBar/BulkBar";
+import type { Topic } from "@/interfaces/topic.interface";
+import { mockFetch, renderWithQuery as render, route } from "./helpers";
 
 const topics: Topic[] = [{ id: "t1", subject_id: "s", parent_id: null, name: "Vectơ", level_kind: "topic", grade: 10, path: "a", depth: 1, sort: 0, child_count: 0 }];
 

@@ -1,15 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { QuestionView, type QuestionMode } from "@/components/question/QuestionView";
+import { QuestionView, type QuestionMode } from "@/components/common/QuestionView/QuestionView";
 import { Panel } from "@/components/app/Panel";
 import { PageHeader } from "@/components/app/PageHeader";
 import { OptionSelect } from "@/components/app/OptionSelect";
-import { useApi } from "@/lib/hooks";
-import type { Question } from "@/lib/types";
+import { ApiError } from "@/lib/api";
+// eslint-disable-next-line no-restricted-imports -- screen moves to a page hook in its own slice
+import { useQuestionDemoQuery } from "@/hooks/react-query/use-query-question";
 
 export default function QuestionPreviewPage() {
-  const { data, error } = useApi<Question>("/questions/demo");
+  const { data, error: failed } = useQuestionDemoQuery();
+  const error = failed ? (failed instanceof ApiError ? failed.message : "Không tải được dữ liệu") : null;
   const [mode, setMode] = useState<QuestionMode>("review");
   const [selected, setSelected] = useState<string | null>(null);
   return (

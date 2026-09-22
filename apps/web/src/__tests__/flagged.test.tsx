@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { FlagPanel } from "@/components/review/ReviewQueue";
-import { pendingOf, ReviewCounts } from "@/components/review/ReviewList";
-import type { ReviewDocument } from "@/lib/types";
+import { pendingOf, ReviewCounts } from "@/components/page-components/Review/ReviewCounts/ReviewCounts";
+import { FlagPanel } from "@/components/page-components/ReviewDocument/FlagPanel/FlagPanel";
+import type { ReviewDocument } from "@/interfaces/review.interface";
 
 describe("flagged questions", () => {
   it("review list counts suspect keys", () => {

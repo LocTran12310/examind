@@ -1,8 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Markdown } from "@/components/question/Markdown";
-import { QuestionView } from "@/components/question/QuestionView";
+import { Markdown } from "@/components/common/Markdown/Markdown";
+import { QuestionView } from "@/components/common/QuestionView/QuestionView";
 import { FormAlert } from "@/components/app/FormAlert";
 import { ToneBadge } from "@/components/app/ToneBadge";
 import { Panel } from "@/components/app/Panel";

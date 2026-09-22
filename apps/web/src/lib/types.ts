@@ -1,4 +1,10 @@
 // moved to interfaces/ and constants/ (architecture-refactor); re-exported for the screens not moved yet
+export type { BankFacets, FlagEvidence, ParsedQuestion, Question, QuestionOption, QuestionStatus, QuestionType } from "@/interfaces/question.interface";
+export type { DetectedHeader, DocStatus, DocumentMeta, ProcessingConfig, SourceDocument } from "@/interfaces/document.interface";
+export type { ReviewDocument } from "@/interfaces/review.interface";
+export { DIFFICULTY_LABEL, STATUS_LABEL, TYPE_LABEL } from "@/constants/question.constant";
+import type { ParsedQuestion, Question, QuestionType } from "@/interfaces/question.interface";
+import type { DocStatus } from "@/interfaces/document.interface";
 export type { Tag, TagGroup } from "@/interfaces/tag.interface";
 export type { Taxonomy } from "@/interfaces/taxonomy.interface";
 export { TAG_GROUP_LABEL } from "@/constants/tag.constant";
@@ -21,110 +27,6 @@ export interface Page<T> {
   total: number;
   page: number;
   page_size: number;
-}
-
-export type QuestionType = "mcq" | "true_false" | "short_answer" | "essay";
-
-export interface QuestionOption {
-  label: string;
-  content: string;
-  is_true?: boolean | null;
-}
-
-export interface Question {
-  id: string;
-  type: QuestionType;
-  stem: string;
-  options: QuestionOption[];
-  answer: { key?: string; value?: string; text?: string; [k: string]: unknown } | null;
-  solution: string;
-  difficulty: string | null;
-  grade: number | null;
-  status: string;
-}
-
-
-
-
-
-export type DocStatus = "queued" | "processing" | "parsed" | "failed";
-
-/** What the exam header said (official-exam-ingestion AC-09); suggestions only. */
-export interface DetectedHeader {
-  issuer?: string;
-  province?: string;
-  school_year?: string;
-  subject_name?: string;
-  grade?: number;
-  exam_kind?: string;
-  attempt?: number;
-  duration?: number;
-}
-
-export interface DocumentMeta {
-  subject_id?: string;
-  grade?: number;
-  semester_code?: string;
-  exam_kind?: string;
-  school_year?: string;
-  source_name?: string;
-  detected?: DetectedHeader;
-}
-
-export interface ProcessingConfig {
-  split_mode: "rule" | "rule_ai" | "ai";
-  ocr: "auto" | "tesseract" | "vision";
-  split_models: string[];
-  tag_model: string | null;
-  vision_model: string | null;
-  threshold: number;
-}
-
-export interface SourceDocument {
-  id: string;
-  filename: string;
-  mime: string;
-  size: number;
-  status: DocStatus;
-  error: string | null;
-  meta: DocumentMeta;
-  processing_config: ProcessingConfig;
-  page_count: number | null;
-  question_count: number;
-  log: { step: string; ms?: number; items?: string[]; [k: string]: unknown }[];
-  created_at: string;
-  finished_at: string | null;
-}
-
-export interface ParsedQuestion extends Question {
-  number: number | null;
-  part: string | null;
-  confidence: number | null;
-  issues: string[];
-  parse_method: string | null;
-  parse_model: string | null;
-  answer_source: string | null;
-  subject_id: string | null;
-  semester_code: string | null;
-  exam_kind: string | null;
-  topics: { id: string; name: string; is_primary: boolean; source: string; score: number | null }[];
-  tags: { id: string; group: string; name: string }[];
-  page?: number | null;
-  spot_check?: boolean;
-  duplicate_of?: string | null;
-  source_document_id?: string | null;
-  group?: string | null;
-  flag_evidence?: FlagEvidence | null;
-}
-
-export interface FlagEvidence {
-  reason: string;
-  answers: number;
-  key: string;
-  overall_correct: number;
-  top_quartile: { size: number; choice: string; share: number };
-  option_counts: Record<string, number>;
-  dismissed?: boolean;
 }
 
 export const EXAM_KINDS = ["Giữa kỳ", "Cuối kỳ", "Khảo sát", "Thi thử", "Ôn tập", "Khác"];
@@ -157,31 +59,6 @@ export const PROVIDER_LABEL: Record<Provider, string> = {
   openai: "Tương thích OpenAI",
   anthropic: "Anthropic",
 };
-
-export type QuestionStatus = "draft" | "auto_approved" | "needs_review" | "approved" | "rejected" | "duplicate" | "flagged";
-
-export const STATUS_LABEL: Record<QuestionStatus, string> = {
-  draft: "Nháp",
-  auto_approved: "Tự duyệt",
-  needs_review: "Cần xem",
-  approved: "Đã duyệt",
-  rejected: "Đã loại",
-  duplicate: "Trùng",
-  flagged: "Nghi sai đáp án",
-};
-
-export interface ReviewDocument {
-  document: SourceDocument;
-  total: number;
-  counts: Record<"auto_approved" | "needs_review" | "approved" | "rejected" | "duplicate" | "flagged", number>;
-  spot_pending: number;
-  progress: number;
-  assigned_to: string | null;
-  assigned_name: string | null;
-}
-
-export const DIFFICULTY_LABEL: Record<string, string> = { nb: "Nhận biết", th: "Thông hiểu", vd: "Vận dụng", vdc: "Vận dụng cao" };
-export const TYPE_LABEL: Record<QuestionType, string> = { mcq: "Trắc nghiệm", true_false: "Đúng/Sai", short_answer: "Trả lời ngắn", essay: "Tự luận" };
 
 export interface BlueprintRow {
   topic_id?: string | null;
@@ -361,7 +238,6 @@ export interface PracticeItem {
   groups: { reason: string; topic: string | null; count: number }[];
 }
 
-
 export interface AuditEntry {
   id: string;
   created_at: string;
@@ -375,14 +251,3 @@ export interface AuditEntry {
   data: Record<string, unknown>;
 }
 
-/** GET /questions/facets — counts per value; each facet ignores its own filter (subject-scoped-bank ADR-02). */
-export interface BankFacets {
-  subjects: Record<string, number>; // subject id or "none"
-  topics: Record<string, number>; // subtree totals
-  types: Record<string, number>;
-  difficulties: Record<string, number>;
-  grades: Record<string, number>;
-  periods: Record<string, number>; // "hk1|Giữa kỳ"
-  school_years: Record<string, number>;
-  tags: Record<string, number>;
-}

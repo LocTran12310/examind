@@ -2,10 +2,13 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import BankPage from "@/app/(app)/org/bank/page";
-import { BankFilters } from "@/components/bank/BankFilters";
-import { QuestionRow } from "@/components/bank/QuestionRow";
-import type { BankFacets, ParsedQuestion, Tag, Taxonomy, Topic } from "@/lib/types";
-import { lastBody, lastQuery, mockFetch, route } from "./helpers";
+import { BankFilters } from "@/components/page-components/Bank/BankFilters/BankFilters";
+import { QuestionRow } from "@/components/page-components/Bank/QuestionRow/QuestionRow";
+import type { BankFacets, ParsedQuestion } from "@/interfaces/question.interface";
+import type { Tag } from "@/interfaces/tag.interface";
+import type { Taxonomy } from "@/interfaces/taxonomy.interface";
+import type { Topic } from "@/interfaces/topic.interface";
+import { lastBody, mockFetch, route, searchPage } from "./helpers";
 import { renderWithQuery as render } from "./helpers";
 import { searchOf, setUrl } from "./router-mock";
 
@@ -55,8 +58,8 @@ describe("bank", () => {
     setUrl("/org/bank?subject_id=s&grade=10&page=2");
     const q = (id: string) => ({ id, type: "mcq", stem: `Câu ${id}`, difficulty: null, grade: 10, status: "approved", tags: [], topics: [] });
     const fetch = mockFetch(
-      route("GET", /^\/api\/questions\?/, { items: [q("x1"), q("x2")], total: 45, page: 2, page_size: 20 }),
-      route("GET", /^\/api\/questions\/facets\?/, { subjects: { s: 45 }, topics: {}, types: {}, difficulties: {}, grades: {}, periods: {}, school_years: {}, tags: {} }),
+      route("POST", "/api/questions/search", searchPage([q("x1"), q("x2")], 45, 2)),
+      route("POST", "/api/questions/facets", { subjects: { s: 45 }, topics: {}, types: {}, difficulties: {}, grades: {}, periods: {}, school_years: {}, tags: {} }),
       route("GET", "/api/taxonomy", taxonomy),
       route("GET", "/api/topics?subject_id=s", topics),
       route("POST", "/api/tags/search", { data: [], total: 0, page: 1, limit: 1000 }),
@@ -64,21 +67,22 @@ describe("bank", () => {
     const u = userEvent.setup();
     render(<BankPage />);
     await screen.findByText("Câu x1");
-    const first = lastQuery(fetch, "/questions");
-    expect([first.get("subject_id"), first.get("grade"), first.get("page")]).toEqual(["s", "10", "2"]);
+    const first = lastBody(fetch, "/questions/search");
+    expect([first.subject_id, first.grade, first.page, first.limit]).toEqual(["s", 10, 2, 20]);
+    expect(lastBody(fetch, "/questions/facets")).toMatchObject({ subject_id: "s", grade: 10 });
     expect(screen.getByText("Hiển thị 21–40 trên 45 kết quả")).toBeInTheDocument();
     await waitFor(() => expect(lastBody(fetch, "/tags/search").subject_id).toBe("s"));
     await u.click(screen.getByRole("button", { name: "Trang sau" }));
-    await waitFor(() => expect(lastQuery(fetch, "/questions").get("page")).toBe("3"));
+    await waitFor(() => expect(lastBody(fetch, "/questions/search").page).toBe(3));
     expect(searchOf().get("grade")).toBe("10");
   });
 
   it("opens on the subject with most questions; switching subject drops topic and tag filters only", async () => {
     setUrl("/org/bank?type=mcq&topic_ids=ds&tag_ids=nb");
     const two: Taxonomy = { ...taxonomy, subjects: [...taxonomy.subjects, { id: "ly", code: "ly", name: "Vật lý" }] };
-    mockFetch(
-      route("GET", /^\/api\/questions\?/, { items: [], total: 0, page: 1, page_size: 20 }),
-      route("GET", /^\/api\/questions\/facets\?/, { subjects: { s: 5, ly: 9, none: 2 }, topics: {}, types: {}, difficulties: {}, grades: {}, periods: {}, school_years: {}, tags: {} }),
+    const fetch = mockFetch(
+      route("POST", "/api/questions/search", searchPage([])),
+      route("POST", "/api/questions/facets", { subjects: { s: 5, ly: 9, none: 2 }, topics: {}, types: {}, difficulties: {}, grades: {}, periods: {}, school_years: {}, tags: {} }),
       route("GET", "/api/taxonomy", two),
       route("GET", /^\/api\/topics\?/, []),
       route("POST", "/api/tags/search", { data: [], total: 0, page: 1, limit: 1000 }),
@@ -86,6 +90,8 @@ describe("bank", () => {
     const u = userEvent.setup();
     render(<BankPage />);
     await waitFor(() => expect(searchOf().get("subject_id")).toBe("ly"));
+    // list params go to the server as arrays, at the top of the body
+    await waitFor(() => expect(lastBody(fetch, "/questions/search")).toMatchObject({ subject_id: "ly", type: "mcq", topic_ids: ["ds"], tag_ids: ["nb"] }));
     const tabs = screen.getByRole("tablist", { name: "Môn học" });
     expect(within(tabs).getAllByRole("tab").map((t) => t.textContent)).toEqual(["Toán5", "Vật lý9", "Chưa phân môn 2"]);
     await u.click(within(tabs).getByRole("tab", { name: /Toán/ }));

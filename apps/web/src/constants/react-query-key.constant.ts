@@ -81,3 +81,20 @@ export const MEMBERSHIP_KEYS = {
   ALL: ["memberships"] as const,
   SEARCH: (body: unknown) => ["memberships", "search", body] as const,
 };
+
+/** Questions of the bank; review screens show questions too, so their mutations refresh both. */
+export const QUESTION_KEYS = {
+  ALL: ["questions"] as const,
+  SEARCH: (body: unknown) => ["questions", "search", body] as const,
+  FACETS: (body: unknown) => ["questions", "facets", body] as const,
+  DETAIL: (id: string) => ["questions", "detail", id] as const,
+  DEMO: ["questions", "demo"] as const,
+};
+
+export const REVIEW_KEYS = {
+  ALL: ["review"] as const,
+  DOCUMENTS: (body: unknown) => ["review", "documents", body] as const,
+  FLAGGED: (body: unknown) => ["review", "flagged", body] as const,
+  DOCUMENT: (id: string) => ["review", "document", id] as const,
+  QUEUE: (id: string) => ["review", "queue", id] as const,
+};

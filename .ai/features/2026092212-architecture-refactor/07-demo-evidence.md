@@ -52,3 +52,35 @@
 - Live (`docker compose up -d --build api worker web`, http://localhost:8088, trungtama/admin): login 200 (org_admin, trungtama);
   wrong password 401 `invalid_credentials` with the same message; `/auth/me` 200; `POST /users/search` role=student → `{data,total,page,limit}`
   total 30; `GET /users` 405; `/me/orgs` 200; `POST /auth/switch-org` 200; `/auth/refresh` 204; `/login` page 200.
+
+## UOW-04 question bank and review (2026-09-22)
+- API module `bank` (4 layers): the Question aggregate (dataclass on `shared/infrastructure/schema/bank.py`, the only Table objects of
+  `questions`, `question_topics`, `question_tags`, `review_events`) with create, update, delete (in-use guard, duplicates released), bulk,
+  review actions (approve / reject / restore / skip, spot_ok / spot_fail, threshold feedback), answer key, approve-confident, reviewer
+  assignment, key audit and ingestion triage (near-duplicates) through handlers. Quality rules, search text, answer-key parsing, review
+  and key-audit rules are pure domain services. Topic / tag / subject checks go through the new `taxonomy/application/api.py`
+  (`TaxonomyApi`), the reviewer check through `IdentityApi.role_in` + new `is_super`; both are wired in `main.py`
+  (`register_taxonomy`, `register_staff_directory`). Source documents, org threshold and submitted answers are read through Core adapters.
+  `lint-imports` 4 contracts kept with `app.modules.bank` added; `test_architecture.py` green.
+- Old layout kept working through shims: `app/models/{question,review}.py` and `QuestionTopic`/`QuestionTag` in `models/document.py`
+  re-export the bank dataclasses; `services/{bank,triage,key_audit,answer_key,question_quality,search_text}.py` delegate
+  (`bank.search_ids`, `IN_USE_CHECKS`, `release_duplicates_of`, `triage_hook`, `audit`); `schemas/questions.py` and the question part of
+  `schemas/documents.py` re-export the bank schemas; `routers/documents.parsed_many` uses the bank presenter. `routers/{questions,review}.py`,
+  `services/review.py`, `schemas/review.py` removed. `strip_markup` / `PART_RE` / `ROMAN` moved to `shared/domain/text.py` (ingestion re-imports).
+- Endpoints moved to search (old GETs answer 405): `GET /questions` → `POST /questions/search` (bank params at the top of the body,
+  `topic_ids` / `tag_ids` arrays, `limit` ≤ 1000; typed filters stem, created_at, updated_at, number, grade), `GET /questions/facets` →
+  `POST /questions/facets` (same body), `GET /review/documents` → `POST /review/documents/search` (+ `mine`),
+  `GET /review/flagged` → `POST /review/flagged/search`. Every other question / review path and JSON body unchanged.
+- API suite 351 passed (+1 skipped: official set needs EXAMIN_DIR); official golden set with EXAMIN_DIR 1 passed. New
+  `tests/unit/test_bank_handlers.py` (11 handler tests on in-memory ports); existing tests changed only for the new URLs/shapes.
+  `test_triage.py::test_pdf_copy_of_docx_is_marked_duplicate` failed once on a re-run (two original questions with the same text tie on
+  similarity; the duplicate query is unchanged from before) and passed on the next run.
+- Web: bank list (SubjectTabs, FilterSheet, FilterChips, facets, BulkBar), question detail / new, review list and review document (queue,
+  editor, answer key, approve-confident) on `question.service` / `review.service` → `use-query-question` / `use-query-review` → page hooks →
+  page components; routes one line. Subject per org in `stores/common/bank-subject.store.ts` (same `examind.bank.subject.<org>` key).
+  QuestionView, Markdown, MarkdownEditor, TopicPicker, QuestionForm, QuestionFields moved to `components/common/`. Exam builder search box
+  and the dev preview use the query hooks (lint exception line). Web 154 tests, tsc and eslint clean.
+- Live (`docker compose up -d --build api worker web`, http://localhost:8088, trungtama/admin): `POST /questions/search {status:"all"}` total
+  397 (396 from the 18 documents + the demo question), usable 377; `POST /review/documents/search` 18 documents, 396 questions;
+  Toán 356 → + one topic subtree 43 → + a source tag 2 (e.g. "Hoán vị, chỉnh hợp, tổ hợp", tag of Trường THPT Thuận Thành); facets for the three filters types {mcq 1, short_answer 1};
+  queue of a document 1, flagged 0; `GET /questions` 405.

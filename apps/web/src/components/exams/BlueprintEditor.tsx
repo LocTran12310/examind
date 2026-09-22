@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { TopicPicker, topicLabel } from "@/components/bank/TopicPicker";
+import { TopicPicker } from "@/components/common/TopicPicker/TopicPicker";
+import { topicLabel } from "@/components/topics/tree";
 import { FormAlert } from "@/components/app/FormAlert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

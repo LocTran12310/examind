@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Markdown } from "@/components/question/Markdown";
+import { Markdown } from "@/components/common/Markdown/Markdown";
 import { ToneBadge } from "@/components/app/ToneBadge";
 import { Panel } from "@/components/app/Panel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";

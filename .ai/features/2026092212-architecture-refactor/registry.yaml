@@ -422,7 +422,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-02-01
     blocks:
@@ -442,7 +442,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-04-01
     blocks:
@@ -458,7 +458,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-04-01
     blocks:
@@ -474,7 +474,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-04-02
       - T-02-04
@@ -493,7 +493,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-04-03
       - T-04-04

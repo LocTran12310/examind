@@ -1,7 +1,7 @@
 "use client";
 
 import { periodLabel } from "@/lib/exam-period";
-import { QuestionView } from "@/components/question/QuestionView";
+import { QuestionView } from "@/components/common/QuestionView/QuestionView";
 import { ToneBadge } from "@/components/app/ToneBadge";
 import type { ParsedQuestion as PQ } from "@/lib/types";
 

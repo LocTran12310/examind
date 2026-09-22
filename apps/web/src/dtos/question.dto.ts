@@ -1,0 +1,43 @@
+import type { SearchBody } from "@/dtos/search.dto";
+import type { QuestionOption, QuestionType } from "@/interfaces/question.interface";
+
+/** Body of `POST /questions/search` and `/questions/facets`: the common search body plus the bank parameters. */
+export interface QuestionSearchBody extends SearchBody {
+  /** subject id or "none" */
+  subject_id?: string;
+  grade?: number;
+  semester_code?: string;
+  exam_kind?: string;
+  type?: string;
+  difficulty?: string;
+  /** default "usable"; "all" or one status */
+  status?: string;
+  topic_id?: string;
+  topic_ids?: string[];
+  tag_ids?: string[];
+  document_id?: string;
+  school_year?: string;
+}
+
+/** Create (`POST /questions`) and full edit (`PATCH /questions/{id}`) of a question. */
+export interface QuestionBody {
+  type: QuestionType;
+  stem: string;
+  options: QuestionOption[];
+  answer: Record<string, unknown>;
+  solution: string;
+  difficulty: string;
+  grade: number;
+  subject_id: string | null;
+  primary_topic_id: string | null;
+  tag_ids: string[];
+  topic_ids: string[];
+}
+
+export type UpdateQuestionBody = Partial<QuestionBody>;
+
+/** `POST /questions/bulk`: the same change on every question. */
+export interface BulkQuestionsBody {
+  ids: string[];
+  set: Record<string, unknown>;
+}

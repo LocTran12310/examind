@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { QuestionView } from "@/components/question/QuestionView";
+import { QuestionView } from "@/components/common/QuestionView/QuestionView";
 import { FormAlert } from "@/components/app/FormAlert";
 import { ToneBadge } from "@/components/app/ToneBadge";
 import { Button } from "@/components/ui/button";

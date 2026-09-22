@@ -8,8 +8,8 @@ import { use, useState } from "react";
 import { AssignDialog } from "@/components/exams/AssignDialog";
 import { BlueprintEditor } from "@/components/exams/BlueprintEditor";
 import { ExamQuestions } from "@/components/exams/ExamQuestions";
-import { Markdown } from "@/components/question/Markdown";
-import { QuestionView } from "@/components/question/QuestionView";
+import { Markdown } from "@/components/common/Markdown/Markdown";
+import { QuestionView } from "@/components/common/QuestionView/QuestionView";
 import { FormAlert } from "@/components/app/FormAlert";
 import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/app/Panel";
@@ -17,13 +17,15 @@ import { Input } from "@/components/ui/input";
 import { FormDialog } from "@/components/app/FormDialog";
 import { PageHeader } from "@/components/app/PageHeader";
 import { api, ApiError } from "@/lib/api";
-import { qs, useApi } from "@/lib/hooks";
+import { useApi } from "@/lib/hooks";
 import { fmt } from "@/lib/dates";
-import { TYPE_LABEL, type Assignment, type BlueprintRow, type Exam, type Page, type ParsedQuestion, type QuestionType, type Tag, type Topic } from "@/lib/types";
+import { TYPE_LABEL, type Assignment, type BlueprintRow, type Exam, type Page, type QuestionType, type Tag, type Topic } from "@/lib/types";
 // eslint-disable-next-line no-restricted-imports -- screen moves to a page hook in its own slice
 import { useTagOptionsQuery } from "@/hooks/react-query/use-query-tag";
 // eslint-disable-next-line no-restricted-imports -- screen moves to a page hook in its own slice
 import { useClassOptionsQuery } from "@/hooks/react-query/use-query-class";
+// eslint-disable-next-line no-restricted-imports -- screen moves to a page hook in its own slice
+import { useQuestionSearchQuery } from "@/hooks/react-query/use-query-question";
 
 export default function ExamBuilderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -35,7 +37,7 @@ export default function ExamBuilderPage({ params }: { params: Promise<{ id: stri
   const [shortfalls, setShortfalls] = useState<{ row: number; missing: number }[]>([]);
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
-  const { data: found } = useApi<Page<ParsedQuestion>>(query ? `/questions${qs({ q: query, page_size: 10 })}` : null);
+  const { data: found } = useQuestionSearchQuery({ page: 1, limit: 10, q: query }, { enabled: !!query });
   const [preview, setPreview] = useState<null | "exam" | "review">(null);
   const [error, setError] = useState<string | null>(null);
   const [assigning, setAssigning] = useState(false);
@@ -163,7 +165,7 @@ export default function ExamBuilderPage({ params }: { params: Promise<{ id: stri
               <Button variant="outline" type="submit">Tìm</Button>
             </form>
             <ul className="mt-2 divide-y divide-border text-sm" data-testid="bank-results">
-              {found?.items.map((q) => (
+              {found?.data.map((q) => (
                 <li key={q.id} className="flex items-start gap-2 py-2">
                   <div className="line-clamp-2 min-w-0 flex-1">
                     <Markdown>{q.stem}</Markdown>

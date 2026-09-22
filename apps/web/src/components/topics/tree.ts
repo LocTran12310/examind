@@ -31,3 +31,14 @@ export function flatten(nodes: TopicNode[], depth = 0, out: { node: TopicNode; d
 export function isInSubtree(candidate: Topic, root: Topic): boolean {
   return candidate.path === root.path || candidate.path.startsWith(root.path + ".");
 }
+
+/** "Giải tích › Nguyên hàm": the names from the strand down to the topic. */
+export function topicLabel(t: Topic, byId: Map<string, Topic>): string {
+  const names: string[] = [];
+  let cur: Topic | undefined = t;
+  while (cur) {
+    names.unshift(cur.name);
+    cur = cur.parent_id ? byId.get(cur.parent_id) : undefined;
+  }
+  return names.join(" › ");
+}
