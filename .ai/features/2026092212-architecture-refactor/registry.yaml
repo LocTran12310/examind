@@ -314,7 +314,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on:
       - T-02-01
       - T-01-05
@@ -332,7 +332,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-02-03
       - T-01-05

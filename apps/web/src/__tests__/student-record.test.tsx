@@ -1,8 +1,8 @@
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { MeProvider } from "@/app/(app)/AppShell";
-import { StudentRecord } from "@/components/students/StudentRecord";
-import { me, mockFetch, route } from "./helpers";
+import { StudentRecordPage } from "@/components/page-components/StudentRecord/StudentRecordPage";
+import { me, mockFetch, renderWithQuery as render, route } from "./helpers";
 
 vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);
 
@@ -24,7 +24,7 @@ describe("student record", () => {
     );
     const { findAllByRole } = render(
       <MeProvider value={me("teacher")}>
-        <StudentRecord id="s1" />
+        <StudentRecordPage id="s1" />
       </MeProvider>,
     );
     const cards = await findAllByRole("listitem");

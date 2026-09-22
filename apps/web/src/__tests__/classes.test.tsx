@@ -1,11 +1,12 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import ClassesPage from "@/app/(app)/org/classes/page";
-import { ClassForm, currentSchoolYear } from "@/components/org/ClassForms";
-import { MemberManager } from "@/components/org/MemberManager";
+import { ClassForm } from "@/components/page-components/Classes/ClassForm/ClassForm";
+import { MemberManager } from "@/components/page-components/Classes/MemberManager/MemberManager";
+import { currentSchoolYear } from "@/lib/page-libs/classes/school-year";
 import type { SchoolClass, User } from "@/lib/types";
-import { lastQuery, mockFetch, page, route } from "./helpers";
+import { lastBody, lastQuery, mockFetch, page, renderWithQuery as render, route, searchPage } from "./helpers";
 import { searchOf, setUrl } from "./router-mock";
 
 vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);
@@ -36,8 +37,8 @@ describe("classes", () => {
   it("creates a class with a grade picked by level", async () => {
     const f = mockFetch(
       route("POST", "/api/classes", { id: "c" }, 201),
-      route("GET", /^\/api\/school-levels\?/, page([{ id: "thpt", code: "thpt", name: "Trung học phổ thông", grade_from: 10, grade_to: 12, sort: 1, grade_count: 1 }])),
-      route("GET", /^\/api\/grades\?/, page([{ id: "g10", level: 10, name: "Lớp 10", school_level_id: "thpt", class_count: 0 }])),
+      route("POST", "/api/school-levels/search", searchPage([{ id: "thpt", code: "thpt", name: "Trung học phổ thông", grade_from: 10, grade_to: 12, sort: 1, grade_count: 1 }])),
+      route("POST", "/api/grades/search", searchPage([{ id: "g10", level: 10, name: "Lớp 10", school_level_id: "thpt", class_count: 0 }])),
     );
     const onDone = vi.fn();
     const u = userEvent.setup();
@@ -55,7 +56,7 @@ describe("classes", () => {
 
   it("selecting a class shows its students in a detail table with its own URL params", async () => {
     const fetch = mockFetch(
-      route("GET", /^\/api\/classes\?/, page([klass(), klass({ id: "c2", name: "11B", grade: 11 })])),
+      route("POST", "/api/classes/search", searchPage([klass(), klass({ id: "c2", name: "11B", grade: 11 })])),
       route("GET", /^\/api\/users\?.*class_id=c1/, page([student("hs01", ["c1"])])),
     );
     const u = userEvent.setup();
@@ -67,7 +68,7 @@ describe("classes", () => {
     fireEvent.change(screen.getAllByRole("textbox", { name: "Lọc Họ tên" })[0], { target: { value: "an" } });
     await waitFor(() => expect(searchOf().get("m.full_name")).toBe("an"), { timeout: 1500 });
     await waitFor(() => expect(lastQuery(fetch, "/users").get("full_name")).toBe("an"));
-    expect(lastQuery(fetch, "/classes").get("full_name")).toBeNull();
+    expect(lastBody(fetch, "/classes/search").filters).toBeUndefined(); // the member filter stays on the member table
   });
 
   it("adds a student and removes one after confirmation", async () => {
@@ -77,15 +78,15 @@ describe("classes", () => {
       route("POST", "/api/classes/c1/members", undefined, 204),
       route("DELETE", "/api/classes/c1/members/hs01", undefined, 204),
     );
-    const onChange = vi.fn();
     const u = userEvent.setup();
-    render(<MemberManager classId="c1" onChange={onChange} />);
+    render(<MemberManager classId="c1" />);
     await screen.findByText("HS01");
     await u.click(screen.getByRole("button", { name: "Thêm học sinh" }));
     await u.type(screen.getByRole("textbox", { name: "Tìm học sinh" }), "hs");
     const dialog = await screen.findByRole("dialog");
     await u.click(await within(dialog).findByRole("button", { name: "Thêm" }));
-    await waitFor(() => expect(onChange).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(f.mock.calls.some((c) => c[0] === "/api/classes/c1/members")).toBe(true));
+    await waitFor(() => expect(within(dialog).queryByRole("button", { name: "Thêm" })).toBeNull()); // hs02 leaves the list once added
     expect(JSON.parse(String(f.mock.calls.find((c) => c[0] === "/api/classes/c1/members")?.[1]?.body)).user_ids).toEqual(["hs02"]);
     await u.keyboard("{Escape}");
     await u.click(screen.getByRole("checkbox", { name: "Chọn dòng" }));

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import DocumentsPage from "@/app/(app)/org/documents/page";
@@ -7,7 +7,7 @@ import { DocumentInfo } from "@/components/documents/DocumentInfo";
 import { UploadForm } from "@/components/documents/UploadForm";
 import { ThemeProvider } from "@/components/app/ThemeProvider";
 import type { ParsedQuestion, SourceDocument, Taxonomy } from "@/lib/types";
-import { mockFetch, page, route } from "./helpers";
+import { mockFetch, page, renderWithQuery as render, route } from "./helpers";
 import { currentUrl, setUrl } from "./router-mock";
 
 vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);

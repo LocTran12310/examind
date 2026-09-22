@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { AppShell } from "@/app/(app)/AppShell";
 import { OrgSwitcher } from "@/components/app/OrgSwitcher";
-import { mockFetch, route } from "./helpers";
+import { mockFetch, renderWithQuery, route } from "./helpers";
 import { ThemeProvider } from "@/components/app/ThemeProvider";
 import { activeItem, groupsFor, homeFor } from "@/lib/nav";
 import type { Me } from "@/lib/types";
@@ -12,7 +12,7 @@ vi.mock("next/navigation", () => ({ usePathname: () => "/org/exams/123", useRout
 
 const me = (role: Me["role"]): Me => ({ id: "u", username: "lan", full_name: "Cô Lan Anh", role, must_change_password: false, org: { id: "o", code: "trungtama", name: "Trung tâm A" } });
 const shell = (role: Me["role"]) =>
-  render(
+  renderWithQuery(
     <ThemeProvider>
       <AppShell me={me(role)}>
         <p>nội dung</p>

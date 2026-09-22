@@ -1,8 +1,8 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { RolloverWizard } from "@/components/years/RolloverWizard";
-import { mockFetch, route } from "./helpers";
+import { RolloverPage } from "@/components/page-components/Rollover/RolloverPage";
+import { mockFetch, renderWithQuery as render, route } from "./helpers";
 
 vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);
 
@@ -25,7 +25,7 @@ describe("rollover wizard", () => {
       route("POST", "/api/school-years/y1/rollover/commit", { target_year_id: "y2", target_code: "2027-2028", classes_created: ["11A1", "10A1"], promote: 1, retain: 1, transfer: 0, graduate: 1 }),
     );
     const u = userEvent.setup();
-    render(<RolloverWizard yearId="y1" />);
+    render(<RolloverPage yearId="y1" />);
     const c10 = await screen.findByTestId("plan-10A1");
     expect(within(c10).getByRole("textbox", { name: "Lớp mới của 10A1" })).toHaveValue("11A1");
     expect(screen.getByTestId("plan-12C")).toHaveTextContent("Tốt nghiệp");

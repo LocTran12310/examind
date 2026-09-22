@@ -11,7 +11,9 @@ import { PageHeader } from "@/components/app/PageHeader";
 import { OptionSelect } from "@/components/app/OptionSelect";
 import { useYear } from "@/components/app/YearContext";
 import { qs, useApi } from "@/lib/hooks";
-import type { GroupStat, SchoolClass, TopicStat, Page } from "@/lib/types";
+// eslint-disable-next-line no-restricted-imports -- screen moves to a page hook in its own slice
+import { useClassOptionsQuery } from "@/hooks/react-query/use-query-class";
+import type { GroupStat, TopicStat } from "@/lib/types";
 
 const TABS = [
   ["topics", "Theo chuyên đề"],
@@ -28,8 +30,7 @@ export default function ReportsPage() {
   const [term, setTerm] = useState("");
   const { year } = useYear();
   // whole year by default; picking a class narrows to that class (its own year) — school-years ADR-02
-  const { data: classesPage } = useApi<Page<SchoolClass>>(`/classes?page_size=all${year ? `&school_year_id=${year.id}` : ""}`);
-  const classes = classesPage?.items;
+  const { data: classes } = useClassOptionsQuery(year?.id ?? null);
   const scopeParams = { class_id: classId, school_year_id: classId ? undefined : year?.id, term_code: term };
   const filters = qs(scopeParams);
   const { data: topics } = useApi<TopicStat[]>(tab === "topics" ? `/stats/topics${filters}` : null);

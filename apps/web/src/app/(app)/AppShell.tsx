@@ -5,7 +5,6 @@ import { createContext, useContext } from "react";
 import { AppSidebar } from "@/components/app/AppSidebar";
 import { OrgSwitcher } from "@/components/app/OrgSwitcher";
 import { ThemeToggle } from "@/components/app/ThemeToggle";
-import { YearProvider } from "@/components/app/YearContext";
 import { YearSwitcher } from "@/components/app/YearSwitcher";
 import { UserMenu } from "@/components/app/UserMenu";
 import { Separator } from "@/components/ui/separator";
@@ -35,7 +34,6 @@ export function AppShell({ me, children, sidebarOpen = true }: { me: Me; childre
   const group = item && groupsFor(me.role, me.is_super).find((g) => g.items.includes(item));
   return (
     <MeContext.Provider value={me}>
-      <YearProvider me={me}>
       <SidebarProvider defaultOpen={sidebarOpen}>
         <AppSidebar me={me} />
         <SidebarInset className="h-svh min-w-0 overflow-hidden">
@@ -57,7 +55,6 @@ export function AppShell({ me, children, sidebarOpen = true }: { me: Me; childre
           <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto p-2 sm:p-3 lg:p-4">{children}</main>
         </SidebarInset>
       </SidebarProvider>
-      </YearProvider>
     </MeContext.Provider>
   );
 }

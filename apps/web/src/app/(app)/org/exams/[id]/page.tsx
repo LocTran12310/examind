@@ -19,9 +19,11 @@ import { PageHeader } from "@/components/app/PageHeader";
 import { api, ApiError } from "@/lib/api";
 import { qs, useApi } from "@/lib/hooks";
 import { fmt } from "@/lib/dates";
-import { TYPE_LABEL, type Assignment, type BlueprintRow, type Exam, type Page, type ParsedQuestion, type QuestionType, type SchoolClass, type Tag, type Topic } from "@/lib/types";
+import { TYPE_LABEL, type Assignment, type BlueprintRow, type Exam, type Page, type ParsedQuestion, type QuestionType, type Tag, type Topic } from "@/lib/types";
 // eslint-disable-next-line no-restricted-imports -- screen moves to a page hook in its own slice
 import { useTagOptionsQuery } from "@/hooks/react-query/use-query-tag";
+// eslint-disable-next-line no-restricted-imports -- screen moves to a page hook in its own slice
+import { useClassOptionsQuery } from "@/hooks/react-query/use-query-class";
 
 export default function ExamBuilderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -37,8 +39,7 @@ export default function ExamBuilderPage({ params }: { params: Promise<{ id: stri
   const [preview, setPreview] = useState<null | "exam" | "review">(null);
   const [error, setError] = useState<string | null>(null);
   const [assigning, setAssigning] = useState(false);
-  const { data: classesPage } = useApi<Page<SchoolClass>>("/classes?page_size=all");
-  const classes = classesPage?.items;
+  const { data: classes } = useClassOptionsQuery();
   const { data: assignedPage, reload: reloadAssigned } = useApi<Page<Assignment>>(`/assignments?exam_id=${id}&page_size=all`);
   const assigned = assignedPage?.items;
 

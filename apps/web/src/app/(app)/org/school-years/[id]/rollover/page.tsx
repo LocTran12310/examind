@@ -1,9 +1,9 @@
 "use client";
 
 import { use } from "react";
-import { RolloverWizard } from "@/components/years/RolloverWizard";
+import { RolloverPage } from "@/components/page-components/Rollover/RolloverPage";
 
-export default function RolloverPage({ params }: { params: Promise<{ id: string }> }) {
+export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  return <RolloverWizard yearId={id} />;
+  return <RolloverPage yearId={id} />;
 }

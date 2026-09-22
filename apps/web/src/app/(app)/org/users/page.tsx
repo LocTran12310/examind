@@ -19,8 +19,9 @@ import { TempPassword, UserCreateForm, UserEditForm } from "@/components/org/Use
 import { api, ApiError } from "@/lib/api";
 import { downloadText, toCsv } from "@/lib/csv";
 import { fmt } from "@/lib/dates";
-import { useApi } from "@/lib/hooks";
-import { type Credential, type Page, ROLE_LABEL, type SchoolClass, type User } from "@/lib/types";
+// eslint-disable-next-line no-restricted-imports -- screen moves to a page hook in its own slice
+import { useClassOptionsQuery } from "@/hooks/react-query/use-query-class";
+import { type Credential, type Page, ROLE_LABEL, type User } from "@/lib/types";
 
 function status(u: User) {
   if (!u.is_active) return <ToneBadge tone="red">Đã khóa</ToneBadge>;
@@ -38,8 +39,8 @@ export default function UsersPage() {
   const [linking, setLinking] = useState(false);
   const [unlinking, setUnlinking] = useState<User[] | null>(null);
   const [version, setVersion] = useState(0);
-  const { data: classes } = useApi<Page<SchoolClass>>("/classes?page_size=all");
-  const classById = useMemo(() => new Map(classes?.items.map((c) => [c.id, c]) ?? []), [classes]);
+  const { data: classes } = useClassOptionsQuery();
+  const classById = useMemo(() => new Map(classes?.map((c) => [c.id, c]) ?? []), [classes]);
   const refresh = () => setVersion((v) => v + 1);
 
   const columns = useMemo<ColumnDef<User, unknown>[]>(
@@ -76,7 +77,7 @@ export default function UsersPage() {
         id: "class_id",
         header: "Lớp",
         cell: ({ row }) => row.original.class_ids.map((id) => classById.get(id)?.name).filter(Boolean).join(", "),
-        meta: { filter: { kind: "select", options: (classes?.items ?? []).map((c) => ({ value: c.id, label: `${c.name} (${c.school_year})` })) } },
+        meta: { filter: { kind: "select", options: (classes ?? []).map((c) => ({ value: c.id, label: `${c.name} (${c.school_year})` })) } },
       },
       { accessorKey: "is_active", header: "Trạng thái", cell: ({ row }) => status(row.original), meta: { filter: { kind: "select", options: [{ value: "true", label: "Hoạt động" }, { value: "false", label: "Đã khóa" }] } } },
       {

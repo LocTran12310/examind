@@ -5,7 +5,7 @@ import { MeProvider } from "@/app/(app)/AppShell";
 import UsersPage from "@/app/(app)/org/users/page";
 import { rolesManagedBy, UserCreateForm } from "@/components/org/UserForm";
 import type { User } from "@/lib/types";
-import { lastQuery, me, mockFetch, page, route } from "./helpers";
+import { lastQuery, me, mockFetch, page, renderWithQuery, route, searchPage } from "./helpers";
 import { searchOf, setUrl } from "./router-mock";
 
 vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);
@@ -23,11 +23,11 @@ const user = (o: Partial<User>): User => ({
   class_ids: [],
   ...o,
 });
-const classes = page([{ id: "c1", name: "10A1", school_year: "2026-2027", grade: 10, member_count: 2 }]);
+const classes = searchPage([{ id: "c1", name: "10A1", school_year: "2026-2027", grade: 10, member_count: 2 }]);
 const users = [user({ id: "me", username: "admin", full_name: "Quản Trị", role: "org_admin" }), user({ id: "s", username: "hs01", full_name: "Bùi Văn Châu", is_active: false, class_ids: ["c1"] })];
 
 function renderPage(role: "org_admin" | "teacher" = "org_admin") {
-  return render(
+  return renderWithQuery(
     <MeProvider value={me(role)}>
       <UsersPage />
     </MeProvider>,
@@ -52,16 +52,16 @@ describe("users", () => {
   });
 
   it("lists users from the server with class names and status", async () => {
-    mockFetch(route("GET", /^\/api\/users\?/, page(users)), route("GET", /^\/api\/classes\?/, classes));
+    mockFetch(route("GET", /^\/api\/users\?/, page(users)), route("POST", "/api/classes/search", classes));
     renderPage();
-    const row = (await screen.findByText("Bùi Văn Châu")).closest("tr")!;
-    expect(row).toHaveTextContent("10A1");
-    expect(row).toHaveTextContent("Đã khóa");
+    // class names arrive with the class options query
+    await waitFor(() => expect(screen.getByText("Bùi Văn Châu").closest("tr")).toHaveTextContent("10A1"));
+    expect(screen.getByText("Bùi Văn Châu").closest("tr")).toHaveTextContent("Đã khóa");
     expect(screen.getByRole("columnheader", { name: /Vai trò/ })).toBeInTheDocument();
   });
 
   it("filters by class on the server and keeps it in the URL", async () => {
-    const fetch = mockFetch(route("GET", /^\/api\/users\?/, page(users)), route("GET", /^\/api\/classes\?/, classes));
+    const fetch = mockFetch(route("GET", /^\/api\/users\?/, page(users)), route("POST", "/api/classes/search", classes));
     const u = userEvent.setup();
     renderPage();
     await screen.findByText("Bùi Văn Châu");
@@ -72,7 +72,7 @@ describe("users", () => {
   });
 
   it("teachers do not see the role column", async () => {
-    mockFetch(route("GET", /^\/api\/users\?/, page(users)), route("GET", /^\/api\/classes\?/, classes));
+    mockFetch(route("GET", /^\/api\/users\?/, page(users)), route("POST", "/api/classes/search", classes));
     renderPage("teacher");
     await screen.findByText("Bùi Văn Châu");
     expect(screen.queryByRole("columnheader", { name: /Vai trò/ })).not.toBeInTheDocument();
@@ -82,7 +82,7 @@ describe("users", () => {
   it("toolbar: unlock the selected user; reset password asks first; never lock myself", async () => {
     const fetch = mockFetch(
       route("GET", /^\/api\/users\?/, page(users)),
-      route("GET", /^\/api\/classes\?/, classes),
+      route("POST", "/api/classes/search", classes),
       route("PATCH", "/api/users/s", user({ id: "s", is_active: true })),
       route("POST", "/api/users/s/reset-password", { user_id: "s", username: "hs01", full_name: "Bùi Văn Châu", temp_password: "Tmp1234567" }),
     );
@@ -109,14 +109,13 @@ describe("users", () => {
     const linked = user({ id: "l", username: "gvlan", full_name: "Cô Lan", role: "teacher", is_home: false, home_org_code: "ttb" });
     const fetch = mockFetch(
       route("GET", /^\/api\/users\?/, page([...users, linked])),
-      route("GET", /^\/api\/classes\?/, classes),
+      route("POST", "/api/classes/search", classes),
       route("POST", "/api/users/link", linked, 201),
       route("DELETE", "/api/users/l/membership", undefined, 204),
     );
     const u = userEvent.setup();
     renderPage();
-    const row = (await screen.findByText("Cô Lan")).closest("tr")!;
-    expect(row).toHaveTextContent("Từ ttb");
+    await waitFor(() => expect(screen.getByText("Cô Lan").closest("tr")).toHaveTextContent("Từ ttb"));
     await u.click(screen.getByRole("button", { name: "Thêm tài khoản có sẵn" }));
     const dialog = await screen.findByRole("dialog");
     await u.type(within(dialog).getByLabelText("Mã tổ chức gốc"), "ttb");

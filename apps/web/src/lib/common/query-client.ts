@@ -15,3 +15,8 @@ export function getQueryClient(): QueryClient {
   browserClient ??= makeQueryClient();
   return browserClient;
 }
+
+/** Refresh every query of these resources (their `<ENTITY>_KEYS.ALL`). */
+export function invalidate(qc: QueryClient, ...keys: readonly (readonly unknown[])[]): Promise<void> {
+  return Promise.all(keys.map((queryKey) => qc.invalidateQueries({ queryKey }))).then(() => undefined);
+}

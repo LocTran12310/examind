@@ -1,11 +1,11 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProcessingConfigFields } from "@/components/documents/ProcessingConfig";
 import { UploadForm } from "@/components/documents/UploadForm";
 import type { AiModel, ProcessingConfig } from "@/lib/types";
-import { mockFetch, route } from "./helpers";
+import { mockFetch, renderWithQuery as render, route } from "./helpers";
 
 const base: ProcessingConfig = { split_mode: "rule", ocr: "auto", split_models: [], tag_model: null, vision_model: null, threshold: 0.85 };
 const m = (id: string, caps: AiModel["capabilities"] = ["text"], is_free = true): AiModel => ({

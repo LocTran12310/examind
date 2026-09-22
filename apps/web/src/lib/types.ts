@@ -2,6 +2,12 @@
 export type { Tag, TagGroup } from "@/interfaces/tag.interface";
 export type { Taxonomy } from "@/interfaces/taxonomy.interface";
 export { TAG_GROUP_LABEL } from "@/constants/tag.constant";
+export type { ClassDetail, SchoolClass } from "@/interfaces/class.interface";
+export type { SchoolTerm, SchoolYear, YearStatus } from "@/interfaces/school-year.interface";
+export type { GradeRow, SchoolLevel, Structure, TreeClass, TreeGrade, TreeLevel } from "@/interfaces/structure.interface";
+export type { LevelKind, Topic } from "@/interfaces/topic.interface";
+export { LEVEL_LABEL } from "@/constants/topic.constant";
+export { YEAR_STATUS_LABEL } from "@/constants/school-year.constant";
 import type { Tag } from "@/interfaces/tag.interface";
 
 export type Role = "super_admin" | "org_admin" | "teacher" | "student";
@@ -85,70 +91,7 @@ export interface Credential {
   class?: string;
 }
 
-export interface SchoolLevel {
-  id: string;
-  code: string;
-  name: string;
-  grade_from: number;
-  grade_to: number;
-  sort: number;
-  grade_count: number;
-}
 
-export interface GradeRow {
-  id: string;
-  level: number;
-  name: string;
-  school_level_id: string | null;
-  class_count: number;
-}
-
-export interface TreeClass {
-  id: string;
-  name: string;
-  school_year: string;
-  member_count: number;
-}
-
-export interface TreeGrade {
-  id: string;
-  level: number;
-  name: string;
-  class_count: number;
-  student_count: number;
-  classes: TreeClass[];
-}
-
-export interface TreeLevel {
-  id: string;
-  code: string;
-  name: string;
-  grade_from: number;
-  grade_to: number;
-  class_count: number;
-  student_count: number;
-  grades: TreeGrade[];
-}
-
-export interface Structure {
-  levels: TreeLevel[];
-  unassigned: TreeClass[];
-}
-
-export interface SchoolClass {
-  id: string;
-  name: string;
-  grade: number | null;
-  grade_id?: string | null;
-  school_year_id?: string | null;
-  school_year: string;
-  member_count: number;
-  created_at: string;
-}
-
-export interface ClassDetail extends SchoolClass {
-  members: User[];
-}
 
 export interface ImportRow {
   row: number;
@@ -180,27 +123,6 @@ export interface Question {
   status: string;
 }
 
-export type LevelKind = "strand" | "topic" | "subtopic" | "type";
-
-export const LEVEL_LABEL: Record<LevelKind, string> = {
-  strand: "Mạch kiến thức",
-  topic: "Chuyên đề",
-  subtopic: "Chủ đề con",
-  type: "Dạng bài",
-};
-
-export interface Topic {
-  id: string;
-  subject_id: string;
-  parent_id: string | null;
-  name: string;
-  level_kind: LevelKind;
-  grade: number | null;
-  path: string;
-  depth: number;
-  sort: number;
-  child_count: number;
-}
 
 
 
@@ -519,26 +441,6 @@ export interface PracticeItem {
   groups: { reason: string; topic: string | null; count: number }[];
 }
 
-export type YearStatus = "planning" | "active" | "closed";
-export const YEAR_STATUS_LABEL: Record<YearStatus, string> = { planning: "Chuẩn bị", active: "Đang học", closed: "Đã khóa" };
-
-export interface SchoolTerm {
-  code: "hk1" | "hk2";
-  name: string;
-  start_date: string;
-  end_date: string;
-}
-
-export interface SchoolYear {
-  id: string;
-  code: string;
-  name: string;
-  start_date: string;
-  end_date: string;
-  status: YearStatus;
-  terms: SchoolTerm[];
-  class_count: number;
-}
 
 export interface AuditEntry {
   id: string;

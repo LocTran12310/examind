@@ -1,33 +1,5 @@
-"use client";
+import { TopicsPage } from "@/components/page-components/Topics/TopicsPage";
 
-import { useEffect, useState } from "react";
-import { useMe } from "@/app/(app)/AppShell";
-import { TopicTree } from "@/components/topics/TopicTree";
-import { EmptyState } from "@/components/app/EmptyState";
-import { PageHeader } from "@/components/app/PageHeader";
-import { OptionSelect } from "@/components/app/OptionSelect";
-import { qs, useApi } from "@/lib/hooks";
-import type { Taxonomy, Topic } from "@/lib/types";
-
-export default function TopicsPage() {
-  const me = useMe();
-  const { data: tax } = useApi<Taxonomy>("/taxonomy");
-  const [subjectId, setSubjectId] = useState("");
-  useEffect(() => {
-    if (!subjectId && tax?.subjects.length) setSubjectId((tax.subjects.find((s) => s.code === "toan") ?? tax.subjects[0]).id);
-  }, [tax, subjectId]);
-  const { data: topics, reload } = useApi<Topic[]>(subjectId ? `/topics${qs({ subject_id: subjectId })}` : null);
-  return (
-    <>
-      <PageHeader
-        title="Cây chuyên đề"
-        description="Nhấp đúp vào tên để đổi tên. Câu hỏi gắn vào nhánh cuối; thống kê cộng dồn lên các cấp trên."
-        actions={
-          <OptionSelect className="w-48" value={subjectId} onValueChange={setSubjectId} aria-label="Môn học" options={(tax?.subjects ?? []).map((s) => ({ value: s.id, label: s.name }))} />
-        }
-      />
-      {topics && topics.length === 0 && <EmptyState>Môn này chưa có cây chuyên đề. Thêm mạch kiến thức đầu tiên bên dưới.</EmptyState>}
-      {topics && <TopicTree key={subjectId} topics={topics} subjectId={subjectId} onChange={reload} readOnly={me.role === "student"} />}
-    </>
-  );
+export default function Page() {
+  return <TopicsPage />;
 }

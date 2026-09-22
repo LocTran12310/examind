@@ -1,9 +1,9 @@
 "use client";
 
 import { use } from "react";
-import { StudentRecord } from "@/components/students/StudentRecord";
+import { StudentRecordPage } from "@/components/page-components/StudentRecord/StudentRecordPage";
 
-export default function StudentRecordPage({ params }: { params: Promise<{ id: string }> }) {
+export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  return <StudentRecord id={id} />;
+  return <StudentRecordPage id={id} />;
 }
