@@ -1,6 +1,6 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
-import { useMe } from "@/app/(app)/AppShell";
+import { useMe } from "@/hooks/common/use-me";
 import { nodeKey, type NodeRef, parseNode } from "@/lib/page-libs/structure/node";
 import { useTableQuery } from "@/hooks/common/use-table-query";
 import { useYear } from "@/hooks/common/use-year";

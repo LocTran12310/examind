@@ -1,7 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useMe } from "@/app/(app)/AppShell";
+import { useMe } from "@/hooks/common/use-me";
 import { ToneBadge } from "@/components/app/ToneBadge";
 import { YEAR_STATUS_LABEL, YEAR_STATUS_OPTIONS } from "@/constants/school-year.constant";
 import type { YearAction } from "@/dtos/school-year.dto";

@@ -10,97 +10,17 @@ export { LEVEL_LABEL } from "@/constants/topic.constant";
 export { YEAR_STATUS_LABEL } from "@/constants/school-year.constant";
 import type { Tag } from "@/interfaces/tag.interface";
 
-export type Role = "super_admin" | "org_admin" | "teacher" | "student";
+export type { Me, MyOrg, OrgRef, Role } from "@/interfaces/auth.interface";
+export type { Credential, ImportPreview, ImportRow, User } from "@/interfaces/user.interface";
+export type { Account, Membership, Org, OrgCreated } from "@/interfaces/org.interface";
+export { ROLE_LABEL } from "@/constants/role.constant";
 
-export interface OrgRef {
-  id: string;
-  code: string;
-  name: string;
-}
-
-export interface Me {
-  id: string;
-  username: string;
-  full_name: string;
-  /** role in the active org */
-  role: Role;
-  must_change_password: boolean;
-  /** the org the user is working in (header selector) */
-  org: OrgRef;
-  home_org?: OrgRef;
-  is_super?: boolean;
-}
-
-export interface MyOrg extends OrgRef {
-  role: Role;
-  is_home: boolean;
-}
-
+/** The old list answer (`GET` lists not moved to search yet). */
 export interface Page<T> {
   items: T[];
   total: number;
   page: number;
   page_size: number;
-}
-
-export const ROLE_LABEL: Record<Role, string> = {
-  super_admin: "Quản trị hệ thống",
-  org_admin: "Quản trị trung tâm",
-  teacher: "Giáo viên",
-  student: "Học sinh",
-};
-
-export interface Org {
-  id: string;
-  code: string;
-  name: string;
-  status: "active" | "suspended";
-  is_system: boolean;
-  user_count: number;
-  created_at: string;
-  deleted_at: string | null;
-}
-
-export interface OrgCreated {
-  org: Org;
-  admin: { username: string; temp_password: string };
-}
-
-export interface User {
-  id: string;
-  username: string;
-  full_name: string;
-  email: string | null;
-  role: Role;
-  is_active: boolean;
-  must_change_password: boolean;
-  last_login_at: string | null;
-  created_at: string;
-  class_ids: string[];
-  /** false when the account lives in another org and was added here */
-  is_home?: boolean;
-  home_org_code?: string | null;
-}
-
-export interface Credential {
-  user_id: string;
-  username: string;
-  full_name: string;
-  temp_password: string;
-  role?: Role;
-  class?: string;
-}
-
-
-
-export interface ImportRow {
-  row: number;
-  full_name: string;
-  username: string;
-  role: Role;
-  class: string;
-  errors: string[];
-  generated_username: boolean;
 }
 
 export type QuestionType = "mcq" | "true_false" | "short_answer" | "essay";
@@ -453,29 +373,6 @@ export interface AuditEntry {
   target_type: string;
   target_id: string | null;
   data: Record<string, unknown>;
-}
-
-export interface Membership {
-  user_id: string;
-  username: string;
-  full_name: string;
-  home_org_code: string;
-  org_id: string;
-  org_code: string;
-  org_name: string;
-  role: Role;
-  is_active: boolean;
-  is_home: boolean;
-}
-
-export interface Account {
-  id: string;
-  username: string;
-  full_name: string;
-  home_org_code: string;
-  home_org_name: string;
-  is_active: boolean;
-  org_count: number;
 }
 
 /** GET /questions/facets — counts per value; each facet ignores its own filter (subject-scoped-bank ADR-02). */

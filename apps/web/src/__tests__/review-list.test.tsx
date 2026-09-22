@@ -1,10 +1,10 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MeProvider } from "@/app/(app)/AppShell";
 import ReviewPage from "@/app/(app)/org/review/page";
 import type { ReviewDocument, User } from "@/lib/types";
-import { lastQuery, me, mockFetch, page, route } from "./helpers";
+import { lastBody, lastQuery, me, mockFetch, page, renderWithQuery as render, route, searchPage } from "./helpers";
 import { searchOf, setUrl } from "./router-mock";
 
 vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);
@@ -56,7 +56,7 @@ describe("review list", () => {
   it("org admins assign a reviewer", async () => {
     const fetch = mockFetch(
       route("GET", /^\/api\/review\/documents\?/, page([reviewRow()])),
-      route("GET", /^\/api\/users\?/, page([gv])),
+      route("POST", "/api/users/search", searchPage([gv])),
       route("PATCH", "/api/review/documents/d1", reviewRow({ assigned_to: "u1" })),
     );
     const u = userEvent.setup();
@@ -64,6 +64,7 @@ describe("review list", () => {
     await screen.findByTestId("rev-de-kho.docx");
     await u.click(screen.getByRole("combobox", { name: "Người duyệt" }));
     await u.click(await screen.findByRole("option", { name: "Cô Lan" }));
+    expect(lastBody(fetch, "/users/search")).toMatchObject({ limit: 1000, filters: { role: { value: ["teacher", "org_admin"] } } });
     await waitFor(() => {
       const call = fetch.mock.calls.find(([url, init]) => url === "/api/review/documents/d1" && (init as RequestInit)?.method === "PATCH");
       expect(JSON.parse(String((call?.[1] as RequestInit).body))).toEqual({ assigned_to: "u1" });

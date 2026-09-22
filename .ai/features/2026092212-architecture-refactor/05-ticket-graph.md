@@ -3,7 +3,7 @@
 # Ticket graph — 2026092212-architecture-refactor
 
 - Units of Work: **7**
-- Tickets: **31** (10 done)
+- Tickets: **31** (14 done)
 - Total effort: **13.8d**
 - Critical path: **4.6d** across 10 tickets
 - Theoretical minimum duration with unlimited parallelism: **4.6d**
@@ -42,10 +42,10 @@ graph LR
     T_02_05["✓ T-02-05<br/>Web: school years, rollover, classes, student record, year store"]
   end
   subgraph UOW_03["UOW-03 · Identity: sessions, users, organisations"]
-    T_03_01["T-03-01<br/>identity: auth, sessions, me, password"]
-    T_03_02["T-03-02<br/>identity: users, import, organisations, membership"]
-    T_03_03["T-03-03<br/>Web: shell, login, password, org switch clears cache"]
-    T_03_04["T-03-04<br/>Web: users, import, admin pages"]
+    T_03_01["✓ T-03-01<br/>identity: auth, sessions, me, password"]
+    T_03_02["✓ T-03-02<br/>identity: users, import, organisations, membership"]
+    T_03_03["✓ T-03-03<br/>Web: shell, login, password, org switch clears cache"]
+    T_03_04["✓ T-03-04<br/>Web: users, import, admin pages"]
   end
   subgraph UOW_04["UOW-04 · Question bank and review"]
     T_04_01["T-04-01<br/>bank: question aggregate and commands"]
@@ -169,10 +169,10 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-02-03 | UOW-02 | api | feature | 4h | T-02-02 | AC-01, AC-02, AC-06 | done |
 | T-02-04 | UOW-02 | web | feature | 3h | T-02-01, T-01-05 | AC-04, AC-05 | done |
 | T-02-05 | UOW-02 | web | feature | 4h | T-02-03, T-01-05 | AC-04, AC-05 | done |
-| T-03-01 | UOW-03 | api | feature | 4h | T-01-02 | AC-01, AC-06 | todo |
-| T-03-02 | UOW-03 | api | feature | 4h | T-03-01 | AC-01, AC-02, AC-06 | todo |
-| T-03-03 | UOW-03 | web | feature | 3h | T-03-01, T-01-05 | AC-04, AC-05 | todo |
-| T-03-04 | UOW-03 | web | feature | 3h | T-03-02, T-03-03 | AC-04, AC-05 | todo |
+| T-03-01 | UOW-03 | api | feature | 4h | T-01-02 | AC-01, AC-06 | done |
+| T-03-02 | UOW-03 | api | feature | 4h | T-03-01 | AC-01, AC-02, AC-06 | done |
+| T-03-03 | UOW-03 | web | feature | 3h | T-03-01, T-01-05 | AC-04, AC-05 | done |
+| T-03-04 | UOW-03 | web | feature | 3h | T-03-02, T-03-03 | AC-04, AC-05 | done |
 | T-04-01 | UOW-04 | api | feature | 4h | T-02-01 | AC-01, AC-06 | todo |
 | T-04-02 | UOW-04 | api | feature | 4h | T-04-01 | AC-02, AC-06 | todo |
 | T-04-03 | UOW-04 | api | feature | 4h | T-04-01 | AC-01, AC-06 | todo |

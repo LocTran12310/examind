@@ -1,11 +1,12 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MeProvider } from "@/app/(app)/AppShell";
 import UsersPage from "@/app/(app)/org/users/page";
-import { rolesManagedBy, UserCreateForm } from "@/components/org/UserForm";
+import { UserCreateForm } from "@/components/page-components/Users/UserForm/UserForm";
+import { rolesManagedBy } from "@/lib/page-libs/users/roles";
 import type { User } from "@/lib/types";
-import { lastQuery, me, mockFetch, page, renderWithQuery, route, searchPage } from "./helpers";
+import { lastBody, me, mockFetch, renderWithQuery, route, searchPage } from "./helpers";
 import { searchOf, setUrl } from "./router-mock";
 
 vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);
@@ -45,14 +46,14 @@ describe("users", () => {
 
   it("creates a user and shows the temp password once", async () => {
     mockFetch(route("POST", "/api/users", { user: user({ username: "nguyenvanan" }), temp_password: "Pw23456789" }, 201));
-    render(<UserCreateForm myRole="org_admin" orgCode="trungtama" onDone={() => {}} />);
+    renderWithQuery(<UserCreateForm myRole="org_admin" orgCode="trungtama" onDone={() => {}} />);
     await userEvent.type(screen.getByLabelText("Họ tên"), "Nguyễn Văn An");
     await userEvent.click(screen.getByRole("button", { name: "Tạo tài khoản" }));
     expect(await screen.findByTestId("temp-cred")).toHaveTextContent("trungtama / nguyenvanan / Pw23456789");
   });
 
   it("lists users from the server with class names and status", async () => {
-    mockFetch(route("GET", /^\/api\/users\?/, page(users)), route("POST", "/api/classes/search", classes));
+    mockFetch(route("POST", "/api/users/search", searchPage(users)), route("POST", "/api/classes/search", classes));
     renderPage();
     // class names arrive with the class options query
     await waitFor(() => expect(screen.getByText("Bùi Văn Châu").closest("tr")).toHaveTextContent("10A1"));
@@ -61,18 +62,19 @@ describe("users", () => {
   });
 
   it("filters by class on the server and keeps it in the URL", async () => {
-    const fetch = mockFetch(route("GET", /^\/api\/users\?/, page(users)), route("POST", "/api/classes/search", classes));
+    const fetch = mockFetch(route("POST", "/api/users/search", searchPage(users)), route("POST", "/api/classes/search", classes));
     const u = userEvent.setup();
     renderPage();
     await screen.findByText("Bùi Văn Châu");
     await u.click(screen.getByRole("combobox", { name: "Lọc Lớp" }));
     await u.click(await screen.findByRole("option", { name: "10A1 (2026-2027)" }));
-    await waitFor(() => expect(lastQuery(fetch, "/users").get("class_id")).toBe("c1"));
+    await waitFor(() => expect(lastBody(fetch, "/users/search").class_id).toBe("c1"));
+    expect(lastBody(fetch, "/users/search").filters).toBeUndefined(); // a resource parameter, not a column filter
     expect(searchOf().get("class_id")).toBe("c1");
   });
 
   it("teachers do not see the role column", async () => {
-    mockFetch(route("GET", /^\/api\/users\?/, page(users)), route("POST", "/api/classes/search", classes));
+    mockFetch(route("POST", "/api/users/search", searchPage(users)), route("POST", "/api/classes/search", classes));
     renderPage("teacher");
     await screen.findByText("Bùi Văn Châu");
     expect(screen.queryByRole("columnheader", { name: /Vai trò/ })).not.toBeInTheDocument();
@@ -81,7 +83,7 @@ describe("users", () => {
 
   it("toolbar: unlock the selected user; reset password asks first; never lock myself", async () => {
     const fetch = mockFetch(
-      route("GET", /^\/api\/users\?/, page(users)),
+      route("POST", "/api/users/search", searchPage(users)),
       route("POST", "/api/classes/search", classes),
       route("PATCH", "/api/users/s", user({ id: "s", is_active: true })),
       route("POST", "/api/users/s/reset-password", { user_id: "s", username: "hs01", full_name: "Bùi Văn Châu", temp_password: "Tmp1234567" }),
@@ -108,7 +110,7 @@ describe("users", () => {
   it("links an account from another org and shows where it comes from; unlinks after confirmation", async () => {
     const linked = user({ id: "l", username: "gvlan", full_name: "Cô Lan", role: "teacher", is_home: false, home_org_code: "ttb" });
     const fetch = mockFetch(
-      route("GET", /^\/api\/users\?/, page([...users, linked])),
+      route("POST", "/api/users/search", searchPage([...users, linked])),
       route("POST", "/api/classes/search", classes),
       route("POST", "/api/users/link", linked, 201),
       route("DELETE", "/api/users/l/membership", undefined, 204),

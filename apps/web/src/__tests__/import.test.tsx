@@ -1,8 +1,8 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ImportWizard } from "@/components/org/ImportWizard";
-import { mockFetch, route } from "./helpers";
+import { ImportWizard } from "@/components/page-components/UserImport/ImportWizard/ImportWizard";
+import { mockFetch, renderWithQuery as render, route } from "./helpers";
 
 const row = (n: number, errors: string[] = []) => ({
   row: n,

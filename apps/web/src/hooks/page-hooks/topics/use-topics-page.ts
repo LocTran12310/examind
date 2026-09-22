@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useMe } from "@/app/(app)/AppShell";
+import { useMe } from "@/hooks/common/use-me";
 import { useTaxonomyQuery } from "@/hooks/react-query/use-query-taxonomy";
 import { useTopicsQuery } from "@/hooks/react-query/use-query-topic";
 

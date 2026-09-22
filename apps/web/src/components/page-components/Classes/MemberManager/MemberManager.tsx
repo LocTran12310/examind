@@ -6,11 +6,12 @@ import Link from "next/link";
 import { useState } from "react";
 import { FormDialog } from "@/components/app/FormDialog";
 import { ToolbarButton } from "@/components/common/DataTable/Toolbar";
-import { DataTable } from "@/components/data-table/DataTable";
+import { DataTable } from "@/components/common/DataTable/DataTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useMemberManager, useStudentSearch } from "@/hooks/page-hooks/classes/use-member-manager";
-import type { User } from "@/lib/types";
+import { useUserSearchQuery } from "@/hooks/react-query/use-query-user";
+import type { User } from "@/interfaces/user.interface";
 
 const COLUMNS: ColumnDef<User, unknown>[] = [
   {
@@ -29,13 +30,13 @@ const COLUMNS: ColumnDef<User, unknown>[] = [
 function AddStudents({ classId, onAdd }: { classId: string; onAdd: (userId: string) => Promise<boolean> }) {
   const [q, setQ] = useState("");
   const [added, setAdded] = useState<Set<string>>(new Set());
-  const data = useStudentSearch(q);
+  const students = useStudentSearch(q);
   return (
     <div className="grid gap-3">
       <Input autoFocus aria-label="Tìm học sinh" placeholder="Tìm tên hoặc tên đăng nhập (≥ 2 ký tự)" value={q} onChange={(e) => setQ(e.target.value)} />
       <ul className="max-h-80 divide-y overflow-y-auto">
-        {data?.items
-          .filter((u) => !u.class_ids.includes(classId) && !added.has(u.id))
+        {students
+          ?.filter((u) => !u.class_ids.includes(classId) && !added.has(u.id))
           .map((u) => (
             <li key={u.id} className="flex items-center justify-between py-2 text-sm">
               <span>
@@ -63,12 +64,11 @@ export function MemberManager({ classId, prefix = "m." }: MemberManagerProps) {
   return (
     <>
       <DataTable
-        path="/users"
+        useRows={useUserSearchQuery}
         prefix={prefix}
         params={m.params}
         columns={COLUMNS}
         getRowId={(u) => u.id}
-        reloadKey={m.version}
         onDelete={m.removeStudents}
         deleteLabel={(rows) => `Xóa ${rows.length} học sinh khỏi lớp?`}
         actions={() => (

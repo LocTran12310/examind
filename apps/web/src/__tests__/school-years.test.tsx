@@ -6,7 +6,7 @@ import ClassesPage from "@/app/(app)/org/classes/page";
 import SchoolYearsPage from "@/app/(app)/org/school-years/page";
 import { HistoryPanel } from "@/components/app/HistoryPanel";
 import { ThemeProvider } from "@/components/app/ThemeProvider";
-import { YearSwitcher } from "@/components/app/YearSwitcher";
+import { YearSwitcher } from "@/components/layout/YearSwitcher/YearSwitcher";
 import type { SchoolYear } from "@/lib/types";
 import { lastBody, lastQuery, me, mockFetch, page, renderWithQuery, route, searchPage } from "./helpers";
 import { useYearStore } from "@/stores/common/year.store";

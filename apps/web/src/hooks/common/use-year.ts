@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo } from "react";
-import { useMeMaybe } from "@/app/(app)/AppShell";
+import { useMeMaybe } from "@/hooks/common/use-me";
 import { useSchoolYearOptionsQuery } from "@/hooks/react-query/use-query-school-year";
 import type { SchoolYear } from "@/interfaces/school-year.interface";
 import { useYearStore } from "@/stores/common/year.store";

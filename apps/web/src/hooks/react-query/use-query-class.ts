@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient, type UseMutationResult, type UseQueryResult } from "@tanstack/react-query";
-import { CLASS_KEYS, GRADE_KEYS, SCHOOL_YEAR_KEYS, STRUCTURE_KEYS } from "@/constants/react-query-key.constant";
+import { CLASS_KEYS, GRADE_KEYS, SCHOOL_YEAR_KEYS, STRUCTURE_KEYS, USER_KEYS } from "@/constants/react-query-key.constant";
 import type { ClassBody } from "@/dtos/class.dto";
 import type { SearchBody } from "@/dtos/search.dto";
 import type { ClassDetail, SchoolClass } from "@/interfaces/class.interface";
@@ -52,11 +52,12 @@ export function useDeleteClassesMutation(): UseMutationResult<void, Error, strin
   });
 }
 
+/** Members are users: their lists (class_id, class_ids) refresh too. */
 export function useAddClassMembersMutation(classId: string): UseMutationResult<void, Error, string[]> {
   const qc = useQueryClient();
   return useMutation<void, Error, string[]>({
     mutationFn: (userIds) => classService.addMembers(classId, userIds),
-    onSuccess: () => invalidate(qc, CLASS_KEYS.ALL, STRUCTURE_KEYS.ALL),
+    onSuccess: () => invalidate(qc, CLASS_KEYS.ALL, STRUCTURE_KEYS.ALL, USER_KEYS.ALL),
   });
 }
 
@@ -66,7 +67,7 @@ export function useRemoveClassMembersMutation(classId: string): UseMutationResul
     mutationFn: async (userIds) => {
       for (const u of userIds) await classService.removeMember(classId, u);
     },
-    onSettled: () => invalidate(qc, CLASS_KEYS.ALL, STRUCTURE_KEYS.ALL),
+    onSettled: () => invalidate(qc, CLASS_KEYS.ALL, STRUCTURE_KEYS.ALL, USER_KEYS.ALL),
   });
 }
 

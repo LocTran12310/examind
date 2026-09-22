@@ -1,14 +1,15 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { AppShell } from "@/app/(app)/AppShell";
-import { OrgSwitcher } from "@/components/app/OrgSwitcher";
+import { AppShell } from "@/components/layout/AppShell/AppShell";
+import { OrgSwitcher } from "@/components/layout/OrgSwitcher/OrgSwitcher";
 import { mockFetch, renderWithQuery, route } from "./helpers";
 import { ThemeProvider } from "@/components/app/ThemeProvider";
 import { activeItem, groupsFor, homeFor } from "@/lib/nav";
 import type { Me } from "@/lib/types";
 
-vi.mock("next/navigation", () => ({ usePathname: () => "/org/exams/123", useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }) }));
+const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
+vi.mock("next/navigation", () => ({ usePathname: () => "/org/exams/123", useRouter: () => router }));
 
 const me = (role: Me["role"]): Me => ({ id: "u", username: "lan", full_name: "Cô Lan Anh", role, must_change_password: false, org: { id: "o", code: "trungtama", name: "Trung tâm A" } });
 const shell = (role: Me["role"]) =>
@@ -61,7 +62,7 @@ describe("AppShell", () => {
     expect(within(menu).getByRole("menuitem", { name: "Đăng xuất" })).toBeInTheDocument();
   });
 
-  it("the org selector lists my orgs and switches with a full reload", async () => {
+  it("the org selector lists my orgs; switching calls the API, clears the query cache and navigates with the router", async () => {
     const assign = vi.fn();
     vi.stubGlobal("location", { ...window.location, assign });
     const fetch = mockFetch(
@@ -72,14 +73,33 @@ describe("AppShell", () => {
       route("POST", "/api/auth/switch-org", { ...me("org_admin"), org: { id: "b", code: "ttb", name: "Trung tâm B" } }),
     );
     const u = userEvent.setup();
-    render(<OrgSwitcher me={me("teacher")} />);
+    const { client } = renderWithQuery(<OrgSwitcher me={me("teacher")} />);
+    client.setQueryData(["classes", "search", {}], { data: [], total: 0, page: 1, limit: 20 }); // a list of the old org
+    const clear = vi.spyOn(client, "clear");
     await u.click(screen.getByRole("combobox", { name: "Chọn tổ chức" }));
     const b = await screen.findByRole("option", { name: /Trung tâm B/ });
     expect(b).toHaveTextContent("ttb · Quản trị trung tâm");
     await u.click(b);
-    await waitFor(() => expect(assign).toHaveBeenCalledWith("/org/review"));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith("/org/review"));
+    expect(router.refresh).toHaveBeenCalled();
+    expect(clear).toHaveBeenCalled();
+    expect(client.getQueryData(["classes", "search", {}])).toBeUndefined();
+    expect(assign).not.toHaveBeenCalled();
     const call = fetch.mock.calls.find(([url]) => url === "/api/auth/switch-org");
     expect(JSON.parse(String((call?.[1] as RequestInit).body))).toEqual({ org_id: "b" });
+    vi.unstubAllGlobals();
+  });
+
+  it("'Đăng xuất' ends the session, clears the query cache and opens the login page", async () => {
+    const fetch = mockFetch(route("GET", "/api/me/orgs", []), route("POST", "/api/auth/logout", undefined, 204));
+    const u = userEvent.setup();
+    const { client } = shell("teacher");
+    const clear = vi.spyOn(client, "clear");
+    await u.click(within(screen.getByRole("banner")).getByRole("button", { name: "Tài khoản" }));
+    await u.click(await screen.findByRole("menuitem", { name: "Đăng xuất" }));
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith("/login"));
+    expect(fetch.mock.calls.some(([url, init]) => url === "/api/auth/logout" && (init as RequestInit)?.method === "POST")).toBe(true);
+    expect(clear).toHaveBeenCalled();
     vi.unstubAllGlobals();
   });
 

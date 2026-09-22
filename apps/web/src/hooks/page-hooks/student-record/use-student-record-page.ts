@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMe } from "@/app/(app)/AppShell";
+import { useMe } from "@/hooks/common/use-me";
 import { useStudentRecordQuery } from "@/hooks/react-query/use-query-student";
 import { ApiError } from "@/lib/common/http";
 

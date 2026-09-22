@@ -52,3 +52,32 @@ export const STUDENT_KEYS = {
   ALL: ["students"] as const,
   RECORD: (id: string) => ["students", "record", id] as const,
 };
+
+/** The signed-in user's own data (the orgs of the header selector). */
+export const ME_KEYS = {
+  ALL: ["me"] as const,
+  ORGS: ["me", "orgs"] as const,
+};
+
+export const USER_KEYS = {
+  ALL: ["users"] as const,
+  SEARCH: (body: unknown) => ["users", "search", body] as const,
+  OPTIONS: (body: unknown) => ["users", "options", body] as const,
+};
+
+export const ORG_KEYS = {
+  ALL: ["orgs"] as const,
+  SEARCH: (body: unknown) => ["orgs", "search", body] as const,
+  OPTIONS: ["orgs", "options"] as const,
+};
+
+export const ACCOUNT_KEYS = {
+  ALL: ["accounts"] as const,
+  SEARCH: (body: unknown) => ["accounts", "search", body] as const,
+};
+
+/** Both sides of a membership (an org's members, an account's orgs) share one resource. */
+export const MEMBERSHIP_KEYS = {
+  ALL: ["memberships"] as const,
+  SEARCH: (body: unknown) => ["memberships", "search", body] as const,
+};

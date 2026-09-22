@@ -47,7 +47,7 @@ export async function http<T = unknown>(path: string, opts: Options = {}): Promi
     init.headers = { "content-type": "application/json" };
   }
   const res = await fetch(`/api${path}`, init);
-  if (res.status === 401 && !opts.retried && !path.startsWith("/auth/login")) {
+  if (res.status === 401 && !opts.retried && !path.startsWith("/auth/login") && path !== "/auth/refresh") {
     if (await refreshOnce()) return http<T>(path, { ...opts, retried: true });
     onUnauthenticated();
   }

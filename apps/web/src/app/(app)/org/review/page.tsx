@@ -11,19 +11,23 @@ import { reviewColumns } from "@/components/review/ReviewList";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { api, ApiError } from "@/lib/api";
-import { useApi } from "@/lib/hooks";
-import type { Page, ReviewDocument, User } from "@/lib/types";
+// eslint-disable-next-line no-restricted-imports -- screen moves to a page hook in its own slice
+import { useUserOptionsQuery } from "@/hooks/react-query/use-query-user";
+import type { ReviewDocument } from "@/lib/types";
+
+// reviewers: the org's teachers and admins
+const STAFF = { filters: { role: { value: ["teacher", "org_admin"] } } };
 
 export default function ReviewPage() {
   const me = useMe();
   const tq = useTableQuery();
   const [version, setVersion] = useState(0);
   const canAssign = me.role === "org_admin";
-  const { data: staff } = useApi<Page<User>>(canAssign ? "/users?role=teacher,org_admin&page_size=all" : null);
+  const { data: staff } = useUserOptionsQuery(STAFF, canAssign);
   const columns = useMemo(
     () =>
       reviewColumns({
-        teachers: staff?.items ?? [],
+        teachers: staff ?? [],
         canAssign,
         onAssign: async (docId, userId) => {
           try {

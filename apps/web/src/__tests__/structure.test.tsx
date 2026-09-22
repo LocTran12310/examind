@@ -5,7 +5,7 @@ import { MeProvider } from "@/app/(app)/AppShell";
 import StructurePage from "@/app/(app)/org/structure/page";
 import { ThemeProvider } from "@/components/app/ThemeProvider";
 import type { Structure } from "@/lib/types";
-import { lastBody, lastQuery, me, mockFetch, page, renderWithQuery as render, route, searchPage } from "./helpers";
+import { lastBody, me, mockFetch, renderWithQuery as render, route, searchPage } from "./helpers";
 import { searchOf, setUrl } from "./router-mock";
 
 vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);
@@ -27,7 +27,7 @@ function serve() {
     route("POST", "/api/school-levels/search", searchPage([{ id: "thpt", code: "thpt", name: "Trung học phổ thông", grade_from: 10, grade_to: 12, sort: 1, grade_count: 3 }])),
     route("POST", "/api/grades/search", searchPage([{ id: "g10", level: 10, name: "Lớp 10", school_level_id: "thpt", class_count: 2 }])),
     route("POST", "/api/classes/search", searchPage([{ id: "c1", name: "10A1", grade: 10, grade_id: "g10", school_year: "2026-2027", member_count: 15, created_at: "" }])),
-    route("GET", /^\/api\/users\?/, page([{ id: "s1", username: "buivanchau", full_name: "Bùi Văn Châu", role: "student", class_ids: ["c1"] }])),
+    route("POST", "/api/users/search", searchPage([{ id: "s1", username: "buivanchau", full_name: "Bùi Văn Châu", role: "student", class_ids: ["c1"] }])),
     route("DELETE", "/api/grades/g10", { code: "in_use", message: "Khối còn 2 lớp" }, 409),
   );
 }
@@ -67,7 +67,7 @@ describe("school structure", () => {
     await waitFor(() => expect(lastBody(fetch, "/classes/search").grade_id).toBe("g10"));
     await u.click(within(tree).getByRole("button", { name: /10A1/ }));
     expect(await screen.findByText("Bùi Văn Châu")).toBeInTheDocument();
-    expect(lastQuery(fetch, "/users").get("class_id")).toBe("c1");
+    expect(lastBody(fetch, "/users/search").class_id).toBe("c1");
     expect(screen.getByText("Lớp 10A1")).toBeInTheDocument();
     expect(screen.getByText("Trung học phổ thông › Lớp 10")).toBeInTheDocument();
   });

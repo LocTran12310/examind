@@ -28,3 +28,27 @@
   page hooks → page components (routes one line); the header year lives in `stores/common/year.store.ts`
   (`examind.year.<org>`), `useYear()` kept. Users, exam and report screens read classes through `useClassOptionsQuery`.
   Web 152 tests, tsc and eslint clean. Not re-run on the live stack (running containers still on the previous image).
+
+## UOW-03 identity: sessions, users, organisations (2026-09-22)
+- API module `identity` (4 layers): sessions (login with lockout and IP throttle, refresh rotation with replay revocation, logout,
+  switch-org, change password, `/auth/me`, `/me/orgs`), users of the org (CRUD, reset password, link/unlink, CSV/XLSX import),
+  organisations and memberships (platform admin). Argon2 hashing, JWT and refresh-token secrets, the rate limiter and the spreadsheet
+  reader are adapters behind ports; the class directory (academic application API) and the org seeder are wired by `main.py`.
+  `schema/identity.py` now holds the only Table objects of `organizations`, `users`, `organization_members`, `refresh_tokens`;
+  `app/models/{user,org}.py`, `app/deps.py`, `services/{auth,membership,users}.py`, `core/{security,passwords}.py` are re-export shims.
+  The actor resolver is `identity.interface.deps.actor_from_request`; `OrgScope`/`org_scope`/`current_user`/`require_role` wrap it.
+  `lint-imports` 4 contracts kept with `app.modules.identity` added; `test_architecture.py` green.
+- Endpoints moved to search (old GET lists answer 405/404): `GET /users` → `POST /users/search` (+ `class_id`),
+  `GET /admin/orgs` → `POST /admin/orgs/search` (+ `include_deleted`), `GET /admin/users` → `POST /admin/users/search`,
+  `GET /admin/orgs/{id}/members` → `POST /admin/orgs/{id}/members/search`,
+  `GET /admin/users/{id}/memberships` → `POST /admin/users/{id}/memberships/search`. Every other identity path and JSON body unchanged
+  (login error bodies identical apart from `requestId`, cookies and JWT unchanged).
+- API suite 340 passed (+1 skipped: official set needs EXAMIN_DIR): new `tests/unit/test_identity_handlers.py` (15 handler tests on
+  in-memory ports) and `tests/test_identity_search.py`; existing tests changed only for the new URLs/shapes.
+- Web: shell (AppShell, AppSidebar, OrgSwitcher, UserMenu, YearSwitcher, SessionRecovery) in `components/layout/`; login, change password,
+  users (+ class members table), import wizard, admin orgs/accounts/memberships on services → query hooks → page hooks → page components.
+  Switching organisation calls the API, clears the query cache (`useSwitchOrgMutation`), `router.push` + `router.refresh` — no full reload.
+  Web 153 tests, tsc and eslint clean.
+- Live (`docker compose up -d --build api worker web`, http://localhost:8088, trungtama/admin): login 200 (org_admin, trungtama);
+  wrong password 401 `invalid_credentials` with the same message; `/auth/me` 200; `POST /users/search` role=student → `{data,total,page,limit}`
+  total 30; `GET /users` 405; `/me/orgs` 200; `POST /auth/switch-org` 200; `/auth/refresh` 204; `/login` page 200.

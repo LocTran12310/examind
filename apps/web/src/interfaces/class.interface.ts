@@ -1,4 +1,4 @@
-import type { User } from "@/lib/types";
+import type { User } from "@/interfaces/user.interface";
 
 export interface SchoolClass {
   id: string;

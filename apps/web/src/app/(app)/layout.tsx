@@ -1,8 +1,8 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getMe } from "@/lib/session";
-import { AppShell } from "./AppShell";
-import { SessionRecovery } from "./SessionRecovery";
+import { AppShell } from "@/components/layout/AppShell/AppShell";
+import { SessionRecovery } from "@/components/layout/SessionRecovery/SessionRecovery";
 
 export const dynamic = "force-dynamic";
 

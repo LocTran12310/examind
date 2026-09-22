@@ -6,7 +6,7 @@ import { ClassForm } from "@/components/page-components/Classes/ClassForm/ClassF
 import { MemberManager } from "@/components/page-components/Classes/MemberManager/MemberManager";
 import { currentSchoolYear } from "@/lib/page-libs/classes/school-year";
 import type { SchoolClass, User } from "@/lib/types";
-import { lastBody, lastQuery, mockFetch, page, renderWithQuery as render, route, searchPage } from "./helpers";
+import { lastBody, mockFetch, renderWithQuery as render, route, searchPage } from "./helpers";
 import { searchOf, setUrl } from "./router-mock";
 
 vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);
@@ -23,6 +23,12 @@ const student = (username: string, class_ids: string[] = []): User => ({
   created_at: "",
   class_ids,
 });
+/** `POST /users/search`: the members of a class (`class_id`) or the student picker (`q`). */
+const usersSearch = (members: User[], found: User[] = []) => (url: string, init?: RequestInit) => {
+  if (url !== "/api/users/search" || init?.method !== "POST") return undefined;
+  const body = JSON.parse(String(init.body));
+  return { body: searchPage(body.class_id ? members : found) };
+};
 const klass = (o: Partial<SchoolClass> = {}): SchoolClass => ({ id: "c1", name: "10A1", grade: 10, school_year: "2026-2027", member_count: 1, created_at: "", ...o });
 
 beforeEach(() => setUrl("/org/classes"));
@@ -57,24 +63,23 @@ describe("classes", () => {
   it("selecting a class shows its students in a detail table with its own URL params", async () => {
     const fetch = mockFetch(
       route("POST", "/api/classes/search", searchPage([klass(), klass({ id: "c2", name: "11B", grade: 11 })])),
-      route("GET", /^\/api\/users\?.*class_id=c1/, page([student("hs01", ["c1"])])),
+      usersSearch([student("hs01", ["c1"])]),
     );
     const u = userEvent.setup();
     render(<ClassesPage />);
     await u.click(await screen.findByText("10A1"));
     expect(await screen.findByText("HS01")).toBeInTheDocument();
-    expect(lastQuery(fetch, "/users").get("class_id")).toBe("c1");
+    expect(lastBody(fetch, "/users/search").class_id).toBe("c1");
     // jsdom has no layout, so the resize handle's hit-test claims every pointer down; set the value directly
     fireEvent.change(screen.getAllByRole("textbox", { name: "Lọc Họ tên" })[0], { target: { value: "an" } });
     await waitFor(() => expect(searchOf().get("m.full_name")).toBe("an"), { timeout: 1500 });
-    await waitFor(() => expect(lastQuery(fetch, "/users").get("full_name")).toBe("an"));
+    await waitFor(() => expect(lastBody(fetch, "/users/search").filters).toEqual({ full_name: { value: "an" } }));
     expect(lastBody(fetch, "/classes/search").filters).toBeUndefined(); // the member filter stays on the member table
   });
 
   it("adds a student and removes one after confirmation", async () => {
     const f = mockFetch(
-      route("GET", /^\/api\/users\?.*class_id=c1/, page([student("hs01", ["c1"])])),
-      route("GET", /^\/api\/users\?q=hs/, page([student("hs01", ["c1"]), student("hs02")])),
+      usersSearch([student("hs01", ["c1"])], [student("hs01", ["c1"]), student("hs02")]),
       route("POST", "/api/classes/c1/members", undefined, 204),
       route("DELETE", "/api/classes/c1/members/hs01", undefined, 204),
     );
@@ -87,6 +92,7 @@ describe("classes", () => {
     await u.click(await within(dialog).findByRole("button", { name: "Thêm" }));
     await waitFor(() => expect(f.mock.calls.some((c) => c[0] === "/api/classes/c1/members")).toBe(true));
     await waitFor(() => expect(within(dialog).queryByRole("button", { name: "Thêm" })).toBeNull()); // hs02 leaves the list once added
+    expect(lastBody(f, "/users/search")).toMatchObject({ q: "hs", filters: { role: { value: "student" } } });
     expect(JSON.parse(String(f.mock.calls.find((c) => c[0] === "/api/classes/c1/members")?.[1]?.body)).user_ids).toEqual(["hs02"]);
     await u.keyboard("{Escape}");
     await u.click(screen.getByRole("checkbox", { name: "Chọn dòng" }));

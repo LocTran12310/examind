@@ -1,0 +1,45 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+import { ThemeToggle } from "@/components/app/ThemeToggle";
+import { Separator } from "@/components/ui/separator";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { MeProvider } from "@/hooks/common/use-me";
+import type { Me } from "@/interfaces/auth.interface";
+import { activeItem, groupsFor } from "@/lib/nav";
+import { AppSidebar } from "@/components/layout/AppSidebar/AppSidebar";
+import { OrgSwitcher } from "@/components/layout/OrgSwitcher/OrgSwitcher";
+import { UserMenu } from "@/components/layout/UserMenu/UserMenu";
+import { YearSwitcher } from "@/components/layout/YearSwitcher/YearSwitcher";
+
+/** Sidebar, header (org, year, theme, account) and the page; provides `useMe()` to everything inside. */
+export function AppShell({ me, children, sidebarOpen = true }: { me: Me; children: React.ReactNode; sidebarOpen?: boolean }) {
+  const pathname = usePathname();
+  const item = activeItem(me.role, pathname, me.is_super);
+  const group = item && groupsFor(me.role, me.is_super).find((g) => g.items.includes(item));
+  return (
+    <MeProvider value={me}>
+      <SidebarProvider defaultOpen={sidebarOpen}>
+        <AppSidebar me={me} />
+        <SidebarInset className="h-svh min-w-0 overflow-hidden">
+          <header className="z-20 flex h-14 shrink-0 items-center gap-1 border-b bg-background px-2 sm:gap-2 sm:px-3">
+            <SidebarTrigger aria-label="Mở menu" />
+            <Separator orientation="vertical" className="mx-1 hidden h-5 sm:block" />
+            <div className="hidden min-w-0 flex-1 truncate text-sm sm:block">
+              {group && <span className="hidden text-muted-foreground md:inline">{group.label} / </span>}
+              <span className="font-medium">{item?.label ?? "Examind"}</span>
+            </div>
+            <div className="ml-auto flex min-w-0 shrink-0 items-center gap-1">
+              <OrgSwitcher me={me} />
+              <YearSwitcher />
+              <Separator orientation="vertical" className="mx-1 hidden h-5 sm:block" />
+              <ThemeToggle />
+              <UserMenu me={me} />
+            </div>
+          </header>
+          <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto p-2 sm:p-3 lg:p-4">{children}</main>
+        </SidebarInset>
+      </SidebarProvider>
+    </MeProvider>
+  );
+}

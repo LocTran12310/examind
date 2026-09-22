@@ -1,7 +1,9 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { LoginForm, ORG_KEY } from "@/app/(auth)/login/LoginForm";
+import { LoginForm } from "@/components/page-components/Login/LoginForm/LoginForm";
+import { ORG_KEY } from "@/constants/auth.constant";
+import { renderWithQuery as render } from "./helpers";
 
 const me = { id: "1", username: "hs01", full_name: "HS", role: "student", must_change_password: false, org: { id: "o", code: "trungtama", name: "A" } };
 

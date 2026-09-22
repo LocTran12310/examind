@@ -1,10 +1,10 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import AccountsPage from "@/app/(app)/admin/users/page";
-import { MembershipTable } from "@/components/admin/MembershipTable";
+import { MembershipTable } from "@/components/page-components/Orgs/MembershipTable/MembershipTable";
 import type { Membership } from "@/lib/types";
-import { mockFetch, page, route } from "./helpers";
+import { mockFetch, renderWithQuery as render, route, searchPage } from "./helpers";
 import { setUrl } from "./router-mock";
 
 vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);
@@ -21,7 +21,7 @@ beforeEach(() => setUrl("/admin/orgs"));
 describe("org ↔ user assignment", () => {
   it("org side: add an account by home org code + username, change a role", async () => {
     const fetch = mockFetch(
-      route("GET", /^\/api\/admin\/orgs\/b\/members\?/, page([mem({ org_id: "b", org_code: "ttb", org_name: "Trung tâm B", is_home: false })])),
+      route("POST", "/api/admin/orgs/b/members/search", searchPage([mem({ org_id: "b", org_code: "ttb", org_name: "Trung tâm B", is_home: false })])),
       route("POST", "/api/admin/orgs/b/members", mem({ org_id: "b", is_home: false }), 201),
       route("PATCH", "/api/admin/orgs/b/members/u1", mem({ org_id: "b", role: "org_admin", is_home: false })),
     );
@@ -45,9 +45,9 @@ describe("org ↔ user assignment", () => {
   it("user side: accounts list → organisations panel → add an org; the home org cannot be locked", async () => {
     setUrl("/admin/users");
     const fetch = mockFetch(
-      route("GET", /^\/api\/admin\/users\?/, page([{ id: "u1", username: "lan", full_name: "Cô Lan", home_org_code: "tta", home_org_name: "Trung tâm A", is_active: true, org_count: 1 }])),
-      route("GET", /^\/api\/admin\/users\/u1\/memberships\?/, page([mem({})])),
-      route("GET", /^\/api\/admin\/orgs\?/, page([{ id: "b", code: "ttb", name: "Trung tâm B", status: "active", is_system: false, user_count: 3, created_at: "", deleted_at: null }])),
+      route("POST", "/api/admin/users/search", searchPage([{ id: "u1", username: "lan", full_name: "Cô Lan", home_org_code: "tta", home_org_name: "Trung tâm A", is_active: true, org_count: 1 }])),
+      route("POST", "/api/admin/users/u1/memberships/search", searchPage([mem({})])),
+      route("POST", "/api/admin/orgs/search", searchPage([{ id: "b", code: "ttb", name: "Trung tâm B", status: "active", is_system: false, user_count: 3, created_at: "", deleted_at: null }])),
       route("POST", "/api/admin/users/u1/memberships", mem({ org_id: "b", is_home: false }), 201),
     );
     const u = userEvent.setup();
