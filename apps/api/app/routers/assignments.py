@@ -7,15 +7,19 @@ from app.core.db import get_db
 from app.deps import OrgScope, org_scope
 from app.routers.users import staff_scope
 from app.schemas.assignments import (AssignmentIn, AssignmentOut, AssignmentPatch, MyAssignmentOut, assignment_out, attempt_brief)
+from app.schemas.common import Page
 from app.services import assignments
+from app.services.paging import ListParams, list_params
 
 router = APIRouter(tags=["assignments"])
 
 
-@router.get("/assignments", response_model=list[AssignmentOut])
-def list_assignments(exam_id: uuid.UUID | None = None, scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
-    return [assignment_out(r["assignment"], students=r["students"], submitted=r["submitted"], classes=r["classes"])
-            for r in assignments.list_for_staff(db, scope, exam_id)]
+@router.get("/assignments", response_model=Page[AssignmentOut])
+def list_assignments(params: ListParams = Depends(list_params), scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
+    """Column filters: title (text) · exam_id · open_at/close_at (date) · duration_minutes (number)."""
+    rows, total = assignments.list_for_staff(db, scope, params)
+    items = [assignment_out(r["assignment"], students=r["students"], submitted=r["submitted"], classes=r["classes"]) for r in rows]
+    return Page(items=items, total=total, page=params.page, page_size=params.page_size)
 
 
 @router.post("/assignments", response_model=AssignmentOut, status_code=201)

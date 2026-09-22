@@ -9,7 +9,9 @@ from app.deps import OrgScope, org_scope
 from app.schemas.ai_models import AiModelIn, AiModelOut, AiModelUpdate, DiscoverIn, TestResult
 from app.core.config import get_settings
 from app.ingestion import llm
+from app.schemas.common import Page
 from app.services import ai_models
+from app.services.paging import ListParams, list_params
 
 router = APIRouter(prefix="/ai-models", tags=["ai-models"])
 
@@ -26,9 +28,11 @@ def _out(scope: OrgScope, m) -> AiModelOut:
                       editable=ai_models.editable(scope, m))
 
 
-@router.get("", response_model=list[AiModelOut])
-def list_models(enabled: bool = False, scope: OrgScope = Depends(model_scope), db: Session = Depends(get_db)):
-    return [_out(scope, m) for m in ai_models.visible(db, scope, enabled_only=enabled)]
+@router.get("", response_model=Page[AiModelOut])
+def list_models(params: ListParams = Depends(list_params), scope: OrgScope = Depends(model_scope), db: Session = Depends(get_db)):
+    """Column filters: name, model (text) · provider (exact) · enabled, is_free (bool)."""
+    rows, total = ai_models.list_models(db, scope, params)
+    return Page(items=[_out(scope, m) for m in rows], total=total, page=params.page, page_size=params.page_size)
 
 
 @router.post("", response_model=AiModelOut, status_code=201)

@@ -96,6 +96,9 @@ describe("users", () => {
     await u.click(student);
     await u.click(screen.getByRole("button", { name: "Mở khóa" }));
     await waitFor(() => expect(fetch.mock.calls.some(([url, init]) => url === "/api/users/s" && (init as RequestInit)?.method === "PATCH")).toBe(true));
+    // the table reloads after a change and clears the selection
+    await waitFor(() => expect(screen.getByRole("button", { name: "Đặt lại mật khẩu" })).toBeDisabled());
+    await u.click(screen.getAllByRole("checkbox", { name: "Chọn dòng" })[1]);
     await u.click(screen.getByRole("button", { name: "Đặt lại mật khẩu" }));
     const confirm = await screen.findByRole("alertdialog");
     await u.click(within(confirm).getByRole("button", { name: "Đặt lại" }));

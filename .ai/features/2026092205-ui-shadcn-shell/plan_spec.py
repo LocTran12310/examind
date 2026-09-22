@@ -67,15 +67,15 @@ t(id="T-02-04", uow="UOW-02", title="Users, organisations, classes screens on Da
   touches=[f"{WEB}/src/app/(app)/org/users/page.tsx", f"{WEB}/src/app/(app)/admin/orgs/page.tsx", f"{WEB}/src/app/(app)/org/classes/page.tsx", f"{WEB}/src/components/org/UserForm.tsx", f"{WEB}/src/components/admin/OrgForm.tsx", f"{WEB}/src/components/org/MemberManager.tsx", f"{WEB}/src/components/org/ClassForms.tsx"],
   assumptions=["A-08"], context="Forms in Dialog; classes → students detail panel.", done_when=["Three screens", "Forms in dialogs", "Import/export kept on users"])
 t(id="T-03-01", uow="UOW-03", title="Bare-list endpoints → Page (classes done; exams, assignments, tags, ai-models, review)",
-  layer="api", estimate="3h", depends_on=["T-02-01"], verifies=["AC-10"], tests=[f"{API}/tests/test_paging.py", f"{API}/tests/test_exams_api.py", f"{API}/tests/test_review_flow.py"],
+  layer="api", estimate="3h", depends_on=["T-02-01"], verifies=["AC-10"], tests=[f"{API}/tests/test_paging.py", f"{API}/tests/test_exams_api.py", f"{API}/tests/test_review_api.py", f"{API}/tests/test_tags_api.py", f"{API}/tests/test_ai_models_api.py", f"{API}/tests/test_assignments_api.py", f"{API}/tests/test_key_audit.py", f"{API}/tests/test_documents_api.py"],
   touches=[f"{API}/app/routers/exams.py", f"{API}/app/routers/assignments.py", f"{API}/app/routers/tags.py", f"{API}/app/routers/ai_models.py", f"{API}/app/routers/review.py", f"{API}/app/routers/documents.py"],
   context="Old callers updated in the same change.", done_when=["All return Page", "Filters per column"])
 t(id="T-03-02", uow="UOW-03", title="Documents, review, exams (+detail panel), assignments, AI models, tags screens",
-  layer="web", estimate="4h", depends_on=["T-03-01", "T-02-03"], verifies=["AC-11"], tests=[f"{WEB}/src/__tests__/documents.test.tsx", f"{WEB}/src/__tests__/exams.test.tsx", f"{WEB}/src/__tests__/ai-models.test.tsx"],
-  touches=[f"{WEB}/src/app/(app)/org/documents/page.tsx", f"{WEB}/src/app/(app)/org/review/page.tsx", f"{WEB}/src/app/(app)/org/exams/page.tsx", f"{WEB}/src/app/(app)/org/ai-models/page.tsx", f"{WEB}/src/components/tags/TagManager.tsx"],
+  layer="web", estimate="4h", depends_on=["T-03-01", "T-02-03"], verifies=["AC-11"], tests=[f"{WEB}/src/__tests__/documents.test.tsx", f"{WEB}/src/__tests__/exams.test.tsx", f"{WEB}/src/__tests__/ai-models.test.tsx", f"{WEB}/src/__tests__/tags.test.tsx", f"{WEB}/src/__tests__/review-list.test.tsx", f"{WEB}/src/__tests__/flagged.test.tsx"],
+  touches=[f"{WEB}/src/app/(app)/org/documents/page.tsx", f"{WEB}/src/app/(app)/org/review/page.tsx", f"{WEB}/src/app/(app)/org/exams/page.tsx", f"{WEB}/src/app/(app)/org/ai-models/page.tsx", f"{WEB}/src/app/(app)/org/tags/page.tsx", f"{WEB}/src/components/tags/TagForm.tsx", f"{WEB}/src/components/ai/ModelColumns.tsx", f"{WEB}/src/components/review/ReviewList.tsx", f"{WEB}/src/components/documents/DocumentList.tsx"],
   assumptions=["A-08"], context="Detail panel for exams.", done_when=["All lists on DataTable", "Detail panel"])
 t(id="T-03-03", uow="UOW-03", title="Question bank: shadcn filters, URL state, server paging",
-  layer="web", estimate="3h", depends_on=["T-02-03"], verifies=["AC-11", "AC-08"], tests=[f"{WEB}/src/__tests__/bank.test.tsx"],
+  layer="web", estimate="3h", depends_on=["T-02-03"], verifies=["AC-11", "AC-08"], tests=[f"{WEB}/src/__tests__/bank.test.tsx", f"{WEB}/src/__tests__/bank-bulk.test.tsx"],
   touches=[f"{WEB}/src/app/(app)/org/bank/page.tsx", f"{WEB}/src/components/bank/BankFilters.tsx", f"{WEB}/src/components/bank/BulkBar.tsx", f"{WEB}/src/components/bank/QuestionRow.tsx"],
   context="Cards kept; shared Pagination.", done_when=["Filters in URL", "Shared pagination"])
 t(id="T-04-01", uow="UOW-04", title="Upload, document detail, review queue, question editor/form on shadcn",

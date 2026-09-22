@@ -13,7 +13,9 @@ from app.routers.documents import parsed_many
 from app.schemas.documents import ParsedQuestionOut
 from app.schemas.questions import ActionIn
 from app.schemas.review import AssignIn, ReviewDocumentOut
+from app.schemas.common import Page
 from app.services import review
+from app.services.paging import ListParams, list_params
 
 router = APIRouter(prefix="/review", tags=["review"])
 
@@ -22,9 +24,12 @@ def _out(row) -> ReviewDocumentOut:
     return ReviewDocumentOut(**{**row, "document": document_out(row["document"])})
 
 
-@router.get("/documents", response_model=list[ReviewDocumentOut])
-def review_documents(mine: bool = False, scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
-    return [_out(r) for r in review.document_counts(db, scope, mine)]
+@router.get("/documents", response_model=Page[ReviewDocumentOut])
+def review_documents(mine: bool = False, params: ListParams = Depends(list_params), scope: OrgScope = Depends(staff_scope),
+                     db: Session = Depends(get_db)):
+    """Column filters: filename, source_name (text) · assigned_to · created_at (date); sort also by total, needs_review."""
+    rows, total = review.list_review_documents(db, scope, params, mine)
+    return Page(items=[_out(r) for r in rows], total=total, page=params.page, page_size=params.page_size)
 
 
 @router.get("/documents/{doc_id}", response_model=ReviewDocumentOut)
@@ -75,7 +80,7 @@ def key_audit(scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_
     return {"flagged": [str(i) for i in audit_service.audit(db, scope.org_id)]}
 
 
-@router.get("/flagged", response_model=list[ParsedQuestionOut])
-def flagged(scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
-    qs = review.flagged_questions(db, scope)
-    return parsed_many(db, qs, {q.id: "Nghi sai đáp án" for q in qs})
+@router.get("/flagged", response_model=Page[ParsedQuestionOut])
+def flagged(params: ListParams = Depends(list_params), scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
+    qs, total = review.flagged_questions(db, scope, params)
+    return Page(items=parsed_many(db, qs, {q.id: "Nghi sai đáp án" for q in qs}), total=total, page=params.page, page_size=params.page_size)

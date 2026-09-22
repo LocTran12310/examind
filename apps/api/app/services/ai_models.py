@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.core import crypto
 from app.core.errors import forbidden, not_found, validation
 from app.deps import OrgScope
+from app.services.paging import Col, ListParams, paginate
 from app.models import AiModel
 from app.models.ai_model import CAPABILITIES, PROVIDERS
 from app.services import audit
@@ -17,6 +18,27 @@ DEFAULT_URLS = {"ollama": "http://ollama:11434", "openai": "https://api.openai.c
 
 def is_super(scope: OrgScope) -> bool:
     return scope.role == "super_admin"
+
+
+MODEL_COLS = {
+    "name": Col(AiModel.name),
+    "provider": Col(AiModel.provider, "exact"),
+    "model": Col(AiModel.model),
+    "enabled": Col(AiModel.enabled, "bool"),
+    "is_free": Col(AiModel.is_free, "bool"),
+}
+
+
+def visible_stmt(scope: OrgScope):
+    stmt = select(AiModel)
+    if not is_super(scope):
+        return stmt.where(or_(AiModel.organization_id == scope.org_id, AiModel.organization_id.is_(None)))
+    return stmt.where(AiModel.organization_id.is_(None))
+
+
+def list_models(db: Session, scope: OrgScope, params: ListParams):
+    return paginate(db, visible_stmt(scope), params, MODEL_COLS, search=[AiModel.name, AiModel.model],
+                    default_sort=[AiModel.organization_id.nulls_first(), AiModel.name, AiModel.id])
 
 
 def visible(db: Session, scope: OrgScope, enabled_only: bool = False) -> list[AiModel]:

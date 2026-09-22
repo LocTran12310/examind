@@ -228,7 +228,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on:
       - T-02-01
     blocks:
@@ -248,7 +248,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-03-01
       - T-02-03
@@ -261,14 +261,18 @@ ticket:
       - apps/web/src/app/(app)/org/review/page.tsx   # new
       - apps/web/src/app/(app)/org/exams/page.tsx   # new
       - apps/web/src/app/(app)/org/ai-models/page.tsx   # new
-      - apps/web/src/components/tags/TagManager.tsx   # new
+      - apps/web/src/app/(app)/org/tags/page.tsx   # new
+      - apps/web/src/components/tags/TagForm.tsx   # new
+      - apps/web/src/components/ai/ModelColumns.tsx   # new
+      - apps/web/src/components/review/ReviewList.tsx   # new
+      - apps/web/src/components/documents/DocumentList.tsx   # new
   - id: T-03-03
     uow: UOW-03
     title: 'Question bank: shadcn filters, URL state, server paging'
     layer: web
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on:
       - T-02-03
     blocks:

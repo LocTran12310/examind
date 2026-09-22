@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.core.errors import conflict, not_found, validation
 from app.deps import OrgScope
+from app.services.paging import Col, ListParams, paginate
 from app.models import Tag
 from app.models.taxonomy import TAG_GROUPS
 
@@ -30,11 +31,12 @@ def get_tag(db: Session, scope: OrgScope, tag_id) -> Tag:
     return t
 
 
-def list_tags(db: Session, scope: OrgScope, group: str | None = None):
+TAG_COLS = {"group": Col(Tag.group, "exact"), "name": Col(Tag.name)}
+
+
+def list_tags(db: Session, scope: OrgScope, params: ListParams):
     stmt = select(Tag).where(Tag.organization_id == scope.org_id)
-    if group:
-        stmt = stmt.where(Tag.group == group)
-    return db.scalars(stmt.order_by(Tag.group, func.lower(Tag.name))).all()
+    return paginate(db, stmt, params, TAG_COLS, search=[Tag.name], default_sort=[Tag.group, func.lower(Tag.name), Tag.id])
 
 
 def create_tag(db: Session, scope: OrgScope, group: str, name: str) -> Tag:

@@ -47,6 +47,9 @@ export interface DataTableProps<T> {
   emptyText?: string;
   /** Change this value to force a reload (e.g. after a dialog saved). */
   reloadKey?: unknown;
+  /** Reload every 2 s while this returns true (e.g. documents still being processed). */
+  pollWhile?: (items: T[]) => boolean;
+  rowClassName?: (row: T) => string | undefined;
 }
 
 export function DataTable<T>({
@@ -67,6 +70,8 @@ export function DataTable<T>({
   footer,
   emptyText = "Không có dữ liệu",
   reloadKey,
+  pollWhile,
+  rowClassName,
 }: DataTableProps<T>) {
   const tq = useTableQuery(prefix);
   const query = useMemo(() => {
@@ -82,9 +87,17 @@ export function DataTable<T>({
 
   useEffect(() => setSelection({}), [query]);
   useEffect(() => {
-    if (reloadKey !== undefined) void reload();
+    if (reloadKey === undefined) return;
+    setSelection({});
+    void reload();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reloadKey]);
+  const polling = !!(pollWhile && data && pollWhile(data.items));
+  useEffect(() => {
+    if (!polling) return;
+    const t = setInterval(() => void reload(), 2000);
+    return () => clearInterval(t);
+  }, [polling, reload]);
   // A page past the end (rows deleted, stale link): jump to the last page.
   useEffect(() => {
     if (data && data.items.length === 0 && data.total > 0 && tq.page > 1) tq.setPage(Math.ceil(data.total / tq.pageSize));
@@ -236,7 +249,7 @@ export function DataTable<T>({
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() ? "selected" : activeRowId === row.id ? "selected" : undefined}
-                className={cn(onRowActivate && "cursor-pointer", activeRowId === row.id && "bg-primary/5")}
+                className={cn(onRowActivate && "cursor-pointer", activeRowId === row.id && "bg-primary/5", rowClassName?.(row.original))}
                 onClick={onRowActivate ? () => onRowActivate(row.original) : undefined}
                 tabIndex={onRowActivate ? 0 : undefined}
                 onKeyDown={onRowActivate ? (e) => e.key === "Enter" && onRowActivate(row.original) : undefined}

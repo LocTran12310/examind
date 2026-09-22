@@ -1,11 +1,14 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DocumentList } from "@/components/documents/DocumentList";
+import DocumentsPage from "@/app/(app)/org/documents/page";
 import { ParsedQuestionCard } from "@/components/documents/ParsedQuestion";
 import { UploadForm } from "@/components/documents/UploadForm";
 import type { ParsedQuestion, SourceDocument, Taxonomy } from "@/lib/types";
-import { mockFetch, route } from "./helpers";
+import { mockFetch, page, route } from "./helpers";
+import { setUrl } from "./router-mock";
+
+vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);
 
 const taxonomy: Taxonomy = {
   subjects: [{ id: "s-toan", code: "toan", name: "Toán" }],
@@ -46,11 +49,22 @@ describe("documents", () => {
     expect(await screen.findByText("Lưu lại dưới dạng .docx")).toBeInTheDocument();
   });
 
-  it("lists documents with status and metadata", () => {
-    render(<DocumentList docs={[doc(), doc({ id: "d2", filename: "b.pdf", status: "processing" })]} taxonomy={taxonomy} />);
-    expect(screen.getByTestId("doc-de.docx")).toHaveTextContent("Đã tách · 40 câu");
-    expect(screen.getByTestId("doc-de.docx")).toHaveTextContent("Toán · Lớp 10 · Học kỳ 1 · Giữa kỳ");
-    expect(screen.getByTestId("doc-b.pdf")).toHaveTextContent("Đang xử lý");
+  it("lists documents from the server with status and metadata, polling while one is processing", async () => {
+    setUrl("/org/documents");
+    const fetch = mockFetch(
+      route("GET", "/api/taxonomy", taxonomy),
+      route("GET", "/api/org/settings/ingestion", doc().processing_config),
+      route("GET", /^\/api\/ai-models\?/, page([])),
+      route("GET", /^\/api\/documents\?/, page([doc(), doc({ id: "d2", filename: "b.pdf", status: "processing" })])),
+    );
+    render(<DocumentsPage />);
+    const row = (await screen.findByText("de.docx")).closest("tr")!;
+    await waitFor(() => expect(row).toHaveTextContent("Toán · Lớp 10 · Học kỳ 1 · Giữa kỳ"));
+    expect(row).toHaveTextContent("Đã tách · 40 câu");
+    expect(screen.getByText("b.pdf").closest("tr")).toHaveTextContent("Đang xử lý");
+    const count = () => fetch.mock.calls.filter(([u]) => String(u).startsWith("/api/documents?")).length;
+    const before = count();
+    await waitFor(() => expect(count()).toBeGreaterThan(before), { timeout: 3000 });
   });
 
   it("parsed question card shows confidence, method and issues", () => {

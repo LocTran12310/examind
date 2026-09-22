@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { Markdown } from "@/components/question/Markdown";
 import { ToneBadge } from "@/components/app/ToneBadge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { DIFFICULTY_LABEL, STATUS_LABEL, TYPE_LABEL, type ParsedQuestion, type QuestionStatus } from "@/lib/types";
 
 export function QuestionRow({ q, selected, onToggle }: { q: ParsedQuestion; selected: boolean; onToggle: () => void }) {
   const primary = q.topics.find((t) => t.is_primary);
   return (
-    <li className="flex gap-3 border-b border-border px-3 py-3 last:border-0" data-testid={`bank-${q.id}`}>
-      <input type="checkbox" aria-label="Chọn câu" checked={selected} onChange={onToggle} className="mt-1" />
+    <li className="flex gap-3 border-b px-3 py-3 last:border-0 hover:bg-muted/40" data-testid={`bank-${q.id}`}>
+      <Checkbox aria-label="Chọn câu" checked={selected} onCheckedChange={onToggle} className="mt-1" />
       <div className="min-w-0 flex-1">
         <Link href={`/org/bank/${q.id}`} className="block hover:text-primary">
           <div className="line-clamp-3 text-sm">

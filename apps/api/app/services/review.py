@@ -8,26 +8,52 @@ from sqlalchemy.orm import Session
 from app.core.errors import AppError, forbidden, not_found, validation
 from app.deps import OrgScope
 from app.models import Organization, Question, QuestionTag, QuestionTopic, ReviewEvent, SourceDocument, Tag, Topic, User
+from app.services.paging import Col, ListParams, paginate
 from app.services.question_quality import blocking, blocking_manual, reevaluate, settle, triage_status
 from app.services.search_text import for_question
 
 STATUS_KEYS = ("auto_approved", "needs_review", "approved", "rejected", "duplicate", "flagged")
 
 
-def document_counts(db: Session, scope: OrgScope, mine: bool = False, doc_id=None) -> list[dict]:
+REVIEW_DOC_COLS = {
+    "filename": Col(SourceDocument.filename),
+    "source_name": Col(SourceDocument.meta["source_name"].astext),
+    "assigned_to": Col(SourceDocument.assigned_to, "uuid"),
+    "created_at": Col(SourceDocument.created_at, "date"),
+    "total": Col(func.count(Question.id), filterable=False),
+    "needs_review": Col(func.count(case((Question.status == "needs_review", 1))), filterable=False),
+}
+
+
+def _counts_stmt(scope: OrgScope, mine: bool = False, doc_id=None):
     cols = [func.count(case((Question.status == s, 1))).label(s) for s in STATUS_KEYS]
     spot = func.count(case((and_(Question.spot_check.is_(True), Question.status == "auto_approved"), 1))).label("spot_pending")
     stmt = (select(SourceDocument, func.count(Question.id).label("total"), *cols, spot)
             .outerjoin(Question, Question.source_document_id == SourceDocument.id)
             .where(SourceDocument.organization_id == scope.org_id, SourceDocument.status == "parsed")
-            .group_by(SourceDocument.id).order_by(SourceDocument.created_at.desc()))
+            .group_by(SourceDocument.id))
     if mine:
         stmt = stmt.where(SourceDocument.assigned_to == scope.user.id)
     if doc_id:
         stmt = stmt.where(SourceDocument.id == doc_id)
+    return stmt
+
+
+def list_review_documents(db: Session, scope: OrgScope, params: ListParams, mine: bool = False):
+    rows, total = paginate(db, _counts_stmt(scope, mine), params, REVIEW_DOC_COLS,
+                           search=[SourceDocument.filename, SourceDocument.meta["source_name"].astext], scalars=False,
+                           default_sort=[SourceDocument.created_at.desc(), SourceDocument.id])
+    return _rows_out(db, rows), total
+
+
+def document_counts(db: Session, scope: OrgScope, mine: bool = False, doc_id=None) -> list[dict]:
+    return _rows_out(db, db.execute(_counts_stmt(scope, mine, doc_id).order_by(SourceDocument.created_at.desc())))
+
+
+def _rows_out(db: Session, rows) -> list[dict]:
     users = {}
     out = []
-    for row in db.execute(stmt):
+    for row in rows:
         doc = row[0]
         counts = {s: getattr(row, s) for s in STATUS_KEYS}
         done = counts["approved"] + counts["rejected"] + counts["duplicate"] + counts["auto_approved"] - row.spot_pending
@@ -304,6 +330,10 @@ def approve_confident(db: Session, scope: OrgScope, doc_id) -> int:
     return len(qs)
 
 
-def flagged_questions(db: Session, scope: OrgScope) -> list[Question]:
-    return db.scalars(select(Question).where(Question.organization_id == scope.org_id, Question.status == "flagged")
-                      .order_by(Question.updated_at.desc().nulls_last())).all()
+FLAGGED_COLS = {"stem": Col(Question.stem), "updated_at": Col(Question.updated_at, "date")}
+
+
+def flagged_questions(db: Session, scope: OrgScope, params: ListParams):
+    stmt = select(Question).where(Question.organization_id == scope.org_id, Question.status == "flagged")
+    return paginate(db, stmt, params, FLAGGED_COLS, search=[Question.stem],
+                    default_sort=[Question.updated_at.desc().nulls_last(), Question.id])

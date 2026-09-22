@@ -1,7 +1,7 @@
 import json
 import uuid
 
-from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
+from fastapi import APIRouter, Depends, File, Form, UploadFile
 from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -15,6 +15,7 @@ from app.routers.users import staff_scope
 from app.schemas.common import Page
 from app.schemas.documents import DocumentCreated, DocumentOut, ParsedQuestionOut, ReparseIn, TagRef, TopicRef, document_out
 from app.schemas.questions import question_out
+from app.services.paging import ListParams, list_params
 from app.services import documents
 
 router = APIRouter(prefix="/documents", tags=["documents"])
@@ -43,10 +44,10 @@ async def upload(response: Response, file: UploadFile = File(...), meta: str | N
 
 
 @router.get("", response_model=Page[DocumentOut])
-def list_documents(q: str = "", status: str | None = None, page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, le=200),
-                   scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
-    items, total = documents.list_documents(db, scope, q, status, page, page_size)
-    return Page(items=[document_out(d) for d in items], total=total, page=page, page_size=page_size)
+def list_documents(params: ListParams = Depends(list_params), scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
+    """Column filters: filename, source_name (text) · status, mime (exact) · question_count (number) · created_at (date)."""
+    items, total = documents.list_documents(db, scope, params)
+    return Page(items=[document_out(d) for d in items], total=total, page=params.page, page_size=params.page_size)
 
 
 @router.get("/{doc_id}", response_model=DocumentOut)

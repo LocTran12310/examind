@@ -8,7 +8,9 @@ from app.deps import OrgScope
 from app.routers.documents import parsed_many
 from app.routers.users import staff_scope
 from app.schemas.exams import BlueprintIn, ExamIn, ExamOut, ExamPatch, ExamQuestionOut, IdsIn, PointsIn
+from app.schemas.common import Page
 from app.services import exams
+from app.services.paging import ListParams, list_params
 
 router = APIRouter(prefix="/exams", tags=["exams"])
 
@@ -24,11 +26,14 @@ def exam_out(db: Session, exam, with_questions: bool = True) -> ExamOut:
                    total_points=round(sum(eq.points for eq, _ in rows), 4), created_at=exam.created_at, questions=qs)
 
 
-@router.get("", response_model=list[ExamOut])
-def list_exams(scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
-    return [ExamOut(id=e.id, title=e.title, subject_id=e.subject_id, grade=e.grade, description=e.description, settings=e.settings or {},
-                    blueprint=e.blueprint or [], source=e.source, question_count=n, total_points=round(p, 4), created_at=e.created_at)
-            for e, n, p in exams.list_exams(db, scope)]
+@router.get("", response_model=Page[ExamOut])
+def list_exams(params: ListParams = Depends(list_params), scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
+    """Column filters: title (text) · grade (number) · source (exact) · subject_id · created_at (date)."""
+    rows, total = exams.list_exams(db, scope, params)
+    items = [ExamOut(id=e.id, title=e.title, subject_id=e.subject_id, grade=e.grade, description=e.description, settings=e.settings or {},
+                     blueprint=e.blueprint or [], source=e.source, question_count=n, total_points=round(p, 4), created_at=e.created_at)
+             for e, n, p in rows]
+    return Page(items=items, total=total, page=params.page, page_size=params.page_size)
 
 
 @router.post("", response_model=ExamOut, status_code=201)

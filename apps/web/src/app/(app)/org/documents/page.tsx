@@ -1,48 +1,63 @@
 "use client";
 
+import { FileUp } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { DocumentList } from "@/components/documents/DocumentList";
+import { useEffect, useMemo, useState } from "react";
+import { FormDialog } from "@/components/app/FormDialog";
+import { PageHeader } from "@/components/app/PageHeader";
+import { DataTable } from "@/components/data-table/DataTable";
+import { ToolbarButton } from "@/components/data-table/Toolbar";
+import { documentColumns } from "@/components/documents/DocumentList";
 import { ProcessingConfigPanel } from "@/components/documents/ProcessingConfig";
 import { UploadForm } from "@/components/documents/UploadForm";
-import { Panel } from "@/components/app/Panel";
-import { EmptyState } from "@/components/app/EmptyState";
-import { PageHeader } from "@/components/app/PageHeader";
+import { api } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
 import type { AiModel, Page, ProcessingConfig, SourceDocument, Taxonomy } from "@/lib/types";
+
+const inFlight = (docs: SourceDocument[]) => docs.some((d) => d.status === "queued" || d.status === "processing");
 
 export default function DocumentsPage() {
   const router = useRouter();
   const { data: taxonomy } = useApi<Taxonomy>("/taxonomy");
-  const { data, reload } = useApi<Page<SourceDocument>>("/documents?page_size=100");
   const { data: defaults } = useApi<ProcessingConfig>("/org/settings/ingestion");
-  const { data: models } = useApi<AiModel[]>("/ai-models?enabled=true");
+  const { data: models } = useApi<Page<AiModel>>("/ai-models?enabled=true&page_size=all");
   const [config, setConfig] = useState<ProcessingConfig | null>(null);
+  const [uploading, setUploading] = useState(false);
   useEffect(() => {
     if (defaults && !config) setConfig(defaults);
   }, [defaults, config]);
-  const busy = data?.items.some((d) => d.status === "queued" || d.status === "processing");
-  useEffect(() => {
-    if (!busy) return;
-    const t = setInterval(reload, 2000);
-    return () => clearInterval(t);
-  }, [busy, reload]);
+  const columns = useMemo(() => documentColumns(taxonomy), [taxonomy]);
 
   return (
     <>
       <PageHeader title="Đề đã tải lên" description="Tải file Word/PDF/ảnh; hệ thống tự tách từng câu với đáp án, lời giải và hình" />
-      <Panel className="mb-6">
+      <DataTable
+        path="/documents"
+        columns={columns}
+        getRowId={(d) => d.id}
+        pollWhile={inFlight}
+        actions={() => (
+          <ToolbarButton onClick={() => setUploading(true)}>
+            <FileUp /> Tải đề lên
+          </ToolbarButton>
+        )}
+        onDelete={async (rows) => {
+          for (const d of rows) await api(`/documents/${d.id}`, { method: "DELETE" });
+        }}
+        deleteLabel={(rows) => `Xóa ${rows.length} đề? Câu hỏi chưa dùng trong đề thi sẽ bị xóa theo.`}
+        onRowActivate={(d) => router.push(`/org/documents/${d.id}`)}
+        emptyText="Chưa có đề nào. Bấm “Tải đề lên” để bắt đầu."
+      />
+      <FormDialog open={uploading} onOpenChange={setUploading} title="Tải đề lên" description="Word (.docx), PDF hoặc ảnh chụp đề" wide>
         {taxonomy && (
           <UploadForm
             taxonomy={taxonomy}
             onUploaded={(doc, duplicate) => router.push(`/org/documents/${doc.id}${duplicate ? "?dup=1" : ""}`)}
             config={config ?? undefined}
-            configSlot={config && <ProcessingConfigPanel value={config} onChange={setConfig} models={models ?? []} />}
+            configSlot={config && <ProcessingConfigPanel value={config} onChange={setConfig} models={models?.items ?? []} />}
           />
         )}
-      </Panel>
-      {data && data.items.length === 0 && <EmptyState>Chưa có đề nào. Tải lên file đầu tiên ở trên.</EmptyState>}
-      {data && data.items.length > 0 && <DocumentList docs={data.items} taxonomy={taxonomy} />}
+      </FormDialog>
     </>
   );
 }

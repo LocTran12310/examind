@@ -11,6 +11,7 @@ from app.core.security import now
 from app.deps import OrgScope
 from app.models import Assignment, AssignmentTarget, Attempt, ClassMember, Exam, ExamQuestion, Question, SchoolClass, User
 from app.models.exam import RESULTS_POLICIES
+from app.services.paging import Col, ListParams, paginate
 from app.services import exams
 
 GRACE = timedelta(seconds=30)
@@ -92,18 +93,26 @@ def delete(db: Session, scope: OrgScope, aid) -> None:
     db.delete(a)
 
 
-def list_for_staff(db: Session, scope: OrgScope, exam_id=None) -> list[dict]:
+ASSIGNMENT_COLS = {
+    "title": Col(Assignment.title),
+    "exam_id": Col(Assignment.exam_id, "uuid"),
+    "open_at": Col(Assignment.open_at, "date"),
+    "close_at": Col(Assignment.close_at, "date"),
+    "duration_minutes": Col(Assignment.duration_minutes, "number"),
+}
+
+
+def list_for_staff(db: Session, scope: OrgScope, params: ListParams):
     stmt = select(Assignment).where(Assignment.organization_id == scope.org_id)
-    if exam_id:
-        stmt = stmt.where(Assignment.exam_id == exam_id)
+    rows, total = paginate(db, stmt, params, ASSIGNMENT_COLS, search=[Assignment.title], default_sort=[Assignment.open_at.desc(), Assignment.id])
     out = []
-    for a in db.scalars(stmt.order_by(Assignment.open_at.desc())):
+    for a in rows:
         targets = student_ids(db, a)
         submitted = db.scalar(select(func.count(func.distinct(Attempt.student_id))).where(Attempt.assignment_id == a.id, Attempt.status == "submitted"))
         classes = db.scalars(select(SchoolClass.name).join(AssignmentTarget, AssignmentTarget.class_id == SchoolClass.id)
                              .where(AssignmentTarget.assignment_id == a.id)).all()
         out.append({"assignment": a, "students": len(targets), "submitted": submitted or 0, "classes": list(classes)})
-    return out
+    return out, total
 
 
 def window_state(a: Assignment) -> str:

@@ -91,3 +91,20 @@ def test_orgs_and_classes_are_paged(client, db):
     body = staff.get("/api/classes", params={"grade_min": 11, "sort": "-name"}).json()
     assert [c["name"] for c in body["items"]] == ["12C", "11B"] and body["total"] == 2
     assert staff.get("/api/classes", params={"sort": "-member_count"}).status_code == 200
+
+
+def test_former_bare_lists_are_paged(client, db):
+    login_as(client, db, "org_admin")
+    for name in ["Đổi biến số", "Từng phần", "Casio"]:
+        client.post("/api/tags", json={"group": "method", "name": name})
+    tags = client.get("/api/tags", params={"name": "doi bien"}).json()
+    assert [t["name"] for t in tags["items"]] == ["Đổi biến số"] and tags["total"] == 1
+    assert client.get("/api/tags", params={"page_size": 2}).json()["total"] == 3
+    for title in ["Kiểm tra 15 phút", "Đề thi thử THPT"]:
+        client.post("/api/exams", json={"title": title})
+    exams = client.get("/api/exams", params={"title": "thpt"}).json()
+    assert [e["title"] for e in exams["items"]] == ["Đề thi thử THPT"]
+    assert client.get("/api/exams", params={"sort": "question_count"}).status_code == 200
+    for path in ("/api/assignments", "/api/review/documents", "/api/review/flagged", "/api/ai-models", "/api/documents"):
+        body = client.get(path).json()
+        assert set(body) == {"items", "total", "page", "page_size"}, path

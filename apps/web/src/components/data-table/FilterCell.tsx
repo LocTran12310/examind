@@ -9,7 +9,7 @@ export const DEBOUNCE_MS = 300;
 const ALL = "__all";
 
 /** Text input that writes to the URL after a pause; follows the URL when it changes elsewhere (Back). */
-function DebouncedInput({ value, onChange, ...props }: { value: string; onChange: (v: string) => void } & Omit<React.ComponentProps<typeof Input>, "value" | "onChange">) {
+export function DebouncedInput({ value, onChange, ...props }: { value: string; onChange: (v: string) => void } & Omit<React.ComponentProps<typeof Input>, "value" | "onChange">) {
   const [draft, setDraft] = useState(value);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const last = useRef(value);

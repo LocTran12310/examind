@@ -3,7 +3,7 @@
 # Ticket graph — 2026092205-ui-shadcn-shell
 
 - Units of Work: **4**
-- Tickets: **13** (7 done)
+- Tickets: **13** (10 done)
 - Total effort: **5.2d**
 - Critical path: **1.6d** across 4 tickets
 - Theoretical minimum duration with unlimited parallelism: **1.6d**
@@ -36,9 +36,9 @@ graph LR
     T_02_04["✓ T-02-04<br/>Users, organisations, classes screens on DataTable"]
   end
   subgraph UOW_03["UOW-03 · All remaining lists on the DataTable"]
-    T_03_01["T-03-01<br/>Bare-list endpoints → Page (classes done; exams, assignments, tags, ai-models, review)"]
-    T_03_02["T-03-02<br/>Documents, review, exams (+detail panel), assignments, AI models, tags screens"]
-    T_03_03["T-03-03<br/>Question bank: shadcn filters, URL state, server paging"]
+    T_03_01["✓ T-03-01<br/>Bare-list endpoints → Page (classes done; exams, assignments, tags, ai-models, review)"]
+    T_03_02["✓ T-03-02<br/>Documents, review, exams (+detail panel), assignments, AI models, tags screens"]
+    T_03_03["✓ T-03-03<br/>Question bank: shadcn filters, URL state, server paging"]
   end
   subgraph UOW_04["UOW-04 · Every other screen on shadcn components, old barrel removed"]
     T_04_01["T-04-01<br/>Upload, document detail, review queue, question editor/form on shadcn"]
@@ -99,9 +99,9 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-02-02 | UOW-02 | api | feature | 3h | T-02-01 | AC-10 | done |
 | T-02-03 | UOW-02 | web | feature | 4h | T-01-01 | AC-06, AC-07, AC-08, AC-09 | done |
 | T-02-04 | UOW-02 | web | feature | 4h | T-02-02, T-02-03, T-01-02 | AC-11 | done |
-| T-03-01 | UOW-03 | api | feature | 3h | T-02-01 | AC-10 | todo |
-| T-03-02 | UOW-03 | web | feature | 4h | T-03-01, T-02-03 | AC-11 | todo |
-| T-03-03 | UOW-03 | web | feature | 3h | T-02-03 | AC-11, AC-08 | todo |
+| T-03-01 | UOW-03 | api | feature | 3h | T-02-01 | AC-10 | done |
+| T-03-02 | UOW-03 | web | feature | 4h | T-03-01, T-02-03 | AC-11 | done |
+| T-03-03 | UOW-03 | web | feature | 3h | T-02-03 | AC-11, AC-08 | done |
 | T-04-01 | UOW-04 | web | feature | 4h | T-02-03 | AC-12 | todo |
 | T-04-02 | UOW-04 | web | feature | 4h | T-02-03 | AC-12 | todo |
 | T-04-03 | UOW-04 | test | feature | 2h | T-04-01, T-04-02, T-03-02, T-03-03, T-02-04, T-01-03 | AC-01, AC-12 | todo |

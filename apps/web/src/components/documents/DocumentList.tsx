@@ -1,8 +1,8 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { ToneBadge } from "@/components/app/ToneBadge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DOC_STATUS_LABEL, type SourceDocument, type Taxonomy } from "@/lib/types";
 
 export function StatusBadge({ doc }: { doc: SourceDocument }) {
@@ -22,35 +22,25 @@ export function metaLabel(doc: SourceDocument, taxonomy?: Taxonomy | null): stri
   return [subject, m.grade ? `Lớp ${m.grade}` : null, semester, m.exam_kind, m.school_year, m.source_name].filter(Boolean).join(" · ");
 }
 
-export function DocumentList({ docs, taxonomy }: { docs: SourceDocument[]; taxonomy?: Taxonomy | null }) {
-  return (
-    <div className="rounded-lg border bg-card">
-<Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>File</TableHead>
-          <TableHead>Thông tin</TableHead>
-          <TableHead>Trạng thái</TableHead>
-          <TableHead>Tải lên</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {docs.map((d) => (
-          <TableRow key={d.id} data-testid={`doc-${d.filename}`}>
-            <TableCell>
-              <Link className="font-medium text-primary hover:underline" href={`/org/documents/${d.id}`}>
-                {d.filename}
-              </Link>
-            </TableCell>
-            <TableCell className="text-muted-foreground">{metaLabel(d, taxonomy)}</TableCell>
-            <TableCell>
-              <StatusBadge doc={d} />
-            </TableCell>
-            <TableCell>{new Date(d.created_at).toLocaleString("vi-VN")}</TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-</div>
-  );
+export function documentColumns(taxonomy?: Taxonomy | null): ColumnDef<SourceDocument, unknown>[] {
+  return [
+    {
+      accessorKey: "filename",
+      header: "File",
+      cell: ({ row }) => (
+        <Link className="font-medium text-primary hover:underline" href={`/org/documents/${row.original.id}`} onClick={(e) => e.stopPropagation()}>
+          {row.original.filename}
+        </Link>
+      ),
+      meta: { filter: { kind: "text" }, sort: "filename" },
+    },
+    { id: "source_name", header: "Thông tin", cell: ({ row }) => <span className="text-muted-foreground">{metaLabel(row.original, taxonomy)}</span>, meta: { filter: { kind: "text", placeholder: "Nguồn đề…" } } },
+    {
+      accessorKey: "status",
+      header: "Trạng thái",
+      cell: ({ row }) => <StatusBadge doc={row.original} />,
+      meta: { filter: { kind: "select", options: Object.entries(DOC_STATUS_LABEL).map(([value, label]) => ({ value, label })) }, sort: "status" },
+    },
+    { accessorKey: "created_at", header: "Tải lên", cell: ({ row }) => new Date(row.original.created_at).toLocaleString("vi-VN"), meta: { filter: { kind: "date" }, sort: "created_at" } },
+  ];
 }

@@ -55,6 +55,6 @@ def test_question_in_exam_cannot_be_deleted_and_list(client, db):
     client.post(f"/api/exams/{exam['id']}/questions", json={"question_ids": [q["id"]]})
     r = client.delete(f"/api/questions/{q['id']}")
     assert r.status_code == 409 and r.json()["error"]["code"] == "question_in_use"
-    listed = client.get("/api/exams").json()
+    listed = client.get("/api/exams").json()["items"]
     assert listed[0]["question_count"] == 1 and listed[0]["questions"] == []
     assert client.post("/api/exams", json={"title": " "}).status_code == 422

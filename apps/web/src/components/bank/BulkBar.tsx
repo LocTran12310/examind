@@ -1,80 +1,96 @@
 "use client";
 
+import { Check, ChevronDown, Gauge, Network, Tag as TagIcon, Trash2, X } from "lucide-react";
 import { useState } from "react";
-import { FormAlert } from "@/components/app/FormAlert";
-import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/app/ConfirmDialog";
 import { FormDialog } from "@/components/app/FormDialog";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { ToolbarButton } from "@/components/data-table/Toolbar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { api, ApiError } from "@/lib/api";
 import { DIFFICULTY_LABEL, type Tag, type Topic } from "@/lib/types";
 import { TopicPicker } from "./TopicPicker";
 
-export function BulkBar({ ids, topics, tags, onDone, onClear }: { ids: string[]; topics: Topic[]; tags: Tag[]; onDone: () => void; onClear: () => void }) {
+/** Bulk actions for the selected questions, rendered inside the table toolbar. */
+export function BulkActions({ ids, topics, tags, onDone, onClear }: { ids: string[]; topics: Topic[]; tags: Tag[]; onDone: () => void; onClear: () => void }) {
   const [picking, setPicking] = useState(false);
-  const [message, setMessage] = useState<{ tone: "red" | "green"; text: string } | null>(null);
-  if (!ids.length) return null;
+  const [confirming, setConfirming] = useState(false);
+  const none = ids.length === 0;
 
   async function apply(set: Record<string, unknown>, label: string) {
-    setMessage(null);
     try {
       const r = await api<{ updated: number }>("/questions/bulk", { body: { ids, set } });
-      setMessage({ tone: "green", text: `${label}: ${r.updated} câu` });
+      toast.success(`${label}: ${r.updated} câu`);
       onDone();
     } catch (e) {
-      setMessage({ tone: "red", text: e instanceof ApiError ? e.message : "Có lỗi xảy ra" });
+      toast.error(e instanceof ApiError ? e.message : "Có lỗi xảy ra");
     }
   }
 
   async function remove() {
-    if (!window.confirm(`Xóa vĩnh viễn ${ids.length} câu hỏi?`)) return;
-    setMessage(null);
     let failed = 0;
-    for (const id of ids) {
-      await api(`/questions/${id}`, { method: "DELETE" }).catch(() => failed++);
-    }
-    setMessage(failed ? { tone: "red", text: `${failed} câu không xóa được (đang dùng trong đề)` } : { tone: "green", text: `Đã xóa ${ids.length} câu` });
+    for (const id of ids) await api(`/questions/${id}`, { method: "DELETE" }).catch(() => failed++);
+    if (failed) toast.error(`${failed} câu không xóa được (đang dùng trong đề)`);
+    else toast.success(`Đã xóa ${ids.length} câu`);
     onClear();
     onDone();
   }
 
   return (
-    <div className="sticky top-0 z-10 mb-3 space-y-2 rounded-xl border border-primary/20 bg-primary/10 p-3" data-testid="bulk-bar">
-      <div className="flex flex-wrap items-center gap-2 text-sm">
-        <span className="font-medium">Đã chọn {ids.length}</span>
-        <NativeSelect aria-label="Đặt mức độ" value="" onChange={(e) => e.target.value && void apply({ difficulty: e.target.value }, "Đã đặt mức độ")}>
-          <NativeSelectOption value="">Đặt mức độ…</NativeSelectOption>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <ToolbarButton disabled={none}>
+            <Gauge /> Mức độ <ChevronDown />
+          </ToolbarButton>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
           {Object.entries(DIFFICULTY_LABEL).map(([k, v]) => (
-            <NativeSelectOption key={k} value={k}>
+            <DropdownMenuItem key={k} onSelect={() => void apply({ difficulty: k }, `Đã đặt mức độ ${v}`)}>
               {v}
-            </NativeSelectOption>
+            </DropdownMenuItem>
           ))}
-        </NativeSelect>
-        <Button variant="outline" size="sm" onClick={() => setPicking(true)}>
-          Đặt chuyên đề…
-        </Button>
-        <NativeSelect aria-label="Thêm tag" value="" onChange={(e) => e.target.value && void apply({ add_tag_ids: [e.target.value] }, "Đã thêm tag")}>
-          <NativeSelectOption value="">Thêm tag…</NativeSelectOption>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <ToolbarButton disabled={none} onClick={() => setPicking(true)}>
+        <Network /> Chuyên đề
+      </ToolbarButton>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <ToolbarButton disabled={none || !tags.length}>
+            <TagIcon /> Thêm tag <ChevronDown />
+          </ToolbarButton>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="max-h-72 overflow-y-auto">
           {tags.map((t) => (
-            <NativeSelectOption key={t.id} value={t.id}>
+            <DropdownMenuItem key={t.id} onSelect={() => void apply({ add_tag_ids: [t.id] }, `Đã thêm tag ${t.name}`)}>
               {t.name}
-            </NativeSelectOption>
+            </DropdownMenuItem>
           ))}
-        </NativeSelect>
-        <Button variant="outline" size="sm" onClick={() => void apply({ status: "approved" }, "Đã duyệt")}>
-          Duyệt
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => void apply({ status: "rejected" }, "Đã loại")}>
-          Loại
-        </Button>
-        <Button size="sm" variant="destructive" onClick={() => void remove()}>
-          Xóa
-        </Button>
-        <Button size="sm" variant="ghost" onClick={onClear}>
-          Bỏ chọn
-        </Button>
-      </div>
-      {message && <FormAlert kind={message.tone === "red" ? "error" : "success"}>{message.text}</FormAlert>}
-      <FormDialog open={picking} title="Đặt chuyên đề cho các câu đã chọn" onOpenChange={(o) => !o && setPicking(false)}>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <ToolbarButton disabled={none} onClick={() => void apply({ status: "approved" }, "Đã duyệt")}>
+        <Check /> Duyệt
+      </ToolbarButton>
+      <ToolbarButton disabled={none} onClick={() => void apply({ status: "rejected" }, "Đã loại")}>
+        <X /> Loại
+      </ToolbarButton>
+      <ToolbarButton disabled={none} onClick={() => setConfirming(true)}>
+        <Trash2 /> Xóa
+      </ToolbarButton>
+      <ConfirmDialog
+        open={confirming}
+        onOpenChange={setConfirming}
+        destructive
+        title={`Xóa vĩnh viễn ${ids.length} câu hỏi?`}
+        description="Câu đang dùng trong đề thi sẽ không bị xóa."
+        confirmLabel="Xóa"
+        onConfirm={async () => {
+          setConfirming(false);
+          await remove();
+        }}
+      />
+      <FormDialog open={picking} title="Đặt chuyên đề cho các câu đã chọn" onOpenChange={setPicking}>
         <TopicPicker
           topics={topics}
           onPick={(t) => {
@@ -84,6 +100,6 @@ export function BulkBar({ ids, topics, tags, onDone, onClear }: { ids: string[];
           onClose={() => setPicking(false)}
         />
       </FormDialog>
-    </div>
+    </>
   );
 }

@@ -13,7 +13,7 @@ def test_assign_home_and_start(client, db):
     assert r.status_code == 200
     att = r.json()["attempt_id"]
     assert s.post(f"/api/assignments/{a['id']}/start").json()["attempt_id"] == att  # resumed
-    assert client.get("/api/assignments", params={"exam_id": exam["id"]}).json()[0]["classes"] == [klass["name"]]
+    assert client.get("/api/assignments", params={"exam_id": exam["id"]}).json()["items"][0]["classes"] == [klass["name"]]
 
 
 def test_window_and_attempt_limits(client, db):

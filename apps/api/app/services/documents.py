@@ -3,7 +3,7 @@ import hashlib
 import re
 import uuid
 
-from sqlalchemy import delete, func, or_, select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.core import storage
@@ -11,6 +11,7 @@ from app.core.errors import AppError, not_found, validation
 from app.core.images import sniff
 from app.deps import OrgScope
 from app.models import Question, Semester, SourceDocument, Subject
+from app.services.paging import Col, ListParams, paginate
 from app.services import audit
 from app.worker import queue
 
@@ -102,16 +103,20 @@ def get_document(db: Session, scope: OrgScope, doc_id) -> SourceDocument:
     return doc
 
 
-def list_documents(db: Session, scope: OrgScope, q: str = "", status: str | None = None, page: int = 1, page_size: int = 50):
+DOCUMENT_COLS = {
+    "filename": Col(SourceDocument.filename),
+    "source_name": Col(SourceDocument.meta["source_name"].astext),
+    "status": Col(SourceDocument.status, "exact"),
+    "mime": Col(SourceDocument.mime, "exact"),
+    "question_count": Col(SourceDocument.question_count, "number"),
+    "created_at": Col(SourceDocument.created_at, "date"),
+}
+
+
+def list_documents(db: Session, scope: OrgScope, params: ListParams):
     stmt = select(SourceDocument).where(SourceDocument.organization_id == scope.org_id)
-    if status:
-        stmt = stmt.where(SourceDocument.status == status)
-    if q:
-        like = f"%{q.strip()}%"
-        stmt = stmt.where(or_(SourceDocument.filename.ilike(like), SourceDocument.meta["source_name"].astext.ilike(like)))
-    total = db.scalar(select(func.count()).select_from(stmt.subquery()))
-    items = db.scalars(stmt.order_by(SourceDocument.created_at.desc()).offset((page - 1) * page_size).limit(page_size)).all()
-    return items, total
+    return paginate(db, stmt, params, DOCUMENT_COLS, search=[SourceDocument.filename, SourceDocument.meta["source_name"].astext],
+                    default_sort=[SourceDocument.created_at.desc(), SourceDocument.id])
 
 
 def reparse(db: Session, scope: OrgScope, doc_id, config: dict | None) -> SourceDocument:

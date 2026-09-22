@@ -10,6 +10,7 @@ from app.deps import OrgScope
 from app.models import Attempt, Exam, ExamQuestion, Question, Subject
 from app.models.exam import DEFAULT_POINTS, SECTION_OF_TYPE
 from app.models.question import USABLE
+from app.services.paging import Col, ListParams, paginate
 from app.services import bank
 
 SECTION_ORDER = ["I", "II", "III", "IV"]
@@ -26,12 +27,24 @@ def points_for(exam: Exam, qtype: str) -> float:
     return float((exam.settings or {}).get("points_by_type", DEFAULT_POINTS).get(qtype, DEFAULT_POINTS.get(qtype, 1.0)))
 
 
-def list_exams(db: Session, scope: OrgScope):
-    counts = (select(ExamQuestion.exam_id, func.count().label("n"), func.coalesce(func.sum(ExamQuestion.points), 0).label("pts"))
-              .group_by(ExamQuestion.exam_id).subquery())
-    rows = db.execute(select(Exam, counts.c.n, counts.c.pts).outerjoin(counts, counts.c.exam_id == Exam.id)
-                      .where(Exam.organization_id == scope.org_id, Exam.source != "adaptive").order_by(Exam.created_at.desc()))
-    return [(e, n or 0, float(p or 0)) for e, n, p in rows]
+_COUNTS = (select(ExamQuestion.exam_id, func.count().label("n"), func.coalesce(func.sum(ExamQuestion.points), 0).label("pts"))
+           .group_by(ExamQuestion.exam_id).subquery())
+EXAM_COLS = {
+    "title": Col(Exam.title),
+    "grade": Col(Exam.grade, "number"),
+    "source": Col(Exam.source, "exact"),
+    "subject_id": Col(Exam.subject_id, "uuid"),
+    "created_at": Col(Exam.created_at, "date"),
+    "question_count": Col(func.coalesce(_COUNTS.c.n, 0), filterable=False),
+    "total_points": Col(func.coalesce(_COUNTS.c.pts, 0), filterable=False),
+}
+
+
+def list_exams(db: Session, scope: OrgScope, params: ListParams):
+    stmt = (select(Exam, _COUNTS.c.n, _COUNTS.c.pts).outerjoin(_COUNTS, _COUNTS.c.exam_id == Exam.id)
+            .where(Exam.organization_id == scope.org_id, Exam.source != "adaptive"))
+    rows, total = paginate(db, stmt, params, EXAM_COLS, search=[Exam.title], scalars=False, default_sort=[Exam.created_at.desc(), Exam.id])
+    return [(e, n or 0, float(p or 0)) for e, n, p in rows], total
 
 
 def create(db: Session, scope: OrgScope, title: str, subject_id=None, grade=None, description: str = "", settings: dict | None = None,

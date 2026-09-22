@@ -1,10 +1,15 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
-import { ReviewList } from "@/components/review/ReviewList";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { MeProvider } from "@/app/(app)/AppShell";
+import ReviewPage from "@/app/(app)/org/review/page";
 import type { ReviewDocument, User } from "@/lib/types";
+import { lastQuery, me, mockFetch, page, route } from "./helpers";
+import { searchOf, setUrl } from "./router-mock";
 
-const row: ReviewDocument = {
+vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);
+
+export const reviewRow = (o: Partial<ReviewDocument> = {}): ReviewDocument => ({
   document: { id: "d1", filename: "de-kho.docx" } as ReviewDocument["document"],
   total: 8,
   counts: { auto_approved: 3, needs_review: 5, approved: 0, rejected: 0, duplicate: 0, flagged: 0 },
@@ -12,24 +17,56 @@ const row: ReviewDocument = {
   progress: 0.25,
   assigned_to: null,
   assigned_name: null,
-};
+  ...o,
+});
 const gv = { id: "u1", full_name: "Cô Lan" } as User;
 
+const renderPage = (role: "teacher" | "org_admin") =>
+  render(
+    <MeProvider value={me(role)}>
+      <ReviewPage />
+    </MeProvider>,
+  );
+
+beforeEach(() => setUrl("/org/review"));
+
 describe("review list", () => {
-  it("shows counts, spot checks, progress and the pending link", () => {
-    render(<ReviewList rows={[row]} teachers={[gv]} canAssign={false} onAssign={() => {}} />);
-    const r = screen.getByTestId("rev-de-kho.docx");
-    expect(r).toHaveTextContent("Tự duyệt 3");
-    expect(r).toHaveTextContent("Cần xem 5");
-    expect(r).toHaveTextContent("Kiểm tra ngẫu nhiên 1");
-    expect(r).toHaveTextContent("25%");
+  it("shows counts, spot checks, progress and the pending link", async () => {
+    mockFetch(route("GET", /^\/api\/review\/documents\?/, page([reviewRow()])));
+    renderPage("teacher");
+    const r = await screen.findByTestId("rev-de-kho.docx");
+    const row = r.closest("tr")!;
+    expect(row).toHaveTextContent("Tự duyệt 3");
+    expect(row).toHaveTextContent("Cần xem 5");
+    expect(row).toHaveTextContent("Kiểm tra ngẫu nhiên 1");
+    expect(row).toHaveTextContent("25%");
     expect(screen.getByRole("link", { name: "Duyệt 6 câu" })).toHaveAttribute("href", "/org/review/d1");
   });
 
+  it("'Của tôi' goes to the server and the URL", async () => {
+    const fetch = mockFetch(route("GET", /^\/api\/review\/documents\?/, page([reviewRow()])));
+    const u = userEvent.setup();
+    renderPage("teacher");
+    await screen.findByTestId("rev-de-kho.docx");
+    await u.click(screen.getByRole("switch", { name: "Của tôi" }));
+    await waitFor(() => expect(lastQuery(fetch, "/review/documents").get("mine")).toBe("true"));
+    expect(searchOf().get("mine")).toBe("true");
+  });
+
   it("org admins assign a reviewer", async () => {
-    const onAssign = vi.fn();
-    render(<ReviewList rows={[row]} teachers={[gv]} canAssign onAssign={onAssign} />);
-    await userEvent.selectOptions(screen.getByLabelText("Người duyệt"), "u1");
-    expect(onAssign).toHaveBeenCalledWith("d1", "u1");
+    const fetch = mockFetch(
+      route("GET", /^\/api\/review\/documents\?/, page([reviewRow()])),
+      route("GET", /^\/api\/users\?/, page([gv])),
+      route("PATCH", "/api/review/documents/d1", reviewRow({ assigned_to: "u1" })),
+    );
+    const u = userEvent.setup();
+    renderPage("org_admin");
+    await screen.findByTestId("rev-de-kho.docx");
+    await u.click(screen.getByRole("combobox", { name: "Người duyệt" }));
+    await u.click(await screen.findByRole("option", { name: "Cô Lan" }));
+    await waitFor(() => {
+      const call = fetch.mock.calls.find(([url, init]) => url === "/api/review/documents/d1" && (init as RequestInit)?.method === "PATCH");
+      expect(JSON.parse(String((call?.[1] as RequestInit).body))).toEqual({ assigned_to: "u1" });
+    });
   });
 });

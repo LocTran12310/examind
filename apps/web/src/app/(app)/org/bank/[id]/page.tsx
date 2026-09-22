@@ -10,14 +10,15 @@ import { Panel } from "@/components/app/Panel";
 import { PageHeader } from "@/components/app/PageHeader";
 import { api } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
-import { DIFFICULTY_LABEL, STATUS_LABEL, type ParsedQuestion, type QuestionStatus, type Tag, type Taxonomy, type Topic } from "@/lib/types";
+import { DIFFICULTY_LABEL, STATUS_LABEL, type ParsedQuestion, type QuestionStatus, type Page, type Tag, type Taxonomy, type Topic } from "@/lib/types";
 
 export default function BankQuestionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { data: q, setData } = useApi<ParsedQuestion>(`/questions/${id}`);
   const { data: taxonomy } = useApi<Taxonomy>("/taxonomy");
   const { data: topics } = useApi<Topic[]>("/topics");
-  const { data: tags } = useApi<Tag[]>("/tags");
+  const { data: tagsPage } = useApi<Page<Tag>>("/tags?page_size=all");
+  const tags = tagsPage?.items;
   const [editing, setEditing] = useState(false);
   if (!q || !taxonomy || !topics || !tags) return null;
   const primary = q.topics.find((t) => t.is_primary);

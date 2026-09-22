@@ -22,7 +22,8 @@ export default function ExamBuilderPage({ params }: { params: Promise<{ id: stri
   const { id } = use(params);
   const { data: exam, setData } = useApi<Exam>(`/exams/${id}`);
   const { data: topics } = useApi<Topic[]>("/topics");
-  const { data: tags } = useApi<Tag[]>("/tags");
+  const { data: tagsPage } = useApi<Page<Tag>>("/tags?page_size=all");
+  const tags = tagsPage?.items;
   const [shortfalls, setShortfalls] = useState<{ row: number; missing: number }[]>([]);
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
@@ -31,7 +32,8 @@ export default function ExamBuilderPage({ params }: { params: Promise<{ id: stri
   const [error, setError] = useState<string | null>(null);
   const [assigning, setAssigning] = useState(false);
   const { data: classes } = useApi<SchoolClass[]>("/classes");
-  const { data: assigned, reload: reloadAssigned } = useApi<Assignment[]>(`/assignments?exam_id=${id}`);
+  const { data: assignedPage, reload: reloadAssigned } = useApi<Page<Assignment>>(`/assignments?exam_id=${id}&page_size=all`);
+  const assigned = assignedPage?.items;
 
   async function run(fn: () => Promise<Exam | { exam: Exam; shortfalls: { row: number; missing: number }[] }>) {
     setError(null);

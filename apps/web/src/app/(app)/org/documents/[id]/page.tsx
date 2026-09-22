@@ -13,7 +13,7 @@ import { FormDialog } from "@/components/app/FormDialog";
 import { PageHeader } from "@/components/app/PageHeader";
 import { api, ApiError } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
-import type { AiModel, ParsedQuestion, ProcessingConfig, SourceDocument, Taxonomy } from "@/lib/types";
+import type { AiModel, Page, ParsedQuestion, ProcessingConfig, SourceDocument, Taxonomy } from "@/lib/types";
 
 export default function DocumentPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -25,7 +25,8 @@ export default function DocumentPage({ params }: { params: Promise<{ id: string 
   const [onlyIssues, setOnlyIssues] = useState(false);
   const [reparse, setReparse] = useState<ProcessingConfig | null>(null);
   const [reparseError, setReparseError] = useState<string | null>(null);
-  const { data: models } = useApi<AiModel[]>(reparse ? "/ai-models?enabled=true" : null);
+  const { data: modelsPage } = useApi<Page<AiModel>>(reparse ? "/ai-models?enabled=true&page_size=all" : null);
+  const models = modelsPage?.items;
   const busy = doc && (doc.status === "queued" || doc.status === "processing");
 
   useEffect(() => {

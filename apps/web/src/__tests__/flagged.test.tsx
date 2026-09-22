@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { FlagPanel } from "@/components/review/ReviewQueue";
-import { ReviewList } from "@/components/review/ReviewList";
+import { pendingOf, ReviewCounts } from "@/components/review/ReviewList";
 import type { ReviewDocument } from "@/lib/types";
 
 describe("flagged questions", () => {
@@ -11,9 +11,9 @@ describe("flagged questions", () => {
       counts: { auto_approved: 30, needs_review: 0, approved: 8, rejected: 0, duplicate: 0, flagged: 2 }, spot_pending: 0, progress: 0.95,
       assigned_to: null, assigned_name: null,
     };
-    render(<ReviewList rows={[row]} teachers={[]} canAssign={false} onAssign={() => {}} />);
-    expect(screen.getByTestId("rev-de.docx")).toHaveTextContent("Nghi sai đáp án 2");
-    expect(screen.getByRole("link", { name: "Duyệt 2 câu" })).toBeInTheDocument();
+    const { container } = render(<ReviewCounts r={row} />);
+    expect(container).toHaveTextContent("Nghi sai đáp án 2");
+    expect(pendingOf(row)).toBe(2);
   });
 
   it("evidence panel explains the flag", () => {

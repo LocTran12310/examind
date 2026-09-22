@@ -5,13 +5,14 @@ import { formValueOf, payloadOf, QuestionForm } from "@/components/bank/Question
 import { PageHeader } from "@/components/app/PageHeader";
 import { api } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
-import type { ParsedQuestion, Tag, Taxonomy, Topic } from "@/lib/types";
+import type { Page, ParsedQuestion, Tag, Taxonomy, Topic } from "@/lib/types";
 
 export default function NewQuestionPage() {
   const router = useRouter();
   const { data: taxonomy } = useApi<Taxonomy>("/taxonomy");
   const { data: topics } = useApi<Topic[]>("/topics");
-  const { data: tags } = useApi<Tag[]>("/tags");
+  const { data: tagsPage } = useApi<Page<Tag>>("/tags?page_size=all");
+  const tags = tagsPage?.items;
   if (!taxonomy || !topics || !tags) return null;
   const initial = { ...formValueOf(), subject_id: taxonomy.subjects.find((s) => s.code === "toan")?.id ?? null };
   return (

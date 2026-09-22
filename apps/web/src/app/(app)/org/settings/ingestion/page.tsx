@@ -8,11 +8,12 @@ import { Panel } from "@/components/app/Panel";
 import { PageHeader } from "@/components/app/PageHeader";
 import { api } from "@/lib/api";
 import { useApi, useMutation } from "@/lib/hooks";
-import type { AiModel, ProcessingConfig } from "@/lib/types";
+import type { AiModel, Page, ProcessingConfig } from "@/lib/types";
 
 export default function IngestionSettingsPage() {
   const { data } = useApi<ProcessingConfig>("/org/settings/ingestion");
-  const { data: models } = useApi<AiModel[]>("/ai-models?enabled=true");
+  const { data: modelsPage } = useApi<Page<AiModel>>("/ai-models?enabled=true&page_size=all");
+  const models = modelsPage?.items;
   const [value, setValue] = useState<ProcessingConfig | null>(null);
   const [saved, setSaved] = useState(false);
   const m = useMutation();

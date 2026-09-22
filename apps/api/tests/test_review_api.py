@@ -18,7 +18,7 @@ def test_counts_progress_and_assignment(client, db):
     kho = upload(client, "k.docx", sample("de-kho.docx")).json()["document"]["id"]
     upload(client, "m.docx", sample("de-mau-toan10.docx"))
     run_jobs()
-    rows = {r["document"]["filename"]: r for r in client.get("/api/review/documents").json()}
+    rows = {r["document"]["filename"]: r for r in client.get("/api/review/documents").json()["items"]}
     k = rows["k.docx"]
     assert k["total"] == 8 and k["counts"]["needs_review"] == 5 and k["counts"]["auto_approved"] == 3
     assert k["spot_pending"] == 1 and 0 < k["progress"] < 1
@@ -27,7 +27,7 @@ def test_counts_progress_and_assignment(client, db):
     assert r.status_code == 200 and r.json()["assigned_name"] == teacher.full_name
     t = client.__class__(client.app)
     t.post("/api/auth/login", json={"org_code": "trungtama", "username": "gv", "password": "Secret123!"})
-    assert [x["document"]["filename"] for x in t.get("/api/review/documents", params={"mine": True}).json()] == ["k.docx"]
+    assert [x["document"]["filename"] for x in t.get("/api/review/documents", params={"mine": True}).json()["items"]] == ["k.docx"]
     assert t.patch(f"/api/review/documents/{kho}", json={"assigned_to": None}).status_code == 403
     stranger = make_user(db, make_org(db, "orgb"), "x", role="teacher")
     db.commit()
@@ -43,5 +43,5 @@ def test_students_and_other_orgs(client, db):
     make_user(db, org, "gvb", role="teacher")
     db.commit()
     s.post("/api/auth/login", json={"org_code": "orgb", "username": "gvb", "password": "Secret123!"})
-    assert s.get("/api/review/documents").json() == []
+    assert s.get("/api/review/documents").json()["items"] == []
     assert s.get(f"/api/review/documents/{doc}").status_code == 404

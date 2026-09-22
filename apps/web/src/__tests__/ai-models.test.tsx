@@ -2,9 +2,13 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { emptyDraft, ModelForm } from "@/components/ai/ModelForm";
-import { ModelTable } from "@/components/ai/ModelTable";
+import { MeProvider } from "@/app/(app)/AppShell";
+import AiModelsPage from "@/app/(app)/org/ai-models/page";
 import type { AiModel } from "@/lib/types";
-import { mockFetch, route } from "./helpers";
+import { me, mockFetch, page, route } from "./helpers";
+import { setUrl } from "./router-mock";
+
+vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);
 
 const model = (o: Partial<AiModel>): AiModel => ({
   id: "m1", name: "Qwen", provider: "ollama", model: "qwen2.5:7b", base_url: "http://ollama:11434", capabilities: ["text"],
@@ -14,21 +18,29 @@ const model = (o: Partial<AiModel>): AiModel => ({
 afterEach(() => vi.unstubAllGlobals());
 
 describe("ai models", () => {
-  it("system models are read-only and badges show free/paid/key", () => {
-    render(
-      <ModelTable
-        models={[model({ id: "s", name: "Sys", system: true, editable: false }), model({ id: "p", name: "GPT", provider: "openai", is_free: false, has_key: true })]}
-        tests={{ p: { ok: true, latency_ms: 120 } }}
-        onTest={() => {}} onEdit={() => {}} onToggle={() => {}} onDelete={() => {}}
-      />,
+  it("badges show system/free/paid/key and the toolbar tests the selected models", async () => {
+    setUrl("/org/ai-models");
+    mockFetch(
+      route("GET", /^\/api\/ai-models\?/, page([model({ id: "s", name: "Sys", system: true, editable: false }), model({ id: "p", name: "GPT", provider: "openai", is_free: false, has_key: true })])),
+      route("POST", "/api/ai-models/p/test", { ok: true, latency_ms: 120 }),
     );
-    const sys = screen.getByTestId("model-Sys");
+    const u = userEvent.setup();
+    render(
+      <MeProvider value={me("org_admin")}>
+        <AiModelsPage />
+      </MeProvider>,
+    );
+    const sys = (await screen.findByTestId("model-Sys")).closest("tr")!;
     expect(sys).toHaveTextContent("Hệ thống");
-    expect(within(sys).queryByRole("button", { name: "Sửa" })).toBeNull();
-    const gpt = screen.getByTestId("model-GPT");
+    const gpt = screen.getByTestId("model-GPT").closest("tr")!;
     expect(gpt).toHaveTextContent("Trả phí");
     expect(gpt).toHaveTextContent("Có khóa");
-    expect(gpt).toHaveTextContent("OK · 120 ms");
+    await u.click(within(sys).getByRole("checkbox"));
+    expect(screen.getByRole("button", { name: "Bật/Tắt" })).toBeDisabled(); // system models are read-only
+    await u.click(within(sys).getByRole("checkbox"));
+    await u.click(within(gpt).getByRole("checkbox"));
+    await u.click(screen.getByRole("button", { name: "Kiểm tra" }));
+    await waitFor(() => expect(gpt).toHaveTextContent("OK · 120 ms"));
   });
 
   it("creates a model and never echoes the key", async () => {

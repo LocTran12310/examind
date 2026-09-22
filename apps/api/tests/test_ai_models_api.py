@@ -27,7 +27,7 @@ def test_org_admin_crud_and_key_never_returned(client, db):
     assert stored.api_key_enc and "sk-secret" not in stored.api_key_enc
     r = client.patch(f"/api/ai-models/{m['id']}", json={"enabled": False, "name": "Qwen tắt"})
     assert r.json()["enabled"] is False and r.json()["name"] == "Qwen tắt"
-    assert [x["name"] for x in client.get("/api/ai-models", params={"enabled": True}).json()] == ["GPT"]
+    assert [x["name"] for x in client.get("/api/ai-models", params={"enabled": True}).json()["items"]] == ["GPT"]
     assert client.patch(f"/api/ai-models/{paid['id']}", json={"api_key": ""}).json()["has_key"] is False
     assert client.delete(f"/api/ai-models/{m['id']}").status_code == 204
     assert client.post("/api/ai-models", json={**OLLAMA, "provider": "bogus"}).status_code == 422
@@ -40,7 +40,7 @@ def test_system_models_visible_but_read_only(client, db):
     client.cookies.clear()
     org = make_org(db, "orgx")
     login_as(client, db, "org_admin", org=org)
-    listed = {m["name"]: m for m in client.get("/api/ai-models").json()}
+    listed = {m["name"]: m for m in client.get("/api/ai-models").json()["items"]}
     assert listed["Hệ thống Qwen"]["system"] and not listed["Hệ thống Qwen"]["editable"]
     assert client.patch(f"/api/ai-models/{sys_model['id']}", json={"name": "x"}).status_code == 403
     assert client.delete(f"/api/ai-models/{sys_model['id']}").status_code == 403
@@ -54,13 +54,13 @@ def test_isolation_and_teacher_read_only(client, db):
     make_user(db, org_b, "adminb", role="org_admin")
     db.commit()
     other.post("/api/auth/login", json={"org_code": "orgb", "username": "adminb", "password": "Secret123!"})
-    assert other.get("/api/ai-models").json() == []
+    assert other.get("/api/ai-models").json()["items"] == []
     assert other.patch(f"/api/ai-models/{mine['id']}", json={"name": "x"}).status_code == 404
     teacher_client = client.__class__(client.app)
     make_user(db, admin.organization, "gv", role="teacher")
     db.commit()
     teacher_client.post("/api/auth/login", json={"org_code": "trungtama", "username": "gv", "password": "Secret123!"})
-    assert len(teacher_client.get("/api/ai-models").json()) == 1
+    assert len(teacher_client.get("/api/ai-models").json()["items"]) == 1
     assert teacher_client.post("/api/ai-models", json=OLLAMA).status_code == 403
 
 
