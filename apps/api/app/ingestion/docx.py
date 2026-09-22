@@ -4,11 +4,15 @@ Math becomes `$…$`, pictures become `![](asset:<id>)`, underline/bold/highligh
 `[…]{.underline}` / `**…**` / `[…]{.mark}` so the splitter can read answers marked by formatting.
 Auto-numbered lists are rendered with their labels (`A.`, `a)`, `12.`) because Word hides them in styles.
 """
+import io
 import json
 import os
+import re
 import subprocess
 import tempfile
+import zipfile
 
+from app.ingestion import mtef
 from app.ingestion.assets import ImageStore
 from app.ingestion.lines import Line
 
@@ -19,8 +23,13 @@ class DocxError(Exception):
     pass
 
 
-def extract_docx(data: bytes, store: ImageStore) -> tuple[list[Line], list[str]]:
+def extract_docx(data: bytes, store: ImageStore, stats: dict | None = None) -> tuple[list[Line], list[str]]:
     warnings: list[str] = []
+    data, math, failed = inline_mathtype(data)
+    if stats is not None:
+        stats.update(equations=len(math), equations_failed=failed)
+    if failed:
+        warnings.append(f"{failed} công thức MathType không chuyển được sang LaTeX, giữ dạng hình")
     with tempfile.TemporaryDirectory() as tmp:
         src = os.path.join(tmp, "in.docx")
         with open(src, "wb") as fh:
@@ -35,20 +44,26 @@ def extract_docx(data: bytes, store: ImageStore) -> tuple[list[Line], list[str]]
         if proc.returncode != 0:
             raise DocxError("Không đọc được file Word: " + proc.stderr.decode(errors="replace")[:300])
         ast = json.loads(proc.stdout)
-        walker = _Walker(tmp, store, warnings)
+        walker = _Walker(tmp, store, warnings, math)
         for block in ast["blocks"]:
             walker.block(block)
         return walker.lines, warnings
 
 
 class _Walker:
-    def __init__(self, base: str, store: ImageStore, warnings: list[str]):
+    def __init__(self, base: str, store: ImageStore, warnings: list[str], math: dict[str, str] | None = None):
         self.base, self.store, self.warnings = base, store, warnings
+        self.math = math or {}
         self.lines: list[Line] = []
         self._cache: dict[str, str | None] = {}
 
     # ---------------------------------------------------------------- blocks
     def emit(self, text: str) -> None:
+        # a picture in a paragraph with words (formula pictures, small icons) stays in the line;
+        # pictures on their own (figures) get a line each
+        has_words = bool(_IMG.sub("", text).strip())
+        text = _IMG.sub((lambda m: m.group(1)) if has_words else (lambda m: "\n" + m.group(1) + "\n"), text)
+        text = _IMG_THEN_LABEL.sub(r"\1\n", text)  # "![](…) D. $0$": the next option starts a line
         for part in text.split("\n"):
             if part.strip():
                 self.lines.append(Line(part.strip()))
@@ -126,7 +141,7 @@ class _Walker:
     def inline(self, x: dict) -> str:
         t, c = x["t"], x.get("c")
         if t == "Str":
-            return c
+            return _TOKEN.sub(lambda m: f"${self.math[m.group(0)]}$" if m.group(0) in self.math else "", c) if "⟦" in c else c
         if t in ("Space",):
             return " "
         if t == "SoftBreak":
@@ -147,10 +162,11 @@ class _Walker:
             return f"[{inner.strip()}]{{.mark}}" if "mark" in c[0][1] and inner.strip() else inner
         if t in ("Emph", "Strikeout", "SmallCaps"):
             return self.inlines(c)
-        if t == "Superscript":
-            return f"$^{{{self.inlines(c)}}}$"
-        if t == "Subscript":
-            return f"$_{{{self.inlines(c)}}}$"
+        if t in ("Superscript", "Subscript"):
+            inner = self.inlines(c)
+            if "$" in inner or "![" in inner:
+                return inner  # a formula or picture only raised/lowered for alignment: keep it as is
+            return f"${'^' if t == 'Superscript' else '_'}{{{inner}}}$"
         if t == "Quoted":
             q = '"' if c[0]["t"] == "DoubleQuote" else "'"
             return q + self.inlines(c[1]) + q
@@ -180,4 +196,77 @@ class _Walker:
             else:
                 self._cache[src] = self.store(data, None)
         asset_id = self._cache[src]
-        return f"\n![](asset:{asset_id})\n" if asset_id else ""
+        return f"\x1e![](asset:{asset_id})\x1e" if asset_id else ""
+
+
+_IMG = re.compile(r"\x1e(!\[\]\(asset:[^)]+\))\x1e")
+_IMG_THEN_LABEL = re.compile(r"(!\[\]\(asset:[^)]+\))\s+(?=(?:\*\*)?\[?(?:[A-D][.)]|[a-d]\))\s)")
+
+# ---------------------------------------------------------------- MathType
+_TOKEN = re.compile(r"⟦EQ\d+⟧")
+_OBJECT = re.compile(rb"<w:object\b.*?</w:object>", re.S)
+_OLE_RID = re.compile(rb'<o:OLEObject\b[^>]*?ProgID="Equation\.(?:DSMT\d*|3)"[^>]*?\br:id="([^"]+)"|<o:OLEObject\b[^>]*?\br:id="([^"]+)"[^>]*?ProgID="Equation\.(?:DSMT\d*|3)"')
+_REL = re.compile(rb'<Relationship\b[^>]*?\bId="([^"]+)"[^>]*?\bTarget="([^"]+)"|<Relationship\b[^>]*?\bTarget="([^"]+)"[^>]*?\bId="([^"]+)"')
+
+
+def _latex(ole: bytes) -> str | None:
+    data = mtef.mtef_from_ole(ole)
+    if data is None:
+        return None
+    try:
+        return mtef.mtef_to_latex(data)
+    except mtef.MtefError:
+        return None
+
+
+def inline_mathtype(data: bytes) -> tuple[bytes, dict[str, str], int]:
+    """Replace MathType OLE objects in the body by text tokens; returns (docx, token→LaTeX, failures).
+
+    Pandoc only keeps the WMF preview of an OLE equation, so each object whose MTEF converts is
+    swapped for a `⟦EQn⟧` run text before Pandoc runs; the walker turns tokens back into `$…$`.
+    Objects that do not convert are left alone and still come out as pictures.
+    """
+    try:
+        zin = zipfile.ZipFile(io.BytesIO(data))
+        doc = zin.read("word/document.xml")
+        rels_xml = zin.read("word/_rels/document.xml.rels")
+    except (zipfile.BadZipFile, KeyError):
+        return data, {}, 0
+    if b"Equation." not in doc:
+        return data, {}, 0
+    rels = {}
+    for m in _REL.finditer(rels_xml):
+        rid, target = (m.group(1), m.group(2)) if m.group(1) else (m.group(4), m.group(3))
+        rels[rid.decode()] = target.decode()
+    math: dict[str, str] = {}
+    failed = 0
+
+    def swap(m: re.Match) -> bytes:
+        nonlocal failed
+        obj = m.group(0)
+        ref = _OLE_RID.search(obj)
+        if not ref:
+            return obj
+        target = rels.get((ref.group(1) or ref.group(2)).decode())
+        try:
+            ole = zin.read("word/" + target.lstrip("/").removeprefix("word/")) if target else None
+        except KeyError:
+            ole = None
+        latex = _latex(ole) if ole else None
+        if latex is None:
+            failed += 1
+            return obj
+        if latex == "":
+            return b""  # an empty formula object: nothing to show
+        token = f"⟦EQ{len(math)}⟧"
+        math[token] = latex
+        return f'<w:t xml:space="preserve">{token}</w:t>'.encode()
+
+    doc = _OBJECT.sub(swap, doc)
+    if not math:
+        return data, {}, failed
+    out = io.BytesIO()
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as zout:
+        for item in zin.infolist():
+            zout.writestr(item, doc if item.filename == "word/document.xml" else zin.read(item.filename))
+    return out.getvalue(), math, failed

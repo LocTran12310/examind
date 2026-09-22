@@ -25,6 +25,31 @@ class DocumentOut(BaseModel):
 class DocumentCreated(BaseModel):
     document: DocumentOut
     duplicate: bool
+    action: str = "created"  # created | skipped | reparsed | replaced
+
+
+class FileProbe(BaseModel):
+    name: str
+    size: int | None = None
+    sha256: str
+
+
+class DuplicateCheckIn(BaseModel):
+    files: list[FileProbe]
+
+
+class DocumentBrief(BaseModel):
+    id: uuid.UUID
+    filename: str
+    status: str
+    question_count: int
+    created_at: datetime
+
+
+class DuplicateOut(BaseModel):
+    name: str
+    same_file: DocumentBrief | None
+    same_name: list[DocumentBrief]
 
 
 class TopicRef(BaseModel):
@@ -64,6 +89,10 @@ class ParsedQuestionOut(QuestionOut):
 
 class ReparseIn(BaseModel):
     config: dict | None = None
+
+
+class DocumentMetaIn(BaseModel):
+    meta: dict
 
 
 def document_out(d) -> DocumentOut:

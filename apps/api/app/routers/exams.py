@@ -48,6 +48,15 @@ def get_exam(exam_id: uuid.UUID, scope: OrgScope = Depends(staff_scope), db: Ses
     return exam_out(db, exams.get(db, scope, exam_id))
 
 
+@router.get("/{exam_id}/questions", response_model=Page[ExamQuestionOut])
+def exam_question_page(exam_id: uuid.UUID, params: ListParams = Depends(list_params), scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
+    """Column filters: stem (text) · type · section (exact) · position/points (number)."""
+    rows, total = exams.question_page(db, scope, exam_id, params)
+    parsed = parsed_many(db, [q for _, q in rows])
+    items = [ExamQuestionOut(**p.model_dump(), position=eq.position, section=eq.section, points=eq.points, row=eq.row) for p, (eq, _) in zip(parsed, rows)]
+    return Page(items=items, total=total, page=params.page, page_size=params.page_size)
+
+
 @router.patch("/{exam_id}", response_model=ExamOut)
 def patch_exam(exam_id: uuid.UUID, body: ExamPatch, scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
     e = exams.update(db, scope, exam_id, **body.model_dump(exclude_unset=True))

@@ -4,7 +4,7 @@ import time
 import uuid
 
 import structlog
-from sqlalchemy import delete, select
+from sqlalchemy import delete, exists, select
 from sqlalchemy.orm import Session
 
 from app.core import storage
@@ -34,6 +34,7 @@ class Ctx:
         self.db = db
         self.warnings: list[str] = []
         self.lines: list[Line] = []
+        self.stats: dict = {}  # extractor counters shown in the extract step
         self.log: list[dict] = []
         self._t = time.monotonic()
 
@@ -53,12 +54,12 @@ def _kind(doc: SourceDocument) -> str:
 
 def extract(db: Session, doc: SourceDocument, data: bytes, ctx: Ctx) -> list[Line]:
     kind = _kind(doc)
-    store = document_store(db, doc.organization_id, doc.id, ctx.warnings)
+    store = document_store(db, doc.organization_id, doc.id, ctx.warnings, ctx.stats)
     if kind == "docx":
         from app.ingestion.docx import DocxError, extract_docx
 
         try:
-            lines, warnings = extract_docx(data, store)
+            lines, warnings = extract_docx(data, store, ctx.stats)
         except DocxError as exc:
             raise IngestError(str(exc)) from exc
         ctx.warnings += warnings
@@ -81,7 +82,10 @@ def ingest(db: Session, document_id: str) -> None:
         ctx.step("download", bytes=len(data))
         lines = extract(db, doc, data, ctx)
         ctx.lines = lines
-        ctx.step("extract", lines=len(lines), pages=doc.page_count)
+        ctx.step("extract", lines=len(lines), pages=doc.page_count, **ctx.stats)
+        from app.ingestion import header
+
+        header.apply(db, doc, lines)  # doc.meta["detected"]; fills fields the uploader left empty
         result = split(lines)
         ctx.warnings += result.warnings
         ctx.step("split", questions=len(result.questions))
@@ -118,7 +122,15 @@ def mark_failed(db: Session, document_id: str, error: str) -> None:
 
 
 def persist(db: Session, doc: SourceDocument, parsed: list[ParsedQuestion]) -> list[tuple[ParsedQuestion, Question]]:
-    db.execute(delete(Question).where(Question.source_document_id == doc.id, Question.status.notin_(KEEP_ON_REPARSE)))
+    # approved questions and questions already used in an exam survive a re-parse (A-14)
+    from app.models import ExamQuestion
+
+    used = exists(select(ExamQuestion.question_id).where(ExamQuestion.question_id == Question.id))
+    from app.services.bank import release_duplicates_of
+
+    gone = (Question.source_document_id == doc.id, Question.status.notin_(KEEP_ON_REPARSE), ~used)
+    release_duplicates_of(db, select(Question.id).where(*gone))
+    db.execute(delete(Question).where(*gone))
     kept = {(q.part, q.number) for q in db.scalars(select(Question).where(Question.source_document_id == doc.id))}
     meta = doc.meta or {}
     tag = _source_tag(db, doc.organization_id, meta.get("source_name"))

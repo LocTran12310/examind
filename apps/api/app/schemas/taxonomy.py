@@ -69,16 +69,19 @@ class TagOut(BaseModel):
     id: uuid.UUID
     group: str
     name: str
+    subject_id: uuid.UUID | None = None
 
 
 class TagIn(BaseModel):
     group: str = "custom"
     name: str = Field(min_length=1, max_length=100)
+    subject_id: uuid.UUID | None = None
 
 
 class TagUpdate(BaseModel):
     group: str | None = None
     name: str | None = Field(default=None, max_length=100)
+    subject_id: uuid.UUID | None = None  # sent as null = make it shared
 
 
 def topic_out(t, child_count=0) -> TopicOut:

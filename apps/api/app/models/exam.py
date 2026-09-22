@@ -24,7 +24,7 @@ class Exam(IdMixin, TimestampMixin, Base):
     description: Mapped[str] = mapped_column(Text, default="")
     settings: Mapped[dict] = mapped_column(JSONB, default=lambda: {"points_by_type": dict(DEFAULT_POINTS), "scale_to": 10})
     blueprint: Mapped[list] = mapped_column(JSONB, default=list)
-    source: Mapped[str] = mapped_column(String(16), default="manual")  # manual | blueprint | adaptive
+    source: Mapped[str] = mapped_column(String(16), default="manual")  # manual | blueprint | adaptive | document
     created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
     updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), onupdate=func.now())
 

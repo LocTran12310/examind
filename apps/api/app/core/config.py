@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     app_encryption_key: str = ""
     llm_timeout_seconds: int = 120
     log_level: str = "info"
+    # business calendar: timestamps are stored and sent in UTC, days are Vietnamese days (back-office convention)
+    business_tz: str = "Asia/Ho_Chi_Minh"
     login_max_failures: int = 5
     login_lock_minutes: int = 15
     login_ip_per_minute: int = 30

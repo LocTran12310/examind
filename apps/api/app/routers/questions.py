@@ -32,22 +32,45 @@ def _uuid_list(raw: str | None) -> list[uuid.UUID]:
         raise validation("Chuyên đề không hợp lệ", "topic_ids")
 
 
+def _filters(q: str = "", subject_id: str | None = None, grade: int | None = None, semester_code: str | None = None,
+             exam_kind: str | None = None, type: str | None = None, difficulty: str | None = None, status: str = "usable",
+             topic_id: uuid.UUID | None = None, topic_ids: str | None = None, tag_ids: list[str] = Query(default=[]),
+             document_id: uuid.UUID | None = None, school_year: str | None = None) -> dict:
+    """The bank's filter params; `tag_ids` may repeat or be a comma list, `subject_id` may be "none"."""
+    from app.core.errors import validation
+
+    if subject_id and subject_id != "none":
+        try:
+            subject_id = uuid.UUID(subject_id)
+        except ValueError:
+            raise validation("Môn học không hợp lệ", "subject_id")
+    try:
+        tags = [uuid.UUID(x) for raw in tag_ids for x in raw.split(",") if x.strip()]
+    except ValueError:
+        raise validation("Tag không hợp lệ", "tag_ids")
+    return dict(q=q, subject_id=subject_id or None, grade=grade, semester_code=semester_code, exam_kind=exam_kind, type=type,
+                difficulty=difficulty, status=status, topic_id=topic_id, topic_ids=_uuid_list(topic_ids), tag_ids=tags,
+                document_id=document_id, school_year=school_year or None)
+
+
 @router.get("")
-def list_questions(q: str = "", subject_id: uuid.UUID | None = None, grade: int | None = None, semester_code: str | None = None,
-                   exam_kind: str | None = None, type: str | None = None, difficulty: str | None = None, status: str = "usable",
-                   topic_id: uuid.UUID | None = None, topic_ids: str | None = None, tag_ids: list[uuid.UUID] = Query(default=[]),
-                   document_id: uuid.UUID | None = None,
-                   page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=100),
+def list_questions(filters: dict = Depends(_filters), page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=100),
                    scope: OrgScope = Depends(org_scope), db: Session = Depends(get_db)):
     from app.routers.documents import parsed_many
     from app.services import bank
 
     _staff(scope)
-    items, total = bank.search(db, scope, q=q, subject_id=subject_id, grade=grade, semester_code=semester_code, exam_kind=exam_kind,
-                               type=type, difficulty=difficulty, status=status, topic_id=topic_id, tag_ids=tag_ids,
-                               topic_ids=_uuid_list(topic_ids),
-                               document_id=document_id, page=page, page_size=page_size)
+    items, total = bank.search(db, scope, page=page, page_size=page_size, **filters)
     return {"items": parsed_many(db, items), "total": total, "page": page, "page_size": page_size}
+
+
+@router.get("/facets")
+def question_facets(filters: dict = Depends(_filters), scope: OrgScope = Depends(org_scope), db: Session = Depends(get_db)):
+    """Counts per subject / topic (subtree) / type / difficulty / grade / đợt / năm học / tag for the filter sheet."""
+    from app.services import bank
+
+    _staff(scope)
+    return bank.facets(db, scope, **filters)
 
 
 @router.post("", status_code=201)

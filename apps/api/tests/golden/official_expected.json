@@ -1,0 +1,3901 @@
+{
+ "source": "Examin/ — 18 official 'Thi thử TN THPT 2025 môn Toán' files (not in the repo)",
+ "documents": [
+  {
+   "file": "07. TRƯỜNG THCS -THPT NGUYỄN KHUYẾN - TPHCM (Thi thử TN THPT 2025 môn Toán)_j1t1c2sPPp (ĐỀ CƠ BẢN SỐ 2).docx",
+   "sha256": "8e83eb944579a06c9422698dced49a305aa0f38999f04ec0f73680f048591dce",
+   "questions": [
+    {
+     "part": "1",
+     "number": 1,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 2,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 3,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 4,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 5,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 6,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 7,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 8,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 9,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 10,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 11,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 12,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 1,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": true,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 2,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": true,
+      "c": true,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 3,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": true,
+      "c": true,
+      "d": false
+     },
+     "has_solution": true,
+     "note": "file's answer table disagrees with its solution"
+    },
+    {
+     "part": "2",
+     "number": 4,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": false,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 1,
+     "type": "short_answer",
+     "answer": {
+      "value": "3"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 2,
+     "type": "short_answer",
+     "answer": {
+      "value": "20"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 3,
+     "type": "short_answer",
+     "answer": {
+      "value": "7,2"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 4,
+     "type": "short_answer",
+     "answer": {
+      "value": "700"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 5,
+     "type": "short_answer",
+     "answer": {
+      "value": "1,15"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 6,
+     "type": "short_answer",
+     "answer": {
+      "value": "0,55"
+     },
+     "has_solution": true
+    }
+   ]
+  },
+  {
+   "file": "08. THPT VĂN GIANG - HƯNG YÊN (Thi thử TN THPT 2025 môn Toán)_9SkEwzwcFi (ĐỀ CƠ BẢN SỐ 2).docx",
+   "sha256": "83af77eaa2abab218deb7d73f3bcb951670d4d184adf92c4ec92dbe0cb8ac3e4",
+   "questions": [
+    {
+     "part": "1",
+     "number": 1,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 2,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 3,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 4,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 5,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 6,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 7,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 8,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 9,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 10,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 11,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 12,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 1,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": true,
+      "c": false,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 2,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": false,
+      "c": true,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 3,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": true,
+      "c": false,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 4,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": true,
+      "c": true,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 1,
+     "type": "short_answer",
+     "answer": {
+      "value": "5"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 2,
+     "type": "short_answer",
+     "answer": {
+      "value": "28"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 3,
+     "type": "short_answer",
+     "answer": {
+      "value": "0,24"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 4,
+     "type": "short_answer",
+     "answer": {
+      "value": "20"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 5,
+     "type": "short_answer",
+     "answer": {
+      "value": "1,71"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 6,
+     "type": "short_answer",
+     "answer": {
+      "value": "2025"
+     },
+     "has_solution": true
+    }
+   ]
+  },
+  {
+   "file": "09. THPT THUẬN THÀNH 1-2 - BẮC NINH (Thi thử TN THPT 2025 môn Toán)_tBvdPklsFW.docx",
+   "sha256": "68aeea0c46ca2c9f0ab5c7cd30c1a1db7ee3255c996775a3d4278a7b0328632a",
+   "questions": [
+    {
+     "part": "1",
+     "number": 1,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 2,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 3,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 4,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 5,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 6,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 7,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 8,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 9,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 10,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 11,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 12,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 1,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": false,
+      "c": true,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 2,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": true,
+      "c": false,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 3,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": false,
+      "c": true,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 4,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": true,
+      "c": true,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 1,
+     "type": "short_answer",
+     "answer": {
+      "value": "105"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 2,
+     "type": "short_answer",
+     "answer": {
+      "value": "512"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 3,
+     "type": "short_answer",
+     "answer": {
+      "value": "0,28"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 4,
+     "type": "short_answer",
+     "answer": {
+      "value": "13"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 5,
+     "type": "short_answer",
+     "answer": {
+      "value": "0,8"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 6,
+     "type": "short_answer",
+     "answer": {
+      "value": "437"
+     },
+     "has_solution": true
+    }
+   ]
+  },
+  {
+   "file": "1. THPT Quế Võ 1 – Bắc Ninh (Thi thử TN THPT 2025 môn Toán)_Icu600Ewxd.docx",
+   "sha256": "7b83232cf02159af5f33ceabfe2a78c35228bb1d13d4ca441627bba93283d37e",
+   "questions": [
+    {
+     "part": "1",
+     "number": 1,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 2,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 3,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 4,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 5,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 6,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 7,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 8,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 9,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 10,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 11,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 12,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 1,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": true,
+      "c": false,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 2,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": true,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 3,
+     "type": "true_false",
+     "answer": null,
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 4,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": false,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 1,
+     "type": "short_answer",
+     "answer": {
+      "value": "37"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 2,
+     "type": "short_answer",
+     "answer": {
+      "value": "18"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 3,
+     "type": "short_answer",
+     "answer": {
+      "value": "33,3"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 4,
+     "type": "short_answer",
+     "answer": {
+      "value": "6250"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 5,
+     "type": "short_answer",
+     "answer": {
+      "value": "30"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 6,
+     "type": "short_answer",
+     "answer": {
+      "value": "0,32"
+     },
+     "has_solution": true
+    }
+   ]
+  },
+  {
+   "file": "10. THPT TRIỆU QUANG PHỤC - HƯNG YÊN (Thi thử TN THPT 2025 môn Toán)_mSRzZs8NYJ.docx",
+   "sha256": "511702252551d850088b64297c623b062174164dcf0cb7c145326cdc8be6ab8f",
+   "questions": [
+    {
+     "part": "1",
+     "number": 1,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": false
+    },
+    {
+     "part": "1",
+     "number": 2,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": false
+    },
+    {
+     "part": "1",
+     "number": 3,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 4,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 5,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 6,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 7,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 8,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 9,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 10,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 11,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 12,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 1,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": false,
+      "c": true,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 2,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": false,
+      "c": true,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 3,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": true,
+      "c": true,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 4,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": false,
+      "c": true,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 1,
+     "type": "short_answer",
+     "answer": {
+      "value": "-3"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 2,
+     "type": "short_answer",
+     "answer": {
+      "value": "38,3"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 3,
+     "type": "short_answer",
+     "answer": {
+      "value": "8"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 4,
+     "type": "short_answer",
+     "answer": {
+      "value": "6,7"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 5,
+     "type": "short_answer",
+     "answer": {
+      "value": "124"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 6,
+     "type": "short_answer",
+     "answer": {
+      "value": "9"
+     },
+     "has_solution": true
+    }
+   ]
+  },
+  {
+   "file": "11. SỞ GIÁO DỤC NINH BÌNH (Thi thử TN THPT 2025 môn Toán)_6gU1NcRKll.docx",
+   "sha256": "09239a9fee724f0dc1f33df7a465c044f9c259fb304fd4a7154c0cb98a4cda0e",
+   "questions": [
+    {
+     "part": "1",
+     "number": 1,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 2,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 3,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 4,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 5,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 6,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 7,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 8,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 9,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 10,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 11,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 12,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 1,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": false,
+      "c": true,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 2,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": true,
+      "c": true,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 3,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": true,
+      "c": true,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 4,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": true,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 1,
+     "type": "short_answer",
+     "answer": {
+      "value": "1012"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 2,
+     "type": "short_answer",
+     "answer": {
+      "value": "240"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 3,
+     "type": "short_answer",
+     "answer": {
+      "value": "67,3"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 4,
+     "type": "short_answer",
+     "answer": {
+      "value": "1255"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 5,
+     "type": "short_answer",
+     "answer": {
+      "value": "2,89"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 6,
+     "type": "short_answer",
+     "answer": {
+      "value": "100"
+     },
+     "has_solution": true
+    }
+   ]
+  },
+  {
+   "file": "12. CHUYÊN VĨNH PHÚC (Lần 1) (Thi thử TN THPT 2025 môn Toán)_vnPljHIZQL.docx",
+   "sha256": "b44600dbe8479a90493a918070c24ba1f6bb2433fdf66f278f56abdb3c05e041",
+   "questions": [
+    {
+     "part": "1",
+     "number": 1,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": false
+    },
+    {
+     "part": "1",
+     "number": 2,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": false
+    },
+    {
+     "part": "1",
+     "number": 3,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 4,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 5,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 6,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 7,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 8,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 9,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 10,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 11,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 12,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 1,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": true,
+      "c": true,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 2,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": false,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 3,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": true,
+      "c": false,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 4,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": false,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 1,
+     "type": "short_answer",
+     "answer": {
+      "value": "0,57"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 2,
+     "type": "short_answer",
+     "answer": {
+      "value": "5,1"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 3,
+     "type": "short_answer",
+     "answer": {
+      "value": "2048"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 4,
+     "type": "short_answer",
+     "answer": {
+      "value": "59"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 5,
+     "type": "short_answer",
+     "answer": {
+      "value": "0,96"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 6,
+     "type": "short_answer",
+     "answer": {
+      "value": "3281"
+     },
+     "has_solution": true
+    }
+   ]
+  },
+  {
+   "file": "13. CHUYÊN PHAN BỘI CHÂU - NGHỆ AN (Thi thử TN THPT 2025 môn Toán).docx",
+   "sha256": "b380744c1fbc631a074bafad97de4f47ec393707a284f5d2451e757214248d74",
+   "questions": [
+    {
+     "part": "1",
+     "number": 1,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 2,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": false
+    },
+    {
+     "part": "1",
+     "number": 3,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 4,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 5,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 6,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 7,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 8,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 9,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 10,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": false
+    },
+    {
+     "part": "1",
+     "number": 11,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 12,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 1,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": false,
+      "c": true,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 2,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": true,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 3,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": true,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 4,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": false,
+      "c": true,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 1,
+     "type": "short_answer",
+     "answer": {
+      "value": "26"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 2,
+     "type": "short_answer",
+     "answer": {
+      "value": "11,5"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 3,
+     "type": "short_answer",
+     "answer": {
+      "value": "1932"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 4,
+     "type": "short_answer",
+     "answer": {
+      "value": "3"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 5,
+     "type": "short_answer",
+     "answer": null,
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 6,
+     "type": "short_answer",
+     "answer": null,
+     "has_solution": true
+    }
+   ]
+  },
+  {
+   "file": "14. SỞ GIÁO DỤC YÊN BÁI (Thi thử TN THPT 2025 môn Toán).docx",
+   "sha256": "4f317fcef449a67f3a5fb5f245e95d5aeda4d7dc388eb344ce67b447b18c9790",
+   "questions": [
+    {
+     "part": "1",
+     "number": 1,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 2,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 3,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 4,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 5,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 6,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 7,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 8,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 9,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 10,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 11,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 12,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 1,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": true,
+      "c": false,
+      "d": false
+     },
+     "has_solution": false
+    },
+    {
+     "part": "2",
+     "number": 2,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": false,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 3,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": true,
+      "c": true,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 4,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": false,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 1,
+     "type": "short_answer",
+     "answer": {
+      "value": "8"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 2,
+     "type": "short_answer",
+     "answer": {
+      "value": "47"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 3,
+     "type": "short_answer",
+     "answer": {
+      "value": "2"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 4,
+     "type": "short_answer",
+     "answer": {
+      "value": "700"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 5,
+     "type": "short_answer",
+     "answer": {
+      "value": "1970"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 6,
+     "type": "short_answer",
+     "answer": {
+      "value": "0,24"
+     },
+     "has_solution": true
+    }
+   ]
+  },
+  {
+   "file": "15. CHUYÊN ĐHKHTN - HCM (Lần 1) (Thi thử TN THPT 2025 môn Toán).docx",
+   "sha256": "38ae111c40df65a5483b6e1bfabd786378ea055b08a1242326c46bd2a7f883ef",
+   "questions": [
+    {
+     "part": "1",
+     "number": 1,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true,
+     "note": "file's answer table disagrees with its solution"
+    },
+    {
+     "part": "1",
+     "number": 2,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 3,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true,
+     "note": "file's answer table disagrees with its solution"
+    },
+    {
+     "part": "1",
+     "number": 4,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true,
+     "note": "file's answer table disagrees with its solution"
+    },
+    {
+     "part": "1",
+     "number": 5,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true,
+     "note": "file's answer table disagrees with its solution"
+    },
+    {
+     "part": "1",
+     "number": 6,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true,
+     "note": "file's answer table disagrees with its solution"
+    },
+    {
+     "part": "1",
+     "number": 7,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true,
+     "note": "file's answer table disagrees with its solution"
+    },
+    {
+     "part": "1",
+     "number": 8,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true,
+     "note": "file's answer table disagrees with its solution"
+    },
+    {
+     "part": "1",
+     "number": 9,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true,
+     "note": "file's answer table disagrees with its solution"
+    },
+    {
+     "part": "1",
+     "number": 10,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 11,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true,
+     "note": "file's answer table disagrees with its solution"
+    },
+    {
+     "part": "1",
+     "number": 12,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true,
+     "note": "file's answer table disagrees with its solution"
+    },
+    {
+     "part": "2",
+     "number": 1,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": true,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 2,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": true,
+      "c": true,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 3,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": true,
+      "c": true,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 4,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": true,
+      "c": false,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 1,
+     "type": "short_answer",
+     "answer": {
+      "value": "2400"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 2,
+     "type": "short_answer",
+     "answer": {
+      "value": "0,25"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 3,
+     "type": "short_answer",
+     "answer": {
+      "value": "9"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 4,
+     "type": "short_answer",
+     "answer": {
+      "value": "2,5"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 5,
+     "type": "short_answer",
+     "answer": {
+      "value": "5,66"
+     },
+     "has_solution": true,
+     "note": "file's answer table disagrees with its solution"
+    },
+    {
+     "part": "3",
+     "number": 6,
+     "type": "short_answer",
+     "answer": {
+      "value": "144"
+     },
+     "has_solution": true
+    }
+   ]
+  },
+  {
+   "file": "16. SỞ BẮC NINH - KSCL  (Thi thử TN THPT 2025 môn Toán).docx",
+   "sha256": "9ec60c7e7726572256ed34f4831aeee14b9aa0ae695a0cb6c27b24b23bd2339c",
+   "questions": [
+    {
+     "part": "1",
+     "number": 1,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 2,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 3,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 4,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 5,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 6,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 7,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 8,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 9,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 10,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 11,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 12,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 1,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": false,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 2,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": false,
+      "c": true,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 3,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": true,
+      "c": false,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 4,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": false,
+      "c": true,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 1,
+     "type": "short_answer",
+     "answer": {
+      "value": "4,39"
+     },
+     "has_solution": true,
+     "note": "file's answer table disagrees with its solution"
+    },
+    {
+     "part": "3",
+     "number": 2,
+     "type": "short_answer",
+     "answer": {
+      "value": "1,8"
+     },
+     "has_solution": true,
+     "note": "file's answer table disagrees with its solution"
+    },
+    {
+     "part": "3",
+     "number": 3,
+     "type": "short_answer",
+     "answer": {
+      "value": "2,5"
+     },
+     "has_solution": true,
+     "note": "file's answer table disagrees with its solution"
+    },
+    {
+     "part": "3",
+     "number": 4,
+     "type": "short_answer",
+     "answer": {
+      "value": "612"
+     },
+     "has_solution": true,
+     "note": "file's answer table disagrees with its solution"
+    },
+    {
+     "part": "3",
+     "number": 5,
+     "type": "short_answer",
+     "answer": {
+      "value": "114"
+     },
+     "has_solution": true,
+     "note": "file's answer table disagrees with its solution"
+    },
+    {
+     "part": "3",
+     "number": 6,
+     "type": "short_answer",
+     "answer": {
+      "value": "13"
+     },
+     "has_solution": true
+    }
+   ]
+  },
+  {
+   "file": "17. CHUYÊN VINH - NA (L 1) (Thi thử TN THPT 2025 môn Toán)_ynHV66i6JF.docx",
+   "sha256": "8f3b3dd4208de61a8244b36658ae5ffe5f7d822fd8c45c5efc20bbcab16518ba",
+   "questions": [
+    {
+     "part": "1",
+     "number": 1,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 2,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 3,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 4,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 5,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 6,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 7,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 8,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 9,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 10,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 11,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 12,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 1,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": false,
+      "c": true,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 2,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": true,
+      "c": false,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 3,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": true,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 4,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": false,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 1,
+     "type": "short_answer",
+     "answer": {
+      "value": "2,2"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 2,
+     "type": "short_answer",
+     "answer": {
+      "value": "1000"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 3,
+     "type": "short_answer",
+     "answer": {
+      "value": "16"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 4,
+     "type": "short_answer",
+     "answer": {
+      "value": "32"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 5,
+     "type": "short_answer",
+     "answer": {
+      "value": "5,4"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 6,
+     "type": "short_answer",
+     "answer": {
+      "value": "1650"
+     },
+     "has_solution": true
+    }
+   ]
+  },
+  {
+   "file": "18. Huyện Cẩm Xuyên - Hà Tĩnh (Lần 1) (Thi thử TN THPT 2025 môn Toán)_vgpraKBbUp.docx",
+   "sha256": "a074dba8e54cfd6485e8f8685351e26022c9a32ceed76030f993de8bfed836b5",
+   "questions": [
+    {
+     "part": "1",
+     "number": 1,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 2,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 3,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 4,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 5,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 6,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 7,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 8,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 9,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 10,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 11,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 12,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 1,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": false,
+      "c": true,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 2,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": true,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 3,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": true,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 4,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": true,
+      "c": true,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 1,
+     "type": "short_answer",
+     "answer": {
+      "value": "0,96"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 2,
+     "type": "short_answer",
+     "answer": {
+      "value": "5"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 3,
+     "type": "short_answer",
+     "answer": {
+      "value": "2"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 4,
+     "type": "short_answer",
+     "answer": {
+      "value": "16"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 5,
+     "type": "short_answer",
+     "answer": {
+      "value": "0,45"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 6,
+     "type": "short_answer",
+     "answer": {
+      "value": "3,5"
+     },
+     "has_solution": true
+    }
+   ]
+  },
+  {
+   "file": "19. Sở GD & ĐT Bà Rịa - Vũng Tàu (Thi thử TN THPT 2025 môn Toán)_nmsgISgFhn.docx",
+   "sha256": "f6928a84f3cc659ae939df7f56a0c3e6cecc8a111c5710f82497d7ae9faa8236",
+   "questions": [
+    {
+     "part": "1",
+     "number": 1,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 2,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 3,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 4,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 5,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 6,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 7,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 8,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 9,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 10,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 11,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 12,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 1,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": false,
+      "c": true,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 2,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": true,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 3,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": true,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 4,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": true,
+      "c": true,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 1,
+     "type": "short_answer",
+     "answer": {
+      "value": "1,87"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 2,
+     "type": "short_answer",
+     "answer": {
+      "value": "99"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 3,
+     "type": "short_answer",
+     "answer": {
+      "value": "58,5"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 4,
+     "type": "short_answer",
+     "answer": {
+      "value": "34"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 5,
+     "type": "short_answer",
+     "answer": {
+      "value": "15,7"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 6,
+     "type": "short_answer",
+     "answer": {
+      "value": "1,5"
+     },
+     "has_solution": true
+    }
+   ]
+  },
+  {
+   "file": "2. THPT Lương Tài 2 – Bắc Ninh (Thi thử TN THPT 2025 môn Toán)_zZVuYPvrEK.docx",
+   "sha256": "8fedbbd7a6dc7039aaa932a81be09c14d97f59707a6d161775ddc7b2857e1311",
+   "questions": [
+    {
+     "part": "1",
+     "number": 1,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 2,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 3,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 4,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 5,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 6,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 7,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 8,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 9,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 10,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 11,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 12,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 1,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": false,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 2,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": true,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 3,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": false,
+      "c": true,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 4,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": false,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 1,
+     "type": "short_answer",
+     "answer": {
+      "value": "52"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 2,
+     "type": "short_answer",
+     "answer": {
+      "value": "-20"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 3,
+     "type": "short_answer",
+     "answer": {
+      "value": "2,38"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 4,
+     "type": "short_answer",
+     "answer": {
+      "value": "224"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 5,
+     "type": "short_answer",
+     "answer": {
+      "value": "54,3"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 6,
+     "type": "short_answer",
+     "answer": {
+      "value": "0,91"
+     },
+     "has_solution": true
+    }
+   ]
+  },
+  {
+   "file": "20. Sở GD & ĐT Hà Tĩnh (Thi thử TN THPT 2025 môn Toán)_eFXJc5533q.docx",
+   "sha256": "b8cf5460067535a72d40adcb78798981278de765a38d004f071c73229ebaebfe",
+   "questions": [
+    {
+     "part": "1",
+     "number": 1,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 2,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 3,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 4,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 5,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 6,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 7,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 8,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 9,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 10,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 11,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 12,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 1,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": false,
+      "c": true,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 2,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": true,
+      "c": true,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 3,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": false,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 4,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": true,
+      "c": true,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 1,
+     "type": "short_answer",
+     "answer": {
+      "value": "12,6"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 2,
+     "type": "short_answer",
+     "answer": {
+      "value": "16"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 3,
+     "type": "short_answer",
+     "answer": {
+      "value": "384"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 4,
+     "type": "short_answer",
+     "answer": {
+      "value": "2"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 5,
+     "type": "short_answer",
+     "answer": {
+      "value": "0,5"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 6,
+     "type": "short_answer",
+     "answer": {
+      "value": "11"
+     },
+     "has_solution": true
+    }
+   ]
+  },
+  {
+   "file": "3. Lê Thánh Tông – TP HCM (Thi thử TN THPT 2025 môn Toán)_xA1w5Dvx1W.docx",
+   "sha256": "b2dfaaa3271dfa14caa5cdc3cf1ffab35dcccd9f95e4b91f089139f1d4d15875",
+   "questions": [
+    {
+     "part": "1",
+     "number": 1,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 2,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 3,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 4,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 5,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 6,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 7,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 8,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 9,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 10,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 11,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 12,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 1,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": true,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 2,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": true,
+      "c": true,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 3,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": false,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 4,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": true,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 1,
+     "type": "short_answer",
+     "answer": {
+      "value": "0,67"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 2,
+     "type": "short_answer",
+     "answer": {
+      "value": "26"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 3,
+     "type": "short_answer",
+     "answer": {
+      "value": "2,31"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 4,
+     "type": "short_answer",
+     "answer": {
+      "value": "253"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 5,
+     "type": "short_answer",
+     "answer": {
+      "value": "9,5"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 6,
+     "type": "short_answer",
+     "answer": {
+      "value": "20"
+     },
+     "has_solution": true
+    }
+   ]
+  },
+  {
+   "file": "6. THPT Thạch Thành 1 - Thanh Hóa - Lần 1 (Thi thử TN THPT 2025 môn Toán)_MTU6e7cZ5x.docx",
+   "sha256": "80fd04d24e434b705b3985dae5767601a7d6532a8c5d92ae2742778aeda3a5cc",
+   "questions": [
+    {
+     "part": "1",
+     "number": 1,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 2,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 3,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 4,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 5,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 6,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 7,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": false
+    },
+    {
+     "part": "1",
+     "number": 8,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 9,
+     "type": "mcq",
+     "answer": {
+      "key": "C"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 10,
+     "type": "mcq",
+     "answer": {
+      "key": "A"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "1",
+     "number": 11,
+     "type": "mcq",
+     "answer": {
+      "key": "B"
+     },
+     "has_solution": false
+    },
+    {
+     "part": "1",
+     "number": 12,
+     "type": "mcq",
+     "answer": {
+      "key": "D"
+     },
+     "has_solution": false
+    },
+    {
+     "part": "2",
+     "number": 1,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": true,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 2,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": true,
+      "c": false,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 3,
+     "type": "true_false",
+     "answer": {
+      "a": true,
+      "b": false,
+      "c": true,
+      "d": false
+     },
+     "has_solution": true
+    },
+    {
+     "part": "2",
+     "number": 4,
+     "type": "true_false",
+     "answer": {
+      "a": false,
+      "b": true,
+      "c": false,
+      "d": true
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 1,
+     "type": "short_answer",
+     "answer": {
+      "value": "45"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 2,
+     "type": "short_answer",
+     "answer": {
+      "value": "25"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 3,
+     "type": "short_answer",
+     "answer": {
+      "value": "10"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 4,
+     "type": "short_answer",
+     "answer": {
+      "value": "1"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 5,
+     "type": "short_answer",
+     "answer": {
+      "value": "32,6"
+     },
+     "has_solution": true
+    },
+    {
+     "part": "3",
+     "number": 6,
+     "type": "short_answer",
+     "answer": {
+      "value": "1768"
+     },
+     "has_solution": true
+    }
+   ]
+  }
+ ]
+}

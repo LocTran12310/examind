@@ -92,3 +92,5 @@ class Tag(IdMixin, TimestampMixin, Base):
     organization_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("organizations.id"), index=True)
     group: Mapped[str] = mapped_column(String(16))
     name: Mapped[str] = mapped_column(String(100))
+    # None = shared by every subject (nguồn đề, "Có hình vẽ"…) — subject-scoped-bank ADR-03
+    subject_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("subjects.id", ondelete="SET NULL"), index=True)

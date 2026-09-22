@@ -3,6 +3,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, File, Form, UploadFile
 from fastapi.responses import Response
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -13,7 +14,7 @@ from app.deps import OrgScope
 from app.models import Question, QuestionTag, QuestionTopic, Tag, Topic
 from app.routers.users import staff_scope
 from app.schemas.common import Page
-from app.schemas.documents import DocumentCreated, DocumentOut, ParsedQuestionOut, ReparseIn, TagRef, TopicRef, document_out
+from app.schemas.documents import DocumentBrief, DocumentCreated, DocumentMetaIn, DuplicateCheckIn, DuplicateOut, DocumentOut, ParsedQuestionOut, ReparseIn, TagRef, TopicRef, document_out
 from app.schemas.questions import question_out
 from app.services.paging import ListParams, list_params
 from app.services import documents
@@ -35,12 +36,23 @@ def _json_field(raw: str | None, name: str) -> dict:
 
 @router.post("", status_code=201, response_model=DocumentCreated)
 async def upload(response: Response, file: UploadFile = File(...), meta: str | None = Form(None), config: str | None = Form(None),
+                 on_duplicate: str = Form("skip"), replace_id: uuid.UUID | None = Form(None),
                  scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
+    """`on_duplicate`: skip (same content → the existing document) · replace (+ `replace_id` for a same-name file) · keep_both."""
     data = await file.read()
-    doc, duplicate = documents.create_document(db, scope, file.filename or "file", data, _json_field(meta, "meta"), _json_field(config, "config"))
-    if duplicate:
+    doc, action = documents.create_document(db, scope, file.filename or "file", data, _json_field(meta, "meta"), _json_field(config, "config"),
+                                            on_duplicate, replace_id)
+    if action != "created":
         response.status_code = 200
-    return DocumentCreated(document=document_out(doc), duplicate=duplicate)
+    return DocumentCreated(document=document_out(doc), duplicate=action != "created", action=action)
+
+
+@router.post("/check", response_model=list[DuplicateOut])
+def check_duplicates(body: DuplicateCheckIn, scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
+    """Before uploading: which files are already here (same content) or share a name with a document."""
+    brief = lambda d: DocumentBrief(id=d.id, filename=d.filename, status=d.status, question_count=d.question_count, created_at=d.created_at)  # noqa: E731
+    return [DuplicateOut(name=r["name"], same_file=brief(r["same_file"]) if r["same_file"] else None, same_name=[brief(d) for d in r["same_name"]])
+            for r in documents.find_duplicates(db, scope, [f.model_dump() for f in body.files])]
 
 
 @router.get("", response_model=Page[DocumentOut])
@@ -98,6 +110,22 @@ def download(doc_id: uuid.UUID, scope: OrgScope = Depends(staff_scope), db: Sess
         "Content-Disposition": f"attachment; filename*=UTF-8''{quote(doc.filename)}",
         "X-Content-Type-Options": "nosniff",
     })
+
+
+@router.patch("/{doc_id}", response_model=DocumentOut)
+def update_document(doc_id: uuid.UUID, body: DocumentMetaIn, scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
+    return document_out(documents.update_meta(db, scope, doc_id, body.meta))
+
+
+class ExamFromDocumentIn(BaseModel):
+    title: str | None = None
+
+
+@router.post("/{doc_id}/exam", status_code=201)
+def exam_from_document(doc_id: uuid.UUID, body: ExamFromDocumentIn, scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
+    from app.services import exams
+
+    return exams.from_document(db, scope, doc_id, body.title)
 
 
 @router.post("/{doc_id}/reparse", response_model=DocumentOut, status_code=202)

@@ -27,5 +27,6 @@ def strip_markup(text: str) -> str:
 def is_emphasised_label(fragment: str) -> bool:
     """True when an option label itself carries emphasis, e.g. `**C.**`, `[C.]{.underline}`."""
     f = fragment.strip()
-    return bool(re.match(r"^(\*\*|__)[A-Da-d][.)]?(\*\*|__)", f) or re.match(r"^\[[A-Da-d][.)]?\]\{\.(underline|mark)\}", f)
+    return bool(re.match(r"^(\*\*|__)?\[[A-Da-d]\]\{\.(underline|mark)\}[.)]", f)  # "**[B]{.underline}.**"
+                or re.match(r"^(\*\*|__)[A-Da-d][.)]?(\*\*|__)", f) or re.match(r"^\[[A-Da-d][.)]?\]\{\.(underline|mark)\}", f)
                 or re.match(r"^\*\*\[[A-Da-d][.)]?\]\{\.(underline|mark)\}\*\*", f))

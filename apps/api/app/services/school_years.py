@@ -6,6 +6,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.errors import AppError, conflict, forbidden, not_found, validation
+from app.core.timezone import business_date, business_today
 from app.deps import OrgScope
 from app.models import SchoolClass, SchoolTerm, SchoolYear
 from app.models.school_year import TERMS
@@ -22,7 +23,7 @@ def _admin(scope: OrgScope) -> None:
 
 
 def current_code(today: date | None = None) -> str:
-    d = today or date.today()
+    d = today or business_today()
     y = d.year if d.month >= 8 else d.year - 1
     return f"{y}-{y + 1}"
 
@@ -53,7 +54,7 @@ def active_year(db: Session, org_id) -> SchoolYear | None:
 
 
 def year_for_date(db: Session, org_id, when: date | datetime) -> SchoolYear | None:
-    d = when.date() if isinstance(when, datetime) else when
+    d = business_date(when)
     return db.scalar(select(SchoolYear).where(SchoolYear.organization_id == org_id, SchoolYear.start_date <= d, SchoolYear.end_date >= d)
                      .order_by(SchoolYear.start_date.desc()).limit(1))
 
@@ -61,7 +62,7 @@ def year_for_date(db: Session, org_id, when: date | datetime) -> SchoolYear | No
 def term_for_date(year: SchoolYear | None, when: date | datetime) -> str | None:
     if year is None:
         return None
-    d = when.date() if isinstance(when, datetime) else when
+    d = business_date(when)
     for t in year.terms:
         if t.start_date <= d <= t.end_date:
             return t.code
@@ -87,7 +88,7 @@ def ensure_year(db: Session, org_id, code: str, actor=None) -> SchoolYear:
 
 CLASS_COUNT = select(func.count(SchoolClass.id)).where(SchoolClass.school_year_id == SchoolYear.id).correlate(SchoolYear).scalar_subquery()
 YEAR_COLS = {"code": Col(SchoolYear.code), "name": Col(SchoolYear.name), "status": Col(SchoolYear.status, "exact"),
-             "start_date": Col(SchoolYear.start_date, "date"), "class_count": Col(CLASS_COUNT, filterable=False)}
+             "start_date": Col(SchoolYear.start_date, "day"), "class_count": Col(CLASS_COUNT, filterable=False)}
 
 
 def list_years(db: Session, scope: OrgScope, params: ListParams):

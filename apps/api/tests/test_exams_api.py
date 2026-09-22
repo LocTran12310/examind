@@ -58,3 +58,15 @@ def test_question_in_exam_cannot_be_deleted_and_list(client, db):
     listed = client.get("/api/exams").json()["items"]
     assert listed[0]["question_count"] == 1 and listed[0]["questions"] == []
     assert client.post("/api/exams", json={"title": " "}).status_code == 422
+
+
+def test_exam_questions_are_a_paged_table(client, db):
+    from tests.exam_helpers import exam_with_questions
+
+    _, exam = exam_with_questions(client, db, mcq=4, tf=1, short=1)
+    r = client.get(f"/api/exams/{exam['id']}/questions", params={"page_size": 3}).json()
+    assert r["total"] == 6 and [q["position"] for q in r["items"]] == [1, 2, 3]
+    assert {"stem", "options", "points", "section", "topics"} <= set(r["items"][0])
+    only_tf = client.get(f"/api/exams/{exam['id']}/questions", params={"type": "true_false"}).json()
+    assert only_tf["total"] == 1 and only_tf["items"][0]["section"] == "II"
+    assert client.get("/api/exams", params={"page_size": 5}).json()["items"][0]["questions"] == []  # the list never embeds questions

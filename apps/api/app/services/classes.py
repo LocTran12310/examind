@@ -15,9 +15,9 @@ YEAR_RE = re.compile(r"^(\d{4})-(\d{4})$")
 
 
 def current_school_year() -> str:
-    from datetime import date
+    from app.core.timezone import business_today
 
-    d = date.today()
+    d = business_today()
     start = d.year if d.month >= 8 else d.year - 1
     return f"{start}-{start + 1}"
 

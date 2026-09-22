@@ -4,12 +4,16 @@ A list endpoint declares its columns once — which can be searched with `q`, fi
 parameter of the same name, and sorted — and `paginate` turns the request's `q`, column filters,
 `sort` and `page`/`page_size` into SQL. The browser never filters rows itself (ADR-02).
 
-Filter kinds:
-- text    `?full_name=bui`            accent/case-insensitive contains (f_unaccent + ILIKE)
+Filter kinds (ui-standards ADR-01: operators as in the reference, sent as `<col>_op`):
+- text    `?full_name=bui[&full_name_op=*]`  accent/case-insensitive; ops `*` contains (default),
+          `=` equals, `+` starts with, `-` ends with, `!` does not contain
 - exact   `?role=student`             equality; comma list = IN (`?status=active,suspended`)
 - bool    `?is_active=true`
-- date    `?created_at_from=2026-09-01&created_at_to=2026-09-30` (inclusive days)
-- number  `?grade=10` or `?grade_min=10&grade_max=12`
+- number  `?grade=10[&grade_op=>=]`   ops `=` (default) `<` `<=` `>` `>=`; also `grade_min` / `grade_max`
+- date    timestamps: `?created_at=2026-09-22[&created_at_op=<]` with the number ops, or a range
+          `?created_at_from=…&created_at_to=…` (inclusive days). Days are business days (Asia/Ho_Chi_Minh)
+          turned into UTC bounds [00:00, next 00:00).
+- day     date columns (no time): same params, compared as calendar dates.
 """
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
@@ -21,6 +25,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import ColumnElement, Select
 
 from app.core.errors import AppError
+from app.core.timezone import day_end_exclusive, day_start
 
 MAX_ALL = 1000
 PAGE_SIZE_DEFAULT = 20
@@ -82,9 +87,51 @@ def _number(field: str, value: str) -> float:
         raise _bad(field, "Giá trị số không hợp lệ")
 
 
+TEXT_OPS = ("*", "=", "+", "-", "!")
+COMPARE_OPS = ("=", "<", "<=", ">", ">=")
+
+
+def _like(value: str) -> str:
+    return value.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
+def _text(e, value: str, op: str):
+    folded = _unaccent(e)
+    needle = _like(value)
+    if op == "=":
+        return func.lower(folded) == func.lower(func.f_unaccent(value.strip()))
+    if op == "+":
+        return folded.ilike(func.f_unaccent(needle + "%"))
+    if op == "-":
+        return folded.ilike(func.f_unaccent("%" + needle))
+    if op == "!":
+        return or_(e.is_(None), ~folded.ilike(func.f_unaccent("%" + needle + "%")))
+    return folded.ilike(func.f_unaccent("%" + needle + "%"))
+
+
+def _compare(e, v, op: str):
+    return {"=": e == v, "<": e < v, "<=": e <= v, ">": e > v, ">=": e >= v}[op]
+
+
+def _day(e, d: date, op: str, suffix: str, timestamp: bool):
+    """A business day against a timestamp (UTC bounds) or a date column."""
+    lo, hi = (day_start(d), day_end_exclusive(d)) if timestamp else (d, d + timedelta(days=1))
+    if suffix == "_from":
+        return e >= lo
+    if suffix == "_to":
+        return e < hi
+    return {"=": and_(e >= lo, e < hi), "<": e < lo, "<=": e < hi, ">": e >= hi, ">=": e >= lo}[op]
+
+
 def _filter_clauses(cols: dict[str, Col], filters: dict[str, str]) -> list:
+    ops: dict[str, str] = {}
+    for key, value in filters.items():
+        if key.endswith("_op") and key[:-3] in cols:
+            ops[key[:-3]] = value
     clauses = []
     for key, value in filters.items():
+        if key.endswith("_op") and key[:-3] in cols:
+            continue
         base, suffix = key, ""
         for s in ("_from", "_to", "_min", "_max"):
             if key.endswith(s) and key[: -len(s)] in cols:
@@ -94,8 +141,12 @@ def _filter_clauses(cols: dict[str, Col], filters: dict[str, str]) -> list:
         if col is None or not col.filterable:
             continue  # endpoint-specific params (e.g. class_id) are handled by the caller
         e, kind = col.expr, col.kind
+        op = ops.get(base)
         if kind == "text":
-            clauses.append(_contains(e, value))
+            op = op or "*"
+            if op not in TEXT_OPS:
+                raise _bad(f"{base}_op", "Kiểu lọc không hợp lệ")
+            clauses.append(_text(e, value, op))
         elif kind in ("exact", "uuid"):
             parts = [p for p in value.split(",") if p]
             if kind == "uuid":
@@ -106,17 +157,20 @@ def _filter_clauses(cols: dict[str, Col], filters: dict[str, str]) -> list:
             clauses.append(e == parts[0] if len(parts) == 1 else e.in_(parts))
         elif kind == "bool":
             clauses.append(e.is_(value.lower() in ("1", "true", "yes", "on")))
-        elif kind == "date":
-            d = _parse_date(key, value)
-            if suffix == "_to":
-                clauses.append(e < datetime.combine(d + timedelta(days=1), time.min))
-            elif suffix == "_from":
-                clauses.append(e >= datetime.combine(d, time.min))
-            else:
-                clauses.append(and_(e >= datetime.combine(d, time.min), e < datetime.combine(d + timedelta(days=1), time.min)))
+        elif kind in ("date", "day"):
+            op = op or "="
+            if op not in COMPARE_OPS:
+                raise _bad(f"{base}_op", "Kiểu lọc không hợp lệ")
+            clauses.append(_day(e, _parse_date(key, value), op, suffix, kind == "date"))
         elif kind == "number":
             n = _number(key, value)
-            clauses.append(e >= n if suffix == "_min" else e <= n if suffix == "_max" else e == n)
+            if suffix:
+                clauses.append(e >= n if suffix == "_min" else e <= n)
+            else:
+                op = op or "="
+                if op not in COMPARE_OPS:
+                    raise _bad(f"{base}_op", "Kiểu lọc không hợp lệ")
+                clauses.append(_compare(e, n, op))
     return clauses
 
 

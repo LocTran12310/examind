@@ -98,6 +98,22 @@ def exam_questions(db: Session, exam: Exam) -> list[tuple[ExamQuestion, Question
                       .where(ExamQuestion.exam_id == exam.id).order_by(ExamQuestion.position)).all()
 
 
+EXAM_QUESTION_COLS = {
+    "position": Col(ExamQuestion.position, "number"),
+    "stem": Col(Question.stem),
+    "type": Col(Question.type, "exact"),
+    "section": Col(ExamQuestion.section, "exact"),
+    "points": Col(ExamQuestion.points, "number"),
+}
+
+
+def question_page(db: Session, scope: OrgScope, exam_id, params: ListParams):
+    """One exam's questions as a server-side table (the list only fetches exams)."""
+    exam = get(db, scope, exam_id)
+    stmt = select(ExamQuestion, Question).join(Question, Question.id == ExamQuestion.question_id).where(ExamQuestion.exam_id == exam.id)
+    return paginate(db, stmt, params, EXAM_QUESTION_COLS, search=[Question.stem], scalars=False, default_sort=[ExamQuestion.position])
+
+
 def _renumber(db: Session, exam: Exam) -> None:
     rows = exam_questions(db, exam)
     rows.sort(key=lambda r: (SECTION_ORDER.index(r[0].section) if r[0].section in SECTION_ORDER else 9, r[0].position))
@@ -182,6 +198,36 @@ def add_questions(db: Session, scope: OrgScope, exam_id, question_ids: list) -> 
     db.flush()
     _renumber(db, exam)
     return added
+
+
+def _part_key(q: Question) -> tuple:
+    part = q.part or ""
+    return (int(part) if part.isdigit() else 99, part, q.number or 0)
+
+
+def from_document(db: Session, scope: OrgScope, doc_id, title: str | None = None) -> dict:
+    """Draft exam with a document's usable questions in the original PHẦN / Câu order (AC-11, AC-12)."""
+    from app.services.documents import get_document
+
+    doc = get_document(db, scope, doc_id)
+    if doc.status != "parsed":
+        raise validation("Tài liệu chưa tách xong", "document")
+    qs = sorted(db.scalars(select(Question).where(Question.source_document_id == doc.id)), key=_part_key)
+    usable = [q for q in qs if q.status in USABLE]
+    if not usable:
+        raise validation("Chưa có câu nào của tài liệu được duyệt — hãy duyệt câu trước", "document")
+    meta = doc.meta or {}
+    detected = meta.get("detected") or {}
+    default_title = " · ".join(x for x in (meta.get("source_name"), meta.get("exam_kind"), meta.get("school_year")) if x)
+    stem = doc.filename.rsplit(".", 1)[0]
+    exam = create(db, scope, (title or default_title or stem)[:200], subject_id=uuid.UUID(meta["subject_id"]) if meta.get("subject_id") else None,
+                  grade=meta.get("grade"), description=f"Tạo từ tài liệu {doc.filename}", source="document")
+    exam.settings = {**exam.settings, "source_document_id": str(doc.id), **({"duration_minutes": detected["duration"]} if detected.get("duration") else {})}
+    for position, q in enumerate(usable, start=1):
+        _append(db, exam, q, None, position)
+    db.flush()
+    _renumber(db, exam)
+    return {"exam_id": exam.id, "added": len(usable), "skipped": len(qs) - len(usable)}
 
 
 def remove_question(db: Session, scope: OrgScope, exam_id, qid) -> None:
