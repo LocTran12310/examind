@@ -39,7 +39,7 @@ t(id="T-01-02", uow="UOW-01", title="Structure service + API (levels, grades, tr
   assumptions=["A-02", "A-04"], context="Range + dependency checks; tree with counts.", done_when=["409 with counts", "Range check", "Tree counts"])
 t(id="T-01-03", uow="UOW-01", title="/org/structure page: tree + contextual DataTable; GradeSelect in class form",
   layer="web", estimate="4h", depends_on=["T-01-02"], verifies=["AC-04", "AC-05", "AC-06"], tests=[f"{WEB}/src/__tests__/structure.test.tsx", f"{WEB}/src/__tests__/classes.test.tsx"],
-  touches=[f"{WEB}/src/app/(app)/org/structure/page.tsx", f"{WEB}/src/components/structure/StructureTree.tsx", f"{WEB}/src/components/structure/GradeSelect.tsx", f"{WEB}/src/components/org/ClassForms.tsx", f"{WEB}/src/lib/nav.ts"],
+  touches=[f"{WEB}/src/app/(app)/org/structure/page.tsx", f"{WEB}/src/components/structure/StructureTree.tsx", f"{WEB}/src/components/structure/GradeSelect.tsx", f"{WEB}/src/components/org/ClassForms.tsx", f"{WEB}/src/lib/nav.ts", f"{WEB}/src/components/structure/StructureForms.tsx"],
   context="Level → grades table, grade → classes table, class → students.", done_when=["Tree", "Three tables", "Grouped grade select"])
 t(id="T-02-01", uow="UOW-02", title="Migration 0013 memberships + last_org_id; membership service",
   layer="data", estimate="2h", depends_on=["T-01-01"], verifies=["AC-08"], tests=[f"{API}/tests/test_membership.py"],

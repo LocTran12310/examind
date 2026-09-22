@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { FormAlert } from "@/components/app/FormAlert";
 import { FormField } from "@/components/app/FormField";
-import { OptionSelect } from "@/components/app/OptionSelect";
+import { GradeSelect } from "@/components/structure/GradeSelect";
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -16,12 +16,10 @@ export function currentSchoolYear(d = new Date()): string {
   return `${start}-${start + 1}`;
 }
 
-const GRADES = Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: `Khối ${i + 1}` }));
-
-/** Create (no `klass`) or edit a class. */
-export function ClassForm({ klass, onDone }: { klass?: SchoolClass; onDone: () => void }) {
+/** Create (no `klass`) or edit a class; `gradeId` preselects the khối (structure page). */
+export function ClassForm({ klass, gradeId, onDone }: { klass?: SchoolClass; gradeId?: string; onDone: () => void }) {
   const [name, setName] = useState(klass?.name ?? "");
-  const [grade, setGrade] = useState(klass?.grade ? String(klass.grade) : "");
+  const [grade, setGrade] = useState(klass?.grade_id ?? gradeId ?? "");
   const [year, setYear] = useState(klass?.school_year ?? currentSchoolYear());
   const m = useMutation();
   return (
@@ -29,7 +27,7 @@ export function ClassForm({ klass, onDone }: { klass?: SchoolClass; onDone: () =
       className="grid gap-4"
       onSubmit={async (e) => {
         e.preventDefault();
-        const body = { name, grade: grade ? Number(grade) : null, school_year: year };
+        const body = { name, grade_id: grade || null, school_year: year };
         const r = await m.run(() => (klass ? api(`/classes/${klass.id}`, { method: "PATCH", body }) : api("/classes", { body })));
         if (r) onDone();
       }}
@@ -40,7 +38,7 @@ export function ClassForm({ klass, onDone }: { klass?: SchoolClass; onDone: () =
       </FormField>
       <div className="grid grid-cols-2 gap-4">
         <FormField label="Khối" error={m.fields.grade}>
-          {(f) => <OptionSelect {...f} value={grade} onValueChange={setGrade} options={GRADES} emptyLabel="Không chọn" />}
+          {(f) => <GradeSelect {...f} value={grade} onValueChange={(v) => setGrade(v)} />}
         </FormField>
         <FormField label="Năm học" error={m.fields.school_year}>
           {(f) => <Input {...f} value={year} onChange={(e) => setYear(e.target.value)} />}

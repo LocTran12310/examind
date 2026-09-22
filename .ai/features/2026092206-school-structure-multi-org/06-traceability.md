@@ -7,9 +7,9 @@
 | AC-01 | T-01-01 | UOW-01 | done |
 | AC-02 | T-01-02 | UOW-01 | done |
 | AC-03 | T-01-01 | UOW-01 | done |
-| AC-04 | T-01-02, T-01-03 | UOW-01 | open |
-| AC-05 | T-01-03 | UOW-01 | open |
-| AC-06 | T-01-02, T-01-03 | UOW-01 | open |
+| AC-04 | T-01-02, T-01-03 | UOW-01 | done |
+| AC-05 | T-01-03 | UOW-01 | done |
+| AC-06 | T-01-02, T-01-03 | UOW-01 | done |
 | AC-07 | T-02-02, T-02-03 | UOW-02 | open |
 | AC-08 | T-02-01, T-02-02 | UOW-02 | open |
 | AC-09 | T-02-02 | UOW-02 | open |

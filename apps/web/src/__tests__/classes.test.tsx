@@ -33,17 +33,24 @@ describe("classes", () => {
     expect(currentSchoolYear(new Date(2027, 2, 1))).toBe("2026-2027");
   });
 
-  it("creates a class with a grade", async () => {
-    const f = mockFetch(route("POST", "/api/classes", { id: "c" }, 201));
+  it("creates a class with a grade picked by level", async () => {
+    const f = mockFetch(
+      route("POST", "/api/classes", { id: "c" }, 201),
+      route("GET", /^\/api\/school-levels\?/, page([{ id: "thpt", code: "thpt", name: "Trung học phổ thông", grade_from: 10, grade_to: 12, sort: 1, grade_count: 1 }])),
+      route("GET", /^\/api\/grades\?/, page([{ id: "g10", level: 10, name: "Lớp 10", school_level_id: "thpt", class_count: 0 }])),
+    );
     const onDone = vi.fn();
     const u = userEvent.setup();
     render(<ClassForm onDone={onDone} />);
     await u.type(screen.getByLabelText("Tên lớp"), "10A1");
     await u.click(screen.getByLabelText("Khối"));
-    await u.click(await screen.findByRole("option", { name: "Khối 10" }));
+    const listbox = await screen.findByRole("listbox");
+    expect(within(listbox).getByText("Trung học phổ thông")).toBeInTheDocument();
+    await u.click(within(listbox).getByRole("option", { name: "Lớp 10" }));
     await u.click(screen.getByRole("button", { name: "Tạo lớp" }));
     await waitFor(() => expect(onDone).toHaveBeenCalled());
-    expect(JSON.parse(String(f.mock.calls[0][1]?.body))).toMatchObject({ name: "10A1", grade: 10 });
+    const post = f.mock.calls.find(([url, init]) => url === "/api/classes" && (init as RequestInit)?.method === "POST");
+    expect(JSON.parse(String(post?.[1]?.body))).toMatchObject({ name: "10A1", grade_id: "g10" });
   });
 
   it("selecting a class shows its students in a detail table with its own URL params", async () => {

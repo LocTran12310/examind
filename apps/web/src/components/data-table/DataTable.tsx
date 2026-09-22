@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { toast } from "sonner";
+import { ApiError } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
 import type { Page } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -284,8 +286,12 @@ export function DataTable<T>({
           description="Thao tác này không hoàn tác được."
           confirmLabel="Xóa"
           onConfirm={async () => {
-            await onDelete(selected);
             setConfirming(false);
+            try {
+              await onDelete(selected);
+            } catch (e) {
+              toast.error(e instanceof ApiError ? e.message : "Không xóa được");
+            }
             clearSelection();
             await reload();
           }}

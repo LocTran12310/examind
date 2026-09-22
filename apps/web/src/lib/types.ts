@@ -67,10 +67,61 @@ export interface Credential {
   class?: string;
 }
 
+export interface SchoolLevel {
+  id: string;
+  code: string;
+  name: string;
+  grade_from: number;
+  grade_to: number;
+  sort: number;
+  grade_count: number;
+}
+
+export interface GradeRow {
+  id: string;
+  level: number;
+  name: string;
+  school_level_id: string | null;
+  class_count: number;
+}
+
+export interface TreeClass {
+  id: string;
+  name: string;
+  school_year: string;
+  member_count: number;
+}
+
+export interface TreeGrade {
+  id: string;
+  level: number;
+  name: string;
+  class_count: number;
+  student_count: number;
+  classes: TreeClass[];
+}
+
+export interface TreeLevel {
+  id: string;
+  code: string;
+  name: string;
+  grade_from: number;
+  grade_to: number;
+  class_count: number;
+  student_count: number;
+  grades: TreeGrade[];
+}
+
+export interface Structure {
+  levels: TreeLevel[];
+  unassigned: TreeClass[];
+}
+
 export interface SchoolClass {
   id: string;
   name: string;
   grade: number | null;
+  grade_id?: string | null;
   school_year: string;
   member_count: number;
   created_at: string;

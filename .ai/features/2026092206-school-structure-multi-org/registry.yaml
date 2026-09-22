@@ -114,7 +114,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-01-02
     blocks: []
@@ -128,6 +128,7 @@ ticket:
       - apps/web/src/components/structure/GradeSelect.tsx   # new
       - apps/web/src/components/org/ClassForms.tsx   # new
       - apps/web/src/lib/nav.ts   # new
+      - apps/web/src/components/structure/StructureForms.tsx   # new
   - id: T-02-01
     uow: UOW-02
     title: 'Migration 0013 memberships + last_org_id; membership service'

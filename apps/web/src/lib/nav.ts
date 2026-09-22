@@ -11,6 +11,7 @@ import {
   ListChecks,
   type LucideIcon,
   Network,
+  School,
   Settings2,
   Tags,
   TrendingUp,
@@ -45,6 +46,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Lớp & học sinh",
     items: [
+      { href: "/org/structure", label: "Cơ cấu trường", roles: STAFF, icon: School },
       { href: "/org/users", label: "Người dùng", roles: STAFF, icon: Users },
       { href: "/org/classes", label: "Lớp học", roles: STAFF, icon: GraduationCap },
     ],
