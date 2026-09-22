@@ -265,3 +265,40 @@ ADRs: ADR-01 — shadcn components verbatim; ADR-02 — URL is the table state; 
 | A-12 | The org detail "Thành viên" tab from the chat plan is replaced by "Vào tổ chức" (switch) + the normal Users page | no |
 
 ADRs: ADR-01 — Levels and grades are org-owned rows; ADR-02 — Home org + memberships; ADR-03 — The token carries the active org; every request re-checks membership; ADR-04 — Super admin works inside orgs as org_admin
+
+## 11. F8 `school-years` (2026-09-22)
+
+Asked in chat: "Vì còn theo dõi học sinh xuyên suốt từ 10 → 12 … chia theo năm học", answers: HK1 & HK2; documents by Kỳ 1/Kỳ 2, giữa kỳ 1, giữa kỳ 2…; many classes, many orgs; Org ↔ Người dùng assignable from both screens; closed years editable with history.
+
+**What changed**
+- **Năm học** per org with HK1/HK2 dates, one "Đang học" year; header year selector (per org, remembered in the browser) scopes Lớp học, Cơ cấu trường, Báo cáo. Closed years stay editable; every change (and close/reopen) is in **Lịch sử**.
+- **Answers remember** the year, the term and every class the student was in → class reports stay correct after students move; reports filter by year and HK.
+- **Hồ sơ học sinh** (`/org/students/{id}`): one card per year — classes with status (lên lớp / ở lại / chuyển đi / tốt nghiệp), results per term and per top-level topic.
+- **Chuyển năm học** wizard: 10A1 → 11A1, top grade → tốt nghiệp, exceptions per student, optional "make the new year active"; safe to run again.
+- **Đợt kiểm tra**: one picker "Giữa kỳ 1 / Cuối kỳ 1 / Giữa kỳ 2 / Cuối kỳ 2 / Khảo sát · HK1 …" on upload, bank filters and labels (stored in the existing semester + kind fields).
+- **Org ↔ user** for the super admin: Tổ chức → members panel; new **Tài khoản** page → organisations panel; both use the same service as the org admin's "Thêm tài khoản có sẵn".
+
+**Dev data changed by the demo**: 2027-2028 (Chuẩn bị) created by the rollover with 11A1, 11A2, 10A1; 2026-2027 memberships marked "Lên lớp" except Đặng Thanh Quân "Ở lại lớp". 2026-2027 is still the active year.
+
+**Known limits**: answer facts from before the migration got their year/term/classes from the answer date and today's memberships (best effort); a class belongs to exactly one year; the year choice is per browser, not per account.
+
+
+### Assumptions — 2026092207-school-years
+
+| ID | Assumption | Blocking |
+| --- | --- | --- |
+| A-01 | A school year belongs to an org: code "YYYY-YYYY", start/end dates, status planning / active / closed; exactly one active year per org | yes |
+| A-02 | Terms are fixed: HK1 and HK2 per year with their own dates (defaults 05/09–15/01 and 16/01–31/05) | no |
+| A-03 | A class belongs to one school year; a student may be in several classes of the same year and in several orgs | yes |
+| A-04 | Closed years stay editable by org admins; every change to a closed year (and close/reopen itself) is written to the audit history, which is visible on the year, class and student | yes |
+| A-05 | Enrollment status per class member: đang học / lên lớp / ở lại / chuyển đi / tốt nghiệp, with joined/left dates | no |
+| A-06 | Each answer fact snapshots school_year_id, term (hk1/hk2 by date) and the ids of the student's classes in that year; class reports use the snapshot, not current membership | yes |
+| A-07 | Rollover: target class name = source name with its leading grade number +1 (10A1 → 11A1); grade 12 (the org's highest grade) → tốt nghiệp; per student the admin can pick lên lớp / ở lại (same-name class in the new year) / chuyển đi / tốt nghiệp; the source year can be closed at the end | yes |
+| A-08 | The header year selector is per browser and per org (localStorage), defaulting to the active year; year-scoped screens: Lớp học, Cơ cấu trường, Báo cáo, Giao bài lists | no |
+| A-09 | Question bank, exams and accounts are not year-scoped | no |
+| A-10 | "Đợt kiểm tra" = semester (hk1/hk2) × kind: Giữa kỳ 1, Cuối kỳ 1, Giữa kỳ 2, Cuối kỳ 2, plus Khảo sát / Thi thử / Ôn tập / Khác with a term; stored in the existing semester_code + exam_kind columns | no |
+| A-11 | Org ↔ user assignment from both screens is a super-admin feature: org list → members panel; new "Tài khoản" (all accounts) list → organisations panel; org admins keep "Thêm tài khoản có sẵn" in their org | yes |
+
+ADRs: ADR-01 — Classes belong to a school-year row; ADR-02 — Answer facts snapshot year, term and classes; ADR-03 — Idempotent rollover by (year, class name); ADR-04 — One membership service for both admin screens; ADR-05 — History is the audit log
+
+Tests at close: API 246, web 120; tsc/eslint/build clean. Evidence: `.ai/features/2026092207-school-years/07-demo-evidence.md`.

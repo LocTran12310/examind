@@ -12,5 +12,6 @@ Source plan: approved in chat 2026-09-21 (Loc Tran).
 | 5 | `adaptive-review` | Topic mastery, personalised review exams, "suspect answer key" flags |
 | 6 | `ui-shadcn-shell` | shadcn/ui, theme, sidebar + header shell, server-side DataTable on every list |
 | 7 | `school-structure-multi-org` | Cấp học › Khối › Lớp › Học sinh, users in several orgs, header org selector |
+| 8 | `school-years` | School years + HK1/HK2, answers snapshot year/class, student record, year rollover, Đợt kiểm tra, org ↔ user both ways |
 
 MVP success signal (features 2+3): a teacher gets a 40-question exam into the bank (upload + review) in < 10 minutes, with ≤ 15% of questions needing review.
