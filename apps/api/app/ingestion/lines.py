@@ -6,6 +6,8 @@ mark a correct option (`**…**`, `[…]{.underline}`, `[…]{.mark}`) so the sp
 from dataclasses import dataclass, field
 import re
 
+from app.shared.domain.text import strip_markup  # noqa: F401  (the extractors and the splitter import it from here)
+
 
 @dataclass
 class Line:
@@ -16,12 +18,6 @@ class Line:
     meta: dict = field(default_factory=dict)
 
 
-_MARKUP = re.compile(r"\*\*|__|\{\.(?:underline|mark)\}|(?<!\!)\[(?=[^\]]*\]\{\.(?:underline|mark)\})|\](?=\{\.(?:underline|mark)\})")
-
-
-def strip_markup(text: str) -> str:
-    """Remove the emphasis markup we inject, keeping content (used for matching only)."""
-    return _MARKUP.sub("", text)
 
 
 def is_emphasised_label(fragment: str) -> bool:

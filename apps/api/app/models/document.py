@@ -32,18 +32,6 @@ class SourceDocument(IdMixin, TimestampMixin, Base):
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
-class QuestionTopic(Base):
-    __tablename__ = "question_topics"
-
-    question_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("questions.id", ondelete="CASCADE"), primary_key=True)
-    topic_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("topics.id", ondelete="CASCADE"), primary_key=True, index=True)
-    is_primary: Mapped[bool] = mapped_column(default=False)
-    source: Mapped[str] = mapped_column(String(8), default="manual")  # auto | ai | manual
-    score: Mapped[float | None]
-
-
-class QuestionTag(Base):
-    __tablename__ = "question_tags"
-
-    question_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("questions.id", ondelete="CASCADE"), primary_key=True)
-    tag_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True, index=True)
+# question links moved to the bank module (architecture-refactor ADR-01); re-exported for the old layout
+from app.modules.bank.domain.entities import QuestionTag, QuestionTopic  # noqa: E402,F401
+from app.modules.bank.infrastructure import orm as _bank_orm  # noqa: E402,F401

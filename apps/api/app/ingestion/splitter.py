@@ -11,16 +11,15 @@ from dataclasses import dataclass, field
 import re
 
 from app.ingestion.lines import Line, is_emphasised_label, strip_markup
+from app.shared.domain.text import PART_RE, ROMAN  # noqa: F401  (answer keys read the same part headers)
 
 AUTO_APPROVE_DEFAULT = 0.85
 
-ROMAN = {"I": 1, "II": 2, "III": 3, "IV": 4, "V": 5}
 _HDR_WORDS = r"(?:Câu|CÂU|Bài|BÀI|Question|QUESTION)"
 QUESTION_RE = re.compile(rf"^{_HDR_WORDS}\s*(\d{{1,3}})\s*(?:\(([^)]*)\))?\s*[.:)]?\s*", re.U)
 # Same header, tolerant of our emphasis markup around it, used to cut it off the raw text.
 QUESTION_RAW_RE = re.compile(rf"^(?:\*\*|__)?\s*{_HDR_WORDS}\s*\d{{1,3}}\s*(?:\([^)]*\))?\s*[.:)]?\s*(?:\*\*|__)?\s*[.:]?\s*", re.U)
 NUMBERED_RE = re.compile(r"^(\d{1,3})\s*[.)]\s+(?=\S)")
-PART_RE = re.compile(r"^(?:PHẦN|Phần)\s+(I{1,3}|IV|V|[1-5])\b\s*[.:]?\s*(.*)$", re.U)
 KEY_HEADER_RE = re.compile(r"^(?:BẢNG\s+ĐÁP\s+ÁN|ĐÁP\s+ÁN(?:\s+THAM\s+KHẢO)?|Bảng\s+đáp\s+án|Đáp\s+án\s+tham\s+khảo)\s*[.:]?\s*$", re.U)
 # Upper-case only: "Lời giải" in mixed case starts a per-question solution, not a section.
 SOLUTION_SECTION_RE = re.compile(

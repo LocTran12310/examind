@@ -31,8 +31,8 @@ def test_blueprint_draws_distinct_questions_and_reports_shortfalls(client, db):
 def test_manual_edits_points_and_sections(client, db):
     _, t = bank_ready(client, db)
     exam = client.post("/api/exams", json={"title": "Đề hỗn hợp"}).json()
-    tf = client.get("/api/questions", params={"type": "true_false"}).json()["items"][:2]
-    mcq = client.get("/api/questions", params={"type": "mcq", "q": "parabol"}).json()["items"][:2]
+    tf = client.post("/api/questions/search", json={"type": "true_false"}).json()["data"][:2]
+    mcq = client.post("/api/questions/search", json={"type": "mcq", "q": "parabol"}).json()["data"][:2]
     e = client.post(f"/api/exams/{exam['id']}/questions", json={"question_ids": [x["id"] for x in tf + mcq]}).json()
     assert [q["section"] for q in e["questions"]] == ["I", "I", "II", "II"] and e["total_points"] == 2.5
     e = client.patch(f"/api/exams/{exam['id']}", json={"settings": {"points_by_type": {"mcq": 0.5}}}).json()
@@ -51,7 +51,7 @@ def test_manual_edits_points_and_sections(client, db):
 def test_question_in_exam_cannot_be_deleted_and_list(client, db):
     _, t = bank_ready(client, db)
     exam = client.post("/api/exams", json={"title": "Đề"}).json()
-    q = client.get("/api/questions").json()["items"][0]
+    q = client.post("/api/questions/search", json={}).json()["data"][0]
     client.post(f"/api/exams/{exam['id']}/questions", json={"question_ids": [q["id"]]})
     r = client.delete(f"/api/questions/{q['id']}")
     assert r.status_code == 409 and r.json()["code"] == "question_in_use"

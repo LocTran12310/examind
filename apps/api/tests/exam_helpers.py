@@ -14,7 +14,7 @@ def exam_with_questions(client, db, mcq=4, tf=1, short=1, essay=False):
     ids = []
     for qtype, n in (("mcq", mcq), ("true_false", tf), ("short_answer", short)):
         if n:
-            ids += [q["id"] for q in client.get("/api/questions", params={"type": qtype, "page_size": n}).json()["items"]][:n]
+            ids += [q["id"] for q in client.post("/api/questions/search", json={"type": qtype, "limit": n}).json()["data"]][:n]
     if essay:
         e = client.post("/api/questions", json={"type": "essay", "stem": "Chứng minh bất đẳng thức", "solution": "…", "answer": {"text": "Mẫu"}}).json()
         ids.append(e["id"])

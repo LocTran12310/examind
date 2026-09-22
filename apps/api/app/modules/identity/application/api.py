@@ -14,6 +14,11 @@ class IdentityApi:
         user = self.users.get(user_id)
         return role_in(self.orgs, self.members, user, org_id) if user is not None else None
 
+    def is_super(self, user_id: uuid.UUID) -> bool:
+        """A platform admin (works in every org as org_admin, but is nobody's teacher)."""
+        user = self.users.get(user_id)
+        return user is not None and user.is_super
+
     def roles_in(self, org_id: uuid.UUID, user_ids) -> dict[uuid.UUID, str]:
         """{user_id: role} for the active members of the org among `user_ids`."""
         return self.members.roles(org_id, list(user_ids)) if user_ids else {}

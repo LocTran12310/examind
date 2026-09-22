@@ -109,6 +109,9 @@ def test_former_bare_lists_are_paged(client, db):
     exams = client.get("/api/exams", params={"title": "thpt"}).json()
     assert [e["title"] for e in exams["items"]] == ["Đề thi thử THPT"]
     assert client.get("/api/exams", params={"sort": "question_count"}).status_code == 200
-    for path in ("/api/assignments", "/api/review/documents", "/api/review/flagged", "/api/ai-models", "/api/documents"):
+    for path in ("/api/assignments", "/api/ai-models", "/api/documents"):
         body = client.get(path).json()
         assert set(body) == {"items", "total", "page", "page_size"}, path
+    for path in ("/api/review/documents/search", "/api/review/flagged/search", "/api/questions/search"):
+        body = client.post(path, json={}).json()
+        assert set(body) == {"data", "total", "page", "limit"}, path

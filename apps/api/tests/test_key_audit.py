@@ -47,7 +47,7 @@ def test_wrong_key_flagged_end_to_end_then_fixed(client, db):
     db.expire_all()
     flagged = db.get(Question, target)
     assert flagged.status == "flagged" and "Nghi sai đáp án" in flagged.issues
-    listed = client.get("/api/review/flagged").json()["items"]
+    listed = client.post("/api/review/flagged/search", json={}).json()["data"]
     assert listed[0]["flag_evidence"]["top_quartile"]["choice"] == true_key
     # excluded from new exams
     new_exam = client.post("/api/exams", json={"title": "x"}).json()

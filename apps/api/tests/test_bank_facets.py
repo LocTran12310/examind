@@ -53,7 +53,7 @@ def build(db, org):
 
 
 def total(client, **p):
-    return client.get("/api/questions", params={"page_size": 1, **p}).json()["total"]
+    return client.post("/api/questions/search", json={"limit": 1, **p}).json()["total"]
 
 
 def test_filters_by_none_subject_year_and_tag_groups(client, db):
@@ -62,21 +62,21 @@ def test_filters_by_none_subject_year_and_tag_groups(client, db):
     assert total(client, subject_id="none") == 1
     assert total(client, subject_id=str(x["toan"].id), school_year="2024-2025") == 3
     # same group: any; different groups: all
-    assert total(client, subject_id=str(x["toan"].id), tag_ids=f"{x['nb'].id},{x['hinh'].id}") == 1
+    assert total(client, subject_id=str(x["toan"].id), tag_ids=[str(x["nb"].id), str(x["hinh"].id)]) == 1
     assert total(client, tag_ids=[str(x["nb"].id)]) == 4
-    assert client.get("/api/questions", params={"subject_id": "toán"}).status_code == 422
+    assert client.post("/api/questions/search", json={"subject_id": "toán"}).status_code == 422
 
 
 def test_facets_exclude_their_own_dimension(client, db):
     admin = setup_admin(client, db)
     x = build(db, admin.organization_id)
     toan = str(x["toan"].id)
-    f = client.get("/api/questions/facets", params={"subject_id": toan, "exam_kind": "Thi thử"}).json()
+    f = client.post("/api/questions/facets", json={"subject_id": toan, "exam_kind": "Thi thử"}).json()
     assert f["subjects"] == {toan: 3, str(x["ly"].id): 1, "none": 1}  # other subjects visible, with the other filters
     assert f["types"] == {"mcq": 1, "true_false": 1, "short_answer": 1}
     assert f["periods"] == {"|Thi thử": 3, "|Giữa kỳ": 1}  # own dimension ignored
     assert f["school_years"] == {"2024-2025": 3}
     assert f["topics"] == {str(x["ham_so"].id): 2, str(x["don_dieu"].id): 2, str(x["tich_phan"].id): 1}  # subtree totals, Toán only
     assert f["tags"] == {str(x["nb"].id): 3, str(x["hinh"].id): 1}
-    f = client.get("/api/questions/facets", params={"subject_id": toan, "topic_ids": str(x["don_dieu"].id)}).json()
+    f = client.post("/api/questions/facets", json={"subject_id": toan, "topic_ids": [str(x["don_dieu"].id)]}).json()
     assert f["topics"][str(x["ham_so"].id)] == 3 and f["types"] == {"mcq": 1, "true_false": 1}

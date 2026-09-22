@@ -2,6 +2,7 @@
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
+from app.modules.taxonomy.application.api import TaxonomyApi
 from app.modules.taxonomy.application.commands.create_tag import CreateTagHandler
 from app.modules.taxonomy.application.commands.create_topic import CreateTopicHandler
 from app.modules.taxonomy.application.commands.delete_tag import DeleteTagHandler
@@ -18,6 +19,11 @@ from app.modules.taxonomy.infrastructure.repositories import SqlSubjectLookup, S
 from app.shared.infrastructure.db import get_db
 from app.shared.infrastructure.sql_audit import SqlAuditTrail
 from app.shared.infrastructure.sql_unit_of_work import SqlUnitOfWork
+
+
+def taxonomy_api(db: Session) -> TaxonomyApi:
+    """The taxonomy context for another context, on the caller's session."""
+    return TaxonomyApi(SqlTopicRepository(db), SqlTagRepository(db), SqlSubjectLookup(db))
 
 
 def create_tag(db: Session = Depends(get_db)) -> CreateTagHandler:

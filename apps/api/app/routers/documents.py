@@ -11,11 +11,11 @@ from app.core import storage
 from app.core.db import get_db
 from app.core.errors import validation
 from app.deps import OrgScope
-from app.models import Question, QuestionTag, QuestionTopic, Tag, Topic
+from app.models import Question
+from app.modules.bank.interface.schemas import parsed_out
 from app.deps import staff_scope
 from app.schemas.common import Page
-from app.schemas.documents import DocumentBrief, DocumentCreated, DocumentMetaIn, DuplicateCheckIn, DuplicateOut, DocumentOut, ParsedQuestionOut, ReparseIn, TagRef, TopicRef, document_out
-from app.schemas.questions import question_out
+from app.schemas.documents import DocumentBrief, DocumentCreated, DocumentMetaIn, DuplicateCheckIn, DuplicateOut, DocumentOut, ParsedQuestionOut, ReparseIn, document_out
 from app.services.paging import ListParams, list_params
 from app.services import documents
 
@@ -74,30 +74,11 @@ def document_questions(doc_id: uuid.UUID, scope: OrgScope = Depends(staff_scope)
     return parsed_many(db, qs)
 
 
-def question_links(db: Session, qids: list) -> list[tuple[list[TopicRef], list[TagRef]]]:
-    topics: dict = {qid: [] for qid in qids}
-    tags: dict = {qid: [] for qid in qids}
-    if qids:
-        for qt, t in db.execute(select(QuestionTopic, Topic).join(Topic, Topic.id == QuestionTopic.topic_id).where(QuestionTopic.question_id.in_(qids))):
-            topics[qt.question_id].append(TopicRef(id=t.id, name=t.name, is_primary=qt.is_primary, source=qt.source, score=qt.score))
-        for qt, t in db.execute(select(QuestionTag, Tag).join(Tag, Tag.id == QuestionTag.tag_id).where(QuestionTag.question_id.in_(qids))):
-            tags[qt.question_id].append(TagRef(id=t.id, group=t.group, name=t.name))
-    return [(sorted(topics[q], key=lambda r: not r.is_primary), tags[q]) for q in qids]
-
-
-def parsed_out(q: Question, topics=(), tags=(), group: str | None = None) -> ParsedQuestionOut:
-    base = question_out(q).model_dump()
-    return ParsedQuestionOut(**base, number=q.number, part=q.part, confidence=q.confidence, issues=q.issues or [],
-                             parse_method=q.parse_method, parse_model=q.parse_model, answer_source=q.answer_source,
-                             subject_id=q.subject_id, semester_code=q.semester_code, exam_kind=q.exam_kind,
-                             topics=list(topics), tags=list(tags), page=q.page, spot_check=q.spot_check,
-                             duplicate_of=q.duplicate_of, source_document_id=q.source_document_id, group=group,
-                             flag_evidence=q.flag_evidence)
-
-
 def parsed_many(db: Session, qs: list[Question], groups: dict | None = None) -> list[ParsedQuestionOut]:
-    links = question_links(db, [q.id for q in qs])
-    return [parsed_out(q, t, g, (groups or {}).get(q.id)) for q, (t, g) in zip(qs, links)]
+    """Questions with topics and tags, through the bank module (its presenter)."""
+    from app.modules.bank.interface.deps import bank_api
+
+    return [parsed_out(v) for v in bank_api(db).views(list(qs), groups)]
 
 
 @router.get("/{doc_id}/file")

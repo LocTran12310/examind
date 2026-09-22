@@ -23,6 +23,11 @@ class SqlTagRepository:
             stmt = stmt.where(tags.c.id != exclude_id)
         return self.session.scalar(stmt.limit(1)) is not None
 
+    def groups(self, org_id: uuid.UUID, tag_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
+        if not tag_ids:
+            return {}
+        return dict(self.session.execute(select(tags.c.id, tags.c.group).where(tags.c.id.in_(tag_ids), tags.c.organization_id == org_id)).all())
+
     def add(self, tag: Tag) -> None:
         self.session.add(tag)
         self.session.flush()
@@ -49,6 +54,11 @@ class SqlTopicRepository:
     def get(self, org_id: uuid.UUID, topic_id: uuid.UUID) -> Topic | None:
         t = self.session.get(Topic, topic_id)
         return t if t is not None and t.organization_id == org_id else None
+
+    def paths(self, org_id: uuid.UUID, topic_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
+        if not topic_ids:
+            return {}
+        return dict(self.session.execute(select(topics.c.id, topics.c.path).where(topics.c.id.in_(topic_ids), topics.c.organization_id == org_id)).all())
 
     def children(self, topic_id: uuid.UUID) -> list[Topic]:
         return list(self.session.scalars(select(Topic).where(topics.c.parent_id == topic_id).order_by(topics.c.sort)))
