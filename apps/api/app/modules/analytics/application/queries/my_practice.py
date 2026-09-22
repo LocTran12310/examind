@@ -16,4 +16,4 @@ class MyPracticeHandler:
         if actor.role != "student":
             raise Forbidden()
         return [{"attempt_id": a.attempt_id, "title": a.title, "status": a.status, "started_at": a.started_at, "submitted_at": a.submitted_at,
-                 "score10": a.score10, **plan_summary(a.settings)} for a in self.assessment.practice_attempts(actor.user_id, HISTORY)]
+                 "score10": a.score10, **plan_summary(a.settings)} for a in self.assessment.practice_attempts(actor.org_id, actor.user_id, HISTORY)]

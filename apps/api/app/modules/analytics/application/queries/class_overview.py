@@ -24,7 +24,7 @@ class ClassOverviewHandler:
         for u in self.roster.class_members(actor, query.class_id):
             if u.role != "student":
                 continue
-            review = self.assessment.latest_review(u.id)
+            review = self.assessment.latest_review(actor.org_id, u.id)
             rows = mastery_rows(self.mastery, self.topics, actor.org_id, u.id)
             out.append({"student_id": u.id, "full_name": u.full_name, "username": u.username,
                         "weakest": [{"name": r["name"], "mastery": r["mastery"], "answers": r["answers"]} for r in weakest(rows)],

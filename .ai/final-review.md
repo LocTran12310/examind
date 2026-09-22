@@ -488,8 +488,11 @@ error contract. Seven vertical slices (UOW-01..07), behaviour kept; the old layo
 - `Grade` and `SchoolLevel` belong to academic (structure), although their tables sit in `schema/taxonomy.py`.
 - `/me/orgs`, `/me/assignments`, `/me/practice`, `/me/mastery` and `/classes/{id}/overview` stay plain lists; the reports
   stay `GET /stats/*` with query parameters (not lists).
-- Attempts keep their pre-refactor quirks (UOW-06). The two this slice touched are kept too: the practice history and the
-  class overview's latest personal review read by student without an org filter, as before.
+- Attempts keep their pre-refactor quirks (UOW-06): reopening a timed-out attempt rolls the automatic submit back with
+  the "closed" error; changing an assignment answers `students: 0`. To decide whether to fix.
+- Fixed at close: the practice history (`/me/practice`) and the class overview's latest personal review read by student
+  without an organisation filter, so a student in two organisations showed the other one's review there. Both now
+  filter by the caller's organisation.
 - Fixed on the way (own commit): a re-parse counted only the questions it created, so a document whose questions an exam
   uses showed 0 — `question_count` now includes the kept ones.
 - Flaky `test_triage.py::test_pdf_copy_of_docx_is_marked_duplicate`: duplicate candidates now break similarity ties by the

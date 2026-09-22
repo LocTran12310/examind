@@ -145,10 +145,10 @@ class FakeAssessment:
         self.assigned.append((exam_id, student_id, title, duration_minutes))
         return uuid.uuid4()
 
-    def practice_attempts(self, student_id, limit):
+    def practice_attempts(self, org_id, student_id, limit):
         return self.practice[:limit]
 
-    def latest_review(self, student_id):
+    def latest_review(self, org_id, student_id):
         return self.reviews.get(student_id)
 
 

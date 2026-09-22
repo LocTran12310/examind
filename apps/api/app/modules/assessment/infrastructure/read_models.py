@@ -106,19 +106,20 @@ class SqlPersonalReader:
     def __init__(self, session: Session):
         self.session = session
 
-    def practice_attempts(self, student_id: uuid.UUID, limit: int) -> list[PracticeAttemptRow]:
+    def practice_attempts(self, org_id: uuid.UUID, student_id: uuid.UUID, limit: int) -> list[PracticeAttemptRow]:
+        # a student may belong to several organisations: only this one's practice
         rows = self.session.execute(select(Attempt, Exam).join(Exam, e_c.id == at_c.exam_id)
-                                    .where(at_c.student_id == student_id, at_c.assignment_id.is_(None))
+                                    .where(at_c.student_id == student_id, at_c.assignment_id.is_(None), e_c.organization_id == org_id)
                                     .order_by(at_c.started_at.desc()).limit(limit)).all()
         return [PracticeAttemptRow(a.id, e.title, a.status, a.started_at, a.submitted_at,
                                    scaled(a.score or 0, a.max_score or 0) if a.status == "submitted" else None, dict(e.settings or {}))
                 for a, e in rows]
 
-    def latest_review(self, student_id: uuid.UUID) -> PersonalReviewRow | None:
+    def latest_review(self, org_id: uuid.UUID, student_id: uuid.UUID) -> PersonalReviewRow | None:
         t_c = assignment_targets.c
         row = self.session.execute(
             select(Assignment, at_c.status).join(Exam, e_c.id == a_c.exam_id)
             .join(assignment_targets, t_c.assignment_id == a_c.id)
             .outerjoin(attempts, (at_c.assignment_id == a_c.id) & (at_c.student_id == student_id))
-            .where(t_c.user_id == student_id, e_c.source == "adaptive").order_by(a_c.created_at.desc()).limit(1)).first()
+            .where(t_c.user_id == student_id, e_c.source == "adaptive", a_c.organization_id == org_id).order_by(a_c.created_at.desc()).limit(1)).first()
         return PersonalReviewRow(row[0].id, row[0].title, row[1] or "not_started") if row else None

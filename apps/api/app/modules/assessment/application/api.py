@@ -61,8 +61,8 @@ class AssessmentApi:
         return AssignPersonalExamHandler(self.assignments, self.uow)(
             AssignPersonalExam(org_id, exam_id, student_id, title, open_at, close_at, duration_minutes, created_by))
 
-    def practice_attempts(self, student_id: uuid.UUID, limit: int = 20) -> list[PracticeAttemptRow]:
-        return self.personal.practice_attempts(student_id, limit)
+    def practice_attempts(self, org_id: uuid.UUID, student_id: uuid.UUID, limit: int = 20) -> list[PracticeAttemptRow]:
+        return self.personal.practice_attempts(org_id, student_id, limit)
 
-    def latest_personal_review(self, student_id: uuid.UUID) -> PersonalReviewRow | None:
-        return self.personal.latest_review(student_id)
+    def latest_personal_review(self, org_id: uuid.UUID, student_id: uuid.UUID) -> PersonalReviewRow | None:
+        return self.personal.latest_review(org_id, student_id)

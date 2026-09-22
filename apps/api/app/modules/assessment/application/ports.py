@@ -40,10 +40,10 @@ class ResultReader(Protocol):
 class PersonalReader(Protocol):
     """Personal review exams (source adaptive): a student's practice attempts and the latest review assigned."""
 
-    def practice_attempts(self, student_id: uuid.UUID, limit: int) -> list[PracticeAttemptRow]:
+    def practice_attempts(self, org_id: uuid.UUID, student_id: uuid.UUID, limit: int) -> list[PracticeAttemptRow]:
         """The student's attempts outside any assignment, newest first."""
         ...
 
-    def latest_review(self, student_id: uuid.UUID) -> PersonalReviewRow | None:
+    def latest_review(self, org_id: uuid.UUID, student_id: uuid.UUID) -> PersonalReviewRow | None:
         """The newest assignment of a personal review exam targeting the student."""
         ...

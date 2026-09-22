@@ -16,7 +16,7 @@ class _AssessmentApi(Protocol):
     def assign_personal(self, org_id: uuid.UUID, exam_id: uuid.UUID, student_id: uuid.UUID, title: str, open_at: datetime,
                         close_at: datetime, duration_minutes: int, created_by: uuid.UUID | None) -> uuid.UUID: ...
 
-    def practice_attempts(self, student_id: uuid.UUID, limit: int = 20) -> list: ...
+    def practice_attempts(self, org_id: uuid.UUID, student_id: uuid.UUID, limit: int = 20) -> list: ...
 
     def latest_personal_review(self, student_id: uuid.UUID) -> Any: ...
 
@@ -36,10 +36,10 @@ class AssessmentExams:
                duration_minutes: int, created_by: uuid.UUID | None) -> uuid.UUID:
         return self.assessment.assign_personal(org_id, exam_id, student_id, title, open_at, close_at, duration_minutes, created_by)
 
-    def practice_attempts(self, student_id: uuid.UUID, limit: int) -> list[PracticeAttempt]:
+    def practice_attempts(self, org_id: uuid.UUID, student_id: uuid.UUID, limit: int) -> list[PracticeAttempt]:
         return [PracticeAttempt(r.attempt_id, r.title, r.status, r.started_at, r.submitted_at, r.score10, r.settings)
-                for r in self.assessment.practice_attempts(student_id, limit)]
+                for r in self.assessment.practice_attempts(org_id, student_id, limit)]
 
-    def latest_review(self, student_id: uuid.UUID) -> ReviewStatus | None:
-        r = self.assessment.latest_personal_review(student_id)
+    def latest_review(self, org_id: uuid.UUID, student_id: uuid.UUID) -> ReviewStatus | None:
+        r = self.assessment.latest_personal_review(org_id, student_id)
         return ReviewStatus(r.assignment_id, r.title, r.status) if r else None
