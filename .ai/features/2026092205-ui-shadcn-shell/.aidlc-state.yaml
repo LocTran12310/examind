@@ -1,0 +1,29 @@
+# Managed by scripts/aidlc.py — do not edit by hand.
+# Editing this file to skip a gate defeats the point of having one.
+feature: ui-shadcn-shell
+slug: 2026092205-ui-shadcn-shell
+profile: none
+created: 2026-09-22T09:55:04
+ruleset: 5
+current_gate: G3
+history:
+  - gate: G0
+    action: passed
+    at: 2026-09-22T09:56:05
+    by: Loc Tran
+    evidence: architecture map verified by Loc Tran (blanket pre-approval in chat, 2026-09-21 — confirm at final review); 00-intent.md complete
+  - gate: G1
+    action: passed
+    at: 2026-09-22T09:56:05
+    by: Loc Tran
+    evidence: 9 assumptions, none blocking-and-pending; 12 acceptance criteria defined
+  - gate: G2
+    action: passed
+    at: 2026-09-22T09:56:05
+    by: Loc Tran
+    evidence: 4 ADR(s) recorded
+  - gate: G3
+    action: passed
+    at: 2026-09-22T09:57:05
+    by: Loc Tran
+    evidence: graph valid - 4 UoW, 13 tickets, no cycles
