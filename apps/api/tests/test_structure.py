@@ -44,7 +44,7 @@ def _admin_client(client, db):
 
 def test_level_and_grade_crud_with_guards(client, db):
     _admin_client(client, db)
-    levels = {lv["code"]: lv for lv in client.get("/api/school-levels").json()["items"]}
+    levels = {lv["code"]: lv for lv in client.post("/api/school-levels/search", json={}).json()["data"]}
     assert levels["thcs"]["grade_count"] == 4 and levels["thpt"]["grade_count"] == 3
     # overlapping ranges and bad ranges are refused
     r = client.post("/api/school-levels", json={"code": "th", "name": "Tiểu học", "grade_from": 5, "grade_to": 6})
@@ -61,7 +61,7 @@ def test_level_and_grade_crud_with_guards(client, db):
     assert (klass["grade"], klass["grade_id"]) == (1, g1["id"])
     r = client.delete(f"/api/grades/{g1['id']}")
     assert r.status_code == 409 and r.json()["message"] == "Khối còn 1 lớp"
-    assert client.get("/api/grades", params={"school_level_id": th["id"]}).json()["items"][0]["class_count"] == 1
+    assert client.post("/api/grades/search", json={"school_level_id": th["id"]}).json()["data"][0]["class_count"] == 1
     # renumbering a grade keeps the class cache in step
     client.patch(f"/api/grades/{g1['id']}", json={"level": 2})
     assert client.get(f"/api/classes/{klass['id']}").json()["grade"] == 2
@@ -84,7 +84,7 @@ def test_class_by_grade_number_links_the_grade_and_tree_counts(client, db):
     k10 = next(g for g in thpt["grades"] if g["level"] == 10)
     assert k10["classes"][0]["name"] == "10A1" and k10["classes"][0]["member_count"] == 1
     assert [c["name"] for c in t["unassigned"]] == ["Lớp hè"]
-    assert client.get("/api/classes", params={"grade_id": str(g10.id)}).json()["total"] == 1
+    assert client.post("/api/classes/search", json={"grade_id": str(g10.id)}).json()["total"] == 1
 
 
 def test_only_org_admin_edits_structure(client, db):

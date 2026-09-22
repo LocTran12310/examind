@@ -16,21 +16,21 @@ def _admin(client, db):
 
 def test_org_starts_with_the_current_year_active_and_terms(client, db):
     _admin(client, db)
-    years = client.get("/api/school-years").json()["items"]
+    years = client.post("/api/school-years/search", json={}).json()["data"]
     assert [(y["code"], y["status"]) for y in years] == [(current_code(), "active")]
     assert [t["code"] for t in years[0]["terms"]] == ["hk1", "hk2"]
 
 
 def test_create_activate_close_reopen(client, db):
     _admin(client, db)
-    old = client.get("/api/school-years").json()["items"][0]
+    old = client.post("/api/school-years/search", json={}).json()["data"][0]
     assert client.post("/api/school-years", json={"code": "2030-2032"}).status_code == 422
     new = client.post("/api/school-years", json={"code": "2031-2032"}).json()
     assert new["status"] == "planning" and new["start_date"] == "2031-09-05"
     assert client.post("/api/school-years", json={"code": "2031-2032"}).status_code == 409
     act = client.post(f"/api/school-years/{new['id']}/activate").json()
     assert act["status"] == "active"
-    statuses = {y["code"]: y["status"] for y in client.get("/api/school-years").json()["items"]}
+    statuses = {y["code"]: y["status"] for y in client.post("/api/school-years/search", json={}).json()["data"]}
     assert statuses == {old["code"]: "closed", "2031-2032": "active"}
     assert client.post(f"/api/school-years/{old['id']}/reopen").json()["status"] == "planning"
     # term dates must stay inside the year
@@ -40,24 +40,24 @@ def test_create_activate_close_reopen(client, db):
 
 def test_classes_belong_to_a_year_and_filter_by_it(client, db):
     _admin(client, db)
-    cur = client.get("/api/school-years").json()["items"][0]
+    cur = client.post("/api/school-years/search", json={}).json()["data"][0]
     nxt = client.post("/api/school-years", json={"code": "2031-2032"}).json()
     a = client.post("/api/classes", json={"name": "10A1"}).json()  # default = active year
     b = client.post("/api/classes", json={"name": "10A1", "grade": 10, "school_year_id": nxt["id"]}).json()
     assert (a["school_year_id"], b["school_year_id"], b["school_year"]) == (cur["id"], nxt["id"], "2031-2032")
-    assert client.get("/api/classes", params={"school_year_id": nxt["id"]}).json()["total"] == 1
+    assert client.post("/api/classes/search", json={"school_year_id": nxt["id"]}).json()["total"] == 1
     tree = client.get("/api/structure", params={"school_year_id": nxt["id"]}).json()
     thpt = next(lv for lv in tree["levels"] if lv["code"] == "thpt")
     assert thpt["class_count"] == 1
     assert client.delete(f"/api/school-years/{nxt['id']}").status_code == 409  # still has a class
     # a year string from an old client creates the year on demand
     c = client.post("/api/classes", json={"name": "12C", "school_year": "2029-2030"}).json()
-    assert any(y["code"] == "2029-2030" for y in client.get("/api/school-years").json()["items"]) and c["school_year_id"]
+    assert any(y["code"] == "2029-2030" for y in client.post("/api/school-years/search", json={}).json()["data"]) and c["school_year_id"]
 
 
 def test_closed_year_stays_editable_and_every_change_is_in_the_history(client, db):
     _admin(client, db)
-    cur = client.get("/api/school-years").json()["items"][0]
+    cur = client.post("/api/school-years/search", json={}).json()["data"][0]
     k = client.post("/api/classes", json={"name": "10A1"}).json()
     client.post(f"/api/school-years/{cur['id']}/close")
     assert client.patch(f"/api/classes/{k['id']}", json={"name": "10A1-CLC"}).status_code == 200
@@ -71,7 +71,7 @@ def test_closed_year_stays_editable_and_every_change_is_in_the_history(client, d
 
 def test_teachers_read_years_but_cannot_change_them_or_read_history(client, db):
     login_as(client, db, "teacher")
-    assert client.get("/api/school-years").status_code == 200
+    assert client.post("/api/school-years/search", json={}).status_code == 200
     assert client.post("/api/school-years", json={"code": "2031-2032"}).status_code == 403
     assert client.get("/api/audit").status_code == 403
 

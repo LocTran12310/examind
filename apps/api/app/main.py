@@ -33,7 +33,7 @@ def health():
 
 
 # each migrated module exposes app.modules.<context>.interface.router:router
-MODULES: list[str] = ["taxonomy"]
+MODULES: list[str] = ["taxonomy", "academic"]
 
 
 def include_routers() -> None:

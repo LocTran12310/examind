@@ -48,3 +48,21 @@ class Tag:
 
     def assign_subject(self, subject_id: uuid.UUID | None) -> None:
         self.subject_id = None if self.group in SHARED_GROUPS else subject_id
+
+
+@dataclass(eq=False)
+class Subject:
+    organization_id: uuid.UUID
+    code: str
+    name: str
+    sort: int = 0
+    id: uuid.UUID = field(default_factory=new_id)
+
+
+@dataclass(eq=False)
+class Semester:
+    organization_id: uuid.UUID
+    code: str
+    name: str
+    sort: int = 0
+    id: uuid.UUID = field(default_factory=new_id)

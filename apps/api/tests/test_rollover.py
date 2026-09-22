@@ -11,7 +11,7 @@ def _setup(client, db):
 
     seed_org(db, admin.organization_id)
     db.commit()
-    year = client.get("/api/school-years").json()["items"][0]
+    year = client.post("/api/school-years/search", json={}).json()["data"][0]
     people = {}
     for cname, grade, names in (("10A1", 10, ["an", "binh", "chi"]), ("11B", 11, ["dung"]), ("12C", 12, ["em"])):
         k = client.post("/api/classes", json={"name": cname, "grade": grade}).json()
@@ -53,7 +53,7 @@ def test_commit_with_exceptions_is_idempotent_and_can_activate(client, db):
     assert cls["11A1"].grade == 11
     old = {m.user_id: m.status for m in db.scalars(select(ClassMember).join(SchoolClass).where(SchoolClass.school_year_id == year["id"]))}
     assert old[people["an"].id] == "promoted" and old[people["chi"].id] == "transferred" and old[people["em"].id] == "graduated"
-    statuses = {y["code"]: y["status"] for y in client.get("/api/school-years").json()["items"]}
+    statuses = {y["code"]: y["status"] for y in client.post("/api/school-years/search", json={}).json()["data"]}
     assert statuses[p["target_code"]] == "active" and statuses[year["code"]] == "closed"
     # running again creates nothing new and duplicates nobody
     again = client.post(f"/api/school-years/{year['id']}/rollover/commit", json={**body, "activate_target": False}).json()

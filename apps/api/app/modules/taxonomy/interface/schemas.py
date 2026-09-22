@@ -29,3 +29,65 @@ class TagSearchBody(SearchBody):
     `include_shared=false` = exactly that subject (the Tags page filter)."""
     subject_id: str | None = None
     include_shared: bool = True
+
+
+class SubjectOut(BaseModel):
+    id: uuid.UUID
+    code: str
+    name: str
+
+
+class GradeOut(BaseModel):
+    id: uuid.UUID
+    level: int
+    name: str
+    school_level_id: uuid.UUID | None = None
+    school_level_name: str | None = None
+
+
+class SemesterOut(BaseModel):
+    id: uuid.UUID
+    code: str
+    name: str
+
+
+class TaxonomyOut(BaseModel):
+    subjects: list[SubjectOut]
+    grades: list[GradeOut]
+    semesters: list[SemesterOut]
+
+
+class TopicOut(BaseModel):
+    id: uuid.UUID
+    subject_id: uuid.UUID
+    parent_id: uuid.UUID | None
+    name: str
+    level_kind: str
+    grade: int | None
+    path: str
+    depth: int
+    sort: int
+    child_count: int = 0
+
+
+class TopicCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    subject_id: uuid.UUID | None = None
+    parent_id: uuid.UUID | None = None
+    level_kind: str | None = None
+    grade: int | None = None
+
+
+class TopicUpdate(BaseModel):
+    name: str | None = Field(default=None, max_length=200)
+    level_kind: str | None = None
+    grade: int | None = None
+    sort: int | None = None
+
+
+class TopicMove(BaseModel):
+    parent_id: uuid.UUID | None
+
+
+class TopicMerge(BaseModel):
+    target_id: uuid.UUID

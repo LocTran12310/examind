@@ -47,7 +47,7 @@ def test_number_operators(client, db):
     login_as(client, db, "org_admin")
     for name, grade in (("10A1", 10), ("11A1", 11), ("12A1", 12)):
         client.post("/api/classes", json={"name": name, "grade": grade})
-    got = lambda **p: sorted(c["name"] for c in client.get("/api/classes", params=p).json()["items"])  # noqa: E731
-    assert got(grade="11") == ["11A1"]
-    assert got(grade="11", grade_op=">=") == ["11A1", "12A1"]
-    assert got(grade="11", grade_op="<") == ["10A1"]
+    got = lambda **f: sorted(c["name"] for c in client.post("/api/classes/search", json={"filters": {"grade": f}}).json()["data"])  # noqa: E731
+    assert got(value=11) == ["11A1"]
+    assert got(value=11, operator=">=") == ["11A1", "12A1"]
+    assert got(value=11, operator="<") == ["10A1"]

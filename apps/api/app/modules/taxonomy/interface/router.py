@@ -3,11 +3,21 @@ import uuid
 from fastapi import APIRouter, Depends, Response
 
 from app.modules.taxonomy.application.commands.create_tag import CreateTag, CreateTagHandler
+from app.modules.taxonomy.application.commands.create_topic import CreateTopic, CreateTopicHandler
 from app.modules.taxonomy.application.commands.delete_tag import DeleteTag, DeleteTagHandler
+from app.modules.taxonomy.application.commands.delete_topic import DeleteTopic, DeleteTopicHandler
+from app.modules.taxonomy.application.commands.merge_topic import MergeTopic, MergeTopicHandler
+from app.modules.taxonomy.application.commands.move_topic import MoveTopic, MoveTopicHandler
 from app.modules.taxonomy.application.commands.update_tag import UNCHANGED, UpdateTag, UpdateTagHandler
+from app.modules.taxonomy.application.commands.update_topic import UpdateTopic, UpdateTopicHandler
+from app.modules.taxonomy.application.queries.get_taxonomy import GetTaxonomyHandler
+from app.modules.taxonomy.application.queries.list_topics import ListTopics, ListTopicsHandler
 from app.modules.taxonomy.application.queries.search_tags import SearchTags, SearchTagsHandler
 from app.modules.taxonomy.interface import deps
-from app.modules.taxonomy.interface.schemas import TagIn, TagOut, TagSearchBody, TagUpdate
+from app.modules.taxonomy.interface.schemas import (
+    GradeOut, SemesterOut, SubjectOut, TagIn, TagOut, TagSearchBody, TagUpdate, TaxonomyOut, TopicCreate, TopicMerge, TopicMove, TopicOut,
+    TopicUpdate,
+)
 from app.shared.application.actor import Actor
 from app.shared.interface.auth import current_actor, staff_actor
 from app.shared.interface.search_schemas import PageOut
@@ -36,4 +46,43 @@ def update_tag(tag_id: uuid.UUID, body: TagUpdate, actor: Actor = Depends(staff_
 @router.delete("/tags/{tag_id}", status_code=204)
 def delete_tag(tag_id: uuid.UUID, actor: Actor = Depends(staff_actor), handle: DeleteTagHandler = Depends(deps.delete_tag)):
     handle(actor, DeleteTag(tag_id))
+    return Response(status_code=204)
+
+
+@router.get("/taxonomy", response_model=TaxonomyOut)
+def taxonomy(actor: Actor = Depends(current_actor), handle: GetTaxonomyHandler = Depends(deps.get_taxonomy)):
+    t = handle(actor)
+    return TaxonomyOut(subjects=[SubjectOut(**vars(s)) for s in t.subjects], grades=[GradeOut(**vars(g)) for g in t.grades],
+                       semesters=[SemesterOut(**vars(s)) for s in t.semesters])
+
+
+# the knowledge tree is read whole (a tree, not a paged list)
+@router.get("/topics", response_model=list[TopicOut])
+def list_topics(subject_id: uuid.UUID | None = None, actor: Actor = Depends(current_actor), handle: ListTopicsHandler = Depends(deps.list_topics)):
+    return [TopicOut(**vars(t)) for t in handle(actor, ListTopics(subject_id))]
+
+
+@router.post("/topics", response_model=TopicOut, status_code=201)
+def create_topic(body: TopicCreate, actor: Actor = Depends(staff_actor), handle: CreateTopicHandler = Depends(deps.create_topic)):
+    return TopicOut(**vars(handle(actor, CreateTopic(body.name, body.subject_id, body.parent_id, body.level_kind, body.grade))))
+
+
+@router.patch("/topics/{topic_id}", response_model=TopicOut)
+def update_topic(topic_id: uuid.UUID, body: TopicUpdate, actor: Actor = Depends(staff_actor), handle: UpdateTopicHandler = Depends(deps.update_topic)):
+    return TopicOut(**vars(handle(actor, UpdateTopic(topic_id, body.name, body.level_kind, body.grade, body.sort))))
+
+
+@router.post("/topics/{topic_id}/move", response_model=TopicOut)
+def move_topic(topic_id: uuid.UUID, body: TopicMove, actor: Actor = Depends(staff_actor), handle: MoveTopicHandler = Depends(deps.move_topic)):
+    return TopicOut(**vars(handle(actor, MoveTopic(topic_id, body.parent_id))))
+
+
+@router.post("/topics/{topic_id}/merge", response_model=TopicOut)
+def merge_topic(topic_id: uuid.UUID, body: TopicMerge, actor: Actor = Depends(staff_actor), handle: MergeTopicHandler = Depends(deps.merge_topic)):
+    return TopicOut(**vars(handle(actor, MergeTopic(topic_id, body.target_id))))
+
+
+@router.delete("/topics/{topic_id}", status_code=204)
+def delete_topic(topic_id: uuid.UUID, actor: Actor = Depends(staff_actor), handle: DeleteTopicHandler = Depends(deps.delete_topic)):
+    handle(actor, DeleteTopic(topic_id))
     return Response(status_code=204)

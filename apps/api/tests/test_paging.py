@@ -88,9 +88,9 @@ def test_orgs_and_classes_are_paged(client, db):
     login_as(staff, db, "org_admin")
     for name, grade in [("10A1", 10), ("11B", 11), ("12C", 12)]:
         staff.post("/api/classes", json={"name": name, "grade": grade})
-    body = staff.get("/api/classes", params={"grade_min": 11, "sort": "-name"}).json()
-    assert [c["name"] for c in body["items"]] == ["12C", "11B"] and body["total"] == 2
-    assert staff.get("/api/classes", params={"sort": "-member_count"}).status_code == 200
+    body = staff.post("/api/classes/search", json={"filters": {"grade": {"from": 11}}, "sort": [{"field": "name", "desc": True}]}).json()
+    assert [c["name"] for c in body["data"]] == ["12C", "11B"] and body["total"] == 2
+    assert staff.post("/api/classes/search", json={"sort": [{"field": "member_count", "desc": True}]}).status_code == 200
 
 
 def test_former_bare_lists_are_paged(client, db):
