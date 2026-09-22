@@ -12,5 +12,5 @@ export function SessionRecovery() {
       else window.location.assign("/login");
     });
   }, [router]);
-  return <div className="p-8 text-sm text-gray-500">Đang tải…</div>;
+  return <div className="p-8 text-sm text-muted-foreground">Đang tải…</div>;
 }

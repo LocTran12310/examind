@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Alert, Button, Field, Input } from "@/components/ui";
+import { AlertCircle } from "lucide-react";
+import { FormField } from "@/components/app/FormField";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { api, ApiError } from "@/lib/api";
 import { homeFor } from "@/lib/nav";
 import type { Me } from "@/lib/types";
@@ -44,18 +48,23 @@ export function LoginForm({ onSuccess }: { onSuccess?: (me: Me) => void }) {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4">
-      {error && <Alert>{error}</Alert>}
-      <Field label="Tổ chức">
-        <Input name="org_code" autoComplete="organization" placeholder="TrungtamA" value={org} onChange={(e) => setOrg(e.target.value)} required />
-      </Field>
-      <Field label="Tên đăng nhập">
-        <Input name="username" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} required />
-      </Field>
-      <Field label="Mật khẩu">
-        <Input name="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-      </Field>
-      <Button variant="primary" type="submit" className="w-full" disabled={busy}>
+    <form onSubmit={submit} className="grid gap-4">
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      <FormField label="Tổ chức">
+        {(f) => <Input {...f} name="org_code" autoComplete="organization" placeholder="TrungtamA" value={org} onChange={(e) => setOrg(e.target.value)} required />}
+      </FormField>
+      <FormField label="Tên đăng nhập">
+        {(f) => <Input {...f} name="username" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} required />}
+      </FormField>
+      <FormField label="Mật khẩu">
+        {(f) => <Input {...f} name="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />}
+      </FormField>
+      <Button type="submit" className="w-full" disabled={busy}>
         {busy ? "Đang đăng nhập…" : "Đăng nhập"}
       </Button>
     </form>

@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, Button, Card, Field, Input } from "@/components/ui";
+import { AlertCircle } from "lucide-react";
+import { FormField } from "@/components/app/FormField";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { api, ApiError } from "@/lib/api";
 import { homeFor } from "@/lib/nav";
 import type { Me } from "@/lib/types";
@@ -29,25 +34,34 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4">
+    <main className="flex min-h-svh items-center justify-center bg-muted/40 p-4">
       <Card className="w-full max-w-sm">
-        <h1 className="mb-1 text-lg font-semibold">Đổi mật khẩu</h1>
-        <p className="mb-4 text-sm text-gray-500">Bạn cần đặt mật khẩu mới trước khi tiếp tục.</p>
-        <form onSubmit={submit} className="space-y-4">
-          {error && <Alert>{error}</Alert>}
-          <Field label="Mật khẩu hiện tại" error={errors.current_password}>
-            <Input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} required autoComplete="current-password" />
-          </Field>
-          <Field label="Mật khẩu mới" error={errors.new_password} hint="Tối thiểu 8 ký tự">
-            <Input type="password" value={next} onChange={(e) => setNext(e.target.value)} required autoComplete="new-password" />
-          </Field>
-          <Field label="Nhập lại mật khẩu mới" error={errors.confirm}>
-            <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required autoComplete="new-password" />
-          </Field>
-          <Button variant="primary" type="submit" className="w-full">
-            Lưu mật khẩu
-          </Button>
-        </form>
+        <CardHeader>
+          <CardTitle>Đổi mật khẩu</CardTitle>
+          <CardDescription>Đặt mật khẩu mới để tiếp tục.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={submit} className="grid gap-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            <FormField label="Mật khẩu hiện tại" error={errors.current_password}>
+              {(f) => <Input {...f} type="password" value={current} onChange={(e) => setCurrent(e.target.value)} required autoComplete="current-password" />}
+            </FormField>
+            <FormField label="Mật khẩu mới" error={errors.new_password} hint="Tối thiểu 8 ký tự">
+              {(f) => <Input {...f} type="password" value={next} onChange={(e) => setNext(e.target.value)} required autoComplete="new-password" />}
+            </FormField>
+            <FormField label="Nhập lại mật khẩu mới" error={errors.confirm}>
+              {(f) => <Input {...f} type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required autoComplete="new-password" />}
+            </FormField>
+            <Button type="submit" className="w-full">
+              Lưu mật khẩu
+            </Button>
+          </form>
+        </CardContent>
       </Card>
     </main>
   );

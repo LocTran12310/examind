@@ -5,10 +5,10 @@
 | AC | Covered by | UoW | Status |
 |----|-----------|-----|--------|
 | AC-01 | T-01-01, T-01-03, T-04-03 | UOW-01, UOW-04 | open |
-| AC-02 | T-01-01 | UOW-01 | open |
-| AC-03 | T-01-02 | UOW-01 | open |
-| AC-04 | T-01-02 | UOW-01 | open |
-| AC-05 | T-01-02 | UOW-01 | open |
+| AC-02 | T-01-01 | UOW-01 | done |
+| AC-03 | T-01-02 | UOW-01 | done |
+| AC-04 | T-01-02 | UOW-01 | done |
+| AC-05 | T-01-02 | UOW-01 | done |
 | AC-06 | T-02-03 | UOW-02 | open |
 | AC-07 | T-02-03 | UOW-02 | open |
 | AC-08 | T-02-03, T-03-03 | UOW-02, UOW-03 | open |
