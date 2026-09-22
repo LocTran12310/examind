@@ -91,7 +91,7 @@ def test_reparse_keeps_approved_and_replaces_drafts(client, db):
     run_jobs()
     db.expire_all()
     rows = db.scalars(select(Question).where(Question.source_document_id == doc_id)).all()
-    assert len(rows) == 8
+    assert len(rows) == 8 and client.get(f"/api/documents/{doc_id}").json()["question_count"] == 8
     assert db.get(Question, q.id).stem == "Đã sửa tay"
     assert len(before & {x.id for x in rows}) == 1  # only the approved one survived
 

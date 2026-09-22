@@ -74,7 +74,7 @@ class IngestDocumentHandler:
             run.warnings += result.warnings
             run.step("split", questions=len(result.questions))
             self.ai.stage(result.questions, run)
-            rows = self._persist(doc, result.questions)
+            rows, kept = self._persist(doc, result.questions)
             run.step("persist", questions=len(rows))
             # triage first: it fills search_text that topic suggestion (kNN) reads
             threshold = float((doc.processing_config or {}).get("threshold", 0.85))
@@ -82,8 +82,8 @@ class IngestDocumentHandler:
             run.step("triage", **counts)
             self.topics(doc, rows, run)
             doc.status = "parsed"
-            doc.question_count = len(rows)
-            if not rows:
+            doc.question_count = len(rows) + kept  # questions kept from a previous parse still belong to it
+            if not rows and not kept:
                 run.warnings.append("Không tìm thấy câu hỏi nào — kiểm tra định dạng 'Câu 1.' hoặc thử chế độ AI")
         except IngestError as exc:
             self.uow.rollback()
@@ -95,7 +95,8 @@ class IngestDocumentHandler:
         self.uow.commit()
         log.info("ingest.done", document=cmd.document_id, status=doc.status, questions=doc.question_count)
 
-    def _persist(self, doc, parsed: list[ParsedQuestion]) -> list[tuple[ParsedQuestion, Stored]]:
+    def _persist(self, doc, parsed: list[ParsedQuestion]) -> tuple[list[tuple[ParsedQuestion, Stored]], int]:
+        """(new questions, how many earlier ones were kept)."""
         # approved questions and questions already used in an exam survive a re-parse (A-14)
         self.bank.remove_document_questions(doc.id, KEEP_ON_REPARSE, keep_used=True)
         kept = self.bank.kept_positions(doc.id)
@@ -103,7 +104,7 @@ class IngestDocumentHandler:
         tag_id = self.taxonomy.source_tag(doc.organization_id, meta.get("source_name"))
         fresh = [p for p in parsed if (p.part, p.number) not in kept]  # an approved question from a previous parse wins (A-14)
         ids = self.bank.add_parsed(doc.organization_id, doc.id, [draft_of(p, meta) for p in fresh], tag_id)
-        return [(p, Stored(qid, p.stem, p.options)) for p, qid in zip(fresh, ids)]
+        return [(p, Stored(qid, p.stem, p.options)) for p, qid in zip(fresh, ids)], len(kept)
 
 
 class MarkIngestFailedHandler:

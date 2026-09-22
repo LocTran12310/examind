@@ -339,7 +339,7 @@ def test_pipeline_keeps_approved_positions():
     handle, bank, _, _ = _pipeline(doc, FakeDocx(LINES))
     bank.kept = {(None, 1)}
     handle(IngestDocument(str(doc.id)))
-    assert [d["number"] for d, _ in bank.added] == [2] and doc.question_count == 1
+    assert [d["number"] for d, _ in bank.added] == [2] and doc.question_count == 2  # 1 new + 1 kept
 
 
 def test_pipeline_failure_fit_for_the_teacher_is_recorded():
