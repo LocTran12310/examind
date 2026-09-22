@@ -31,11 +31,15 @@ describe("bank", () => {
     await u.click(await screen.findByRole("option", { name: "Giữa kỳ 2" }));
     expect(onChange).toHaveBeenLastCalledWith({ semester_code: "hk2", exam_kind: "Giữa kỳ" });
     await u.click(screen.getByTestId("topic-filter"));
-    await u.type(screen.getByPlaceholderText(/Tìm chuyên đề/), "dai so");
-    await u.click(within(screen.getByRole("listbox")).getByText("Đại số"));
-    expect(onChange).toHaveBeenLastCalledWith({ topic_id: "ds" });
-    rerender(<BankFilters value={{ topic_id: "ds" }} onChange={onChange} taxonomy={taxonomy} topics={topics} tags={[]} />);
-    expect(screen.getByText(/Gồm cả các nhánh con của Đại số/)).toBeInTheDocument();
+    const tree = await screen.findByRole("tree", { name: "Cây chuyên đề" });
+    await u.click(within(tree).getByRole("checkbox", { name: "Đại số" }));
+    // choosing the parent checks the child too
+    expect(within(tree).getByRole("checkbox", { name: "Hàm số bậc hai và đồ thị" })).toBeChecked();
+    await u.click(screen.getByRole("button", { name: "Áp dụng (1)" }));
+    expect(onChange).toHaveBeenLastCalledWith({ topic_ids: "ds", topic_id: null });
+    rerender(<BankFilters value={{ topic_ids: "ds" }} onChange={onChange} taxonomy={taxonomy} topics={topics} tags={[]} />);
+    expect(screen.getByText(/Gồm cả các nhánh con của: Đại số/)).toBeInTheDocument();
+    expect(screen.getByTestId("topic-filter")).toHaveTextContent("Chuyên đề: Đại số");
   });
 
   it("the page keeps filters in the URL and pages on the server", async () => {

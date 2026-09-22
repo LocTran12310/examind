@@ -8,7 +8,8 @@ import { DebouncedInput } from "@/components/data-table/FilterCell";
 import { Button } from "@/components/ui/button";
 import { parsePeriod, periodOptions, periodValue } from "@/lib/exam-period";
 import { DIFFICULTY_LABEL, STATUS_LABEL, TYPE_LABEL, type Tag, type Taxonomy, type Topic } from "@/lib/types";
-import { TopicPicker, topicLabel } from "./TopicPicker";
+import { TopicTreeSelect } from "@/components/topics/TopicTreeSelect";
+import { topicLabel } from "./TopicPicker";
 
 export type BankQuery = Record<string, string>;
 type Changes = Record<string, string | null>;
@@ -20,7 +21,9 @@ export function BankFilters({ value, onChange, taxonomy, topics, tags }: { value
   const [picking, setPicking] = useState(false);
   const set = (k: string, v: string) => onChange({ [k]: v || null });
   const byId = new Map(topics.map((t) => [t.id, t]));
-  const topic = value.topic_id ? byId.get(value.topic_id) : undefined;
+  // topic filter: comma list of top-most nodes (each includes its subtree); old links used topic_id
+  const chosen = (value.topic_ids ?? value.topic_id ?? "").split(",").filter((id) => byId.has(id));
+  const topicText = chosen.length === 1 ? `Chuyên đề: ${byId.get(chosen[0])!.name}` : chosen.length ? `Chuyên đề (${chosen.length})` : "Chuyên đề…";
   const sel = "h-8 w-auto min-w-32";
   return (
     <div className="grid gap-3 border-b p-3" data-testid="bank-filters">
@@ -52,24 +55,27 @@ export function BankFilters({ value, onChange, taxonomy, topics, tags }: { value
           options={[{ value: "usable", label: "Dùng được" }, { value: "all", label: "Tất cả" }, ...opts(STATUS_LABEL as Record<string, string>)]}
         />
         <OptionSelect className={sel} aria-label="Tag" value={value.tag_ids ?? ""} onValueChange={(v) => set("tag_ids", v)} emptyLabel="Mọi tag" options={tags.map((t) => ({ value: t.id, label: t.name }))} />
-        <Button variant="outline" size="sm" className="h-8" onClick={() => setPicking(true)} data-testid="topic-filter">
-          <Network /> {topic ? `Chuyên đề: ${topic.name}` : "Chuyên đề…"}
+        <Button variant={chosen.length ? "secondary" : "outline"} size="sm" className="h-8 max-w-72" onClick={() => setPicking(true)} data-testid="topic-filter">
+          <Network /> <span className="truncate">{topicText}</span>
         </Button>
-        {topic && (
-          <Button variant="ghost" size="icon-sm" onClick={() => set("topic_id", "")} aria-label="Bỏ lọc chuyên đề">
+        {chosen.length > 0 && (
+          <Button variant="ghost" size="icon-sm" onClick={() => onChange({ topic_ids: null, topic_id: null })} aria-label="Bỏ lọc chuyên đề">
             <X />
           </Button>
         )}
       </div>
-      {topic && <p className="text-xs text-muted-foreground">Gồm cả các nhánh con của {topicLabel(topic, byId)}</p>}
+      {chosen.length > 0 && (
+        <p className="text-xs text-muted-foreground">Gồm cả các nhánh con của: {chosen.map((id) => topicLabel(byId.get(id)!, byId)).join("; ")}</p>
+      )}
       <FormDialog open={picking} title="Lọc theo chuyên đề" onOpenChange={setPicking}>
-        <TopicPicker
+        <TopicTreeSelect
           topics={topics}
-          onPick={(t) => {
+          value={chosen}
+          onCancel={() => setPicking(false)}
+          onApply={(ids) => {
             setPicking(false);
-            set("topic_id", t.id);
+            onChange({ topic_ids: ids.length ? ids.join(",") : null, topic_id: null });
           }}
-          onClose={() => setPicking(false)}
         />
       </FormDialog>
     </div>

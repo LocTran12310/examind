@@ -1,7 +1,7 @@
 """Question bank queries and mutations (US-06, A-10, A-11)."""
 import uuid
 
-from sqlalchemy import exists, func, select
+from sqlalchemy import exists, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.core.errors import AppError, validation
@@ -17,7 +17,7 @@ IN_USE_CHECKS: list = []
 
 
 def filtered(db: Session, scope: OrgScope, *, q: str = "", subject_id=None, grade=None, semester_code=None, exam_kind=None,
-             type=None, difficulty=None, status="usable", topic_id=None, tag_ids=None, document_id=None):
+             type=None, difficulty=None, status="usable", topic_id=None, tag_ids=None, document_id=None, topic_ids=None):
     """The bank's filter statement, shared by search and the exam builder."""
     stmt = select(Question).where(Question.organization_id == scope.org_id)
     if status == "usable":
@@ -29,13 +29,16 @@ def filtered(db: Session, scope: OrgScope, *, q: str = "", subject_id=None, grad
                      (Question.source_document_id, document_id)):
         if val not in (None, ""):
             stmt = stmt.where(col == val)
-    if topic_id:
-        root = db.get(Topic, topic_id)
-        if root is None or root.organization_id != scope.org_id:
-            raise validation("Chuyên đề không hợp lệ", "topic_id")
+    roots_ids = [t for t in [topic_id, *(topic_ids or [])] if t]
+    if roots_ids:
+        # each chosen node includes its whole subtree; several nodes are OR-ed
+        roots = db.scalars(select(Topic).where(Topic.id.in_(roots_ids), Topic.organization_id == scope.org_id)).all()
+        if len(roots) != len(set(roots_ids)):
+            raise validation("Chuyên đề không hợp lệ", "topic_ids")
         stmt = stmt.where(exists(
             select(QuestionTopic.question_id).join(Topic, Topic.id == QuestionTopic.topic_id)
-            .where(QuestionTopic.question_id == Question.id, Topic.path.op("<@")(func.text2ltree(root.path)))
+            .where(QuestionTopic.question_id == Question.id,
+                   or_(*[Topic.path.op("<@")(func.text2ltree(r.path)) for r in roots]))
         ))
     if tag_ids:
         stmt = stmt.where(exists(select(QuestionTag.question_id).where(QuestionTag.question_id == Question.id, QuestionTag.tag_id.in_(tag_ids))))

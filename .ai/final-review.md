@@ -302,3 +302,12 @@ Asked in chat: "Vì còn theo dõi học sinh xuyên suốt từ 10 → 12 … c
 ADRs: ADR-01 — Classes belong to a school-year row; ADR-02 — Answer facts snapshot year, term and classes; ADR-03 — Idempotent rollover by (year, class name); ADR-04 — One membership service for both admin screens; ADR-05 — History is the audit log
 
 Tests at close: API 246, web 120; tsc/eslint/build clean. Evidence: `.ai/features/2026092207-school-years/07-demo-evidence.md`.
+
+## 12. Follow-ups after F8 (2026-09-22, chat feedback on screenshots)
+
+- **Tables fill the screen**: only the table body scrolls; header + filter row + totals are sticky and the pagination stays at the bottom. List screens use `ListLayout`.
+- **Table ↔ Chi tiết split is draggable** (shadcn `resizable`), remembered per screen: Lớp học, Đề thi, Tổ chức, Tài khoản; Cơ cấu trường has a draggable tree | table split on desktop and stacks on phones.
+- **Pagination is responsive to its container** (not the viewport): labels, first/last buttons and the long summary drop out step by step (`‹ [1] / 2 ›  20  1–20 / 32` on a phone). The header's org/year selectors are compact on phones.
+- **Topic filter is a tree**: checkbox tree with expand/collapse and accent-free search; choosing a parent includes all its children, choosing every child selects the parent; several branches can be combined. URL: `topic_ids=a,b` (each id includes its subtree on the server); old `topic_id` links still work.
+- Known test-environment note: jsdom has no layout, so tests set values with `fireEvent.change` for inputs inside resizable panels.
+- Tests: API 247, web 123; tsc/eslint/build clean.

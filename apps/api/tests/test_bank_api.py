@@ -30,6 +30,13 @@ def test_search_text_filters_and_topic_subtree(client, db):
     assert "Tìm đỉnh và trục đối xứng parabol" in names and leafs["total"] >= 10
     hinh = db.scalar(select(Topic).where(Topic.organization_id == admin.organization_id, Topic.name == "Hình học"))
     assert not ({x["id"] for x in leafs["items"]} & {x["id"] for x in client.get("/api/questions", params={"topic_id": str(hinh.id), "page_size": 100}).json()["items"]})
+    # several nodes: the union of their subtrees; a parent and its child do not double count
+    both = client.get("/api/questions", params={"topic_ids": f"{dai_so.id},{hinh.id}", "page_size": 100}).json()
+    solo = lambda t: client.get("/api/questions", params={"topic_id": str(t.id), "page_size": 1}).json()["total"]  # noqa: E731
+    assert both["total"] == solo(dai_so) + solo(hinh)
+    leaf = db.scalar(select(Topic).where(Topic.organization_id == admin.organization_id, Topic.name == "Tìm đỉnh và trục đối xứng parabol"))
+    assert client.get("/api/questions", params={"topic_ids": f"{dai_so.id},{leaf.id}", "page_size": 1}).json()["total"] == solo(dai_so)
+    assert client.get("/api/questions", params={"topic_ids": "nope"}).status_code == 422
     assert client.get("/api/questions", params={"type": "true_false"}).json()["total"] == 0
     assert client.get("/api/questions", params={"status": "needs_review"}).json()["total"] <= 6
     assert client.get("/api/questions", params={"document_id": doc, "status": "all", "page_size": 100}).json()["total"] == 40
