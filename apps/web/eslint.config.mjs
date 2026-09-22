@@ -42,6 +42,8 @@ const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     rules: {
+      // dropping a field with a rest element, and `_x` placeholders, are intentional
+      "@typescript-eslint/no-unused-vars": ["error", { ignoreRestSiblings: true, argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" }],
       "no-restricted-imports": restrict([HTTP_ONLY_IN_SERVICES, QUERY_ONLY_IN_HOOKS]),
       // native pickers look different on every browser: use DatePicker / DateTimePicker / OptionSelect
       "no-restricted-syntax": ["error", ...NATIVE_PICKERS],

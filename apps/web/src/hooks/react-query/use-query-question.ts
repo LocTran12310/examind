@@ -19,7 +19,7 @@ export function useQuestionSearchQuery(
 
 /** Facet counts of the bank for the same filters; paging and sort do not change them. */
 export function useQuestionFacetsQuery(body: QuestionSearchBody, enabled = true): UseQueryResult<BankFacets, Error> {
-  const { sort: _sort, ...rest } = body;
+  const { sort, ...rest } = body; // facets ignore ordering
   const facetsBody: QuestionSearchBody = { ...rest, page: 1 };
   return useQuery<BankFacets, Error>({ queryKey: QUESTION_KEYS.FACETS(facetsBody), queryFn: () => questionService.facets(facetsBody), enabled });
 }
