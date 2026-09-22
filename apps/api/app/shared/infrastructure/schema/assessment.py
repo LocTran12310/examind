@@ -4,7 +4,19 @@ answer_facts through SQL."""
 import uuid
 
 from sqlalchemy import (
-    Boolean, CheckConstraint, Column, DateTime, Float, ForeignKey, Index, Integer, SmallInteger, String, Table, Text, func,
+    Boolean,
+    CheckConstraint,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    SmallInteger,
+    String,
+    Table,
+    Text,
+    func,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 

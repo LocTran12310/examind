@@ -1,10 +1,7 @@
 from datetime import timedelta
 
-from sqlalchemy import select
-
-from app.shared.domain.clock import utcnow as now
 from app.modules.bank.domain.entities import Question
-from app.modules.taxonomy.domain.topics import Topic
+from app.shared.domain.clock import utcnow as now
 from tests.factories import PASSWORD, make_user
 from tests.test_exams_api import bank_ready
 

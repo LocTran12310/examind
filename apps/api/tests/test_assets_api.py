@@ -9,7 +9,7 @@ def png_bytes():
 
 
 def test_upload_and_fetch_with_org_check(client, db):
-    teacher = login_as(client, db, "teacher")
+    login_as(client, db, "teacher")
     r = client.post("/api/assets", files={"file": ("a.png", png_bytes(), "image/png")})
     assert r.status_code == 201, r.text
     body = r.json()

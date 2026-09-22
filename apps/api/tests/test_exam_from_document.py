@@ -2,7 +2,6 @@
 from sqlalchemy import select, update
 
 from app.modules.assessment.domain.entities import Exam, ExamQuestion
-
 from app.modules.bank.domain.entities import Question
 from tests.test_documents_api import run_jobs, sample, teacher_with_taxonomy, upload
 

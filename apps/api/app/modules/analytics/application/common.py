@@ -8,7 +8,14 @@ import uuid
 from app.modules.analytics.domain.ports import AnswerHistory, MasteryRepository, QuestionPool, Topics
 from app.modules.analytics.domain.services import mastery as mastery_rules
 from app.modules.analytics.domain.services.practice import (
-    RECENT_CORRECT_DAYS, REASK_AFTER, REASK_SHARE, WEAK_SHARE, WEAK_TOPICS, draw, shares, target_difficulties,
+    REASK_AFTER,
+    REASK_SHARE,
+    RECENT_CORRECT_DAYS,
+    WEAK_SHARE,
+    WEAK_TOPICS,
+    draw,
+    shares,
+    target_difficulties,
 )
 from app.modules.analytics.domain.value_objects import Pick, Plan
 

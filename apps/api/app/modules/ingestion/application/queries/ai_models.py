@@ -4,8 +4,8 @@ import uuid
 from app.modules.ingestion.application.ai_access import is_super, load_visible, may_manage_models, may_see_models, model_view
 from app.modules.ingestion.application.dto import AiModelView
 from app.modules.ingestion.application.ports import AiModelReader
-from app.modules.ingestion.domain.errors import LlmError
 from app.modules.ingestion.domain.entities import AiModel
+from app.modules.ingestion.domain.errors import LlmError
 from app.modules.ingestion.domain.ports import AiModelRepository, ChatModels
 from app.modules.ingestion.domain.services.ai_parse import parse_json
 from app.shared.application.actor import Actor

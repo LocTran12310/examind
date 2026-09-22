@@ -10,10 +10,10 @@ record is not understood — callers then keep the picture, so an unreadable for
 """
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 import io
 import re
 import struct
-from dataclasses import dataclass, field
 
 import olefile
 
@@ -272,7 +272,7 @@ SYMBOLS = {
     0x00AC: r"\neg ", 0x2202: r"\partial ", 0x2207: r"\nabla ", 0x210F: r"\hbar ", 0x2113: r"\ell ",
     0x211D: r"\mathbb{R}", 0x2115: r"\mathbb{N}", 0x2124: r"\mathbb{Z}", 0x211A: r"\mathbb{Q}", 0x2102: r"\mathbb{C}",
     0x2329: r"\langle ", 0x232A: r"\rangle ", 0x27E8: r"\langle ", 0x27E9: r"\rangle ", 0x2016: r"\| ",
-    0x25B3: r"\triangle ", 0x2206: r"\Delta ", 0x25B5: r"\triangle ", 0x22BF: r"\triangle ", 0x2234: r"\therefore ",
+    0x25B3: r"\triangle ", 0x25B5: r"\triangle ", 0x22BF: r"\triangle ", 0x2234: r"\therefore ",
     0x2235: r"\because ", 0x226A: r"\ll ", 0x226B: r"\gg ", 0x2243: r"\simeq ", 0x2241: r"\nsim ", 0x2262: r"\not\equiv ",
     0x21C4: r"\rightleftarrows ", 0x21CC: r"\rightleftharpoons ", 0x2191: r"\uparrow ", 0x2193: r"\downarrow ",
     0x2197: r"\nearrow ", 0x2198: r"\searrow ", 0x2135: r"\aleph ", 0x2118: r"\wp ", 0x2111: r"\Im ", 0x211C: r"\Re ",

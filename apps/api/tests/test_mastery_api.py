@@ -3,7 +3,7 @@ from tests.test_mastery import take
 
 
 def test_mastery_endpoints(client, db):
-    admin = take(client, db, right=True)
+    take(client, db, right=True)
     s = login(client, "trungtama", "hs01")
     rows = s.get("/api/me/mastery").json()
     tracked = [r for r in rows if r["tracked"]]

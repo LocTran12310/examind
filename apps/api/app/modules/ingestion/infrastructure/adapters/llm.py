@@ -10,12 +10,12 @@ import time
 
 import httpx
 
-from app.shared.infrastructure.config import get_settings
 from app.modules.ingestion.domain.entities import AiModel
 from app.modules.ingestion.domain.errors import LlmError
 from app.modules.ingestion.domain.ports import ChatResult
 from app.modules.ingestion.domain.services.ai_parse import parse_json  # noqa: F401  (tests read replies with it)
 from app.modules.ingestion.infrastructure.adapters import crypto
+from app.shared.infrastructure.config import get_settings
 
 TRANSPORT: httpx.BaseTransport | None = None  # tests inject an httpx.MockTransport
 

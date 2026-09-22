@@ -3,10 +3,10 @@ from types import SimpleNamespace
 
 from sqlalchemy import select
 
-from app.modules.ingestion.domain.services.header import apply, detect
-from app.modules.ingestion.infrastructure.adapters.taxonomy import SqlTaxonomyLookup
-from app.modules.ingestion.domain.services.lines import Line
 from app.modules.bank.domain.entities import Question
+from app.modules.ingestion.domain.services.header import apply, detect
+from app.modules.ingestion.domain.services.lines import Line
+from app.modules.ingestion.infrastructure.adapters.taxonomy import SqlTaxonomyLookup
 from app.modules.taxonomy.domain.entities import Subject
 from tests.test_documents_api import run_jobs, sample, teacher_with_taxonomy, upload
 

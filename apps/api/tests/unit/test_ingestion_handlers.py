@@ -10,10 +10,10 @@ from app.modules.ingestion.application.commands.ingest_document import IngestDoc
 from app.modules.ingestion.application.commands.reparse_document import ReparseDocument, ReparseDocumentHandler
 from app.modules.ingestion.application.commands.save_ai_model import CreateAiModel, CreateAiModelHandler, UpdateAiModel, UpdateAiModelHandler
 from app.modules.ingestion.application.commands.save_ingestion_settings import SaveIngestionSettings, SaveIngestionSettingsHandler
+from app.modules.ingestion.application.commands.store_asset import StoreImage
 from app.modules.ingestion.application.commands.update_document_meta import UpdateDocumentMeta, UpdateDocumentMetaHandler
 from app.modules.ingestion.application.commands.upload_document import UploadDocument, UploadDocumentHandler
 from app.modules.ingestion.application.image_store import document_store
-from app.modules.ingestion.application.commands.store_asset import StoreImage
 from app.modules.ingestion.application.queries.check_duplicates import CheckDuplicates, CheckDuplicatesHandler
 from app.modules.ingestion.application.stages.ai_split import AiSplitter
 from app.modules.ingestion.application.stages.extract import Extractor

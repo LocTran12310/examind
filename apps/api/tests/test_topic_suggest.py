@@ -1,14 +1,14 @@
 import json
 import os
 
+from cryptography.fernet import Fernet
 import httpx
 import pytest
-from cryptography.fernet import Fernet
 from sqlalchemy import select
 
-from app.shared.infrastructure.config import get_settings
 from app.modules.ingestion.infrastructure.adapters import llm
 from app.modules.taxonomy.domain.topics import Topic
+from app.shared.infrastructure.config import get_settings
 from tests.test_documents_api import EXAMS, run_jobs, sample, teacher_with_taxonomy, upload
 
 

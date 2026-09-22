@@ -1,9 +1,7 @@
 from sqlalchemy import func, select, text
 
 from app.modules.academic.domain.entities import Grade
-
 from app.modules.taxonomy.domain.entities import Semester, Subject
-
 from app.modules.taxonomy.domain.topics import Topic
 from app.seed.math_topics import MATH_TREE
 from app.seed.org_template import seed_org
@@ -44,8 +42,8 @@ def test_seed_org_is_idempotent(db):
 
 
 def test_taxonomy_grades_carry_their_level(client, db):
-    from tests.factories import login_as
     from app.seed.org_template import seed_org
+    from tests.factories import login_as
 
     admin = login_as(client, db, "org_admin")
     seed_org(db, admin.organization_id)

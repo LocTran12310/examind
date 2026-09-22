@@ -24,7 +24,7 @@ class SqlTagReader:
             try:
                 sid = uuid.UUID(subject)
             except ValueError:
-                raise Invalid("Môn học không hợp lệ", "subject_id")
+                raise Invalid("Môn học không hợp lệ", "subject_id") from None
             stmt = stmt.where(or_(tags.c.subject_id == sid, tags.c.subject_id.is_(None)) if include_shared else tags.c.subject_id == sid)
         rows, total = search(self.session, stmt, req, TAG_COLS, text=[tags.c.name],
                              default_sort=[tags.c.group, func.lower(tags.c.name), tags.c.id], scalars=False)

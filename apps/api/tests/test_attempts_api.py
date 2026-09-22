@@ -2,8 +2,8 @@ from datetime import timedelta
 
 from sqlalchemy import select
 
-from app.shared.domain.clock import utcnow as now
 from app.modules.assessment.domain.entities import AnswerFact, Attempt
+from app.shared.domain.clock import utcnow as now
 from tests.exam_helpers import assign, display_key, exam_with_questions, key_of, klass_with_student, login
 
 

@@ -29,10 +29,19 @@ from app.modules.academic.application.queries.search_years import SearchYearsHan
 from app.modules.academic.application.queries.structure_tree import StructureTreeHandler
 from app.modules.academic.application.queries.student_record import StudentRecordHandler
 from app.modules.academic.infrastructure.read_models import (
-    SqlClassReader, SqlGradeReader, SqlLevelReader, SqlRecordReader, SqlStructureReader, SqlYearReader,
+    SqlClassReader,
+    SqlGradeReader,
+    SqlLevelReader,
+    SqlRecordReader,
+    SqlStructureReader,
+    SqlYearReader,
 )
 from app.modules.academic.infrastructure.repositories import (
-    SqlMemberDirectory, SqlClassRepository, SqlGradeRepository, SqlLevelRepository, SqlSchoolYearRepository,
+    SqlClassRepository,
+    SqlGradeRepository,
+    SqlLevelRepository,
+    SqlMemberDirectory,
+    SqlSchoolYearRepository,
 )
 from app.shared.infrastructure.calendar import TzCalendar
 from app.shared.infrastructure.db import get_db

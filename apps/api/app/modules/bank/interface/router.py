@@ -22,8 +22,24 @@ from app.modules.bank.application.queries.search_questions import SearchQuestion
 from app.modules.bank.application.queries.search_review_documents import SearchReviewDocuments, SearchReviewDocumentsHandler
 from app.modules.bank.interface import deps
 from app.modules.bank.interface.schemas import (
-    ActionIn, AnswerKeyIn, AnswerKeyOut, ApprovedOut, AssignIn, BulkIn, BulkOut, FacetsOut, FlaggedIdsOut, ParsedQuestionOut, QuestionCreate,
-    QuestionOut, QuestionPatch, QuestionSearchBody, ReviewDocumentOut, ReviewDocumentSearchBody, parsed_out, question_out,
+    ActionIn,
+    AnswerKeyIn,
+    AnswerKeyOut,
+    ApprovedOut,
+    AssignIn,
+    BulkIn,
+    BulkOut,
+    FacetsOut,
+    FlaggedIdsOut,
+    ParsedQuestionOut,
+    QuestionCreate,
+    QuestionOut,
+    QuestionPatch,
+    QuestionSearchBody,
+    ReviewDocumentOut,
+    ReviewDocumentSearchBody,
+    parsed_out,
+    question_out,
     review_document_out,
 )
 from app.shared.application.actor import Actor

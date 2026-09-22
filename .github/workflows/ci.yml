@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: API — ruff, layers, pytest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          working-directory: apps/api
+      - name: Lint
+        working-directory: apps/api
+        run: |
+          uv sync --frozen
+          uv run ruff check .
+          uv run lint-imports
+      - name: Tests (compose postgres + minio, pytest in the api-test image)
+        run: ./scripts/verify.sh apps/api/tests
+
+  web:
+    name: Web — tsc, eslint, vitest, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
+      - run: pnpm test
+      - run: pnpm build

@@ -528,3 +528,33 @@ error contract. Seven vertical slices (UOW-01..07), behaviour kept; the old layo
   ôn cá nhân"), a student's "Tiến độ của tôi" and "Tạo đề ôn tập", the history panels (school years, student record,
   memberships). The live data has no graded answers yet, so the reports are empty there; the flows are covered by the
   HTTP tests.
+
+## 20. Project standards (2026-09-23)
+Not a planned feature: repo hygiene asked for in chat after F13 ("chuẩn hoá 1 project thực sự").
+
+- **Docs for people and agents.** `AGENTS.md` (root, read by every agent) plus one per app; `CLAUDE.md` files
+  import them, so there is a single source. `README.md` rewritten from the real repo (run, commands, structure,
+  API conventions); `apps/api/README.md` written; `apps/web/README.md` replaced (it was the create-next-app text).
+  `CONTRIBUTING.md` holds the working loop, commit convention and the pre-submit checklist.
+- **Rules and skills.** `.claude/rules/*.md` scope the binding rules to the files they apply to (API modules, web
+  screens, tests, migrations). Six task recipes in `.agents/skills/` — `api-endpoint`, `api-search`, `web-screen`,
+  `db-change`, `ingestion-change`, `feature-plan`; `.claude/skills` is a symlink to them, so Codex and Claude Code
+  read the same files.
+- **Commands in one place.** `Makefile` (up, dev, api-dev, web-dev, migrate, revision, seed, backup, lint, test,
+  test-unit, golden, build). `make` alone lists them.
+- **Python linting, which the repo had none of.** ruff added as a dev dependency, configured in
+  `apps/api/pyproject.toml` (line length 160, E/F/I/B/UP, isort with `force-sort-within-sections`; B008, B905, E741,
+  UP031 and UP046 ignored with the reason in the file, E501 ignored in tests). 824 findings → 0: 96 fixed
+  mechanically (import order, unused imports, encode/utf-8, datetime.UTC), the rest by hand — `raise … from None`
+  on 8 re-raises, unused locals, one duplicated dict key in the MathType symbol table (`0x2206`, same value both
+  times, no behaviour change), three `# noqa: E501` on long data lines. `scripts/verify.sh` and `make test-api`
+  now run ruff before the import contracts, so every recorded evidence run includes it. Formatting (`ruff format`)
+  was **not** applied — it would rewrite the whole tree; the style stays as written.
+- **CI.** `.github/workflows/ci.yml` runs the same commands as locally (API: ruff, lint-imports, the suite in the
+  api-test image; web: tsc, eslint, vitest, next build) plus a PR template. There is no remote yet, so it has
+  never executed — it will first run when the repo gets one.
+- **Housekeeping.** `.editorconfig`; `.gitignore` grouped and extended (`.grimp_cache`, `.import_linter_cache`,
+  `.vitest`, `*.tsbuildinfo`); `apps/web/.vitest/json/output.json` untracked (a stale run from another machine).
+
+Checks after the change: ruff clean, `lint-imports` 4 contracts kept, API 409 passed / 1 skipped, web 171 passed,
+tsc clean.

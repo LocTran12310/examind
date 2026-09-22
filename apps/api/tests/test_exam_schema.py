@@ -4,8 +4,8 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
-from app.shared.domain.clock import utcnow as now
 from app.modules.assessment.domain.entities import Assignment, AssignmentTarget, Exam
+from app.shared.domain.clock import utcnow as now
 from tests.factories import make_org
 
 

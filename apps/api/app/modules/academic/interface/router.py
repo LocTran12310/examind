@@ -29,8 +29,27 @@ from app.modules.academic.application.queries.structure_tree import StructureTre
 from app.modules.academic.application.queries.student_record import StudentRecord, StudentRecordHandler
 from app.modules.academic.interface import deps
 from app.modules.academic.interface.schemas import (
-    ClassCreate, ClassDetail, ClassOut, ClassSearchBody, ClassUpdate, CommitIn, GradeIn, GradeOut, GradeSearchBody, GradeUpdate, LevelIn,
-    LevelOut, LevelUpdate, MemberOut, MembersIn, PreviewIn, StructureOut, YearIn, YearOut, YearUpdate, year_out,
+    ClassCreate,
+    ClassDetail,
+    ClassOut,
+    ClassSearchBody,
+    ClassUpdate,
+    CommitIn,
+    GradeIn,
+    GradeOut,
+    GradeSearchBody,
+    GradeUpdate,
+    LevelIn,
+    LevelOut,
+    LevelUpdate,
+    MemberOut,
+    MembersIn,
+    PreviewIn,
+    StructureOut,
+    YearIn,
+    YearOut,
+    YearUpdate,
+    year_out,
 )
 from app.shared.application.actor import Actor
 from app.shared.interface.auth import current_actor, staff_actor

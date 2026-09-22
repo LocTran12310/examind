@@ -181,7 +181,7 @@ _IMG_THEN_LABEL = re.compile(r"(!\[\]\(asset:[^)]+\))\s+(?=(?:\*\*)?\[?(?:[A-D][
 # ---------------------------------------------------------------- MathType
 _TOKEN = re.compile(r"⟦EQ\d+⟧")
 _OBJECT = re.compile(rb"<w:object\b.*?</w:object>", re.S)
-_OLE_RID = re.compile(rb'<o:OLEObject\b[^>]*?ProgID="Equation\.(?:DSMT\d*|3)"[^>]*?\br:id="([^"]+)"|<o:OLEObject\b[^>]*?\br:id="([^"]+)"[^>]*?ProgID="Equation\.(?:DSMT\d*|3)"')
+_OLE_RID = re.compile(rb'<o:OLEObject\b[^>]*?ProgID="Equation\.(?:DSMT\d*|3)"[^>]*?\br:id="([^"]+)"|<o:OLEObject\b[^>]*?\br:id="([^"]+)"[^>]*?ProgID="Equation\.(?:DSMT\d*|3)"')  # noqa: E501
 _REL = re.compile(rb'<Relationship\b[^>]*?\bId="([^"]+)"[^>]*?\bTarget="([^"]+)"|<Relationship\b[^>]*?\bTarget="([^"]+)"[^>]*?\bId="([^"]+)"')
 
 

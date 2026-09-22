@@ -23,7 +23,8 @@ if ((${#api_tests[@]})); then
   extra=()
   # official-exam-ingestion AC-08: the reference exam files live outside the repo
   if [ -n "${EXAMIN_DIR:-}" ] && [ -d "$EXAMIN_DIR" ]; then extra=(-v "$EXAMIN_DIR:/examin:ro" -e EXAMIN_DIR=/examin); fi
-  # architecture-refactor ADR-05: the dependency rules gate every API run
+  # architecture-refactor ADR-05: style and the dependency rules gate every API run
+  docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile test run --rm -T api-test ruff check . || status=$?
   docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile test run --rm -T api-test lint-imports || status=$?
   docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile test run --rm -T ${extra[@]+"${extra[@]}"} api-test \
     pytest -q -p no:cacheprovider "${api_tests[@]}" || status=$?

@@ -1,5 +1,5 @@
 """Server-side list params shared by every data table (ui-shadcn-shell AC-10)."""
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from tests.factories import login_as, make_org, make_user
 
@@ -56,7 +56,7 @@ def test_exact_bool_and_combined_filters(client, db):
 def test_date_range_filter(client, db):
     admin = login_as(client, db, "org_admin")
     old = make_user(db, admin.organization, "old", full_name="Cũ")
-    old.created_at = datetime(2026, 1, 15, 10, tzinfo=timezone.utc)
+    old.created_at = datetime(2026, 1, 15, 10, tzinfo=UTC)
     db.commit()
     assert _names(users(client, filters={"created_at": {"from": "2026-01-15", "to": "2026-01-15"}})) == ["Cũ"]
     assert "Cũ" not in _names(users(client, filters={"created_at": {"from": "2026-02-01"}}))
@@ -73,7 +73,7 @@ def test_sort_and_bad_sort(client, db):
 
 
 def test_unknown_params_are_ignored_and_tenancy_kept(client, db):
-    admin = login_as(client, db, "org_admin")
+    login_as(client, db, "org_admin")
     other = make_org(db, "ttb", "Trung tâm B")
     make_user(db, other, "bui", full_name="Bùi Ở Org Khác")
     db.commit()

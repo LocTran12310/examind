@@ -145,7 +145,7 @@ class QuestionSearchBody(SearchBody):
             try:
                 subject = uuid.UUID(self.subject_id)
             except ValueError:
-                raise Invalid("Môn học không hợp lệ", "subject_id")
+                raise Invalid("Môn học không hợp lệ", "subject_id") from None
         topics = tuple(dict.fromkeys([t for t in [self.topic_id, *self.topic_ids] if t]))
         return BankFilters(q=self.q.strip(), subject_id=subject, grade=self.grade, semester_code=self.semester_code or None,
                            exam_kind=self.exam_kind or None, type=self.type or None, difficulty=self.difficulty or None,

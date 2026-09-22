@@ -37,7 +37,10 @@ from app.modules.assessment.application.queries.search_exams import SearchExamsH
 from app.modules.assessment.domain.ports import FactListener, QuestionBank, Roster, Subjects
 from app.modules.assessment.infrastructure.read_models import SqlAssignmentReader, SqlExamReader, SqlPersonalReader, SqlResultReader
 from app.modules.assessment.infrastructure.repositories import (
-    SqlAnswerFacts, SqlAssignmentRepository, SqlAttemptRepository, SqlExamRepository,
+    SqlAnswerFacts,
+    SqlAssignmentRepository,
+    SqlAttemptRepository,
+    SqlExamRepository,
 )
 from app.shared.domain.clock import utcnow
 from app.shared.infrastructure.db import get_db

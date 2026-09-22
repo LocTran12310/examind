@@ -1,8 +1,8 @@
 """Encryption of provider API keys at rest (exam-ingestion ADR-07): Fernet with APP_ENCRYPTION_KEY."""
 from cryptography.fernet import Fernet, InvalidToken
 
-from app.shared.infrastructure.config import get_settings
 from app.shared.domain.errors import Misconfigured
+from app.shared.infrastructure.config import get_settings
 
 
 def _fernet() -> Fernet:

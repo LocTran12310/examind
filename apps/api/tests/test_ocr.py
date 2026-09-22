@@ -3,8 +3,8 @@ import os
 
 from PIL import Image
 
-from app.modules.ingestion.infrastructure.adapters.tesseract import parse_tsv, tesseract_page
 from app.modules.ingestion.domain.services.splitter import split
+from app.modules.ingestion.infrastructure.adapters.tesseract import parse_tsv, tesseract_page
 from tests.test_documents_api import EXAMS, run_jobs, sample, teacher_with_taxonomy, upload
 
 

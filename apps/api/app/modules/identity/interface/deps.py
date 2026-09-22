@@ -5,7 +5,6 @@ import uuid
 from fastapi import Depends, Request
 from sqlalchemy.orm import Session
 
-from app.shared.infrastructure.config import get_settings
 from app.modules.identity.application.api import IdentityApi
 from app.modules.identity.application.commands.add_membership import AddMembershipHandler
 from app.modules.identity.application.commands.change_org_status import ChangeOrgStatusHandler
@@ -44,10 +43,14 @@ from app.modules.identity.infrastructure.adapters.spreadsheets import FileSpread
 from app.modules.identity.infrastructure.adapters.tokens import JwtAccessTokens, TokenSecrets
 from app.modules.identity.infrastructure.read_models import SqlAccountReader, SqlMembershipReader, SqlOrgReader, SqlUserReader
 from app.modules.identity.infrastructure.repositories import (
-    SqlMembershipRepository, SqlOrganizationRepository, SqlRefreshTokenRepository, SqlUserRepository,
+    SqlMembershipRepository,
+    SqlOrganizationRepository,
+    SqlRefreshTokenRepository,
+    SqlUserRepository,
 )
 from app.shared.application.actor import Actor
 from app.shared.domain.errors import Forbidden, Unauthenticated
+from app.shared.infrastructure.config import get_settings
 from app.shared.infrastructure.db import get_db
 from app.shared.infrastructure.sql_audit import SqlAuditTrail
 from app.shared.infrastructure.sql_unit_of_work import SqlUnitOfWork

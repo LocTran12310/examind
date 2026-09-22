@@ -67,11 +67,11 @@ def test_xlsx_bom_and_duplicates_in_file(client, db):
     assert rows[0]["errors"] == [] and rows[0]["role"] == "student"
     assert rows[1]["role"] == "teacher" and rows[1]["username"] == "lean2"
     assert "Tên đăng nhập bị trùng trong file" in rows[2]["errors"]
-    r = upload(client, "bom.csv", "﻿full_name\nNguyễn Văn An\n".encode("utf-8"))
+    r = upload(client, "bom.csv", "﻿full_name\nNguyễn Văn An\n".encode())
     assert r.json()["rows"][0]["username"] == "nguyenvanan"
 
 
 def test_teacher_cannot_import_teachers(client, db):
     login_as(client, db, "teacher")
-    body = upload(client, "t.csv", "full_name,role\nA B C,teacher\n".encode()).json()
+    body = upload(client, "t.csv", b"full_name,role\nA B C,teacher\n").json()
     assert body["rows"][0]["errors"] == ["Bạn không có quyền tạo vai trò này"]

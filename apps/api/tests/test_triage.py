@@ -1,8 +1,6 @@
 from sqlalchemy import select
 
 from app.modules.bank.domain.entities import Question
-
-from app.modules.ingestion.domain.entities import SourceDocument
 from app.modules.bank.domain.services.search_text import for_question
 from app.modules.bank.interface.deps import bank_api
 from tests.factories import make_org

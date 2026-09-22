@@ -1,12 +1,12 @@
 import json
 
+from cryptography.fernet import Fernet
 import httpx
 import pytest
-from cryptography.fernet import Fernet
 
-from app.shared.infrastructure.config import get_settings
-from app.modules.ingestion.infrastructure.adapters import llm
 from app.modules.ingestion.domain.entities import AiModel
+from app.modules.ingestion.infrastructure.adapters import llm
+from app.shared.infrastructure.config import get_settings
 from tests.factories import login_as
 
 

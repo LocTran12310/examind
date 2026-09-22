@@ -4,7 +4,8 @@ import uuid
 
 from app.modules.assessment.application.commands.assign_personal_exam import AssignPersonalExam, AssignPersonalExamHandler
 from app.modules.assessment.application.commands.create_exam_from_document import (
-    CreateExamFromDocument, CreateExamFromDocumentHandler,
+    CreateExamFromDocument,
+    CreateExamFromDocumentHandler,
 )
 from app.modules.assessment.application.commands.create_personal_exam import CreatePersonalExam, CreatePersonalExamHandler
 from app.modules.assessment.application.commands.start_attempt import new_attempt

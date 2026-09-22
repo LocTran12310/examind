@@ -30,7 +30,7 @@ SPLIT_SYSTEM = """Bạn là trợ lý số hóa đề thi Việt Nam. Nhận n�
 {"type": "mcq|true_false|short_answer|essay", "stem": "...", "options": [{"label": "A", "content": "...", "is_true": null}],
  "answer": "C" | {"a": true, "b": false, "c": true, "d": true} | "giá trị" | null, "solution": "..." | null}
 Quy tắc: giữ nguyên công thức và thẻ ảnh; mcq có 4 phương án A-D; true_false có 4 mệnh đề a-d;
-nếu đề liệt kê các lựa chọn (kể cả dạng "Các lựa chọn: 1; 2; 3; 4") thì type = mcq và gán nhãn A-D theo thứ tự;\nmcq: answer là MỘT chữ cái A-D (ví dụ "B"), không dùng object;\nshort_answer không có options; không bịa đáp án — nếu đề không cho đáp án thì answer = null."""
+nếu đề liệt kê các lựa chọn (kể cả dạng "Các lựa chọn: 1; 2; 3; 4") thì type = mcq và gán nhãn A-D theo thứ tự;\nmcq: answer là MỘT chữ cái A-D (ví dụ "B"), không dùng object;\nshort_answer không có options; không bịa đáp án — nếu đề không cho đáp án thì answer = null."""  # noqa: E501
 
 MULTI_SYSTEM = SPLIT_SYSTEM.replace("MỘT câu hỏi", "một đoạn đề gồm NHIỀU câu").replace(
     "trả về DUY NHẤT một JSON:\n", 'trả về DUY NHẤT JSON {"questions": [ ... ]}, mỗi phần tử có thêm "number", dạng:\n')

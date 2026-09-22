@@ -15,7 +15,18 @@ from app.modules.taxonomy.application.queries.list_topics import ListTopics, Lis
 from app.modules.taxonomy.application.queries.search_tags import SearchTags, SearchTagsHandler
 from app.modules.taxonomy.interface import deps
 from app.modules.taxonomy.interface.schemas import (
-    GradeOut, SemesterOut, SubjectOut, TagIn, TagOut, TagSearchBody, TagUpdate, TaxonomyOut, TopicCreate, TopicMerge, TopicMove, TopicOut,
+    GradeOut,
+    SemesterOut,
+    SubjectOut,
+    TagIn,
+    TagOut,
+    TagSearchBody,
+    TagUpdate,
+    TaxonomyOut,
+    TopicCreate,
+    TopicMerge,
+    TopicMove,
+    TopicOut,
     TopicUpdate,
 )
 from app.shared.application.actor import Actor

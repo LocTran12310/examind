@@ -5,7 +5,13 @@ from typing import Protocol
 import uuid
 
 from app.modules.assessment.domain.entities import (
-    AnswerFact, Assignment, AssignmentTarget, Attempt, AttemptAnswer, Exam, ExamQuestion,
+    AnswerFact,
+    Assignment,
+    AssignmentTarget,
+    Attempt,
+    AttemptAnswer,
+    Exam,
+    ExamQuestion,
 )
 from app.modules.assessment.domain.value_objects import PoolFilter, QuestionRef, Snapshot
 

@@ -3,8 +3,6 @@ import uuid
 
 from sqlalchemy import select, text
 
-from app.modules.bank.domain.entities import Question
-
 from app.modules.taxonomy.domain.topics import Topic
 from tests.factories import make_org, make_user
 from tests.test_documents_api import run_jobs, sample, upload

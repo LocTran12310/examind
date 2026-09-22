@@ -3,7 +3,12 @@ from typing import Protocol
 import uuid
 
 from app.modules.assessment.application.dto import (
-    AssignmentRow, ExamQuestionRow, ExamSummary, Person, PersonalReviewRow, PracticeAttemptRow,
+    AssignmentRow,
+    ExamQuestionRow,
+    ExamSummary,
+    Person,
+    PersonalReviewRow,
+    PracticeAttemptRow,
 )
 from app.modules.assessment.domain.entities import Attempt, AttemptAnswer
 from app.shared.application.search import Page, SearchRequest

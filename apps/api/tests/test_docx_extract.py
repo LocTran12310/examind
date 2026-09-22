@@ -1,9 +1,9 @@
 import os
 import re
 
-from app.shared.infrastructure.png import Canvas
-from app.modules.ingestion.infrastructure.adapters.pandoc import extract_docx
 from app.modules.ingestion.domain.services.splitter import split
+from app.modules.ingestion.infrastructure.adapters.pandoc import extract_docx
+from app.shared.infrastructure.png import Canvas
 
 EXAMS = os.path.join(os.path.dirname(__file__), "..", "..", "..", "samples", "exams")
 

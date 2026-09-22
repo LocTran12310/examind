@@ -3,9 +3,9 @@ from pathlib import Path
 
 import pytest
 
-from app.shared.domain.images import sniff
 from app.modules.ingestion.infrastructure.adapters import vector_images
 from app.modules.ingestion.infrastructure.image_store import document_store
+from app.shared.domain.images import sniff
 from tests.factories import make_org
 
 FIX = Path(__file__).parent / "fixtures" / "vector"

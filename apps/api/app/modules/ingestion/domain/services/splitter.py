@@ -266,7 +266,7 @@ def _fix_lookalikes(line: Line) -> Line:
     return line if text == line.text else Line(text, line.page, line.ocr, line.confidence, line.meta)
 
 
-KEY_ENTRY_RE = re.compile(r"^(?:(?:Câu\s*)?\d{1,3}\s*[:.)\-]?\s*(?:(?:[a-d]\)?\s*[:\-]?\s*(?:Đúng|Sai|Đ|S|Ð)\s*[,;]?\s*){1,4}|[ĐSÐ]{4}|[A-D]|-?\d+(?:[.,]\d+)?(?:/\d+)?)\s*[,;|]?\s*)+$", re.U)
+KEY_ENTRY_RE = re.compile(r"^(?:(?:Câu\s*)?\d{1,3}\s*[:.)\-]?\s*(?:(?:[a-d]\)?\s*[:\-]?\s*(?:Đúng|Sai|Đ|S|Ð)\s*[,;]?\s*){1,4}|[ĐSÐ]{4}|[A-D]|-?\d+(?:[.,]\d+)?(?:/\d+)?)\s*[,;|]?\s*)+$", re.U)  # noqa: E501
 
 
 def _looks_like_key(plain: str) -> bool:

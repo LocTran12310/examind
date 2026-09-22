@@ -1,16 +1,14 @@
-from datetime import timedelta
 import time
 
 from sqlalchemy import select, text
 
-from app.shared.domain.clock import utcnow as now
 from app.modules.analytics.domain.entities import TopicMastery
+from app.modules.analytics.domain.services.practice import target_difficulties
+from app.modules.analytics.interface.deps import practice_planner
 from app.modules.assessment.domain.entities import AnswerFact
 from app.modules.bank.domain.entities import Question, QuestionTopic
 from app.modules.identity.domain.entities import User
 from app.modules.taxonomy.domain.topics import Topic
-from app.modules.analytics.domain.services.practice import target_difficulties
-from app.modules.analytics.interface.deps import practice_planner
 from tests.test_mastery import take
 
 

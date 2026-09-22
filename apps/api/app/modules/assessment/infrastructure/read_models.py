@@ -6,7 +6,12 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.modules.assessment.application.dto import (
-    AssignmentRow, ExamQuestionRow, ExamSummary, Person, PersonalReviewRow, PracticeAttemptRow,
+    AssignmentRow,
+    ExamQuestionRow,
+    ExamSummary,
+    Person,
+    PersonalReviewRow,
+    PracticeAttemptRow,
 )
 from app.modules.assessment.domain.entities import Assignment, Attempt, AttemptAnswer, Exam
 from app.modules.assessment.domain.services.scoring import scaled

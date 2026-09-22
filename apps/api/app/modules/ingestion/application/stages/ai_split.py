@@ -10,7 +10,13 @@ from app.modules.ingestion.application.run import IngestRun
 from app.modules.ingestion.domain.errors import LlmError
 from app.modules.ingestion.domain.ports import AiModelRepository, ChatModels, OcrPage, Scanner
 from app.modules.ingestion.domain.services.ai_parse import (
-    MULTI_SYSTEM, NO_AI, QUESTION_SCHEMA, SPLIT_SYSTEM, VISION_SYSTEM, _from_json, parse_json,
+    MULTI_SYSTEM,
+    NO_AI,
+    QUESTION_SCHEMA,
+    SPLIT_SYSTEM,
+    VISION_SYSTEM,
+    _from_json,
+    parse_json,
 )
 from app.modules.ingestion.domain.services.lines import Line
 from app.modules.ingestion.domain.services.splitter import ParsedQuestion

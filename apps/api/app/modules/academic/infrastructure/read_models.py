@@ -4,7 +4,16 @@ from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
 from app.modules.academic.application.dto import (
-    ClassView, GradeView, LevelView, MemberView, RosterEntry, YearView, class_view, grade_view, level_view, year_view,
+    ClassView,
+    GradeView,
+    LevelView,
+    MemberView,
+    RosterEntry,
+    YearView,
+    class_view,
+    grade_view,
+    level_view,
+    year_view,
 )
 from app.modules.academic.domain.entities import Grade, SchoolClass, SchoolLevel, SchoolYear
 from app.modules.academic.infrastructure import orm  # noqa: F401  (mapping)

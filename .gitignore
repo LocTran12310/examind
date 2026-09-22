@@ -1,13 +1,23 @@
+# secrets and local data
 .env
-node_modules/
-.next/
+backups/
+
+# python
 __pycache__/
 *.pyc
 .venv/
 .pytest_cache/
 .ruff_cache/
+.grimp_cache/
+.import_linter_cache/
+
+# node / next
+node_modules/
+.next/
 coverage/
 playwright-report/
 test-results/
+.vitest/
+*.tsbuildinfo
+
 .DS_Store
-backups/

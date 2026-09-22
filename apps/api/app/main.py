@@ -1,7 +1,8 @@
 from fastapi import APIRouter, FastAPI
 from sqlalchemy import text
 
-from app.shared.infrastructure import db as dbmod, storage
+from app.shared.infrastructure import db as dbmod
+from app.shared.infrastructure import storage
 from app.shared.infrastructure.config import get_settings
 from app.shared.infrastructure.logging import setup as setup_logging
 

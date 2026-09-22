@@ -1,8 +1,8 @@
 import json
 import os
 
-from app.modules.ingestion.infrastructure.adapters.pdf import extract_pdf
 from app.modules.ingestion.domain.services.splitter import split
+from app.modules.ingestion.infrastructure.adapters.pdf import extract_pdf
 
 EXAMS = os.path.join(os.path.dirname(__file__), "..", "..", "..", "samples", "exams")
 

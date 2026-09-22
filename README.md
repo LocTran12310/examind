@@ -1,33 +1,65 @@
 # Examind
 
-Quản lý ngân hàng câu hỏi, đề ôn luyện và đề ôn tập cá nhân hóa cho trung tâm/giáo viên và học sinh.
-Toàn bộ chạy self-host bằng Docker Compose (Postgres + pgvector, MinIO, FastAPI, Next.js, Caddy; Ollama ở các feature sau).
+Ngân hàng câu hỏi, đề ôn luyện và đề ôn tập cá nhân hoá cho trung tâm, giáo viên và học sinh.
+Chạy self-host bằng Docker Compose: Postgres (ltree + pgvector), MinIO, FastAPI, Next.js, Caddy,
+một worker xử lý tài liệu, Ollama tuỳ chọn.
+
+Tải lên đề Word/PDF của trường hoặc Sở, hệ thống đọc công thức MathType thành LaTeX, tách từng câu
+kèm đáp án và lời giải, gắn chuyên đề, rồi từ ngân hàng đó tạo đề theo ma trận, giao bài cho lớp,
+chấm tự động và báo cáo theo chuyên đề.
 
 ## Chạy nhanh
 
 ```bash
-cp .env.example .env
-docker compose up -d --build --wait
-open http://localhost:8088/login     # tổ chức: system · admin / admin12345 (bắt đổi mật khẩu)
+cp .env.example .env          # đổi JWT_SECRET, mật khẩu admin, APP_ENCRYPTION_KEY trước khi mở ra ngoài
+make up                       # build và chạy cả stack
+open http://localhost:8088/login
 ```
 
-## Dev
+Tài khoản đầu tiên là tài khoản hệ thống: tổ chức `system`, tên đăng nhập và mật khẩu lấy từ
+`SUPERADMIN_USERNAME` / `SUPERADMIN_PASSWORD` trong `.env` (lần đầu bắt buộc đổi mật khẩu).
+Từ đó tạo tổ chức, giáo viên và lớp.
+
+## Lệnh thường dùng
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --wait postgres minio   # PG :55442, MinIO :59100
-cd apps/api && uv run alembic upgrade head && uv run python -m app.seed.bootstrap && uv run uvicorn app.main:app --reload --port 58100
-cd apps/web && pnpm dev                                                                         # :3000, /api proxied to :58100
-./scripts/verify.sh apps/api/tests apps/web/src                                                 # tests
+make            # liệt kê mọi lệnh
+make dev        # chỉ Postgres (:55442) và MinIO (:59100) để chạy api/web ở máy
+make api-dev    # uvicorn --reload :58100
+make web-dev    # next dev :3000, /api proxy sang :58100
+make test       # toàn bộ kiểm tra: API (trong docker) và web
+make backup     # pg_dump vào backups/
 ```
 
 ## Cấu trúc
 
 | Path | Nội dung |
-|---|---|
-| `apps/api` | FastAPI + SQLAlchemy + Alembic (`app/core`, `models`, `schemas`, `services`, `routers`, `seed`, `worker`, `ingestion`) |
-| `apps/web` | Next.js App Router + Tailwind |
-| `infra/` | Caddyfile, backup/deploy scripts |
-| `.ai/` | Kế hoạch AI-DLC: roadmap, architecture map, từng feature (intent → requirements → design → UoW/tickets) |
+| --- | --- |
+| `apps/api` | FastAPI theo clean architecture: `app/shared` (nhân dùng chung) và `app/modules/<context>` chia 4 tầng domain / application / infrastructure / interface, cộng `worker`, `seed`, `migrations`, `tests` |
+| `apps/web` | Next.js App Router: `app` (route mỏng), `components/{ui,common,layout,page-components}`, `hooks/{common,react-query,page-hooks}`, `services`, `stores`, `lib` |
+| `infra/` | Caddyfile |
+| `scripts/` | `verify.sh` (chạy test), `aidlc` + `gen_plan.py` + `close_ticket.sh` (kế hoạch), `golden_live.py` (chạy bộ đề chuẩn qua stack thật) |
+| `.ai/` | Bản đồ kiến trúc, roadmap, kế hoạch từng feature và final review |
+
+Tám bounded context: `identity`, `academic`, `taxonomy`, `bank`, `ingestion`, `assessment`, `analytics`, `audit`.
+Chi tiết và luật phụ thuộc nằm ở [`.ai/architecture.md`](.ai/architecture.md).
+
+## Quy ước API
+
+- Danh sách: `POST /api/<resource>/search` với `{page, limit, q?, sort?, filters?}` → `{data, total, page, limit}`.
+  Bộ lọc theo kiểu cột: chữ `* = + - !`, số và ngày `= < <= > >=` hoặc khoảng `from`/`to`, enum nhận danh sách.
+- Lỗi: `{code, message, details: {fields?, requestId}}` kèm header `X-Request-Id`.
+- Thời gian lưu và trả theo UTC; ngày tính theo giờ Việt Nam (`Asia/Ho_Chi_Minh`).
+- Đăng nhập bằng `mã tổ chức + tên đăng nhập + mật khẩu`, phiên giữ trong cookie httpOnly.
+
+Tài liệu API tự sinh: http://localhost:8088/api/docs
+
+## Phát triển
+
+- Quy ước dành cho người và cho agent: [`AGENTS.md`](AGENTS.md), [`apps/api/AGENTS.md`](apps/api/AGENTS.md),
+  [`apps/web/AGENTS.md`](apps/web/AGENTS.md). Công thức cho từng loại việc: [`.agents/skills/`](.agents/skills).
+- Cách đóng góp, quy ước commit và checklist trước khi gửi: [`CONTRIBUTING.md`](CONTRIBUTING.md).
+- Ranh giới tầng được lint: `lint-imports` (API) và ESLint (web) sẽ fail nếu import sai tầng.
 
 ## Build multi-arch
 

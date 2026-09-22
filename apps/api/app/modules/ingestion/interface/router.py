@@ -14,19 +14,41 @@ from app.modules.ingestion.application.commands.store_asset import UploadAsset, 
 from app.modules.ingestion.application.commands.update_document_meta import UpdateDocumentMeta, UpdateDocumentMetaHandler
 from app.modules.ingestion.application.commands.upload_document import UploadDocument, UploadDocumentHandler
 from app.modules.ingestion.application.queries.ai_models import (
-    DiscoverModels, DiscoverModelsHandler, SearchAiModels, SearchAiModelsHandler, TestAiModel, TestAiModelHandler,
+    DiscoverModels,
+    DiscoverModelsHandler,
+    SearchAiModels,
+    SearchAiModelsHandler,
+    TestAiModel,
+    TestAiModelHandler,
 )
 from app.modules.ingestion.application.queries.check_duplicates import CheckDuplicates, CheckDuplicatesHandler
 from app.modules.ingestion.application.queries.get_asset import GetAsset, GetAssetHandler
 from app.modules.ingestion.application.queries.get_document import (
-    DocumentFileHandler, GetDocument, GetDocumentHandler, GetPageImage, PageImageHandler,
+    DocumentFileHandler,
+    GetDocument,
+    GetDocumentHandler,
+    GetPageImage,
+    PageImageHandler,
 )
 from app.modules.ingestion.application.queries.ingestion_settings import GetIngestionSettingsHandler
 from app.modules.ingestion.application.queries.search_documents import SearchDocuments, SearchDocumentsHandler
 from app.modules.ingestion.interface import deps
 from app.modules.ingestion.interface.schemas import (
-    AiModelIn, AiModelOut, AiModelUpdate, AssetOut, DiscoverIn, DocumentBrief, DocumentCreated, DocumentMetaIn, DocumentOut,
-    DuplicateCheckIn, DuplicateOut, ExamFromDocumentIn, ReparseIn, TestResult, document_out,
+    AiModelIn,
+    AiModelOut,
+    AiModelUpdate,
+    AssetOut,
+    DiscoverIn,
+    DocumentBrief,
+    DocumentCreated,
+    DocumentMetaIn,
+    DocumentOut,
+    DuplicateCheckIn,
+    DuplicateOut,
+    ExamFromDocumentIn,
+    ReparseIn,
+    TestResult,
+    document_out,
 )
 from app.shared.application.actor import Actor
 from app.shared.domain.errors import Invalid
@@ -42,7 +64,7 @@ def _json_field(raw: str | None, name: str) -> dict:
     try:
         value = json.loads(raw)
     except json.JSONDecodeError:
-        raise Invalid("JSON không hợp lệ", name)
+        raise Invalid("JSON không hợp lệ", name) from None
     if not isinstance(value, dict):
         raise Invalid("JSON không hợp lệ", name)
     return value

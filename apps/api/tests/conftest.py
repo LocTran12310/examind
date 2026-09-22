@@ -8,10 +8,10 @@ os.environ.setdefault("S3_ENDPOINT", "http://localhost:59100")
 os.environ["S3_BUCKET"] = "examind-test"
 os.environ["LOG_LEVEL"] = "warning"
 
-import pytest  # noqa: E402
 from alembic import command  # noqa: E402
 from alembic.config import Config  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
+import pytest  # noqa: E402
 from sqlalchemy import create_engine, text  # noqa: E402
 from sqlalchemy.engine import make_url  # noqa: E402
 

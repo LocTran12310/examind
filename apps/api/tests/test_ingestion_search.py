@@ -1,6 +1,6 @@
 """Documents and AI models moved to `POST …/search` (architecture-refactor UOW-05, ADR-03)."""
-import pytest
 from cryptography.fernet import Fernet
+import pytest
 
 from app.shared.infrastructure.config import get_settings
 from tests.factories import login_as

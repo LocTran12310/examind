@@ -8,7 +8,12 @@ from app.modules.identity.application.ports import AuthPolicy
 from app.modules.identity.domain import errors
 from app.modules.identity.domain.entities import SYSTEM_ORG_CODE, Membership, Organization, RefreshToken, User
 from app.modules.identity.domain.ports import (
-    AccessTokens, MembershipRepository, OrganizationRepository, RefreshTokenRepository, Secrets, UserRepository,
+    AccessTokens,
+    MembershipRepository,
+    OrganizationRepository,
+    RefreshTokenRepository,
+    Secrets,
+    UserRepository,
 )
 from app.modules.identity.domain.services.accounts import next_free_username, username_base
 from app.shared.application.actor import Actor

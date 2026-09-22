@@ -6,8 +6,8 @@ import uuid
 
 import jwt
 
-from app.shared.infrastructure.config import get_settings
 from app.modules.identity.infrastructure.adapters.passwords import temp_password
+from app.shared.infrastructure.config import get_settings
 
 ALGORITHM = "HS256"
 

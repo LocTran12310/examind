@@ -30,8 +30,26 @@ from app.modules.assessment.application.queries.search_exam_questions import Sea
 from app.modules.assessment.application.queries.search_exams import SearchExams, SearchExamsHandler
 from app.modules.assessment.interface import deps
 from app.modules.assessment.interface.schemas import (
-    AnswerIn, AssignmentIn, AssignmentOut, AssignmentPatch, BlueprintIn, BlueprintOut, ExamIn, ExamOut, ExamPatch, ExamQuestionOut, GradeIn,
-    IdsIn, MyAssignmentOut, PointsIn, StartOut, assignment_out, assignment_view_out, exam_out, exam_question_out, exam_row_out,
+    AnswerIn,
+    AssignmentIn,
+    AssignmentOut,
+    AssignmentPatch,
+    BlueprintIn,
+    BlueprintOut,
+    ExamIn,
+    ExamOut,
+    ExamPatch,
+    ExamQuestionOut,
+    GradeIn,
+    IdsIn,
+    MyAssignmentOut,
+    PointsIn,
+    StartOut,
+    assignment_out,
+    assignment_view_out,
+    exam_out,
+    exam_question_out,
+    exam_row_out,
     my_assignment_out,
 )
 from app.shared.application.actor import Actor

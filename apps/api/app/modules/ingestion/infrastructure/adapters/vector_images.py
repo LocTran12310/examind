@@ -64,8 +64,8 @@ def to_png(data: bytes) -> bytes | None:
 
 
 def _render(pdf: bytes) -> bytes | None:  # b"" = nothing drawn
-    import pypdfium2 as pdfium
     from PIL import Image, ImageChops
+    import pypdfium2 as pdfium
 
     doc = pdfium.PdfDocument(pdf)
     try:

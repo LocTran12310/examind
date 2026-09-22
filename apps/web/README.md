@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# examind-web
 
-## Getting Started
+Next.js 15 App Router, React 19, Tailwind v4, shadcn/ui, TanStack Query + Table, zustand, vitest.
 
-First, run the development server:
+## Chạy ở máy
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+make dev && make api-dev     # từ thư mục gốc: hạ tầng + API trên :58100
+cd apps/web
+pnpm install
+pnpm dev                     # :3000, /api proxy sang :58100 (next.config.ts)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Kiểm tra
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm typecheck
+NODE_OPTIONS=--max-old-space-size=6144 pnpm lint    # eslint, gồm cả luật ranh giới tầng
+pnpm test                                           # vitest
+pnpm build
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Cấu trúc
 
-## Learn More
+```
+src/app/                                  chỉ route: page.tsx render đúng một page component
+src/components/ui/                        file do shadcn CLI sinh, không sửa tay
+src/components/common/<Name>/             component dùng chung (DataTable, FormDialog, DatePicker, QuestionView…)
+src/components/layout/<Name>/             Providers, AppShell, sidebar, switcher, theme
+src/components/page-components/<Page>/    <Page>Page.tsx và component riêng của trang đó
+src/hooks/common/ react-query/ page-hooks/  state URL của bảng · hook gọi API · logic từng trang
+src/services/<module>.service.ts          nơi duy nhất gọi HTTP
+src/stores/                               zustand, chỉ giữ state giao diện
+src/constants/ dtos/ interfaces/ types/   hằng số, body request, entity, union
+src/lib/common/ page-libs/                http, query client, search body, ngày giờ… · hàm thuần của một trang
+```
 
-To learn more about Next.js, take a look at the following resources:
+Luồng dữ liệu: URL (bộ lọc, sắp xếp, trang) → `useTableQuery` → `toSearchBody` → `useXxxSearchQuery` →
+service → `POST /api/x/search`. React Query giữ server state; mutation invalidate `<ENTITY>_KEYS.ALL`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Quy ước và cách thêm một màn hình: [`AGENTS.md`](AGENTS.md) và [`../../.ai/architecture.md`](../../.ai/architecture.md).

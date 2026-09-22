@@ -5,11 +5,21 @@ from sqlalchemy import delete, exists, func, or_, select, update
 from sqlalchemy.orm import Session
 
 from app.modules.assessment.domain.entities import (
-    AnswerFact, Assignment, AssignmentTarget, Attempt, AttemptAnswer, Exam, ExamQuestion,
+    AnswerFact,
+    Assignment,
+    AssignmentTarget,
+    Attempt,
+    AttemptAnswer,
+    Exam,
+    ExamQuestion,
 )
 from app.modules.assessment.infrastructure import orm  # noqa: F401  (mapping)
 from app.shared.infrastructure.schema.assessment import (
-    assignment_targets, assignments, attempt_answers, attempts, exam_questions,
+    assignment_targets,
+    assignments,
+    attempt_answers,
+    attempts,
+    exam_questions,
 )
 
 eq_c, at_c, t_c = exam_questions.c, attempts.c, assignment_targets.c

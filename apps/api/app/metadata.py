@@ -4,8 +4,8 @@ import importlib
 import pkgutil
 
 import app.modules
-import app.shared.infrastructure.schema as schema
 from app.shared.infrastructure.db import metadata
+import app.shared.infrastructure.schema as schema
 
 for _m in pkgutil.iter_modules(schema.__path__):
     importlib.import_module(f"{schema.__name__}.{_m.name}")

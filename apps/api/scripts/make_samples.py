@@ -177,8 +177,8 @@ def build_thpt2025(out_dir: str, media: dict) -> tuple[str, dict]:
     for i in range(1, 5):
         k = i + 1
         md += [f"**Câu {i}.** Cho hàm số $f(x) = x^3 - {3 * k}x$.", "",
-               f"a) $f'(x) = 3x^2 - {3 * k}$.", "", f"b) Hàm số đồng biến trên $\\mathbb{{R}}$.", "",
-               f"c) $f(0) = 0$.", "", f"d) Hàm số có hai điểm cực trị.", ""]
+               f"a) $f'(x) = 3x^2 - {3 * k}$.", "", "b) Hàm số đồng biến trên $\\mathbb{R}$.", "",
+               "c) $f(0) = 0$.", "", "d) Hàm số có hai điểm cực trị.", ""]
         truth = {"a": True, "b": False, "c": True, "d": True}
         tf_truth.append(truth)
         exp.append({"number": i, "part": "2", "type": "true_false", "answer": truth, "n_options": 4})
@@ -200,7 +200,7 @@ def build_kho(out_dir: str, media: dict) -> tuple[str, dict]:
     exp = []
     for i in range(1, 6):
         md += [f"**Câu {i}.** Giá trị của $2^{i}$ bằng bao nhiêu? Các lựa chọn: {2 ** i - 1}; {2 ** i}; {2 ** i + 1}; {2 ** (i + 1)}.", "",
-               f"Đáp án đúng là giá trị thứ hai.", ""]
+               "Đáp án đúng là giá trị thứ hai.", ""]
         exp.append({"number": i, "part": None, "type": "mcq", "answer": {"key": "B"}, "n_options": 4, "needs_ai": True})
     for i in range(6, 9):
         md += [f"**Câu {i}.** Nghiệm của phương trình $x - {i} = 0$ là", "", f"A. ${i - 1}$", "", f"B. ${i}$", "", f"C. ${i + 1}$", "", f"D. ${-i}$", "",
@@ -248,7 +248,6 @@ def md_to_pdf(markdown: str, path: str, media_dir: str, columns: int = 1) -> Non
     blocks = [b for b in markdown.split("\n")]
 
     def emit(cols=None):
-        target = cols if cols is not None else pdf
         rows = []
         for raw in blocks:
             line = raw.rstrip()
@@ -314,9 +313,9 @@ def pdf_to_scans(pdf_path: str, out_png: str, out_pdf: str, pages: int = 2) -> l
     """Rasterise the first pages (≈200 dpi) as a fake scan; returns the question numbers visible on them."""
     import re as _re
 
+    from fpdf import FPDF
     import pdfplumber
     import pypdfium2 as pdfium
-    from fpdf import FPDF
 
     doc = pdfium.PdfDocument(pdf_path)  # closed at the end
     images = []

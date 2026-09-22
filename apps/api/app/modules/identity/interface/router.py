@@ -3,7 +3,6 @@ import uuid
 
 from fastapi import APIRouter, Depends, File, Request, Response, UploadFile
 
-from app.shared.infrastructure.config import get_settings
 from app.modules.identity.application.commands.add_membership import AddMembership, AddMembershipHandler
 from app.modules.identity.application.commands.change_org_status import ChangeOrgStatus, ChangeOrgStatusHandler
 from app.modules.identity.application.commands.change_password import ChangePassword, ChangePasswordHandler
@@ -29,18 +28,48 @@ from app.modules.identity.application.queries.get_user import GetUser, GetUserHa
 from app.modules.identity.application.queries.my_orgs import MyOrgsHandler
 from app.modules.identity.application.queries.search_accounts import SearchAccounts, SearchAccountsHandler
 from app.modules.identity.application.queries.search_memberships import (
-    SearchOrgMembers, SearchOrgMembersHandler, SearchUserMemberships, SearchUserMembershipsHandler,
+    SearchOrgMembers,
+    SearchOrgMembersHandler,
+    SearchUserMemberships,
+    SearchUserMembershipsHandler,
 )
 from app.modules.identity.application.queries.search_orgs import SearchOrgs, SearchOrgsHandler
 from app.modules.identity.application.queries.search_users import SearchUsers, SearchUsersHandler
 from app.modules.identity.interface import deps
 from app.modules.identity.interface.deps import ACCESS_COOKIE, REFRESH_COOKIE, client_ip, super_actor
 from app.modules.identity.interface.schemas import (
-    AccountOut, ChangePasswordIn, Credential, ImportRowsIn, LinkIn, LoginIn, MemberIn, MembershipIn, MembershipOut, MembershipPatch, MeOut,
-    MyOrgOut, OrgCreate, OrgCreated, OrgOut, OrgSearchBody, OrgUpdate, SwitchOrgIn, UserCreate, UserCreated, UserOut, UserSearchBody,
-    UserUpdate, AdminCredential, account_out, me_out, membership_out, org_out, user_out,
+    AccountOut,
+    AdminCredential,
+    ChangePasswordIn,
+    Credential,
+    ImportRowsIn,
+    LinkIn,
+    LoginIn,
+    MemberIn,
+    MembershipIn,
+    MembershipOut,
+    MembershipPatch,
+    MeOut,
+    MyOrgOut,
+    OrgCreate,
+    OrgCreated,
+    OrgOut,
+    OrgSearchBody,
+    OrgUpdate,
+    SwitchOrgIn,
+    UserCreate,
+    UserCreated,
+    UserOut,
+    UserSearchBody,
+    UserUpdate,
+    account_out,
+    me_out,
+    membership_out,
+    org_out,
+    user_out,
 )
 from app.shared.application.actor import Actor
+from app.shared.infrastructure.config import get_settings
 from app.shared.interface.auth import current_actor, staff_actor
 from app.shared.interface.search_schemas import PageOut, SearchBody
 

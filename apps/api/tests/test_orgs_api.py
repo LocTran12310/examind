@@ -1,9 +1,7 @@
 from sqlalchemy import func, select
 
 from app.modules.audit.domain.entities import AuditEntry
-
 from app.modules.identity.domain.entities import Organization, User
-
 from app.modules.taxonomy.domain.topics import Topic
 from tests.factories import PASSWORD, login_as, make_org, make_user
 

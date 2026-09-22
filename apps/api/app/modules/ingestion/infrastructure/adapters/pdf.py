@@ -57,7 +57,7 @@ def _normalise(text: str) -> str:
 
 def _row_text(row: list[dict]) -> str:
     parts = []
-    for i, w in enumerate(row):
+    for w in row:
         text = w["text"]
         if "Bold" in (w.get("fontname") or "") and len(text) <= 2 and text[:1] in "ABCD" and text.endswith((".", ")")):
             text = f"**{text}**"

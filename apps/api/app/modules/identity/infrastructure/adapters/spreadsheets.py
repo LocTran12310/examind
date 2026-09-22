@@ -17,7 +17,7 @@ class FileSpreadsheetReader:
             try:
                 text = data.decode("utf-8-sig")
             except UnicodeDecodeError:
-                raise Invalid("File phải mã hóa UTF-8", "file")
+                raise Invalid("File phải mã hóa UTF-8", "file") from None
             first = text.splitlines()[0] if text.strip() else ""
             delimiter = max(",;\t", key=first.count) if first else ","
             return list(csv.reader(io.StringIO(text), delimiter=delimiter))

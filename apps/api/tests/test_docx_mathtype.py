@@ -1,7 +1,7 @@
 """MathType objects in .docx become $…$ before Pandoc (official-exam-ingestion AC-01, AC-02)."""
 import io
-import zipfile
 from pathlib import Path
+import zipfile
 
 from app.modules.ingestion.domain.services.docx_ast import inline_mathtype
 from app.modules.ingestion.infrastructure.adapters.pandoc import extract_docx

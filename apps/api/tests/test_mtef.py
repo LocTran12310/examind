@@ -1,7 +1,7 @@
 """MathType (MTEF v5) → LaTeX (official-exam-ingestion AC-01, AC-02)."""
 import json
-import struct
 from pathlib import Path
+import struct
 
 import pytest
 

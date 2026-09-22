@@ -67,7 +67,7 @@ def _uuid(value, message: str, field: str) -> uuid.UUID | None:
     try:
         return value if isinstance(value, uuid.UUID) else uuid.UUID(str(value))
     except ValueError:
-        raise Invalid(message, field)
+        raise Invalid(message, field) from None
 
 
 def row_filter(subject_id: uuid.UUID | None, row: dict) -> PoolFilter:

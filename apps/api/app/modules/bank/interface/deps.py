@@ -29,7 +29,11 @@ from app.modules.bank.domain.ports import StaffDirectory, Taxonomy
 from app.modules.bank.infrastructure.adapters.sql import SqlAnswerStats, SqlReviewDocuments, SqlReviewSettings
 from app.modules.bank.infrastructure.read_models import SqlQuestionReader, SqlReviewReader
 from app.modules.bank.infrastructure.repositories import (
-    SqlDocumentQuestions, SqlDuplicateFinder, SqlQuestionRepository, SqlQuestionUsage, SqlReviewLog,
+    SqlDocumentQuestions,
+    SqlDuplicateFinder,
+    SqlQuestionRepository,
+    SqlQuestionUsage,
+    SqlReviewLog,
 )
 from app.shared.infrastructure.db import get_db
 from app.shared.infrastructure.sql_unit_of_work import SqlUnitOfWork

@@ -5,7 +5,13 @@ from sqlalchemy import and_, case, exists, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.modules.bank.application.dto import (
-    DocumentRow, QuestionView, ResolvedFilters, ReviewDocumentView, TagRefView, TopicRefView, question_view,
+    DocumentRow,
+    QuestionView,
+    ResolvedFilters,
+    ReviewDocumentView,
+    TagRefView,
+    TopicRefView,
+    question_view,
 )
 from app.modules.bank.domain.entities import STATUS_KEYS, USABLE, Question
 from app.modules.bank.domain.services.search_text import query as normalise_query

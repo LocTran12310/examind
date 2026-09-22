@@ -1,11 +1,23 @@
 """Maps the assessment dataclasses onto their tables (architecture-refactor ADR-01). Importing this module is enough;
 mapping happens once."""
 from app.modules.assessment.domain.entities import (
-    AnswerFact, Assignment, AssignmentTarget, Attempt, AttemptAnswer, Exam, ExamQuestion,
+    AnswerFact,
+    Assignment,
+    AssignmentTarget,
+    Attempt,
+    AttemptAnswer,
+    Exam,
+    ExamQuestion,
 )
 from app.shared.infrastructure.db import mapper_registry
 from app.shared.infrastructure.schema.assessment import (
-    answer_facts, assignment_targets, assignments, attempt_answers, attempts, exam_questions, exams,
+    answer_facts,
+    assignment_targets,
+    assignments,
+    attempt_answers,
+    attempts,
+    exam_questions,
+    exams,
 )
 
 

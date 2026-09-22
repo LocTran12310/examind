@@ -1,10 +1,10 @@
 from datetime import timedelta
 import threading
 
-from app.shared.infrastructure import db as dbmod
 from app.shared.domain.clock import utcnow as now
-from app.worker.queue import Job
+from app.shared.infrastructure import db as dbmod
 from app.worker import queue
+from app.worker.queue import Job
 
 
 def test_enqueue_claim_done(db):

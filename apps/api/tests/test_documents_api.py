@@ -2,12 +2,12 @@ import os
 
 from sqlalchemy import select
 
-from app.shared.infrastructure import db as dbmod
 from app.modules.bank.domain.entities import Question
 from app.modules.ingestion.domain.entities import SourceDocument
 from app.modules.taxonomy.domain.entities import Subject
-from app.worker.queue import Job
+from app.shared.infrastructure import db as dbmod
 from app.worker import queue
+from app.worker.queue import Job
 from tests.factories import login_as
 
 EXAMS = os.path.join(os.path.dirname(__file__), "..", "..", "..", "samples", "exams")

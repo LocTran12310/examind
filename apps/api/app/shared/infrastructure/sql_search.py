@@ -13,9 +13,9 @@ from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import ColumnElement, Select
 
-from app.shared.infrastructure.timezone import day_end_exclusive, day_start
 from app.shared.application.search import COMPARE_OPS, TEXT_OPS, Filter, SearchRequest
 from app.shared.domain.errors import Invalid
+from app.shared.infrastructure.timezone import day_end_exclusive, day_start
 
 KINDS = ("text", "exact", "uuid", "bool", "number", "date", "day")
 
@@ -76,14 +76,14 @@ def parse_day(field: str, value) -> date:
     try:
         return date.fromisoformat(str(value)[:10])
     except ValueError:
-        raise bad_filter(field, "Ngày không hợp lệ (yyyy-mm-dd)")
+        raise bad_filter(field, "Ngày không hợp lệ (yyyy-mm-dd)") from None
 
 
 def parse_number(field: str, value) -> float:
     try:
         return float(value)
     except (TypeError, ValueError):
-        raise bad_filter(field, "Giá trị số không hợp lệ")
+        raise bad_filter(field, "Giá trị số không hợp lệ") from None
 
 
 def _values(value) -> list:
@@ -116,7 +116,7 @@ def filter_clause(name: str, col: Col, f: Filter):
             try:
                 parts = [p if isinstance(p, uuid.UUID) else uuid.UUID(str(p)) for p in parts]
             except ValueError:
-                raise bad_filter(name, "Mã không hợp lệ")
+                raise bad_filter(name, "Mã không hợp lệ") from None
         return e == parts[0] if len(parts) == 1 else e.in_(parts)
     if kind == "bool":
         return None if f.value in (None, "") else e.is_(_truthy(f.value))

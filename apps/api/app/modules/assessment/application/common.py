@@ -6,7 +6,13 @@ import uuid
 
 from app.modules.assessment.domain.entities import AnswerFact, Assignment, Attempt, AttemptAnswer, Exam, ExamQuestion
 from app.modules.assessment.domain.ports import (
-    AnswerFacts, AssignmentRepository, AttemptRepository, ExamRepository, FactListener, QuestionBank, Roster,
+    AnswerFacts,
+    AssignmentRepository,
+    AttemptRepository,
+    ExamRepository,
+    FactListener,
+    QuestionBank,
+    Roster,
 )
 from app.modules.assessment.domain.services import attempt_rules
 from app.modules.assessment.domain.value_objects import QuestionRef, Snapshot

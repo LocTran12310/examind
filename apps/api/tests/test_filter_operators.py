@@ -3,8 +3,8 @@ from datetime import UTC, date, datetime
 
 from sqlalchemy import update
 
-from app.shared.infrastructure.timezone import business_date, day_end_exclusive, day_start
 from app.modules.identity.domain.entities import User
+from app.shared.infrastructure.timezone import business_date, day_end_exclusive, day_start
 from tests.factories import login_as, make_user
 
 

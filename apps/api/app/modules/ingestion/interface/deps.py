@@ -6,7 +6,6 @@ from collections.abc import Callable
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
-from app.shared.infrastructure.config import get_settings
 from app.modules.ingestion.application.commands.create_exam_from_document import CreateExamFromDocumentHandler
 from app.modules.ingestion.application.commands.delete_ai_model import DeleteAiModelHandler
 from app.modules.ingestion.application.commands.delete_document import DeleteDocumentHandler
@@ -40,6 +39,7 @@ from app.modules.ingestion.infrastructure.adapters.vector_images import LibreOff
 from app.modules.ingestion.infrastructure.read_models import SqlAiModelReader, SqlDocumentReader
 from app.modules.ingestion.infrastructure.repositories import SqlAiModelRepository, SqlAssetRepository, SqlDocumentRepository
 from app.shared.domain.clock import utcnow
+from app.shared.infrastructure.config import get_settings
 from app.shared.infrastructure.db import get_db
 from app.shared.infrastructure.sql_audit import SqlAuditTrail
 from app.shared.infrastructure.sql_jobs import SqlJobQueue

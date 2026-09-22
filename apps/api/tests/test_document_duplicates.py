@@ -1,6 +1,5 @@
 """Uploading a file that is already there: check, skip, re-parse, replace, keep both (critical: no silent duplicates)."""
 import hashlib
-import json
 import unicodedata
 
 from sqlalchemy import func, select

@@ -1,5 +1,5 @@
-from app.modules.identity.infrastructure.adapters.passwords import hash_password
 from app.modules.identity.domain.entities import Organization, User
+from app.modules.identity.infrastructure.adapters.passwords import hash_password
 
 PASSWORD = "Secret123!"
 

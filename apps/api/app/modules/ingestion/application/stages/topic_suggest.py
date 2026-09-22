@@ -16,7 +16,13 @@ from app.modules.ingestion.domain.ports import AiModelRepository, ChatModels, Qu
 from app.modules.ingestion.domain.services.ai_parse import parse_json
 from app.modules.ingestion.domain.services.splitter import ParsedQuestion
 from app.modules.ingestion.domain.services.topic_rules import (
-    KNN_MIN_SIMILARITY, TAG_SYSTEM, WEAK_KEYWORD, _label, _may_replace, _resolve, keyword_scores,
+    KNN_MIN_SIMILARITY,
+    TAG_SYSTEM,
+    WEAK_KEYWORD,
+    _label,
+    _may_replace,
+    _resolve,
+    keyword_scores,
 )
 
 

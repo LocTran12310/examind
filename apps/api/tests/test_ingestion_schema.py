@@ -2,9 +2,7 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 
 from app.modules.bank.domain.entities import Question, QuestionTopic
-
 from app.modules.ingestion.domain.entities import SourceDocument
-
 from app.modules.taxonomy.domain.topics import Topic
 from app.seed.org_template import seed_org
 from tests.factories import make_org
