@@ -311,3 +311,127 @@ Tests at close: API 246, web 120; tsc/eslint/build clean. Evidence: `.ai/feature
 - **Topic filter is a tree**: checkbox tree with expand/collapse and accent-free search; choosing a parent includes all its children, choosing every child selects the parent; several branches can be combined. URL: `topic_ids=a,b` (each id includes its subtree on the server); old `topic_id` links still work.
 - Known test-environment note: jsdom has no layout, so tests set values with `fireEvent.change` for inputs inside resizable panels.
 - Tests: API 246, web 123; tsc/eslint/build clean.
+
+
+## 13. F9 `2026092208-official-exam-ingestion` — đọc đúng đề chính thức (2026-09-22)
+
+Trigger: "@Examin/ Đây là tài liệu chính thức, có thể làm mẫu được. Tham khảo tài liệu, thiết kế lại DB, UI,UX…"
+
+- **MathType → LaTeX** (`ingestion/mtef.py`, own MTEF v5 reader): 7 889/7 889 formulas of the 18 files read, KaTeX renders
+  100 %, 90 random ones compared by eye with the originals. Unreadable objects keep their picture with a warning.
+- **WMF/EMF → PNG** via LibreOffice headless (API/worker image now ~1.6 GB, +LibreOffice Draw): 31 figures, 0 lost.
+- **THPT 2025 layout**: per-part answer tables in the solutions, "a đúng| b sai", Đ/S grids, header-less solution pass,
+  Word auto-numbered parts, Cyrillic "А", underlined/highlighted labels, copied question removed from the solution,
+  "Phương pháp / Cách giải" kept as headings.
+- **Result on the 18 files (live, 24 s)**: 396/396 questions, 393 with an answer (the 3 others have none in the file),
+  386/386 solutions. 17 questions flagged "đáp án không khớp bảng đáp án" where the file's key disagrees with its own
+  worked solution (ĐHKHTN key is another mã đề; Sở Bắc Ninh Phần III key shifted a column) — the solution wins.
+- **Header → metadata**: issuer, school year, subject, lớp, kỳ, lần, thời gian filled when the uploader left them on
+  "Tự nhận từ đề"; editable on the document ("Sửa thông tin") and applied to its questions + nguồn tag.
+- **Upload many files at once**; **"Tạo đề từ tài liệu"** makes a draft exam in PHẦN/Câu order (0,25 / 1 / 0,5).
+- Golden: `tests/golden/official_expected.json` (derived data only; files stay outside the repo, `EXAMIN_DIR=…`).
+
+### Assumptions — 2026092208-official-exam-ingestion
+
+| ID | Assumption | Blocking |
+| --- | --- | --- |
+| A-01 | The 18 files in `Examin/` are representative of the official files centers upload (MathType OLE, three-part THPT 2025 layout, solution section repeating questions) | yes |
+| A-02 | MathType is converted by our own MTEF v5 reader (no maintained Python package exists); template/embellishment numbering follows the MathType SDK as used by zhexiao/mtef-go (Apache-2.0, credited) | yes |
+| A-03 | WMF/EMF pictures are rendered with LibreOffice headless (→ PDF → pypdfium2 PNG, trimmed); the API/worker image grows by ~300 MB; without soffice the old warning path applies | no |
+| A-04 | "Phương pháp" and "Cách giải" stay inside the solution markdown as bold sub-headings, not separate columns | no |
+| A-05 | Header metadata (issuer, school year, subject, exam kind, attempt, duration) is a suggestion shown in the upload/document form; the user's values win | no |
+| A-06 | "Tạo đề từ tài liệu" makes a draft exam with the document's parsed questions in original part/number order, points 0,25 (Phần I), 1 with THPT partial ladder (Phần II), 0,5 (Phần III) | no |
+| A-07 | Multi-file upload creates one document per file with the same processing settings; duplicates (same hash) are reported per file and skipped | no |
+| A-08 | Expected answers for the golden set are taken from each file's own answer tables and spot-checked by hand; the files stay outside the repo (only derived expectations are committed) | no |
+
+ADRs: ADR-01 Own MTEF v5 reader; ADR-02 Tokens before Pandoc; ADR-03 LibreOffice renders WMF/EMF; ADR-04 Answers from the file's own tables; ADR-05 Header metadata as suggestions in meta.
+
+## 14. F10 `2026092209-subject-scoped-bank` — bộ lọc theo môn (2026-09-22)
+
+Answer to "Bộ lọc nên phân theo từng môn không?": yes — the subject is the bank's working context.
+
+- **Tabs Môn** at the top (with counts; last used per browser + org; "Chưa phân môn" when needed). Switching subject
+  drops topic and tag filters, keeps the rest.
+- **"Bộ lọc" sheet** (right side, full screen on phones): Chuyên đề tree with subtree counts, Loại câu, Mức độ, Lớp,
+  Đợt, Năm học, Nguồn đề, Tags by group, Trạng thái — every option with a count (each facet ignores its own filter).
+  "Áp dụng" writes the URL; **chips** under the search remove one filter; "Xóa tất cả".
+- **Tags by subject** (migration 0016, nullable `tags.subject_id`, backfill); nguồn đề always shared. Tags page has a
+  Môn column + subject in the form; exam matrix and question editor only offer the subject's topics/tags.
+- Several tags: OR inside a group, AND across groups (e.g. nguồn đề AND phương pháp).
+
+### Assumptions — 2026092209-subject-scoped-bank
+
+| ID | Assumption | Blocking |
+| --- | --- | --- |
+| A-01 | Subject is the working context of the bank: tabs at the top, always one chosen; questions without a subject have their own "Chưa phân môn" tab (shown only when there are any) | yes |
+| A-02 | Tags get an optional subject; no subject = shared by all subjects; source tags (nguồn đề) are always shared; backfill gives a tag the subject of its questions when they all share one | yes |
+| A-03 | The chosen subject is remembered per browser and org (localStorage), like the header year selector — not in the user row as the plan first said | no |
+| A-04 | Filters live in a right-side "Bộ lọc" sheet with sections and counts; counts are computed with every other filter applied (a facet ignores its own dimension); topic counts include the subtree | no |
+| A-05 | The sheet edits a draft and applies on "Áp dụng"; chips remove one filter at once; the search box stays on the page | no |
+| A-06 | "Năm học" filters by the source document's school year (manual questions have none) | no |
+| A-07 | The exam matrix (BlueprintEditor) lists topics and tags of the exam's subject only | no |
+
+ADRs: ADR-01 Subject as the bank's context; ADR-02 Facets exclude their own dimension; ADR-03 Optional subject on tags.
+
+## 15. F11 `2026092210-ui-polish-dialogs-tables` (2026-09-22, back-office screenshots)
+
+- Dialogs: ⤢ Phóng to / Thu nhỏ (also double-click the title), drag any edge or corner. **Please check the drag by
+  eye** — the in-app browser pane was hidden during the demo, so only the jsdom test measured it.
+- Tables: column borders, zebra rows, sticky header + filter row.
+- "←" on detail pages returns to the list's page, sort and filters (bank, documents, exams, classes, review).
+- Topic picker is a tree everywhere; ⌘/Ctrl + Enter saves (also while typing Vietnamese); hint shows ⌘ on Mac.
+- Compact paddings for small screens.
+
+### Assumptions — 2026092210-ui-polish-dialogs-tables
+
+| ID | Assumption | Blocking |
+| --- | --- | --- |
+| A-01 | Every FormDialog gets ⤢ maximise (also double-click on the title) and edge/corner resizing; sizes reset when the dialog closes | no |
+| A-02 | Back links and "Hủy/Lưu" returns go to the last URL of that list in this tab (sessionStorage), falling back to the plain list | no |
+| A-03 | The save shortcut listens to the physical Enter key (`code`) with ⌘ or Ctrl, so Vietnamese IME composition does not swallow it; the hint shows ⌘ on Apple devices | no |
+| A-04 | Question editor topics are limited to the question's subject when it has one (as in the bank, F10) | no |
+
+ADRs: ADR-01 Resizing in the app wrapper, not the shadcn file; ADR-02 List memory in sessionStorage.
+
+Tests at close of F9–F11: API 298 (incl. the 18 official files), web 134; tsc/eslint/next build clean.
+
+## 16. Follow-ups after F11 (2026-09-22, chat feedback on screenshots)
+
+- **Broken formulas `_{…}` in the bank**: some Word files put a MathType object in a run formatted as sub/superscript
+  (for alignment); it became `$_{$…$}$`. The sub/superscript wrapper is now dropped around formulas and pictures.
+  All 7 885 inline formulas of the 18 files render in KaTeX. Every .docx was re-parsed on the dev stack.
+- **Re-parse bug found**: re-parsing deleted unapproved questions that an exam used (FK error, document "failed").
+  Questions used in an exam are now kept, like approved ones (test added).
+- **"Chưa phân môn" emptied**: re-parsing filled subjects from the headers; the files without a MÔN line (Quế Võ 1,
+  internal samples) were set to Toán via "Sửa thông tin". All 1 055 dev questions are Toán.
+- **Markdown editor with preview**: stem, options, solution and model answer have a toolbar (đậm, nghiêng, $…$, $$…$$,
+  phân số, căn, mũ, chỉ số, vectơ, góc, ≤ ≥ ≠ ∈ ∞ ⇔, hệ, chèn ảnh) and a live KaTeX preview under the field
+  (errors show in red); options show it while focused or when they contain markup.
+- **Đề thi & giao bài**: the list fetches only exams; choosing a row loads its questions through the shared DataTable
+  (no toolbar, server paging/filters `/exams/{id}/questions`, sticky header), rendered with formulas, bold and
+  pictures. Clicking the exam title opens a (resizable) dialog with the whole exam by PHẦN, fetched on open.
+- Sticky headers: DataTable headers were already sticky (checked live); the non-sticky one was the old plain table in
+  the exam detail, now replaced.
+- Tests: API 300 (incl. 18 official files), web 137; tsc/eslint/next build clean.
+
+## 17. F12 `2026092211-ui-standards` (2026-09-22)
+
+- **Duplicate uploads (critical)** — cause: my golden runner uploaded modified copies of the 18 files; your real
+  upload had other hashes, so nothing matched, and there was no choice. Now the upload form checks every file first:
+  same content → "Bỏ qua (dùng bản đã có)" / "Tách lại bản đã có"; same name → "Ghi đè bản cũ" / "Giữ cả hai" /
+  "Bỏ qua", with "apply to all". The same content is never stored twice. The runner now re-parses in place.
+  Done on Loc Tran's go: the 18 old copies, their questions and 539 images deleted (backup `backups/examind-before-dedupe-*.dump`),
+  the Ninh Bình exam and its assignment re-created from the real upload. Bug found meanwhile: questions marked "duplicate"
+  of a deleted original stayed hidden — they now return to review (test added).
+- **Filters like the reference**: symbol button per column — text `*` Chứa, `=` Bằng, `+` Bắt đầu bằng, `-` Kết thúc bằng,
+  `!` Không chứa; numbers/dates `=` `<` `≤` `>` `≥`; dates also "↔ Trong khoảng" (default). URL `<col>_op`, server whitelist.
+  Deviations from the back-office: kept in the URL (not a POST body); text `=` ignores accents/case.
+- **Time**: UTC in DB/API as before; display and day filters fixed to Asia/Ho_Chi_Minh (`BUSINESS_TZ`), date-time inputs
+  send +07:00; school year/term of answers use the Vietnamese day. The back-office's two known zone bugs are avoided.
+- **Exam order**: "Sắp xếp thứ tự" draft (swap with a chosen câu, drag, ↑/↓, inside a PHẦN) saved once.
+- **shadcn everywhere**; exam preview dialog fills when maximised.
+- **Last question polluted (found by Loc Tran)**: every official file's last question (and often its solution) carried
+  "HẾT" and the exam header repeated before the solutions ("SỞ GIÁO DỤC…", "KÌ THI…", "Mã đề thi…", "1.B | 2.C …").
+  The splitter now treats "HẾT" and exam-header lines as a boundary that closes the question, and reads "n.X | n.X …"
+  rows as answer keys anywhere (test added; golden unchanged). All 18 files re-parsed; the Ninh Bình exam + assignment
+  re-created (no attempts existed); every unused image deleted (524 → 263 images left, all referenced; 0 orphans).

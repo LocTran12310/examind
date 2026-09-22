@@ -1,0 +1,104 @@
+# Managed by scripts/aidlc.py — do not edit by hand.
+# Editing this file to skip a gate defeats the point of having one.
+feature: ui-polish-dialogs-tables
+slug: 2026092210-ui-polish-dialogs-tables
+profile: none
+created: 2026-09-22T16:29:21
+ruleset: 5
+current_gate: G5
+history:
+  - gate: G0
+    action: passed
+    at: 2026-09-22T16:29:22
+    by: Loc Tran
+    evidence: architecture map verified by Loc Tran (blanket pre-approval in chat, 2026-09-21 — confirm at final review); 00-intent.md complete
+  - gate: G1
+    action: passed
+    at: 2026-09-22T16:29:22
+    by: Loc Tran
+    evidence: 4 assumptions, none blocking-and-pending; 6 acceptance criteria defined
+  - gate: G2
+    action: passed
+    at: 2026-09-22T16:29:22
+    by: Loc Tran
+    evidence: 2 ADR(s) recorded
+  - gate: G3
+    action: passed
+    at: 2026-09-22T16:29:22
+    by: Loc Tran
+    evidence: graph valid - 2 UoW, 4 tickets, no cycles
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-22T16:29:30
+    by: Loc Tran
+    ticket: T-01-01
+  - gate: G4
+    action: evidence
+    at: 2026-09-22T16:31:04
+    by: Loc Tran
+    ticket: T-01-01
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-22T16:31:04
+    by: Loc Tran
+    ticket: T-01-01
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-22T16:31:04
+    by: Loc Tran
+    ticket: T-01-02
+  - gate: G4
+    action: evidence
+    at: 2026-09-22T16:31:40
+    by: Loc Tran
+    ticket: T-01-02
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-22T16:31:40
+    by: Loc Tran
+    ticket: T-01-02
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-22T16:31:41
+    by: Loc Tran
+    ticket: T-02-01
+  - gate: G4
+    action: evidence
+    at: 2026-09-22T16:32:32
+    by: Loc Tran
+    ticket: T-02-01
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-22T16:32:32
+    by: Loc Tran
+    ticket: T-02-01
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-22T16:32:32
+    by: Loc Tran
+    ticket: T-02-02
+  - gate: G4
+    action: evidence
+    at: 2026-09-22T16:35:31
+    by: Loc Tran
+    ticket: T-02-02
+  - gate: G4
+    action: evidence
+    at: 2026-09-22T16:36:49
+    by: Loc Tran
+    ticket: T-02-02
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-22T16:36:49
+    by: Loc Tran
+    ticket: T-02-02
+  - gate: G4
+    action: passed
+    at: 2026-09-22T16:42:01
+    by: Loc Tran
+    evidence: every done ticket has a passing verification run; all 4 tickets done, all UoW checklists ticked
+  - gate: G5
+    action: passed
+    at: 2026-09-22T16:42:02
+    by: Loc Tran
+    evidence: assumptions resolved, ADRs settled, graph valid
