@@ -7,7 +7,7 @@ from app.core.errors import AppError
 from app.core.ratelimit import SlidingWindow
 from app.deps import ACCESS_COOKIE, REFRESH_COOKIE, current_user, current_user_any
 from app.models import User
-from app.schemas.auth import ChangePasswordIn, LoginIn, MeOut, me_out
+from app.schemas.auth import ChangePasswordIn, LoginIn, MeOut, SwitchOrgIn, me_out
 from app.services import auth
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -37,7 +37,7 @@ def login(body: LoginIn, request: Request, response: Response, db: Session = Dep
         raise AppError("locked", "Quá nhiều lần đăng nhập, thử lại sau 1 phút", 429)
     session = auth.login(db, body.org_code, body.username, body.password)
     _set_cookies(response, session)
-    return me_out(session.user)
+    return me_out(session.user, session.org, session.role)
 
 
 @router.post("/refresh", status_code=204)
@@ -57,8 +57,19 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)):
 
 
 @router.get("/me", response_model=MeOut)
-def me(user: User = Depends(current_user)):
-    return me_out(user)
+def me(request: Request, user: User = Depends(current_user_any), db: Session = Depends(get_db)):
+    from app.deps import _principal
+    from app.models import Organization
+
+    _, org_id, role = _principal(request, db)
+    return me_out(user, db.get(Organization, org_id), role)
+
+
+@router.post("/switch-org", response_model=MeOut)
+def switch_org(body: SwitchOrgIn, request: Request, response: Response, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    session = auth.switch_org(db, db.merge(user), body.org_id, request.cookies.get(REFRESH_COOKIE))
+    _set_cookies(response, session)
+    return me_out(session.user, session.org, session.role)
 
 
 @router.post("/change-password", status_code=204)

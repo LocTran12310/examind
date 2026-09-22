@@ -29,18 +29,33 @@ class Session_:
     user: User
     access_token: str
     refresh_token: str
+    org: Organization | None = None
+    role: str = ""
 
 
 def normalise_org_code(code: str) -> str:
     return (code or "").strip().lower()
 
 
-def _issue(db: Session, user: User) -> Session_:
+def _issue(db: Session, user: User, org: Organization | None = None, role: str | None = None) -> Session_:
+    """Tokens for the active org: the given one, else the last used, else home (ADR-03, A-07)."""
+    from app.services.membership import active_org
+
+    if org is None or role is None:
+        org, role = active_org(db, user)
     s = get_settings()
     raw, digest = new_refresh_token()
     db.add(RefreshToken(user_id=user.id, token_hash=digest, expires_at=now() + timedelta(days=s.refresh_token_days)))
-    access = create_access_token(user.id, user.organization_id, user.organization.code, user.role)
-    return Session_(user=user, access_token=access, refresh_token=raw)
+    access = create_access_token(user.id, org.id, org.code, role)
+    return Session_(user=user, access_token=access, refresh_token=raw, org=org, role=role)
+
+
+def switch_org(db: Session, user: User, org_id, raw_refresh: str | None) -> Session_:
+    from app.services.membership import switch
+
+    org, role = switch(db, user, org_id)
+    logout(db, raw_refresh)  # rotate: the old refresh token must not reopen the previous org
+    return _issue(db, user, org, role)
 
 
 def login(db: Session, org_code: str, username: str, password: str) -> Session_:
