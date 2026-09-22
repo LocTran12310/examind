@@ -91,41 +91,91 @@ def roles_in(db: Session, org_id, user_ids) -> dict:
         OrganizationMember.organization_id == org_id, OrganizationMember.user_id.in_(list(user_ids)), OrganizationMember.is_active.is_(True))).all())
 
 
-def link(db: Session, scope, org_code: str, username: str, role: str) -> tuple[User, OrganizationMember]:
-    """Add an existing account from another org (A-10)."""
-    if scope.role != "org_admin":
-        raise forbidden()
-    if role not in ORG_ROLES:
-        raise validation("Vai trò không hợp lệ", "role")
+def find_account(db: Session, org_code: str, username: str) -> tuple[Organization, User]:
     home = db.scalar(select(Organization).where(Organization.code == (org_code or "").strip().lower(), Organization.code != SYSTEM_ORG_CODE))
     user = db.scalar(select(User).where(User.organization_id == home.id, User.username == (username or "").strip())) if home else None
     if user is None or not user.is_active:
         raise not_found("Không tìm thấy tài khoản với mã tổ chức và tên đăng nhập này")
-    existing = db.get(OrganizationMember, (user.id, scope.org_id))
+    return home, user
+
+
+def _target_org(db: Session, org_id) -> Organization:
+    org = db.get(Organization, org_id)
+    if org is None or org.deleted_at is not None:
+        raise not_found("Không tìm thấy tổ chức")
+    if org.is_system:
+        raise validation("Không thêm thành viên vào tổ chức hệ thống", "org_id")
+    return org
+
+
+def add(db: Session, actor: User, org_id, user: User, role: str) -> OrganizationMember:
+    """One rule set for every screen that adds a membership (school-years ADR-04)."""
+    if role not in ORG_ROLES:
+        raise validation("Vai trò không hợp lệ", "role")
+    _target_org(db, org_id)
+    existing = db.get(OrganizationMember, (user.id, org_id))
     if existing is not None and existing.is_active:
         raise conflict("Tài khoản đã là thành viên của tổ chức", "username")
     if existing is None:
-        existing = OrganizationMember(user_id=user.id, organization_id=scope.org_id, role=role, is_active=True)
+        existing = OrganizationMember(user_id=user.id, organization_id=org_id, role=role, is_active=True)
         db.add(existing)
     else:
         existing.role, existing.is_active = role, True
     db.flush()
-    audit.record(db, scope.user, scope.org_id, "member.link", "user", user.id, home=home.code, role=role)
-    return user, existing
+    audit.record(db, actor, org_id, "member.link", "user", user.id, home=user.organization.code, role=role, username=user.username)
+    return existing
+
+
+def update(db: Session, actor: User, org_id, user_id, role: str | None = None, is_active: bool | None = None) -> OrganizationMember:
+    m = db.get(OrganizationMember, (user_id, org_id))
+    user = db.get(User, user_id)
+    if m is None or user is None:
+        raise not_found("Không tìm thấy thành viên")
+    home = user.organization_id == org_id
+    changes = {}
+    if role and role != m.role:
+        if role not in ORG_ROLES:
+            raise validation("Vai trò không hợp lệ", "role")
+        changes["role"] = [m.role, role]
+        m.role = role
+        if home:
+            user.role = role  # keeps users.role = home role (A-06)
+    if is_active is not None and is_active != m.is_active:
+        if home:
+            raise validation("Khóa tài khoản ở tổ chức gốc bằng màn Người dùng của tổ chức đó", "is_active")
+        changes["is_active"] = [m.is_active, is_active]
+        m.is_active = is_active
+    if changes:
+        audit.record(db, actor, org_id, "member.update", "user", user_id, changes=changes, username=user.username)
+    return m
+
+
+def remove(db: Session, actor: User, org_id, user_id) -> None:
+    m = db.get(OrganizationMember, (user_id, org_id))
+    user = db.get(User, user_id)
+    if m is None or user is None:
+        raise not_found("Không tìm thấy thành viên")
+    if user.organization_id == org_id:
+        raise validation("Không gỡ được tổ chức gốc của tài khoản", "user_id")
+    db.execute(delete(ClassMember).where(ClassMember.user_id == user_id,
+                                         ClassMember.class_id.in_(select(SchoolClass.id).where(SchoolClass.organization_id == org_id))))
+    db.delete(m)
+    if user.last_org_id == org_id:
+        user.last_org_id = None
+    audit.record(db, actor, org_id, "member.unlink", "user", user_id, username=user.username)
+
+
+def link(db: Session, scope, org_code: str, username: str, role: str) -> tuple[User, OrganizationMember]:
+    """Org admin adds an existing account from another org (A-10)."""
+    if scope.role != "org_admin":
+        raise forbidden()
+    if role not in ORG_ROLES:
+        raise validation("Vai trò không hợp lệ", "role")
+    _, user = find_account(db, org_code, username)
+    return user, add(db, scope.user, scope.org_id, user, role)
 
 
 def unlink(db: Session, scope, user_id) -> None:
     if scope.role != "org_admin":
         raise forbidden()
-    m = db.get(OrganizationMember, (user_id, scope.org_id))
-    user = db.get(User, user_id)
-    if m is None or user is None:
-        raise not_found("Không tìm thấy thành viên")
-    if user.organization_id == scope.org_id:
-        raise validation("Không gỡ được tổ chức gốc của tài khoản", "user_id")
-    db.execute(delete(ClassMember).where(ClassMember.user_id == user_id,
-                                         ClassMember.class_id.in_(select(SchoolClass.id).where(SchoolClass.organization_id == scope.org_id))))
-    db.delete(m)
-    if user.last_org_id == scope.org_id:
-        user.last_org_id = None
-    audit.record(db, scope.user, scope.org_id, "member.unlink", "user", user_id)
+    remove(db, scope.user, scope.org_id, user_id)

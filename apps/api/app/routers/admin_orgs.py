@@ -1,15 +1,17 @@
 import uuid
 
 from fastapi import APIRouter, Depends, Response
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.deps import require_role
-from app.models import Organization, User
+from app.models import Organization, OrganizationMember, User
+from app.schemas.admin import MemberIn, MembershipOut, MembershipPatch, membership_out
 from app.schemas.common import Page
 from app.schemas.orgs import AdminCredential, OrgCreate, OrgCreated, OrgOut, OrgUpdate
-from app.services import orgs
-from app.services.paging import ListParams, list_params
+from app.services import membership, orgs
+from app.services.paging import Col, ListParams, list_params, paginate
 
 router = APIRouter(prefix="/admin/orgs", tags=["admin"])
 SuperAdmin = Depends(require_role("super_admin"))
@@ -60,4 +62,43 @@ def activate(org_id: uuid.UUID, actor: User = SuperAdmin, db: Session = Depends(
 @router.delete("/{org_id}", status_code=204)
 def delete_org(org_id: uuid.UUID, hard: bool = False, actor: User = SuperAdmin, db: Session = Depends(get_db)):
     orgs.delete_org(db, actor, org_id, hard)
+    return Response(status_code=204)
+
+
+MEMBER_COLS = {
+    "username": Col(User.username),
+    "full_name": Col(User.full_name),
+    "role": Col(OrganizationMember.role, "exact"),
+    "is_active": Col(OrganizationMember.is_active, "bool"),
+}
+
+
+@router.get("/{org_id}/members", response_model=Page[MembershipOut])
+def org_members(org_id: uuid.UUID, params: ListParams = Depends(list_params), _: User = SuperAdmin, db: Session = Depends(get_db)):
+    """Org → users (school-years AC-13)."""
+    org = orgs._get(db, org_id)
+    stmt = (select(OrganizationMember, User).join(User, User.id == OrganizationMember.user_id)
+            .where(OrganizationMember.organization_id == org.id))
+    rows, total = paginate(db, stmt, params, MEMBER_COLS, search=[User.username, User.full_name], scalars=False,
+                           default_sort=[User.full_name, User.id])
+    return Page(items=[membership_out(m, u, org) for m, u in rows], total=total, page=params.page, page_size=params.page_size)
+
+
+@router.post("/{org_id}/members", response_model=MembershipOut, status_code=201)
+def add_org_member(org_id: uuid.UUID, body: MemberIn, actor: User = SuperAdmin, db: Session = Depends(get_db)):
+    org = orgs._get(db, org_id)
+    _, user = membership.find_account(db, body.org_code, body.username)
+    return membership_out(membership.add(db, actor, org.id, user, body.role), user, org)
+
+
+@router.patch("/{org_id}/members/{user_id}", response_model=MembershipOut)
+def update_org_member(org_id: uuid.UUID, user_id: uuid.UUID, body: MembershipPatch, actor: User = SuperAdmin, db: Session = Depends(get_db)):
+    org = orgs._get(db, org_id)
+    m = membership.update(db, actor, org.id, user_id, body.role, body.is_active)
+    return membership_out(m, db.get(User, user_id), org)
+
+
+@router.delete("/{org_id}/members/{user_id}", status_code=204)
+def remove_org_member(org_id: uuid.UUID, user_id: uuid.UUID, actor: User = SuperAdmin, db: Session = Depends(get_db)):
+    membership.remove(db, actor, orgs._get(db, org_id).id, user_id)
     return Response(status_code=204)

@@ -72,7 +72,7 @@ t(id="T-04-01", uow="UOW-04", title="Đợt kiểm tra helper, upload + bank + d
   assumptions=["A-10"], context="", done_when=["One picker", "Labels"])
 t(id="T-04-02", uow="UOW-04", title="Membership service by (actor, org, user); admin org members + accounts endpoints",
   layer="api", estimate="3h", depends_on=["T-01-02"], verifies=["AC-13", "AC-14", "AC-15"], tests=[f"{API}/tests/test_admin_memberships.py", f"{API}/tests/test_membership.py"],
-  touches=[f"{API}/app/services/membership.py", f"{API}/app/routers/admin_orgs.py", f"{API}/app/routers/admin_users.py"],
+  touches=[f"{API}/app/services/membership.py", f"{API}/app/routers/admin_orgs.py", f"{API}/app/routers/admin_users.py", f"{API}/app/schemas/admin.py"],
   assumptions=["A-11"], context="ADR-04.", done_when=["Both directions", "Home membership protected"])
 t(id="T-04-03", uow="UOW-04", title="Members panel on Tổ chức, Tài khoản page with orgs panel, history panels",
   layer="web", estimate="4h", depends_on=["T-04-02", "T-01-03"], verifies=["AC-13", "AC-14", "AC-15", "AC-16"], tests=[f"{WEB}/src/__tests__/admin-members.test.tsx"],

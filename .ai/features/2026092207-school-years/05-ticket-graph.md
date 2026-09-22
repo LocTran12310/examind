@@ -3,7 +3,7 @@
 # Ticket graph — 2026092207-school-years
 
 - Units of Work: **4**
-- Tickets: **11** (9 done)
+- Tickets: **11** (10 done)
 - Total effort: **4.5d**
 - Critical path: **1.8d** across 4 tickets
 - Theoretical minimum duration with unlimited parallelism: **1.8d**
@@ -40,7 +40,7 @@ graph LR
   end
   subgraph UOW_04["UOW-04 · Đợt kiểm tra picker; org ↔ user assignment from both admin screens"]
     T_04_01["✓ T-04-01<br/>Đợt kiểm tra helper, upload + bank + document labels"]
-    T_04_02["T-04-02<br/>Membership service by (actor, org, user); admin org members + accounts endpoints"]
+    T_04_02["✓ T-04-02<br/>Membership service by (actor, org, user); admin org members + accounts endpoints"]
     T_04_03["T-04-03<br/>Members panel on Tổ chức, Tài khoản page with orgs panel, history panels"]
   end
   T_01_01 --> T_01_02
@@ -93,5 +93,5 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-03-01 | UOW-03 | domain | feature | 4h | T-02-01, T-01-02 | AC-09, AC-10, AC-11 | done |
 | T-03-02 | UOW-03 | web | feature | 4h | T-03-01, T-01-03 | AC-09, AC-10 | done |
 | T-04-01 | UOW-04 | web | feature | 2h | T-01-01 | AC-12 | done |
-| T-04-02 | UOW-04 | api | feature | 3h | T-01-02 | AC-13, AC-14, AC-15 | todo |
+| T-04-02 | UOW-04 | api | feature | 3h | T-01-02 | AC-13, AC-14, AC-15 | done |
 | T-04-03 | UOW-04 | web | feature | 4h | T-04-02, T-01-03 | AC-13, AC-14, AC-15, AC-16 | todo |

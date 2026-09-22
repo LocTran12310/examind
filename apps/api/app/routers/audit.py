@@ -15,7 +15,8 @@ from app.services.paging import Col, ListParams, list_params, paginate
 router = APIRouter(prefix="/audit", tags=["audit"])
 
 COLS = {"action": Col(AuditLog.action), "target_type": Col(AuditLog.target_type, "exact"), "target_id": Col(AuditLog.target_id, "uuid"),
-        "created_at": Col(AuditLog.created_at, "date"), "actor_id": Col(AuditLog.actor_id, "uuid")}
+        "created_at": Col(AuditLog.created_at, "date"), "actor_id": Col(AuditLog.actor_id, "uuid"),
+        "organization_id": Col(AuditLog.organization_id, "uuid")}
 
 
 @router.get("", response_model=Page[AuditOut])

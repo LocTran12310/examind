@@ -253,7 +253,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on:
       - T-01-02
     blocks:
@@ -266,6 +266,7 @@ ticket:
       - apps/api/app/services/membership.py   # new
       - apps/api/app/routers/admin_orgs.py   # new
       - apps/api/app/routers/admin_users.py   # new
+      - apps/api/app/schemas/admin.py   # new
   - id: T-04-03
     uow: UOW-04
     title: 'Members panel on Tổ chức, Tài khoản page with orgs panel, history panels'
