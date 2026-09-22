@@ -451,3 +451,77 @@ Tests at close of F9–F11: API 298 (incl. the 18 official files), web 134; tsc/
 - **Kiểm tra:** tsc/eslint sạch; vitest 144/144, trong đó có test mới `date-picker.test.tsx`.
   - Kiểm tra trên trình duyệt, cả trang lẫn dialog Giao bài không còn `<select>` hay ô ngày native. Riêng dialog có một `<select aria-hidden>`: đó là thẻ ẩn Radix tự thêm để gửi form, không phải control hiển thị.
 - **Sửa thêm (ảnh chụp lọc "Trong khoảng"):** hai ô ngày từ/đến không vừa cột, ô "đến" bị cắt mất. Thay bằng `DateRangePicker`: một nút duy nhất hiển thị "dd/MM/yyyy – dd/MM/yyyy", một lịch; bấm lần 1 chọn ngày bắt đầu, lần 2 chọn ngày kết thúc (bấm ngày sớm hơn thì tự đảo), có nút xoá. URL vẫn dùng `<col>_from` / `<col>_to`. Test mới được thêm; vitest 145/145.
+
+## 19. F13 `2026092212-architecture-refactor` (2026-09-22)
+
+Trigger: "tái cấu trúc kiến trúc" — every API module in four layers, every web screen on React Query, one list and
+error contract. Seven vertical slices (UOW-01..07), behaviour kept; the old layout is deleted in the last one.
+
+- **API layers**: `app/shared` (kernel: errors, search contract, unit of work, actor, audit and calendar ports, SQL search,
+  settings, storage, time zone) + 8 modules in `app/modules/<context>/{domain,application,infrastructure,interface}` —
+  identity, academic, taxonomy, bank, ingestion, assessment, analytics, audit. Domain objects are plain dataclasses mapped
+  imperatively onto `shared/infrastructure/schema/*` (the one physical schema; no migration). Modules call each other only
+  through `application/api.py`, wired in `main.py` and `worker/handlers.py`. `app/routers`, `app/services`, `app/models`,
+  `app/schemas`, `app/core`, `app/deps.py` and the GET-list pager are gone. `lint-imports` (4 contracts) and
+  `tests/test_architecture.py` enforce it; `alembic check` against the dev database: "No new upgrade operations
+  detected" (also a test on the test database).
+- **Contracts**: every list is `POST /<resource>/search` `{page, limit, q, sort[], filters{field: {operator, value, from, to}}}`
+  → `{data, total, page, limit}` (typed filters per column kind, 422 `bad_filter` / `bad_sort`); the old GET lists answer
+  405/404. Errors `{code, message, details: {fields?, requestId}}` with `X-Request-Id`. Other paths and JSON unchanged.
+- **Web layers**: route → page component → page hook → query hook → service → `lib/common/http`. One QueryClient;
+  mutations invalidate `<ENTITY>_KEYS`; table state stays in the URL and becomes the search body. `lib/hooks.ts` (useApi,
+  useMutation), `lib/api.ts`, `lib/types.ts`, `components/app`, `components/data-table` and the per-area folders are gone;
+  ESLint forbids importing them and forbids `fetch` in components and page hooks; `architecture.test.ts` checks the tree
+  (thin routes, no `useApi`, naming).
+- **Last slice (UOW-07)**: analytics (reports, mastery, personal practice and class review) and audit (`GET /audit` →
+  `POST /audit/search`, scope `target_id` / `organization_id` / `related`) as modules; assessment gained the personal-exam
+  API (create, assign, practice history, latest review) so analytics never writes its tables; the mastery listener is an
+  assessment adapter over `AnalyticsApi`. Web: reports, my progress, class overview, class review dialog, practice button
+  and the history panel on query hooks.
+- **Numbers**: API 409 passed + 1 skipped (official set needs EXAMIN_DIR; 316 after UOW-01); 8 handler unit-test files
+  on in-memory ports. Web 171 tests; tsc, eslint and `next build` clean. Official golden set unchanged: 18 files →
+  396/396 questions, 393/393 answers, 386/386 solutions, 0 pictures lost. API `app/` 11 710 → 21 578 lines, web `src/`
+  18 593 → 23 011 lines (layers, ports and handlers cost lines; nothing is duplicated between old and new any more).
+
+### Deviations (recorded in 07-demo-evidence, please confirm)
+- A row selection in a table stays after an edit dialog saves (as before the refactor); not changed.
+- `Grade` and `SchoolLevel` belong to academic (structure), although their tables sit in `schema/taxonomy.py`.
+- `/me/orgs`, `/me/assignments`, `/me/practice`, `/me/mastery` and `/classes/{id}/overview` stay plain lists; the reports
+  stay `GET /stats/*` with query parameters (not lists).
+- Attempts keep their pre-refactor quirks (UOW-06). The two this slice touched are kept too: the practice history and the
+  class overview's latest personal review read by student without an org filter, as before.
+- Fixed on the way (own commit): a re-parse counted only the questions it created, so a document whose questions an exam
+  uses showed 0 — `question_count` now includes the kept ones.
+- Flaky `test_triage.py::test_pdf_copy_of_docx_is_marked_duplicate`: duplicate candidates now break similarity ties by the
+  same part/number, then age, then id (a strictly more similar candidate still wins).
+- Topic-reference hooks (`REFERENCE_COUNTERS` / `REFERENCE_MOVERS` of taxonomy) were never registered before the refactor
+  and are not now: deleting or merging a topic does not count or move question links through them (question links to a deleted
+  topic go with the database cascade, as before).
+- Ids are validated as UUIDs by the endpoints and bodies: a malformed id answers 422 `validation_error` (stricter than
+  before).
+- Indexes on expressions (accent-folded trigram search on users, case-folded tag names) exist only in the migrations;
+  `alembic check` skips them by name. The other migration-made indexes are now declared in the schema files, and
+  `tags.created_at` is declared NOT NULL as in the database.
+- The audit write port stays in the shared kernel (`SqlAuditTrail`); the audit module only reads.
+
+### Assumptions to confirm — 2026092212-architecture-refactor
+
+| ID | Assumption | Blocking |
+| --- | --- | --- |
+| A-01 | The API contract may change (web is the only client): lists become `POST /<resource>/search` with typed filters and `{data,total,page,limit}`; errors `{code,message,details}` | yes (confirmed in chat) |
+| A-02 | JSON stays snake_case and auth stays in httpOnly cookies | no |
+| A-03 | Next.js App Router stays; the folder convention is applied inside `src/` | yes (confirmed in chat) |
+| A-04 | Every API module gets the four layers, simple CRUD included | yes (confirmed in chat) |
+| A-05 | Domain objects are plain dataclasses mapped imperatively; the schema and the Alembic history do not change | no |
+| A-06 | Table state stays in the URL; the web converts it to the search body | no |
+| A-07 | Ingestion algorithms move without behaviour change; the official golden numbers do not move | no |
+| A-08 | Existing HTTP tests change only for the new URLs/shapes; their assertions keep their meaning | no |
+
+### What to review
+- `.ai/architecture.md` (the map), `app/main.py` + `app/worker/handlers.py` (all cross-module wiring in one place).
+- One module end to end, e.g. `app/modules/analytics` (ports, planner, handlers, SQL reads) and its unit tests.
+- The deviations above, especially the org filter kept off the practice history and the 422 on malformed ids.
+- By eye on http://localhost:8088: reports (topics / tags / types / difficulty / heatmap), a class page (overview, "Giao đề
+  ôn cá nhân"), a student's "Tiến độ của tôi" and "Tạo đề ôn tập", the history panels (school years, student record,
+  memberships). The live data has no graded answers yet, so the reports are empty there; the flows are covered by the
+  HTTP tests.

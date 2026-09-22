@@ -452,3 +452,48 @@ history:
     at: 2026-09-22T22:55:39
     by: Loc Tran
     ticket: T-06-04
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-22T23:40:25
+    by: Loc Tran
+    ticket: T-07-01
+  - gate: G4
+    action: evidence
+    at: 2026-09-22T23:40:48
+    by: Loc Tran
+    ticket: T-07-01
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-22T23:40:48
+    by: Loc Tran
+    ticket: T-07-01
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-22T23:40:48
+    by: Loc Tran
+    ticket: T-07-02
+  - gate: G4
+    action: evidence
+    at: 2026-09-22T23:40:51
+    by: Loc Tran
+    ticket: T-07-02
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-22T23:40:51
+    by: Loc Tran
+    ticket: T-07-02
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-22T23:40:51
+    by: Loc Tran
+    ticket: T-07-03
+  - gate: G4
+    action: evidence
+    at: 2026-09-22T23:41:01
+    by: Loc Tran
+    ticket: T-07-03
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-22T23:41:01
+    by: Loc Tran
+    ticket: T-07-03

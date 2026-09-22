@@ -181,3 +181,58 @@
 - Demo script: (1) matrix, order, preview over HTTP in `test_exams_api.py` (blueprint with shortfalls, manual edits, points, `PUT /order`,
   swap) and the web tests; (2) assign, take, result, essay grading in `test_assignments_api.py`, `test_attempts_api.py`,
   `test_results_api.py` — not repeated on the live data (no live exam, assignment or attempt was created or changed).
+
+## UOW-07 analytics, audit and removal of the old layout (2026-09-22)
+- API module `analytics` (4 layers): reports over `answer_facts` (`TopicStats`, `GroupStats`, `Heatmap` on `SqlReportReader`, same SQL;
+  a student only reads their own facts through `FactScope`), topic mastery (`TopicMastery` dataclass on
+  `schema/analytics.py`; pure rules `domain/services/mastery.py`; `RecordAnswer` fed by assessment's `FactListener` through
+  `AnalyticsApi.answer_recorded`; `RebuildMastery` replays the facts — the bootstrap's backfill), personal review exams
+  (`PracticePlanner` with the same draw order and seeds, `StartPractice`, `AssignClassReview`, `MyPractice`, `ClassOverview`,
+  `MyMastery`, `StudentMastery`). Exams, assignments and attempts are created and read through the new assessment API
+  (`create_personal_exam`, `assign_personal`, `practice_attempts`, `latest_personal_review`, `new_attempt`); classes and
+  members through the academic and identity APIs (`AcademicRoster` adapter). Module `audit`: `SearchAudit` on `SqlAuditReader`
+  (`schema/audit.py`, `AuditEntry` mapped); writes stay behind the shared `AuditTrail` port (`SqlAuditTrail` on the same table).
+- Endpoint moved: `GET /audit` → `POST /audit/search` (filters action · target_type · target_id, actor_id, organization_id ·
+  created_at; scope `target_id`, `organization_id`, `related` at the top of the body; `GET /audit` 404). Unchanged paths and JSON:
+  `GET /stats/topics|groups|heatmap`, `GET /me/mastery`, `GET /students/{id}/mastery`, `GET /classes/{id}/overview`,
+  `POST|GET /me/practice`, `POST /classes/{id}/adaptive-assignments`.
+- Old layout deleted: `app/routers/`, `app/services/` (incl. the GET-list `paging.py`), `app/models/`, `app/schemas/`, `app/core/`,
+  `app/deps.py`. Settings, logging, storage, time zone and the PNG writer moved to `app/shared/infrastructure/`; `now` is
+  `shared/domain/clock.utcnow`, password hashing and tokens are identity adapters; the legacy-draft triage is
+  `BankApi.triage_legacy_drafts`; the worker's key audit calls `BankApi.audit_keys`. `app/metadata.py` imports every schema
+  table and every module mapping (Alembic `env.py`, bootstrap, tests); `shared/infrastructure/db.py` keeps one `registry()`.
+  `rg "from app\.(models|services|routers|schemas|core)|app\.deps" apps/api` → nothing.
+- Schema drift: `alembic check` in the api-test container against the dev database (`postgres:5432/examind`, at 0016) →
+  "No new upgrade operations detected." Before this slice the same check listed 19 migration-made indexes and
+  `tags.created_at` nullability (the old declarative models never declared them either); they are now declared in the schema
+  files, and the 4 expression indexes (trigram on `f_unaccent(...)`, `lower(name)`) are left out by name in `env.py`. Same result
+  on the test database; `tests/test_schema_drift.py` keeps it that way.
+- `lint-imports`: 4 contracts kept, layers contract lists all 8 modules; `tests/test_architecture.py` also checks that every
+  module is in the contract, the eight modules exist and the old packages are gone.
+- API suite 409 passed (+1 skipped: official set needs EXAMIN_DIR; 392 before): new `tests/unit/test_analytics_handlers.py`
+  (13 tests on in-memory ports: mastery step and replay, roll-up, reports scope and ordering, heatmap, balanced and weak-topic
+  plans, practice start, class review, overview, practice history, audit access), `tests/test_schema_drift.py`, 3 architecture
+  tests; existing tests changed only for import paths and `/audit/search`. Golden (EXAMIN_DIR): 18 documents → 396/396, 393/393
+  answers, 386/386 solutions, 0 pictures lost.
+- Web: reports (TopicStatsTree, GroupStats, Heatmap), my progress (MasteryList, PracticeHistory), class detail (ClassOverview,
+  ClassAdaptiveDialog), PracticeButton and HistoryPanel on `stats.service` / `practice.service` / `audit.service` →
+  `use-query-stats` / `use-query-practice` / `use-query-audit` → page hooks → page components; the dev question preview too.
+  Deleted: `lib/hooks.ts` (useApi, useMutation, qs), `lib/api.ts`, `lib/types.ts` (types → interfaces/, `EXAM_KINDS` →
+  constants), `components/data-table/`, `components/app/*` (→ `components/common/<Name>/`, theme → `components/layout/`),
+  `components/{adaptive,reports,topics}`, the `YearContext` and `app/(app)/AppShell` shims, the `api` alias of `http`, the two
+  "screen moves…" lint exceptions; the other `lib/*.ts` helpers moved to `lib/common/`. `useApi` count = 0.
+  New ESLint rules: `@/lib/hooks`, `@/lib/api`, `@/lib/types`, `@/components/app/*`, `@/components/data-table/*` forbidden; `fetch`
+  forbidden in `src/components/**` and `src/hooks/page-hooks/**` (`no-restricted-globals` + `window.fetch` syntax rule).
+  `src/__tests__/architecture.test.ts` (removed folders, thin routes, no useApi / fetch in screens, naming).
+  Web 171 tests, `tsc --noEmit` clean, `eslint src --quiet` clean, `next build` ok.
+- LOC (`.py` in `apps/api/app`, `.ts/.tsx` in `apps/web/src`): API 21 026 → 21 578 (11 710 at the start of F13), web 22 826 → 23 011
+  (18 593 at the start of F13).
+- Live (`docker compose up -d --build api worker web`, http://localhost:8088, read-only): health ok (db, storage); admin login 200;
+  `/stats/topics` 0 rows, `/stats/groups?by=type` [] (no graded answers on the live data), `by=bogus` 422, heatmap of 10A1 1 student,
+  class overview 1 student; `POST /audit/search` total 226 (newest `document.reparse`), filter action `+class` total 3, bad sort
+  `bad_sort`, `GET /audit` 404; `/me/mastery` as admin 403. Student `buivanchau`: `/stats/topics`, `/stats/groups`, `/me/mastery`,
+  `/me/practice` 200 (empty), heatmap 403, audit 403; pages `/me/stats` and `/home` 200. Every `/org/*` page (23 routes, ids from
+  the live data), `/home` and `/me/stats` answer 200 with the admin session; worker healthy.
+- Demo script: (1) reports by topic, my progress and personal practice over HTTP in `test_stats_api.py`, `test_mastery*.py`,
+  `test_practice_api.py`, `test_adaptive.py` and the web tests — not repeated on the live data (no attempt was created);
+  (2) old folders gone (`test_architecture.py`, `architecture.test.ts`), lint clean.
