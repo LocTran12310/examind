@@ -1,5 +1,6 @@
 "use client";
 
+import { periodLabel } from "@/lib/exam-period";
 import { QuestionView } from "@/components/question/QuestionView";
 import { ToneBadge } from "@/components/app/ToneBadge";
 import type { ParsedQuestion as PQ } from "@/lib/types";
@@ -7,8 +8,8 @@ import type { ParsedQuestion as PQ } from "@/lib/types";
 const PART = (p: string | null) => (p ? `Phần ${["", "I", "II", "III", "IV", "V"][Number(p)] ?? p} · ` : "");
 const METHOD: Record<string, string> = { rule: "Quy tắc", llm: "AI", ocr: "OCR" };
 
-export function metaChips(q: PQ, subjectName?: string, semesterName?: string): string[] {
-  return [subjectName, q.grade ? `Lớp ${q.grade}` : null, semesterName, q.exam_kind].filter(Boolean) as string[];
+export function metaChips(q: PQ, subjectName?: string): string[] {
+  return [subjectName, q.grade ? `Lớp ${q.grade}` : null, periodLabel(q.semester_code, q.exam_kind)].filter(Boolean) as string[];
 }
 
 export function ParsedQuestionCard({ q, threshold = 0.85, meta = [] }: { q: PQ; threshold?: number; meta?: string[] }) {

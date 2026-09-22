@@ -3,6 +3,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { ToneBadge } from "@/components/app/ToneBadge";
+import { periodLabel } from "@/lib/exam-period";
 import { DOC_STATUS_LABEL, type SourceDocument, type Taxonomy } from "@/lib/types";
 
 export function StatusBadge({ doc }: { doc: SourceDocument }) {
@@ -18,8 +19,7 @@ export function StatusBadge({ doc }: { doc: SourceDocument }) {
 export function metaLabel(doc: SourceDocument, taxonomy?: Taxonomy | null): string {
   const m = doc.meta;
   const subject = taxonomy?.subjects.find((s) => s.id === m.subject_id)?.name;
-  const semester = taxonomy?.semesters.find((s) => s.code === m.semester_code)?.name;
-  return [subject, m.grade ? `Lớp ${m.grade}` : null, semester, m.exam_kind, m.school_year, m.source_name].filter(Boolean).join(" · ");
+  return [subject, m.grade ? `Lớp ${m.grade}` : null, periodLabel(m.semester_code, m.exam_kind), m.school_year, m.source_name].filter(Boolean).join(" · ");
 }
 
 export function documentColumns(taxonomy?: Taxonomy | null): ColumnDef<SourceDocument, unknown>[] {

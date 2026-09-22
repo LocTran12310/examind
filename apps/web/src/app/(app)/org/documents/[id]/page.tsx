@@ -117,11 +117,7 @@ export default function DocumentPage({ params }: { params: Promise<{ id: string 
                 key={q.id}
                 q={q}
                 threshold={threshold}
-                meta={metaChips(
-                  q,
-                  taxonomy?.subjects.find((s) => s.id === q.subject_id)?.name,
-                  taxonomy?.semesters.find((s) => s.code === q.semester_code)?.name,
-                )}
+                meta={metaChips(q, taxonomy?.subjects.find((s) => s.id === q.subject_id)?.name)}
               />
             ))}
           </div>

@@ -6,7 +6,8 @@ import { FormDialog } from "@/components/app/FormDialog";
 import { OptionSelect } from "@/components/app/OptionSelect";
 import { DebouncedInput } from "@/components/data-table/FilterCell";
 import { Button } from "@/components/ui/button";
-import { DIFFICULTY_LABEL, EXAM_KINDS, STATUS_LABEL, TYPE_LABEL, type Tag, type Taxonomy, type Topic } from "@/lib/types";
+import { parsePeriod, periodOptions, periodValue } from "@/lib/exam-period";
+import { DIFFICULTY_LABEL, STATUS_LABEL, TYPE_LABEL, type Tag, type Taxonomy, type Topic } from "@/lib/types";
 import { TopicPicker, topicLabel } from "./TopicPicker";
 
 export type BankQuery = Record<string, string>;
@@ -30,8 +31,17 @@ export function BankFilters({ value, onChange, taxonomy, topics, tags }: { value
       <div className="flex flex-wrap gap-2">
         <OptionSelect className={sel} aria-label="Môn" value={value.subject_id ?? ""} onValueChange={(v) => set("subject_id", v)} emptyLabel="Mọi môn" options={taxonomy.subjects.map((s) => ({ value: s.id, label: s.name }))} />
         <OptionSelect className={sel} aria-label="Lớp" value={value.grade ?? ""} onValueChange={(v) => set("grade", v)} emptyLabel="Mọi lớp" options={taxonomy.grades.map((g) => ({ value: String(g.level), label: g.name, group: g.school_level_name ?? undefined }))} />
-        <OptionSelect className={sel} aria-label="Học kỳ" value={value.semester_code ?? ""} onValueChange={(v) => set("semester_code", v)} emptyLabel="Mọi học kỳ" options={taxonomy.semesters.map((s) => ({ value: s.code, label: s.name }))} />
-        <OptionSelect className={sel} aria-label="Loại đề" value={value.exam_kind ?? ""} onValueChange={(v) => set("exam_kind", v)} emptyLabel="Mọi loại đề" options={EXAM_KINDS.map((k) => ({ value: k, label: k }))} />
+        <OptionSelect
+          className={sel}
+          aria-label="Đợt kiểm tra"
+          value={periodValue(value.semester_code, value.exam_kind)}
+          onValueChange={(v) => {
+            const p = parsePeriod(v);
+            onChange({ semester_code: p.semester_code ?? null, exam_kind: p.exam_kind ?? null });
+          }}
+          emptyLabel="Mọi đợt kiểm tra"
+          options={periodOptions(true)}
+        />
         <OptionSelect className={sel} aria-label="Loại câu" value={value.type ?? ""} onValueChange={(v) => set("type", v)} emptyLabel="Mọi loại câu" options={opts(TYPE_LABEL)} />
         <OptionSelect className={sel} aria-label="Mức độ" value={value.difficulty ?? ""} onValueChange={(v) => set("difficulty", v)} emptyLabel="Mọi mức độ" options={opts(DIFFICULTY_LABEL)} />
         <OptionSelect

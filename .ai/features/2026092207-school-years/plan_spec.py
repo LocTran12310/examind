@@ -67,7 +67,7 @@ t(id="T-03-02", uow="UOW-03", title="Chuyển năm học wizard page",
   touches=[f"{WEB}/src/app/(app)/org/school-years/[id]/rollover/page.tsx", f"{WEB}/src/components/years/RolloverPlan.tsx", f"{WEB}/src/components/years/RolloverWizard.tsx"],
   context="Per-class cards, per-student action select, summary, confirm.", done_when=["Edit actions", "Commit", "Result summary"])
 t(id="T-04-01", uow="UOW-04", title="Đợt kiểm tra helper, upload + bank + document labels",
-  layer="web", estimate="2h", depends_on=["T-01-01"], verifies=["AC-12"], tests=[f"{WEB}/src/__tests__/documents.test.tsx", f"{WEB}/src/__tests__/bank.test.tsx"],
+  layer="web", estimate="2h", depends_on=["T-01-01"], verifies=["AC-12"], tests=[f"{WEB}/src/__tests__/documents.test.tsx", f"{WEB}/src/__tests__/bank.test.tsx", f"{WEB}/src/lib/exam-period.test.ts", f"{WEB}/src/__tests__/parsed-question.test.tsx"],
   touches=[f"{WEB}/src/lib/exam-period.ts", f"{WEB}/src/components/documents/UploadForm.tsx", f"{WEB}/src/components/bank/BankFilters.tsx", f"{WEB}/src/components/documents/DocumentList.tsx"],
   assumptions=["A-10"], context="", done_when=["One picker", "Labels"])
 t(id="T-04-02", uow="UOW-04", title="Membership service by (actor, org, user); admin org members + accounts endpoints",

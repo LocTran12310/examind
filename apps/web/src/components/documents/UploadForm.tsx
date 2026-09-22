@@ -7,11 +7,19 @@ import { FormAlert } from "@/components/app/FormAlert";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/app/FormField";
 import { Input } from "@/components/ui/input";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from "@/components/ui/native-select";
+import { useYear } from "@/components/app/YearContext";
+import { parsePeriod, periodOptions, periodValue } from "@/lib/exam-period";
 import { api, ApiError } from "@/lib/api";
-import { EXAM_KINDS, type DocumentMeta, type ProcessingConfig, type SourceDocument, type Taxonomy } from "@/lib/types";
+import { type DocumentMeta, type ProcessingConfig, type SourceDocument, type Taxonomy } from "@/lib/types";
 
 const ACCEPT = ".docx,.pdf,.png,.jpg,.jpeg";
+
+function groupBy<T extends { group: string }>(items: T[]): Record<string, T[]> {
+  const out: Record<string, T[]> = {};
+  for (const i of items) (out[i.group] ??= []).push(i);
+  return out;
+}
 
 export function UploadForm({
   taxonomy,
@@ -27,7 +35,8 @@ export function UploadForm({
   const math = taxonomy.subjects.find((s) => s.code === "toan") ?? taxonomy.subjects[0];
   const [file, setFile] = useState<File | null>(null);
   const [drag, setDrag] = useState(false);
-  const [meta, setMeta] = useState<DocumentMeta>({ subject_id: math?.id, semester_code: "hk1", exam_kind: "Giữa kỳ", school_year: currentSchoolYear() });
+  const { years, year } = useYear();
+  const [meta, setMeta] = useState<DocumentMeta>({ subject_id: math?.id, semester_code: "hk1", exam_kind: "Giữa kỳ", school_year: year?.code ?? currentSchoolYear() });
   const [fields, setFields] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -93,26 +102,32 @@ export function UploadForm({
             ))}
           </NativeSelect>
         </FormField>
-        <FormField label="Học kỳ" error={fields.semester_code}>
-          <NativeSelect className="w-full" value={meta.semester_code ?? ""} onChange={(e) => set("semester_code", e.target.value)}>
+        <FormField label="Đợt kiểm tra" error={fields.semester_code ?? fields.exam_kind}>
+          <NativeSelect className="w-full" value={periodValue(meta.semester_code, meta.exam_kind)} onChange={(e) => setMeta((m) => ({ ...m, ...parsePeriod(e.target.value) }))}>
             <NativeSelectOption value="">—</NativeSelectOption>
-            {taxonomy.semesters.map((s) => (
-              <NativeSelectOption key={s.id} value={s.code}>
-                {s.name}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
-        </FormField>
-        <FormField label="Loại đề" error={fields.exam_kind}>
-          <NativeSelect className="w-full" value={meta.exam_kind ?? ""} onChange={(e) => set("exam_kind", e.target.value)}>
-            <NativeSelectOption value="">—</NativeSelectOption>
-            {EXAM_KINDS.map((k) => (
-              <NativeSelectOption key={k}>{k}</NativeSelectOption>
+            {Object.entries(groupBy(periodOptions())).map(([group, opts]) => (
+              <NativeSelectOptGroup key={group} label={group}>
+                {opts.map((o) => (
+                  <NativeSelectOption key={o.value} value={o.value}>
+                    {o.label}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelectOptGroup>
             ))}
           </NativeSelect>
         </FormField>
         <FormField label="Năm học" error={fields.school_year}>
-          <Input value={meta.school_year ?? ""} onChange={(e) => set("school_year", e.target.value)} />
+          {years.length ? (
+            <NativeSelect className="w-full" value={meta.school_year ?? ""} onChange={(e) => set("school_year", e.target.value)}>
+              {years.map((y) => (
+                <NativeSelectOption key={y.id} value={y.code}>
+                  {y.code}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+          ) : (
+            <Input value={meta.school_year ?? ""} onChange={(e) => set("school_year", e.target.value)} />
+          )}
         </FormField>
         <FormField label="Nguồn đề" error={fields.source_name} hint="Ví dụ: THPT Chu Văn An">
           <Input value={meta.source_name ?? ""} onChange={(e) => set("source_name", e.target.value)} />

@@ -32,11 +32,12 @@ describe("documents", () => {
     render(<UploadForm taxonomy={taxonomy} onUploaded={onUploaded} />);
     fireEvent.change(screen.getByTestId("file"), { target: { files: [new File(["x"], "de.docx")] } });
     await userEvent.selectOptions(screen.getByLabelText("Lớp"), "10");
+    await userEvent.selectOptions(screen.getByLabelText("Đợt kiểm tra"), "hk2|Cuối kỳ");
     await userEvent.type(screen.getByLabelText(/Nguồn đề/), "THPT A");
     await userEvent.click(screen.getByRole("button", { name: "Tải lên và tách câu" }));
     await waitFor(() => expect(onUploaded).toHaveBeenCalledWith(expect.objectContaining({ id: "d1" }), true));
     const form = f.mock.calls[0][1]?.body as FormData;
-    expect(JSON.parse(String(form.get("meta")))).toMatchObject({ subject_id: "s-toan", grade: 10, semester_code: "hk1", source_name: "THPT A" });
+    expect(JSON.parse(String(form.get("meta")))).toMatchObject({ subject_id: "s-toan", grade: 10, semester_code: "hk2", exam_kind: "Cuối kỳ", source_name: "THPT A" });
   });
 
   it("requires a file and shows server field errors", async () => {
@@ -59,7 +60,7 @@ describe("documents", () => {
     );
     render(<DocumentsPage />);
     const row = (await screen.findByText("de.docx")).closest("tr")!;
-    await waitFor(() => expect(row).toHaveTextContent("Toán · Lớp 10 · Học kỳ 1 · Giữa kỳ"));
+    await waitFor(() => expect(row).toHaveTextContent("Toán · Lớp 10 · Giữa kỳ 1"));
     expect(row).toHaveTextContent("Đã tách · 40 câu");
     expect(screen.getByText("b.pdf").closest("tr")).toHaveTextContent("Đang xử lý");
     const count = () => fetch.mock.calls.filter(([u]) => String(u).startsWith("/api/documents?")).length;

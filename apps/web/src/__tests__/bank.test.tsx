@@ -27,6 +27,9 @@ describe("bank", () => {
     expect(within(await screen.findByRole("listbox")).getByText("Trung học phổ thông")).toBeInTheDocument(); // grouped by level
     await u.click(await screen.findByRole("option", { name: "Lớp 10" }));
     expect(onChange).toHaveBeenLastCalledWith({ grade: "10" });
+    await u.click(screen.getByRole("combobox", { name: "Đợt kiểm tra" }));
+    await u.click(await screen.findByRole("option", { name: "Giữa kỳ 2" }));
+    expect(onChange).toHaveBeenLastCalledWith({ semester_code: "hk2", exam_kind: "Giữa kỳ" });
     await u.click(screen.getByTestId("topic-filter"));
     await u.type(screen.getByPlaceholderText(/Tìm chuyên đề/), "dai so");
     await u.click(within(screen.getByRole("listbox")).getByText("Đại số"));

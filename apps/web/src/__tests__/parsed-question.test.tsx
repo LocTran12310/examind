@@ -12,9 +12,9 @@ const q = (o: Partial<ParsedQuestion> = {}): ParsedQuestion => ({
 
 describe("parsed question chips", () => {
   it("shows metadata, source tag and the suggested topic with score", () => {
-    render(<ParsedQuestionCard q={q()} meta={metaChips(q(), "Toán", "Học kỳ 1")} />);
+    render(<ParsedQuestionCard q={q()} meta={metaChips(q(), "Toán")} />);
     const chips = screen.getByTestId("chips");
-    expect(chips).toHaveTextContent("Toán · Lớp 10 · Học kỳ 1 · Giữa kỳ");
+    expect(chips).toHaveTextContent("Toán · Lớp 10 · Giữa kỳ 1");
     expect(chips).toHaveTextContent("#THPT A");
     expect(screen.getByTestId("topic-chip")).toHaveTextContent("Chuyên đề: Tìm đỉnh và trục đối xứng parabol · 80% · gợi ý");
   });
