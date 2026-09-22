@@ -549,3 +549,26 @@ export interface AuditEntry {
   target_id: string | null;
   data: Record<string, unknown>;
 }
+
+export interface Membership {
+  user_id: string;
+  username: string;
+  full_name: string;
+  home_org_code: string;
+  org_id: string;
+  org_code: string;
+  org_name: string;
+  role: Role;
+  is_active: boolean;
+  is_home: boolean;
+}
+
+export interface Account {
+  id: string;
+  username: string;
+  full_name: string;
+  home_org_code: string;
+  home_org_name: string;
+  is_active: boolean;
+  org_count: number;
+}

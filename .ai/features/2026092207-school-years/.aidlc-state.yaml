@@ -177,3 +177,18 @@ history:
     at: 2026-09-22T11:54:14
     by: Loc Tran
     ticket: T-04-02
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-22T11:56:11
+    by: Loc Tran
+    ticket: T-04-03
+  - gate: G4
+    action: evidence
+    at: 2026-09-22T11:56:15
+    by: Loc Tran
+    ticket: T-04-03
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-22T11:56:15
+    by: Loc Tran
+    ticket: T-04-03

@@ -76,7 +76,7 @@ t(id="T-04-02", uow="UOW-04", title="Membership service by (actor, org, user); a
   assumptions=["A-11"], context="ADR-04.", done_when=["Both directions", "Home membership protected"])
 t(id="T-04-03", uow="UOW-04", title="Members panel on Tổ chức, Tài khoản page with orgs panel, history panels",
   layer="web", estimate="4h", depends_on=["T-04-02", "T-01-03"], verifies=["AC-13", "AC-14", "AC-15", "AC-16"], tests=[f"{WEB}/src/__tests__/admin-members.test.tsx"],
-  touches=[f"{WEB}/src/app/(app)/admin/orgs/page.tsx", f"{WEB}/src/app/(app)/admin/users/page.tsx", f"{WEB}/src/components/admin/MembershipTable.tsx", f"{WEB}/src/lib/nav.ts"],
+  touches=[f"{WEB}/src/app/(app)/admin/orgs/page.tsx", f"{WEB}/src/app/(app)/admin/users/page.tsx", f"{WEB}/src/components/admin/MembershipTable.tsx", f"{WEB}/src/lib/nav.ts", f"{WEB}/src/components/app/HistoryPanel.tsx"],
   assumptions=["A-11"], context="", done_when=["Org → users", "User → orgs", "History"])
 
 TICKETS = T

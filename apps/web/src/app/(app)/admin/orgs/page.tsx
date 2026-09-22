@@ -8,7 +8,9 @@ import { ConfirmDialog } from "@/components/app/ConfirmDialog";
 import { FormDialog } from "@/components/app/FormDialog";
 import { PageHeader } from "@/components/app/PageHeader";
 import { ToneBadge } from "@/components/app/ToneBadge";
+import { MembershipTable } from "@/components/admin/MembershipTable";
 import { OrgCreateForm, OrgEditForm } from "@/components/admin/OrgForm";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/data-table/DataTable";
 import { ToolbarButton } from "@/components/data-table/Toolbar";
 import { useTableQuery } from "@/components/data-table/useTableQuery";
@@ -38,6 +40,7 @@ export default function OrgsPage() {
   const [editing, setEditing] = useState<Org | null>(null);
   const [pending, setPending] = useState<{ action: Action; orgs: Org[] } | null>(null);
   const [version, setVersion] = useState(0);
+  const [active, setActive] = useState<Org | null>(null);
   const refresh = () => setVersion((v) => v + 1);
   const editable = (o: Org) => !o.is_system && !o.deleted_at;
 
@@ -82,6 +85,7 @@ export default function OrgsPage() {
     <>
       <PageHeader
         title="Tổ chức"
+        description="Chọn một tổ chức để quản lý thành viên bên dưới."
         actions={
           <div className="flex items-center gap-2">
             <Switch id="show-deleted" checked={tq.get("include_deleted") === "true"} onCheckedChange={(v) => tq.setFilter("include_deleted", v ? "true" : null)} />
@@ -98,6 +102,8 @@ export default function OrgsPage() {
         addLabel="Tạo tổ chức"
         onEdit={setEditing}
         onDelete={(orgs) => run("delete", orgs)}
+        onRowActivate={(o) => setActive(o)}
+        activeRowId={active?.id}
         deleteLabel={(orgs) => `Xóa ${orgs.filter(editable).length} tổ chức? Tổ chức sẽ bị ẩn và không đăng nhập được.`}
         actions={({ selected }) => (
           <>
@@ -113,6 +119,16 @@ export default function OrgsPage() {
           </>
         )}
       />
+      {active && !active.is_system && (
+        <Card className="mt-4">
+          <CardHeader>
+            <CardTitle>Thành viên · {active.name}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MembershipTable key={active.id} side={{ kind: "org", orgId: active.id, orgName: active.name }} />
+          </CardContent>
+        </Card>
+      )}
       <ConfirmDialog
         open={!!pending}
         onOpenChange={(o) => !o && setPending(null)}

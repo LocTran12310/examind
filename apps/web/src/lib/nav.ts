@@ -16,6 +16,7 @@ import {
   Settings2,
   Tags,
   TrendingUp,
+  UserCog,
   Users,
 } from "lucide-react";
 import type { Role } from "./types";
@@ -63,7 +64,13 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/org/settings/ingestion", label: "Cấu hình tách đề", roles: ["org_admin"], icon: Settings2 },
     ],
   },
-  { label: "Hệ thống", items: [{ href: "/admin/orgs", label: "Tổ chức", roles: ["super_admin"], icon: Building2 }] },
+  {
+    label: "Hệ thống",
+    items: [
+      { href: "/admin/orgs", label: "Tổ chức", roles: ["super_admin"], icon: Building2 },
+      { href: "/admin/users", label: "Tài khoản", roles: ["super_admin"], icon: UserCog },
+    ],
+  },
   {
     label: "Học tập",
     items: [

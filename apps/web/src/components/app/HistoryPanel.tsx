@@ -33,18 +33,19 @@ function details(e: AuditEntry): string {
   const parts: string[] = [];
   const changes = d.changes as Record<string, [unknown, unknown]> | undefined;
   if (changes) for (const [k, [a, b]] of Object.entries(changes)) parts.push(`${k}: ${a ?? "—"} → ${b ?? "—"}`);
-  for (const k of ["name", "code", "school_year", "role", "home", "org_code"]) if (typeof d[k] === "string" && !changes?.[k]) parts.push(String(d[k]));
+  for (const k of ["username", "name", "code", "school_year", "role", "home", "org_code"]) if (typeof d[k] === "string" && !changes?.[k]) parts.push(String(d[k]));
   if (Array.isArray(d.user_ids)) parts.push(`${d.user_ids.length} người`);
   return parts.join(" · ");
 }
 
 /** "Lịch sử": audit entries for one target (or anything mentioning `related`), paged on the server. */
-export function HistoryPanel({ targetId, related, prefix = "h." }: { targetId?: string; related?: string; prefix?: string }) {
-  const params = useMemo(() => ({ target_id: targetId, related }), [targetId, related]);
+export function HistoryPanel({ targetId, related, orgId, prefix = "h." }: { targetId?: string; related?: string; orgId?: string; prefix?: string }) {
+  const params = useMemo(() => ({ target_id: targetId, related, organization_id: orgId }), [targetId, related, orgId]);
   const columns = useMemo<ColumnDef<AuditEntry, unknown>[]>(
     () => [
       { accessorKey: "created_at", header: "Thời điểm", cell: ({ row }) => new Date(row.original.created_at).toLocaleString("vi-VN"), meta: { filter: { kind: "date" }, sort: "created_at" } },
       { accessorKey: "actor_name", header: "Người thực hiện", cell: ({ row }) => row.original.actor_name ?? "Hệ thống" },
+      ...(orgId ? [] : [{ accessorKey: "organization_code", header: "Tổ chức" } as ColumnDef<AuditEntry, unknown>]),
       {
         accessorKey: "action",
         header: "Thao tác",
@@ -58,7 +59,7 @@ export function HistoryPanel({ targetId, related, prefix = "h." }: { targetId?: 
       },
       { id: "details", header: "Chi tiết", cell: ({ row }) => <span className="text-muted-foreground">{details(row.original)}</span> },
     ],
-    [],
+    [orgId],
   );
   return <DataTable path="/audit" prefix={prefix} params={params} columns={columns} getRowId={(e) => e.id} selectable={false} emptyText="Chưa có thay đổi nào." />;
 }
