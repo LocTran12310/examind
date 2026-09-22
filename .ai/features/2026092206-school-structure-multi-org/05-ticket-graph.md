@@ -3,7 +3,7 @@
 # Ticket graph — 2026092206-school-structure-multi-org
 
 - Units of Work: **3**
-- Tickets: **9** (5 done)
+- Tickets: **9** (6 done)
 - Total effort: **3.5d**
 - Critical path: **2.2d** across 6 tickets
 - Theoretical minimum duration with unlimited parallelism: **2.2d**
@@ -31,7 +31,7 @@ graph LR
   subgraph UOW_02["UOW-02 · Active organisation in the token, header selector"]
     T_02_01["✓ T-02-01<br/>Migration 0013 memberships + last_org_id; membership service"]
     T_02_02["✓ T-02-02<br/>Scope from token + membership; auth for the active org; switch-org, /me/orgs"]
-    T_02_03["T-02-03<br/>OrgSwitcher lists /me/orgs and switches"]
+    T_02_03["✓ T-02-03<br/>OrgSwitcher lists /me/orgs and switches"]
   end
   subgraph UOW_03["UOW-03 · Accounts from other organisations"]
     T_03_01["T-03-01<br/>Per-org roles in user lists and cross-user checks (users, classes, review, assignments, adaptive, stats, orgs counts)"]
@@ -88,7 +88,7 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-01-03 | UOW-01 | web | feature | 4h | T-01-02 | AC-04, AC-05, AC-06 | done |
 | T-02-01 | UOW-02 | data | feature | 2h | T-01-01 | AC-08 | done |
 | T-02-02 | UOW-02 | api | feature | 4h | T-02-01 | AC-07, AC-08, AC-09, AC-10 | done |
-| T-02-03 | UOW-02 | web | feature | 2h | T-02-02 | AC-07 | todo |
+| T-02-03 | UOW-02 | web | feature | 2h | T-02-02 | AC-07 | done |
 | T-03-01 | UOW-03 | api | feature | 4h | T-02-02 | AC-13 | todo |
 | T-03-02 | UOW-03 | api | feature | 2h | T-03-01 | AC-11, AC-12 | todo |
 | T-03-03 | UOW-03 | web | feature | 3h | T-03-02, T-02-03 | AC-11, AC-12 | todo |

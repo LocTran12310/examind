@@ -71,17 +71,19 @@ export const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
-export function groupsFor(role: Role): NavGroup[] {
-  return NAV_GROUPS.map((g) => ({ ...g, items: g.items.filter((i) => i.roles.includes(role)) })).filter((g) => g.items.length);
+/** Items for the role in the active org; a super admin working inside an org keeps the "Hệ thống" items. */
+export function groupsFor(role: Role, isSuper = false): NavGroup[] {
+  const can = (i: NavItem) => i.roles.includes(role) || (isSuper && i.roles.includes("super_admin"));
+  return NAV_GROUPS.map((g) => ({ ...g, items: g.items.filter(can) })).filter((g) => g.items.length);
 }
 
-export function navFor(role: Role): NavItem[] {
-  return groupsFor(role).flatMap((g) => g.items);
+export function navFor(role: Role, isSuper = false): NavItem[] {
+  return groupsFor(role, isSuper).flatMap((g) => g.items);
 }
 
 /** The deepest nav item matching the path, so /org/exams/123 highlights "Đề thi". */
-export function activeItem(role: Role, pathname: string): NavItem | undefined {
-  return navFor(role)
+export function activeItem(role: Role, pathname: string, isSuper = false): NavItem | undefined {
+  return navFor(role, isSuper)
     .filter((n) => pathname === n.href || pathname.startsWith(n.href + "/"))
     .sort((a, b) => b.href.length - a.href.length)[0];
 }

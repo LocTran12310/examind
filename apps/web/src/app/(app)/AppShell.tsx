@@ -24,8 +24,8 @@ export function useMe(): Me {
 
 export function AppShell({ me, children, sidebarOpen = true }: { me: Me; children: React.ReactNode; sidebarOpen?: boolean }) {
   const pathname = usePathname();
-  const item = activeItem(me.role, pathname);
-  const group = item && groupsFor(me.role).find((g) => g.items.includes(item));
+  const item = activeItem(me.role, pathname, me.is_super);
+  const group = item && groupsFor(me.role, me.is_super).find((g) => g.items.includes(item));
   return (
     <MeContext.Provider value={me}>
       <SidebarProvider defaultOpen={sidebarOpen}>
@@ -39,7 +39,7 @@ export function AppShell({ me, children, sidebarOpen = true }: { me: Me; childre
               <span className="font-medium">{item?.label ?? "Examind"}</span>
             </div>
             <div className="flex items-center gap-1">
-              <OrgSwitcher current={me.org} />
+              <OrgSwitcher me={me} />
               <Separator orientation="vertical" className="mx-1 h-5" />
               <ThemeToggle />
               <UserMenu me={me} />

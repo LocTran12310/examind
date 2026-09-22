@@ -10,9 +10,18 @@ export interface Me {
   id: string;
   username: string;
   full_name: string;
+  /** role in the active org */
   role: Role;
   must_change_password: boolean;
+  /** the org the user is working in (header selector) */
   org: OrgRef;
+  home_org?: OrgRef;
+  is_super?: boolean;
+}
+
+export interface MyOrg extends OrgRef {
+  role: Role;
+  is_home: boolean;
 }
 
 export interface Page<T> {

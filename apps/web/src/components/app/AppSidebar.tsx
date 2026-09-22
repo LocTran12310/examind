@@ -22,7 +22,7 @@ import type { Me } from "@/lib/types";
 export function AppSidebar({ me }: { me: Me }) {
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
-  const active = activeItem(me.role, pathname);
+  const active = activeItem(me.role, pathname, me.is_super);
   const close = () => isMobile && setOpenMobile(false);
   return (
     <Sidebar collapsible="icon" aria-label="Điều hướng chính">
@@ -44,7 +44,7 @@ export function AppSidebar({ me }: { me: Me }) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        {groupsFor(me.role).map((g) => (
+        {groupsFor(me.role, me.is_super).map((g) => (
           <SidebarGroup key={g.label}>
             <SidebarGroupLabel>{g.label}</SidebarGroupLabel>
             <SidebarGroupContent>

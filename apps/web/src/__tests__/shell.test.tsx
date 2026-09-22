@@ -1,7 +1,9 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { AppShell } from "@/app/(app)/AppShell";
+import { OrgSwitcher } from "@/components/app/OrgSwitcher";
+import { mockFetch, route } from "./helpers";
 import { ThemeProvider } from "@/components/app/ThemeProvider";
 import { activeItem, groupsFor, homeFor } from "@/lib/nav";
 import type { Me } from "@/lib/types";
@@ -57,6 +59,33 @@ describe("AppShell", () => {
     expect(menu).toHaveTextContent("Giáo viên");
     expect(within(menu).getByRole("menuitem", { name: "Đổi mật khẩu" })).toBeInTheDocument();
     expect(within(menu).getByRole("menuitem", { name: "Đăng xuất" })).toBeInTheDocument();
+  });
+
+  it("the org selector lists my orgs and switches with a full reload", async () => {
+    const assign = vi.fn();
+    vi.stubGlobal("location", { ...window.location, assign });
+    const fetch = mockFetch(
+      route("GET", "/api/me/orgs", [
+        { id: "o", code: "trungtama", name: "Trung tâm A", role: "teacher", is_home: true },
+        { id: "b", code: "ttb", name: "Trung tâm B", role: "org_admin", is_home: false },
+      ]),
+      route("POST", "/api/auth/switch-org", { ...me("org_admin"), org: { id: "b", code: "ttb", name: "Trung tâm B" } }),
+    );
+    const u = userEvent.setup();
+    render(<OrgSwitcher me={me("teacher")} />);
+    await u.click(screen.getByRole("combobox", { name: "Chọn tổ chức" }));
+    const b = await screen.findByRole("option", { name: /Trung tâm B/ });
+    expect(b).toHaveTextContent("ttb · Quản trị trung tâm");
+    await u.click(b);
+    await waitFor(() => expect(assign).toHaveBeenCalledWith("/org/review"));
+    const call = fetch.mock.calls.find(([url]) => url === "/api/auth/switch-org");
+    expect(JSON.parse(String((call?.[1] as RequestInit).body))).toEqual({ org_id: "b" });
+    vi.unstubAllGlobals();
+  });
+
+  it("a super admin inside an org keeps the Hệ thống menu", () => {
+    expect(groupsFor("org_admin", true).map((g) => g.label)).toContain("Hệ thống");
+    expect(groupsFor("org_admin", false).map((g) => g.label)).not.toContain("Hệ thống");
   });
 
   it("collapses the sidebar with the trigger", async () => {
