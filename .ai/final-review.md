@@ -198,4 +198,6 @@ Status in the registers is `confirmed` with the note "Accepted under blanket pre
 | de-scan.png (numbers found) | 5/5 | 5/5 | 5 split | 4 → 4 (Q5 answer now filled) | 33 s |
 
 - The AI is only called for low-confidence blocks, so clean files cost nothing extra; the remaining scan reviews are the deliberate `OCR` needs-eyes flag.
-- Topic (de-mau-toan10, 40 labelled): exact node 30/40 in both modes; the other 10 are a more specific child of the expected node, except **one AI pick that is wrong** (Q26 set intersection → "Đại số tổ hợp"). 7B topic choice is not better than keyword cues here — keep keyword/kNN first.
+- Topic (de-mau-toan10, 40 labelled), first run: exact node 30/40; one wrong AI pick (Q26 "A ∩ B" → "Đại số tổ hợp") because the AI result always overrode keywords.
+- **Fixed 2026-09-22** (`topic_suggest.py`): keyword/kNN first; the model is only asked about weak matches, and over a weak keyword topic it may only refine to a descendant (never a parent or another branch); a returned `name` is checked against the index; single math symbols (∩ ∪ ⊂) count as cues, so PDF text scores like docx.
+  Re-run: docx and PDF both **40/40 in the right branch** (30 exact node, 10 a more specific child), AI tag calls 0 on clean files, splitting unchanged (all 7 files 100%). Questions tagged before the fix keep their old topic — re-parse or fix them in the bank.

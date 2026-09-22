@@ -1,8 +1,10 @@
 """Suggest a primary topic for each parsed question (US-06, A-13).
 
 Keyword rules always run: every node of the org's tree contributes its own name plus curated
-synonyms; the deepest, best-scoring node wins. When a tagging model is configured it chooses
-among the same nodes and, when valid, overrides the keywords (source `ai`).
+synonyms; the deepest, best-scoring node wins. A weak or missing keyword match falls back to kNN
+over approved questions, and only what is still weak goes to the tagging model (source `ai`).
+A 7B model mis-picks where the text has cues (golden run 2026-09-22), so it never overrides a strong
+keyword, and over a weak one it may only refine to a descendant of that topic.
 """
 import re
 import unicodedata
@@ -20,7 +22,7 @@ SYNONYMS: dict[str, list[str]] = {
     "Tìm đỉnh và trục đối xứng parabol": ["tọa độ đỉnh", "đỉnh của parabol", "trục đối xứng"],
     "Dấu của tam thức bậc hai": ["tam thức", "âm khi", "dương khi"],
     "Mệnh đề": ["mệnh đề", "phủ định", "\\forall", "\\exists"],
-    "Tập hợp và các phép toán": ["tập hợp", "\\cap", "\\cup", "tập con", "giao của", "hợp của"],
+    "Tập hợp và các phép toán": ["tập hợp", "\\cap", "\\cup", "∩", "∪", "⊂", "tập con", "giao của", "hợp của"],
     "Tích vô hướng của hai vectơ": ["tích vô hướng", "\\cdot \\vec", "vec{u} \\cdot"],
     "Các phép toán vectơ": ["tổng hai vectơ", "hiệu hai vectơ", "\\vec"],
     "Hệ thức lượng trong tam giác": ["tam giác", "diện tích tam giác", "định lý cosin", "định lí sin", "\\widehat"],
@@ -58,7 +60,7 @@ def _norm(s: str) -> str:
 def _cues(topic: Topic) -> list[str]:
     name = _norm(topic.name)
     cues = [name] + [_norm(c) for c in SYNONYMS.get(topic.name, [])]
-    return [c for c in cues if len(c) >= 3]
+    return [c for c in cues if len(c) >= 3 or (c and not c.isalnum())]  # single math symbols (∩, ∪) count
 
 
 def keyword_scores(text: str, topics: list[Topic]) -> list[tuple[float, Topic]]:
@@ -84,7 +86,8 @@ def _candidates(db, doc) -> list[Topic]:
 
 
 TAG_SYSTEM = """Bạn phân loại câu hỏi vào cây chuyên đề. Với mỗi câu, chọn MỘT chỉ số chuyên đề phù hợp nhất
-(ưu tiên nhánh sâu nhất đúng). Trả về DUY NHẤT JSON {"results": [{"number": 1, "index": 12, "confidence": 0.8}]}."""
+(ưu tiên nhánh sâu nhất đúng). Trả về DUY NHẤT JSON
+{"results": [{"number": 1, "index": 12, "name": "tên chuyên đề đúng như ở dòng 12", "confidence": 0.8}]}."""
 
 
 def _ai_choose(db, doc, rows, topics, ctx) -> dict:
@@ -109,10 +112,23 @@ def _ai_choose(db, doc, rows, topics, ctx) -> dict:
                 q, idx = numbers[int(r["number"])], int(r["index"])
             except (KeyError, TypeError, ValueError):
                 continue
-            if 0 <= idx < len(topics):
+            chosen = _resolve(topics, idx, r.get("name"))
+            if chosen is not None:
                 conf = r.get("confidence")
-                out[q.id] = (topics[idx], float(conf) if isinstance(conf, (int, float)) else 0.7, m.model)
+                out[q.id] = (chosen, float(conf) if isinstance(conf, (int, float)) else 0.7, m.model)
     return out
+
+
+def _resolve(topics: list[Topic], idx: int, name) -> Topic | None:
+    """Small models miscount a long numbered list: trust the returned name over the index when they disagree."""
+    at = topics[idx] if 0 <= idx < len(topics) else None
+    if not isinstance(name, str) or not name.strip():
+        return at
+    want = _norm(name.split("›")[-1].strip())
+    if at is not None and _norm(at.name) == want:
+        return at
+    named = [t for t in topics if _norm(t.name) == want]
+    return named[0] if len(named) == 1 else None
 
 
 def _label(t: Topic, by_id: dict) -> str:
@@ -141,36 +157,42 @@ def knn_topic(db, q) -> tuple[Topic, float] | None:
     return db.get(Topic, row[0]), round(float(row[1]), 2)
 
 
+def _local_topic(db, q, topics) -> tuple[Topic | None, float, str]:
+    scored = keyword_scores(q.stem + "\n" + " ".join(o.get("content", "") for o in q.options or []), topics)
+    topic, score, source = None, 0.0, "auto"
+    if scored:
+        weight, topic = scored[0]
+        score = round(min(0.95, weight / (weight + 1)), 2)
+    if score < WEAK_KEYWORD:
+        near = knn_topic(db, q)
+        if near and near[1] >= score:
+            topic, score, source = near[0], near[1], "knn"
+    return topic, score, source
+
+
+def _may_replace(local: Topic | None, chosen: Topic) -> bool:
+    return local is None or chosen.path.startswith(local.path + ".")
+
+
 def suggest_topics(db, doc, rows, ctx) -> None:
     topics = _candidates(db, doc)
     if not topics or not rows:
         return
-    ai = _ai_choose(db, doc, rows, topics, ctx)
-    auto = with_ai = knn = 0
-    for p, q in rows:
-        if q.id in ai:
+    local = {q.id: _local_topic(db, q, topics) for _, q in rows}
+    weak = [(p, q) for p, q in rows if local[q.id][1] < WEAK_KEYWORD]
+    ai = _ai_choose(db, doc, weak, topics, ctx) if weak else {}
+    counts = {"auto": 0, "knn": 0, "ai": 0}
+    for _, q in rows:
+        topic, score, source = local[q.id]
+        if q.id in ai and _may_replace(topic, ai[q.id][0]):
             topic, score, _ = ai[q.id]
             source = "ai"
-            with_ai += 1
-        else:
-            scored = keyword_scores(q.stem + "\n" + " ".join(o.get("content", "") for o in q.options or []), topics)
-            topic, score, source = None, 0.0, "auto"
-            if scored:
-                weight, topic = scored[0]
-                score = round(min(0.95, weight / (weight + 1)), 2)
-            if score < WEAK_KEYWORD:
-                near = knn_topic(db, q)
-                if near and near[1] >= score:
-                    topic, score, source = near[0], near[1], "knn"
-            if topic is None:
-                continue
-            if source == "knn":
-                knn += 1
-            else:
-                auto += 1
+        if topic is None:
+            continue
+        counts[source] += 1
         db.add(QuestionTopic(question_id=q.id, topic_id=topic.id, is_primary=True, source=source, score=round(score, 2)))
     db.flush()
-    ctx.step("suggest_topics", keyword=auto, ai=with_ai, knn=knn, none=len(rows) - auto - with_ai - knn)
+    ctx.step("suggest_topics", keyword=counts["auto"], ai=counts["ai"], knn=counts["knn"], none=len(rows) - sum(counts.values()))
 
 
 POST_PERSIST.append(suggest_topics)

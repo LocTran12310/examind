@@ -1,11 +1,16 @@
+"""Golden set against the live stack: rule vs rule_ai, scored with samples/exams/*.expected.json."""
 import json, os, sys, time, shutil, httpx
-EX = "/Users/macbook/Documents/LocTran/Freelance/examind/samples/exams"
-B = "http://localhost:8088/api"; M = "3e8f301a-5dc4-4db0-9e0d-e29a7ec29278"; OUT = "/tmp/claude-502/golden"
+EX = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "samples", "exams")
+B = "http://localhost:8088/api"; M = "3e8f301a-5dc4-4db0-9e0d-e29a7ec29278"; OUT = os.environ.get("GOLDEN_OUT", "/tmp/examind-golden")
 FILES = ["de-mau-toan10.docx", "de-mau-toan10.pdf", "de-thpt2025-toan.docx", "de-2cot.pdf", "de-kho.docx", "de-scan.pdf", "de-scan.png"]
 MODES = {"rule": {"split_mode": "rule", "split_models": []},
          "rule_ai": {"split_mode": "rule_ai", "split_models": [M], "tag_model": M}}
+if len(sys.argv) > 1:  # e.g. golden_live.py rule_ai de-mau-toan10.docx
+    MODES = {k: v for k, v in MODES.items() if k in sys.argv[1].split(",")}
+    FILES = sys.argv[2:] or FILES
 c = httpx.Client(timeout=60)
 c.post(f"{B}/auth/login", json={"org_code": "trungtama", "username": "admin", "password": "admin123456"}).raise_for_status()
+os.makedirs(OUT, exist_ok=True)
 stamp = str(time.time())
 results = []
 for mode, cfg in MODES.items():
