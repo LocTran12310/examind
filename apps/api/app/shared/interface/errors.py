@@ -3,10 +3,10 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.shared.domain.errors import Conflict, DomainError, Forbidden, Invalid, NotFound, Unauthenticated
+from app.shared.domain.errors import Conflict, DomainError, Forbidden, Invalid, NotFound, Throttled, Unauthenticated
 from app.shared.interface.request_id import HEADER, request_id
 
-STATUS = {NotFound: 404, Conflict: 409, Invalid: 422, Forbidden: 403, Unauthenticated: 401}
+STATUS = {NotFound: 404, Conflict: 409, Invalid: 422, Forbidden: 403, Unauthenticated: 401, Throttled: 429}
 
 
 def status_of(exc: DomainError) -> int:

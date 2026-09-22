@@ -87,6 +87,10 @@ class SqlClassRepository(_Repo):
     def remove_member(self, class_id: uuid.UUID, user_id: uuid.UUID) -> None:
         self.session.execute(delete(class_members).where(class_members.c.class_id == class_id, class_members.c.user_id == user_id))
 
+    def remove_from_org(self, org_id: uuid.UUID, user_id: uuid.UUID) -> None:
+        self.session.execute(delete(class_members).where(
+            class_members.c.user_id == user_id, class_members.c.class_id.in_(select(classes.c.id).where(classes.c.organization_id == org_id))))
+
     def member_ids(self, class_id: uuid.UUID) -> list[uuid.UUID]:
         return list(self.session.scalars(select(users.c.id).join(class_members, class_members.c.user_id == users.c.id)
                                          .where(class_members.c.class_id == class_id).order_by(users.c.full_name)))

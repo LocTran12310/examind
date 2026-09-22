@@ -21,7 +21,7 @@ def test_class_crud_and_members(client, db):
     client.post(f"/api/classes/{c2}/members", json={"user_ids": [str(b.id)]})
     user = client.get(f"/api/users/{b.id}").json()
     assert len(user["class_ids"]) == 2
-    assert client.get("/api/users", params={"class_id": c2}).json()["total"] == 1
+    assert client.post("/api/users/search", json={"class_id": c2}).json()["total"] == 1
     assert client.patch(f"/api/classes/{cid}", json={"name": "10A1-CLC"}).json()["name"] == "10A1-CLC"
     assert client.delete(f"/api/classes/{cid}").status_code == 204
 

@@ -46,3 +46,11 @@ class AcademicApi:
     def member_ids(self, actor: Actor, class_id: uuid.UUID) -> list[uuid.UUID]:
         """Members of a class of the org, by full name."""
         return self.classes.member_ids(load_class(self.classes, actor.org_id, class_id).id)
+
+    def add_members(self, actor: Actor, class_id: uuid.UUID, user_ids: set[uuid.UUID]) -> None:
+        """Enrol accounts the caller already checked (user import); flushed with the caller's transaction."""
+        self.classes.add_members(load_class(self.classes, actor.org_id, class_id).id, set(user_ids))
+
+    def leave_org_classes(self, org_id: uuid.UUID, user_id: uuid.UUID) -> None:
+        """The account leaves every class of the org (its membership there ended)."""
+        self.classes.remove_from_org(org_id, user_id)

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.core import storage
 from app.core.db import get_db
 from app.deps import OrgScope, org_scope
-from app.routers.users import staff_scope
+from app.deps import staff_scope
 from app.services import assets
 
 router = APIRouter(prefix="/assets", tags=["assets"])

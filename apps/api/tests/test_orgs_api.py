@@ -40,7 +40,7 @@ def test_list_search_edit(client, db):
     login_as(client, db)
     oid = create(client).json()["org"]["id"]
     create(client, "trungtamb", "Trung tâm B")
-    items = client.get("/api/admin/orgs", params={"q": "tâm b"}).json()["items"]
+    items = client.post("/api/admin/orgs/search", json={"q": "tâm b"}).json()["data"]
     assert [o["code"] for o in items] == ["trungtamb"]
     r = client.patch(f"/api/admin/orgs/{oid}", json={"name": "Trung tâm A mới", "code": "tta"})
     assert r.status_code == 200 and r.json()["code"] == "tta" and r.json()["name"] == "Trung tâm A mới"
@@ -59,9 +59,9 @@ def test_suspend_activate_delete(client, db):
     client.post(f"/api/admin/orgs/{org.id}/activate")
     assert other.post("/api/auth/login", json={"org_code": "ttx", "username": "hs01", "password": PASSWORD}).status_code == 200
     assert client.delete(f"/api/admin/orgs/{org.id}").status_code == 204
-    codes = [o["code"] for o in client.get("/api/admin/orgs").json()["items"]]
+    codes = [o["code"] for o in client.post("/api/admin/orgs/search", json={}).json()["data"]]
     assert "ttx" not in codes
-    assert "ttx" in [o["code"] for o in client.get("/api/admin/orgs", params={"include_deleted": True}).json()["items"]]
+    assert "ttx" in [o["code"] for o in client.post("/api/admin/orgs/search", json={"include_deleted": True}).json()["data"]]
     # hard delete refused while it has students
     assert client.delete(f"/api/admin/orgs/{org.id}", params={"hard": True}).status_code == 409
     system_id = root.organization_id
@@ -81,5 +81,5 @@ def test_only_super_admin(client, db):
         client.cookies.clear()
         org = make_org(db, f"org-{role.replace('_', '')}")
         login_as(client, db, role, org=org)
-        assert client.get("/api/admin/orgs").status_code == 403
+        assert client.post("/api/admin/orgs/search", json={}).status_code == 403
         assert create(client, f"x{role.replace('_', '')}").status_code == 403

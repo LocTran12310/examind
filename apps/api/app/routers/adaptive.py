@@ -11,7 +11,7 @@ from app.core.db import get_db
 from app.core.errors import forbidden, not_found
 from app.deps import OrgScope, org_scope
 from app.models import Assignment, AssignmentTarget, Attempt, Exam, User
-from app.routers.users import staff_scope
+from app.deps import staff_scope
 from app.services import adaptive, classes as class_service, mastery
 from app.services.scoring import scaled
 

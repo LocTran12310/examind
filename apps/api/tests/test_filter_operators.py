@@ -8,8 +8,9 @@ from app.models import User
 from tests.factories import login_as, make_user
 
 
-def names(client, **params):
-    return sorted(u["username"] for u in client.get("/api/users", params={"page_size": 100, **params}).json()["items"] if u["username"].startswith("hs"))
+def names(client, **filters):
+    body = {"limit": 100, "filters": filters}
+    return sorted(u["username"] for u in client.post("/api/users/search", json=body).json()["data"] if u["username"].startswith("hs"))
 
 
 def test_business_day_is_vietnamese_whatever_the_server_zone():
@@ -24,23 +25,23 @@ def test_text_number_and_date_operators(client, db):
     for u, name in (("hs01", "Nguyễn Văn An"), ("hs02", "Trần An Bình"), ("hs03", "Lê Thị Hoa")):
         make_user(db, admin.organization, u, full_name=name)
     db.commit()
-    assert names(client, full_name="an") == ["hs01", "hs02"]  # * contains (default), accent-free
-    assert names(client, full_name="nguyen", full_name_op="+") == ["hs01"]
-    assert names(client, full_name="hoa", full_name_op="-") == ["hs03"]
-    assert names(client, full_name="le thi hoa", full_name_op="=") == ["hs03"]
-    assert names(client, full_name="an", full_name_op="!") == ["hs03"]
-    assert client.get("/api/users", params={"full_name": "a", "full_name_op": "~"}).status_code == 422
+    assert names(client, full_name={"value": "an"}) == ["hs01", "hs02"]  # * contains (default), accent-free
+    assert names(client, full_name={"value": "nguyen", "operator": "+"}) == ["hs01"]
+    assert names(client, full_name={"value": "hoa", "operator": "-"}) == ["hs03"]
+    assert names(client, full_name={"value": "le thi hoa", "operator": "="}) == ["hs03"]
+    assert names(client, full_name={"value": "an", "operator": "!"}) == ["hs03"]
+    assert client.post("/api/users/search", json={"filters": {"full_name": {"value": "a", "operator": "~"}}}).status_code == 422
     # a user created 00:30 Hà Nội time on 22/09 is on the 22nd, not the 21st (UTC)
     db.execute(update(User).where(User.username == "hs01").values(created_at=datetime(2026, 9, 21, 17, 30, tzinfo=UTC)))
     db.execute(update(User).where(User.username == "hs02").values(created_at=datetime(2026, 9, 21, 16, 30, tzinfo=UTC)))
     db.execute(update(User).where(User.username == "hs03").values(created_at=datetime(2026, 9, 23, 3, 0, tzinfo=UTC)))
     db.commit()
-    assert names(client, created_at="2026-09-22") == ["hs01"]
-    assert names(client, created_at="2026-09-22", created_at_op="<") == ["hs02"]
-    assert names(client, created_at="2026-09-22", created_at_op="<=") == ["hs01", "hs02"]
-    assert names(client, created_at="2026-09-22", created_at_op=">") == ["hs03"]
-    assert names(client, created_at_from="2026-09-22", created_at_to="2026-09-23") == ["hs01", "hs03"]
-    assert client.get("/api/users", params={"created_at": "2026-09-22", "created_at_op": "!"}).status_code == 422
+    assert names(client, created_at={"value": "2026-09-22"}) == ["hs01"]
+    assert names(client, created_at={"value": "2026-09-22", "operator": "<"}) == ["hs02"]
+    assert names(client, created_at={"value": "2026-09-22", "operator": "<="}) == ["hs01", "hs02"]
+    assert names(client, created_at={"value": "2026-09-22", "operator": ">"}) == ["hs03"]
+    assert names(client, created_at={"from": "2026-09-22", "to": "2026-09-23"}) == ["hs01", "hs03"]
+    assert client.post("/api/users/search", json={"filters": {"created_at": {"value": "2026-09-22", "operator": "!"}}}).status_code == 422
 
 
 def test_number_operators(client, db):

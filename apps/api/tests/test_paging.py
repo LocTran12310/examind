@@ -6,7 +6,11 @@ from tests.factories import login_as, make_org, make_user
 
 def _names(r):
     assert r.status_code == 200, r.text
-    return [u["full_name"] for u in r.json()["items"]]
+    return [u["full_name"] for u in r.json()["data"]]
+
+
+def users(client, **body):
+    return client.post("/api/users/search", json=body)
 
 
 def _people(db, org):
@@ -21,21 +25,21 @@ def test_page_envelope_defaults_to_20(client, db):
     for i in range(25):
         make_user(db, admin.organization, f"hs{i:02}", full_name=f"Học sinh {i:02}")
     db.commit()
-    body = client.get("/api/users").json()
-    assert (body["page"], body["page_size"], body["total"], len(body["items"])) == (1, 20, 26, 20)
-    second = client.get("/api/users", params={"page": 2}).json()
-    assert len(second["items"]) == 6 and not {u["id"] for u in body["items"]} & {u["id"] for u in second["items"]}
-    assert client.get("/api/users", params={"page_size": "all"}).json()["page_size"] == 1000
+    body = users(client).json()
+    assert (body["page"], body["limit"], body["total"], len(body["data"])) == (1, 20, 26, 20)
+    second = users(client, page=2).json()
+    assert len(second["data"]) == 6 and not {u["id"] for u in body["data"]} & {u["id"] for u in second["data"]}
+    assert users(client, limit=1000).json()["limit"] == 1000
 
 
 def test_text_filter_is_accent_and_case_insensitive(client, db):
     admin = login_as(client, db, "org_admin")
     _people(db, admin.organization)
-    assert sorted(_names(client.get("/api/users", params={"full_name": "bui"}))) == ["Bùi Văn Châu", "Trần Bùi Minh"]
-    assert _names(client.get("/api/users", params={"full_name": "ANH"})) == ["Nguyễn Thị Ánh"]
-    assert _names(client.get("/api/users", params={"q": "hoang"})) == ["Lê Hoàng"]
+    assert sorted(_names(users(client, filters={"full_name": {"value": "bui"}}))) == ["Bùi Văn Châu", "Trần Bùi Minh"]
+    assert _names(users(client, filters={"full_name": {"value": "ANH"}})) == ["Nguyễn Thị Ánh"]
+    assert _names(users(client, q="hoang")) == ["Lê Hoàng"]
     # LIKE metacharacters are literal
-    assert _names(client.get("/api/users", params={"full_name": "%"})) == []
+    assert _names(users(client, filters={"full_name": {"value": "%"}})) == []
 
 
 def test_exact_bool_and_combined_filters(client, db):
@@ -43,10 +47,10 @@ def test_exact_bool_and_combined_filters(client, db):
     _people(db, admin.organization)
     db.execute(__import__("sqlalchemy").text("update users set is_active=false where username='u4'"))
     db.commit()
-    assert _names(client.get("/api/users", params={"role": "teacher"})) == ["Trần Bùi Minh"]
-    assert len(_names(client.get("/api/users", params={"role": "teacher,org_admin"}))) == 2
-    assert _names(client.get("/api/users", params={"is_active": "false"})) == ["Phạm Văn Bửu"]
-    assert _names(client.get("/api/users", params={"full_name": "bui", "role": "student"})) == ["Bùi Văn Châu"]
+    assert _names(users(client, filters={"role": {"value": "teacher"}})) == ["Trần Bùi Minh"]
+    assert len(_names(users(client, filters={"role": {"value": ["teacher", "org_admin"]}}))) == 2
+    assert _names(users(client, filters={"is_active": {"value": False}})) == ["Phạm Văn Bửu"]
+    assert _names(users(client, filters={"full_name": {"value": "bui"}, "role": {"value": "student"}})) == ["Bùi Văn Châu"]
 
 
 def test_date_range_filter(client, db):
@@ -54,17 +58,17 @@ def test_date_range_filter(client, db):
     old = make_user(db, admin.organization, "old", full_name="Cũ")
     old.created_at = datetime(2026, 1, 15, 10, tzinfo=timezone.utc)
     db.commit()
-    assert _names(client.get("/api/users", params={"created_at_from": "2026-01-15", "created_at_to": "2026-01-15"})) == ["Cũ"]
-    assert "Cũ" not in _names(client.get("/api/users", params={"created_at_from": "2026-02-01"}))
-    assert client.get("/api/users", params={"created_at_from": "15/01/2026"}).status_code == 422
+    assert _names(users(client, filters={"created_at": {"from": "2026-01-15", "to": "2026-01-15"}})) == ["Cũ"]
+    assert "Cũ" not in _names(users(client, filters={"created_at": {"from": "2026-02-01"}}))
+    assert users(client, filters={"created_at": {"from": "15/01/2026"}}).status_code == 422
 
 
 def test_sort_and_bad_sort(client, db):
     admin = login_as(client, db, "org_admin")
     _people(db, admin.organization)
-    names = _names(client.get("/api/users", params={"sort": "-username", "role": "student"}))
+    names = _names(users(client, sort=[{"field": "username", "desc": True}], filters={"role": {"value": "student"}}))
     assert names == ["Phạm Văn Bửu", "Lê Hoàng", "Nguyễn Thị Ánh", "Bùi Văn Châu"]
-    r = client.get("/api/users", params={"sort": "password_hash"})
+    r = users(client, sort=[{"field": "password_hash"}])
     assert r.status_code == 422 and r.json()["code"] == "bad_sort"
 
 
@@ -73,16 +77,16 @@ def test_unknown_params_are_ignored_and_tenancy_kept(client, db):
     other = make_org(db, "ttb", "Trung tâm B")
     make_user(db, other, "bui", full_name="Bùi Ở Org Khác")
     db.commit()
-    assert _names(client.get("/api/users", params={"full_name": "bui", "nonsense": "1"})) == []
+    assert _names(users(client, filters={"full_name": {"value": "bui"}}, nonsense="1")) == []
 
 
 def test_orgs_and_classes_are_paged(client, db):
     login_as(client, db)
     for i in range(3):
         client.post("/api/admin/orgs", json={"code": f"tt{i}", "name": f"Trung tâm {i}", "admin_username": "admin", "admin_full_name": "A"})
-    body = client.get("/api/admin/orgs", params={"name": "trung tam 1"}).json()
-    assert [o["code"] for o in body["items"]] == ["tt1"] and body["total"] == 1
-    assert client.get("/api/admin/orgs", params={"status": "suspended"}).json()["total"] == 0
+    body = client.post("/api/admin/orgs/search", json={"filters": {"name": {"value": "trung tam 1"}}}).json()
+    assert [o["code"] for o in body["data"]] == ["tt1"] and body["total"] == 1
+    assert client.post("/api/admin/orgs/search", json={"filters": {"status": {"value": "suspended"}}}).json()["total"] == 0
 
     staff = client.__class__(client.app)
     login_as(staff, db, "org_admin")

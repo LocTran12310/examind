@@ -39,3 +39,8 @@ class Unauthenticated(DomainError):
 
     def __init__(self, message: str = "Bạn cần đăng nhập", field: str | None = None, **kw):
         super().__init__(message, field, **kw)
+
+
+class Throttled(DomainError):
+    """Too many attempts: try again later."""
+    code = "throttled"

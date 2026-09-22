@@ -15,13 +15,13 @@ def test_org_to_users_and_user_to_orgs_show_the_same_membership(client, db):
     login_as(client, db)
     r = client.post(f"/api/admin/orgs/{b.id}/members", json={"org_code": "tta", "username": "lan", "role": "student"})
     assert r.status_code == 201 and (r.json()["is_home"], r.json()["home_org_code"]) == (False, "tta")
-    mine = client.get(f"/api/admin/users/{u.id}/memberships").json()["items"]
+    mine = client.post(f"/api/admin/users/{u.id}/memberships/search", json={}).json()["data"]
     assert [(m["org_code"], m["role"], m["is_home"]) for m in mine] == [("tta", "teacher", True), ("ttb", "student", False)]
     # change the role from the user side, see it from the org side
     client.patch(f"/api/admin/users/{u.id}/memberships/{b.id}", json={"role": "teacher"})
-    members = client.get(f"/api/admin/orgs/{b.id}/members").json()["items"]
+    members = client.post(f"/api/admin/orgs/{b.id}/members/search", json={}).json()["data"]
     assert [(m["username"], m["role"]) for m in members] == [("lan", "teacher")]
-    acc = next(x for x in client.get("/api/admin/users", params={"username": "lan"}).json()["items"])
+    acc = next(x for x in client.post("/api/admin/users/search", json={"filters": {"username": {"value": "lan"}}}).json()["data"])
     assert (acc["home_org_code"], acc["org_count"]) == ("tta", 2)
     # add from the user side, remove from the org side
     c = make_org(db, "ttc", "Trung tâm C")
@@ -29,7 +29,7 @@ def test_org_to_users_and_user_to_orgs_show_the_same_membership(client, db):
     assert client.post(f"/api/admin/users/{u.id}/memberships", json={"org_id": str(c.id), "role": "teacher"}).status_code == 201
     assert client.post(f"/api/admin/users/{u.id}/memberships", json={"org_id": str(c.id), "role": "teacher"}).status_code == 409
     assert client.delete(f"/api/admin/orgs/{c.id}/members/{u.id}").status_code == 204
-    assert len(client.get(f"/api/admin/users/{u.id}/memberships").json()["items"]) == 2
+    assert len(client.post(f"/api/admin/users/{u.id}/memberships/search", json={}).json()["data"]) == 2
 
 
 def test_home_membership_rules_and_history(client, db):
@@ -51,5 +51,5 @@ def test_home_membership_rules_and_history(client, db):
 def test_admin_endpoints_are_super_admin_only(client, db):
     a, _, u = _data(db)
     login_as(client, db, "org_admin", org=a, username="adm")
-    assert client.get("/api/admin/users").status_code == 403
-    assert client.get(f"/api/admin/orgs/{a.id}/members").status_code == 403
+    assert client.post("/api/admin/users/search", json={}).status_code == 403
+    assert client.post(f"/api/admin/orgs/{a.id}/members/search", json={}).status_code == 403

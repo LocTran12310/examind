@@ -33,7 +33,7 @@ def test_teacher_assigns_personal_review_to_class(client, db):
     admin = take(client, db, right=False)
     klass = client.post("/api/classes/search", json={}).json()["data"][0]
     klass2, _ = klass_with_student(client, db, admin, "hs02")
-    client.post(f"/api/classes/{klass['id']}/members", json={"user_ids": [client.get('/api/users', params={'q': 'hs02'}).json()['items'][0]['id']]})
+    client.post(f"/api/classes/{klass['id']}/members", json={"user_ids": [client.post('/api/users/search', json={'q': 'hs02'}).json()['data'][0]['id']]})
     r = client.post(f"/api/classes/{klass['id']}/adaptive-assignments",
                     json={"count": 10, "open_at": (now() - timedelta(minutes=1)).isoformat(), "close_at": (now() + timedelta(days=1)).isoformat(), "duration_minutes": 30})
     assert r.json() == {"created": 2}

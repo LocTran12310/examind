@@ -37,9 +37,9 @@ def test_list_filters(client, db):
     make_user(db, org, "gv01", role="teacher", full_name="Giáo viên")
     make_user(db, org, "hs01", full_name="Học sinh Một")
     db.commit()
-    r = client.get("/api/users", params={"role": "student"}).json()
-    assert [u["username"] for u in r["items"]] == ["hs01"]
-    assert client.get("/api/users", params={"q": "giáo"}).json()["total"] == 1
+    r = client.post("/api/users/search", json={"filters": {"role": {"value": "student"}}}).json()
+    assert [u["username"] for u in r["data"]] == ["hs01"]
+    assert client.post("/api/users/search", json={"q": "giáo"}).json()["total"] == 1
 
 
 def test_teacher_manages_students_only(client, db):
@@ -53,13 +53,13 @@ def test_teacher_manages_students_only(client, db):
     assert client.patch(f"/api/users/{other_teacher.id}", json={"full_name": "x"}).status_code == 403
     assert client.post(f"/api/users/{other_teacher.id}/reset-password").status_code == 403
     assert client.post(f"/api/users/{student.id}/reset-password").status_code == 200
-    usernames = [u["username"] for u in client.get("/api/users").json()["items"]]
+    usernames = [u["username"] for u in client.post("/api/users/search", json={}).json()["data"]]
     assert "gv02" not in usernames and "hs01" in usernames
 
 
 def test_students_cannot_manage(client, db):
     login_as(client, db, "student")
-    assert client.get("/api/users").status_code == 403
+    assert client.post("/api/users/search", json={}).status_code == 403
 
 
 def test_reset_password_revokes_sessions(client, db):
@@ -85,4 +85,4 @@ def test_tenant_isolation(client, db):
     assert client.get(f"/api/users/{stranger.id}").status_code == 404
     assert client.patch(f"/api/users/{stranger.id}", json={"full_name": "x"}).status_code == 404
     assert client.post(f"/api/users/{stranger.id}/reset-password").status_code == 404
-    assert all(u["username"] != "hsb" for u in client.get("/api/users").json()["items"])
+    assert all(u["username"] != "hsb" for u in client.post("/api/users/search", json={}).json()["data"])

@@ -37,10 +37,10 @@ def test_switch_org_changes_scope_and_role(client, db):
     assert (me["org"]["code"], me["role"], me["home_org"]["code"]) == ("ttb", "teacher", "ttb")
     orgs = client.get("/api/me/orgs").json()
     assert [(o["code"], o["role"], o["is_home"]) for o in orgs] == [("ttb", "teacher", True), ("tta", "org_admin", False)]
-    assert {u["username"] for u in client.get("/api/users").json()["items"]} >= {"hsb"}
+    assert {u["username"] for u in client.post("/api/users/search", json={}).json()["data"]} >= {"hsb"}
     r = client.post("/api/auth/switch-org", json={"org_id": str(a.id)})
     assert r.status_code == 200 and (r.json()["org"]["code"], r.json()["role"]) == ("tta", "org_admin")
-    names = {u["username"] for u in client.get("/api/users").json()["items"]}
+    names = {u["username"] for u in client.post("/api/users/search", json={}).json()["data"]}
     assert "hsa" in names and "hsb" not in names  # no rows from B while A is open
     assert client.get("/api/auth/me").json()["org"]["code"] == "tta"
 
@@ -64,7 +64,7 @@ def test_login_opens_the_last_org_and_removed_membership_is_refused(client, db):
     m = db.get(OrganizationMember, (lan.id, a.id))
     m.is_active = False
     db.commit()
-    assert client.get("/api/users").status_code == 401
+    assert client.post("/api/users/search", json={}).status_code == 401
     client.cookies.delete("ex_access")
     assert client.post("/api/auth/refresh").status_code == 204
     assert client.get("/api/auth/me").json()["org"]["code"] == "ttb"
@@ -76,7 +76,7 @@ def test_suspended_org_is_hidden_and_falls_back_home(client, db):
     client.post("/api/auth/switch-org", json={"org_id": str(a.id)})
     a.status = "suspended"
     db.commit()
-    assert client.get("/api/users").status_code == 401
+    assert client.post("/api/users/search", json={}).status_code == 401
     client.cookies.delete("ex_access")
     client.post("/api/auth/refresh")
     assert client.get("/api/auth/me").json()["org"]["code"] == "ttb"
@@ -90,17 +90,17 @@ def test_super_admin_sees_every_org_and_works_inside_as_org_admin(client, db):
     assert codes[0] == "system" and {"tta", "ttb"} <= set(codes)
     me = client.post("/api/auth/switch-org", json={"org_id": str(a.id)}).json()
     assert (me["org"]["code"], me["role"], me["is_super"]) == ("tta", "org_admin", True)
-    assert "hsa" in {u["username"] for u in client.get("/api/users").json()["items"]}
-    assert client.get("/api/admin/orgs").status_code == 200  # still a platform admin
+    assert "hsa" in {u["username"] for u in client.post("/api/users/search", json={}).json()["data"]}
+    assert client.post("/api/admin/orgs/search", json={}).status_code == 200  # still a platform admin
 
 
 def test_linked_member_is_listed_with_role_and_home_org(client, db):
     a, b, lan = _two_orgs(db)
     login_as(client, db, "org_admin", org=a, username="admin_a")
-    rows = {u["username"]: u for u in client.get("/api/users").json()["items"]}
+    rows = {u["username"]: u for u in client.post("/api/users/search", json={}).json()["data"]}
     assert (rows["gvlan"]["role"], rows["gvlan"]["is_home"], rows["gvlan"]["home_org_code"]) == ("org_admin", False, "ttb")
     assert rows["hsa"]["is_home"] is True and "hsb" not in rows
-    assert client.get("/api/users", params={"role": "org_admin"}).json()["total"] == 2  # admin_a + gvlan (role in A)
+    assert client.post("/api/users/search", json={"filters": {"role": {"value": "org_admin"}}}).json()["total"] == 2  # admin_a + gvlan (role in A)
     # A cannot reset the password or rename an account it does not own
     assert client.post(f"/api/users/{lan.id}/reset-password").status_code == 403
     assert client.patch(f"/api/users/{lan.id}", json={"full_name": "X"}).status_code == 403
@@ -118,7 +118,7 @@ def test_per_org_roles_in_checks(client, db):
     db.add(OrganizationMember(user_id=minh.id, organization_id=a.id, role="teacher"))
     db.commit()
     login_as(client, db, "org_admin", org=a, username="admin_a")
-    doc_ok = client.get("/api/users", params={"role": "teacher"}).json()["items"]
+    doc_ok = client.post("/api/users/search", json={"filters": {"role": {"value": "teacher"}}}).json()["data"]
     assert [u["username"] for u in doc_ok] == ["minh"]
     k = client.post("/api/classes", json={"name": "10A1"}).json()
     # hsb is not a member of A → cannot join A's class
@@ -151,12 +151,12 @@ def test_link_and_unlink_an_account(client, db):
     # unlink: access to A ends, A's class memberships go, the account still works in B
     assert client.delete(f"/api/users/{hoa}/membership").status_code == 204
     assert client.get(f"/api/classes/{k['id']}").json()["member_count"] == 0
-    assert hoa_client.get("/api/users").status_code == 401
+    assert hoa_client.post("/api/users/search", json={}).status_code == 401
     hoa_client.cookies.delete("ex_access")
     assert hoa_client.post("/api/auth/refresh").status_code == 204
     assert hoa_client.get("/api/auth/me").json()["org"]["code"] == "ttb"
     # the home membership cannot be removed
-    hsa = next(u["id"] for u in client.get("/api/users").json()["items"] if u["username"] == "hsa")
+    hsa = next(u["id"] for u in client.post("/api/users/search", json={}).json()["data"] if u["username"] == "hsa")
     assert client.delete(f"/api/users/{hsa}/membership").status_code == 422
 
 

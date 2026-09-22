@@ -12,7 +12,7 @@ from app.core.db import get_db
 from app.core.errors import validation
 from app.deps import OrgScope
 from app.models import Question, QuestionTag, QuestionTopic, Tag, Topic
-from app.routers.users import staff_scope
+from app.deps import staff_scope
 from app.schemas.common import Page
 from app.schemas.documents import DocumentBrief, DocumentCreated, DocumentMetaIn, DuplicateCheckIn, DuplicateOut, DocumentOut, ParsedQuestionOut, ReparseIn, TagRef, TopicRef, document_out
 from app.schemas.questions import question_out

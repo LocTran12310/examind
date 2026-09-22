@@ -58,6 +58,10 @@ class ClassRepository(Protocol):
 
     def remove_member(self, class_id: uuid.UUID, user_id: uuid.UUID) -> None: ...
 
+    def remove_from_org(self, org_id: uuid.UUID, user_id: uuid.UUID) -> None:
+        """Delete the user's rows in every class of the org."""
+        ...
+
     def member_ids(self, class_id: uuid.UUID) -> list[uuid.UUID]:
         """By full name."""
         ...

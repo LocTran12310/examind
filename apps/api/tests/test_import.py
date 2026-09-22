@@ -46,10 +46,10 @@ def test_bad_rows_reported_and_nothing_created(client, db):
     assert set(errors) == {7, 9, 10}
     assert "Thiếu họ tên" in errors[7]
     assert "Tên đăng nhập đã tồn tại" in errors[9]
-    before = client.get("/api/users").json()["total"]
+    before = client.post("/api/users/search", json={}).json()["total"]
     r = client.post("/api/users/import/commit", json={"rows": body["rows"]})
     assert r.status_code == 422 and r.json()["code"] == "import_invalid"
-    assert client.get("/api/users").json()["total"] == before
+    assert client.post("/api/users/search", json={}).json()["total"] == before
 
 
 def test_xlsx_bom_and_duplicates_in_file(client, db):

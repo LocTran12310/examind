@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.deps import OrgScope
 from app.routers.documents import parsed_many
-from app.routers.users import staff_scope
+from app.deps import staff_scope
 from app.schemas.exams import BlueprintIn, ExamIn, ExamOut, ExamPatch, ExamQuestionOut, IdsIn, PointsIn
 from app.schemas.common import Page
 from app.services import exams

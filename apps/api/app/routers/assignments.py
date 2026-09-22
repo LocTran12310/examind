@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.deps import OrgScope, org_scope
-from app.routers.users import staff_scope
+from app.deps import staff_scope
 from app.schemas.assignments import (AssignmentIn, AssignmentOut, AssignmentPatch, MyAssignmentOut, assignment_out, attempt_brief)
 from app.schemas.common import Page
 from app.services import assignments

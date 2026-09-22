@@ -28,7 +28,7 @@ def test_wrong_key_flagged_end_to_end_then_fixed(client, db):
     db.commit()
     for i in range(1, 12):
         klass_with_student(client, db, admin, f"hsx{i}")
-        client.post(f"/api/classes/{klass['id']}/members", json={"user_ids": [client.get('/api/users', params={'q': f'hsx{i}'}).json()['items'][0]['id']]})
+        client.post(f"/api/classes/{klass['id']}/members", json={"user_ids": [client.post('/api/users/search', json={'q': f'hsx{i}'}).json()['data'][0]['id']]})
     a = assign(client, exam["id"], klass["id"])
     db.expire_all()
     for i in range(1, 12):

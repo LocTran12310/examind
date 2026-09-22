@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.deps import OrgScope
-from app.routers.users import staff_scope
+from app.deps import staff_scope
 from app.services import ingestion_settings
 
 router = APIRouter(prefix="/org/settings", tags=["org-settings"])
