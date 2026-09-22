@@ -51,15 +51,15 @@ t(id="T-01-03", uow="UOW-01", title="Login and change-password on shadcn",
   context="Card + Input + Label + Button.", done_when=["Login works", "Errors shown"])
 t(id="T-02-01", uow="UOW-02", title="API paging helper (q, column filters, sort, page, page_size=all)",
   layer="api", estimate="3h", verifies=["AC-10"], tests=[f"{API}/tests/test_paging.py"],
-  touches=[f"{API}/app/services/paging.py", f"{API}/app/schemas/common.py"], assumptions=["A-04", "A-05", "A-06"],
+  touches=[f"{API}/app/services/paging.py", f"{API}/migrations/versions/0011_list_search.py"], assumptions=["A-04", "A-05", "A-06"],
   context="ADR-03. unaccent ILIKE for text; bad sort → 422 bad_sort.", done_when=["Helper unit-tested", "unaccent contains", "bad_sort"])
 t(id="T-02-02", uow="UOW-02", title="Users, orgs, classes endpoints on the paging helper",
-  layer="api", estimate="3h", depends_on=["T-02-01"], verifies=["AC-10"], tests=[f"{API}/tests/test_paging.py", f"{API}/tests/test_users.py", f"{API}/tests/test_orgs.py", f"{API}/tests/test_classes.py"],
-  touches=[f"{API}/app/routers/users.py", f"{API}/app/routers/admin_orgs.py", f"{API}/app/routers/classes.py", f"{API}/app/services/users.py"],
+  layer="api", estimate="3h", depends_on=["T-02-01"], verifies=["AC-10"], tests=[f"{API}/tests/test_paging.py", f"{API}/tests/test_users_api.py", f"{API}/tests/test_orgs_api.py", f"{API}/tests/test_classes_api.py", f"{API}/tests/test_import.py"],
+  touches=[f"{API}/app/routers/users.py", f"{API}/app/routers/admin_orgs.py", f"{API}/app/routers/classes.py", f"{API}/app/services/users.py", f"{API}/app/services/orgs.py", f"{API}/app/services/classes.py"],
   context="Column filters named after fields.", done_when=["Page on all three", "Filters + sort", "< 300 ms on perf fixture"])
 t(id="T-02-03", uow="UOW-02", title="DataTable: filter row, toolbar, selection, pagination, useTableQuery (URL)",
   layer="web", estimate="4h", depends_on=["T-01-01"], verifies=["AC-06", "AC-07", "AC-08", "AC-09"], tests=[f"{WEB}/src/__tests__/data-table.test.tsx"],
-  touches=[f"{WEB}/src/components/data-table/DataTable.tsx", f"{WEB}/src/components/data-table/useTableQuery.ts", f"{WEB}/src/components/data-table/Pagination.tsx", f"{WEB}/src/components/data-table/Toolbar.tsx"],
+  touches=[f"{WEB}/src/components/data-table/DataTable.tsx", f"{WEB}/src/components/data-table/useTableQuery.ts", f"{WEB}/src/components/data-table/Pagination.tsx", f"{WEB}/src/components/data-table/Toolbar.tsx", f"{WEB}/src/components/data-table/FilterCell.tsx"],
   assumptions=["A-03", "A-04", "A-05"], context="ADR-02, ADR-04. Debounced text filters use router.replace.",
   done_when=["Debounce + URL", "Initial load from URL", "Confirm delete", "Footer text"])
 t(id="T-02-04", uow="UOW-02", title="Users, organisations, classes screens on DataTable",

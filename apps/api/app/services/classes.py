@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.errors import conflict, not_found, validation
 from app.deps import OrgScope
 from app.models import ClassMember, SchoolClass, User
+from app.services.paging import Col, ListParams, paginate
 from app.services import audit
 
 YEAR_RE = re.compile(r"^(\d{4})-(\d{4})$")
@@ -38,11 +39,21 @@ def get_class(db: Session, scope: OrgScope, class_id) -> SchoolClass:
     return c
 
 
-def list_classes(db: Session, scope: OrgScope, school_year: str | None = None):
-    stmt = select(SchoolClass, func.count(ClassMember.user_id)).outerjoin(ClassMember).where(SchoolClass.organization_id == scope.org_id)
-    if school_year:
-        stmt = stmt.where(SchoolClass.school_year == school_year)
-    return db.execute(stmt.group_by(SchoolClass.id).order_by(SchoolClass.school_year.desc(), SchoolClass.name)).all()
+MEMBER_COUNT = func.count(ClassMember.user_id)
+CLASS_COLS = {
+    "name": Col(SchoolClass.name),
+    "grade": Col(SchoolClass.grade, "number"),
+    "school_year": Col(SchoolClass.school_year, "exact"),
+    "member_count": Col(MEMBER_COUNT, filterable=False),
+    "created_at": Col(SchoolClass.created_at, "date"),
+}
+
+
+def list_classes(db: Session, scope: OrgScope, params: ListParams):
+    stmt = (select(SchoolClass, MEMBER_COUNT).outerjoin(ClassMember).where(SchoolClass.organization_id == scope.org_id)
+            .group_by(SchoolClass.id))
+    return paginate(db, stmt, params, CLASS_COLS, search=[SchoolClass.name], scalars=False,
+                    default_sort=[SchoolClass.school_year.desc(), SchoolClass.name])
 
 
 def find_or_create(db: Session, scope: OrgScope, name: str, school_year: str | None = None, grade: int | None = None) -> SchoolClass:

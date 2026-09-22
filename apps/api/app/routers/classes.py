@@ -8,14 +8,18 @@ from app.deps import OrgScope
 from app.routers.users import staff_scope
 from app.schemas.classes import ClassCreate, ClassDetail, ClassOut, ClassUpdate, MembersIn, class_out
 from app.schemas.users import user_out
+from app.schemas.common import Page
 from app.services import classes
+from app.services.paging import ListParams, list_params
 
 router = APIRouter(prefix="/classes", tags=["classes"])
 
 
-@router.get("", response_model=list[ClassOut])
-def list_classes(school_year: str | None = None, scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
-    return [class_out(c, n) for c, n in classes.list_classes(db, scope, school_year)]
+@router.get("", response_model=Page[ClassOut])
+def list_classes(params: ListParams = Depends(list_params), scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
+    """Column filters: name (text) · grade (number, grade_min/grade_max) · school_year (exact) · created_at (date)."""
+    rows, total = classes.list_classes(db, scope, params)
+    return Page(items=[class_out(c, n) for c, n in rows], total=total, page=params.page, page_size=params.page_size)
 
 
 @router.post("", response_model=ClassOut, status_code=201)

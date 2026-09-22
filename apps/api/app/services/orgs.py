@@ -1,7 +1,7 @@
 """Organisation lifecycle for super admins (US-04, A-01, A-04, A-15)."""
 import re
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.errors import AppError, conflict, not_found, validation
@@ -9,6 +9,7 @@ from app.core.passwords import temp_password
 from app.core.security import hash_password, now
 from app.models import Organization, User
 from app.seed.org_template import seed_org
+from app.services.paging import Col, ListParams, paginate
 from app.services import audit, auth
 from app.services.users import USERNAME_RE
 
@@ -40,16 +41,20 @@ def user_counts(db: Session, org_ids) -> dict:
     return dict(rows.all())
 
 
-def list_orgs(db: Session, q: str = "", include_deleted: bool = False, page: int = 1, page_size: int = 50):
+ORG_COLS = {
+    "code": Col(Organization.code),
+    "name": Col(Organization.name),
+    "status": Col(Organization.status, "exact"),
+    "created_at": Col(Organization.created_at, "date"),
+}
+
+
+def list_orgs(db: Session, params: ListParams, include_deleted: bool = False):
     stmt = select(Organization)
     if not include_deleted:
         stmt = stmt.where(Organization.deleted_at.is_(None))
-    if q:
-        like = f"%{q.strip()}%"
-        stmt = stmt.where(or_(Organization.code.ilike(like), Organization.name.ilike(like)))
-    total = db.scalar(select(func.count()).select_from(stmt.subquery()))
-    items = db.scalars(stmt.order_by(Organization.is_system.desc(), Organization.created_at.desc()).offset((page - 1) * page_size).limit(page_size)).all()
-    return items, total
+    return paginate(db, stmt, params, ORG_COLS, search=[Organization.code, Organization.name],
+                    default_sort=[Organization.is_system.desc(), Organization.created_at.desc()])
 
 
 def create_org(db: Session, actor: User, code: str, name: str, admin_username: str, admin_full_name: str):

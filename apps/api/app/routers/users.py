@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, File, Query, UploadFile
+from fastapi import APIRouter, Depends, File, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -10,6 +10,7 @@ from app.deps import STAFF, OrgScope, org_scope
 from app.schemas.common import Page
 from app.schemas.users import Credential, UserCreate, UserCreated, UserOut, UserUpdate, user_out
 from app.services import user_import, users
+from app.services.paging import ListParams, list_params
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -21,12 +22,12 @@ def staff_scope(scope: OrgScope = Depends(org_scope)) -> OrgScope:
 
 
 @router.get("", response_model=Page[UserOut])
-def list_users(q: str = "", role: str | None = None, class_id: uuid.UUID | None = None, active: bool | None = None,
-               page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, le=500),
+def list_users(class_id: uuid.UUID | None = None, params: ListParams = Depends(list_params),
                scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
-    items, total = users.list_users(db, scope, q, role, class_id, active, page, page_size)
+    """Column filters: username, full_name, email (text) · role (exact) · is_active (bool) · created_at/last_login_at (date)."""
+    items, total = users.list_users(db, scope, params, class_id)
     classes = users.class_ids_by_user(db, [u.id for u in items])
-    return Page(items=[user_out(u, classes.get(u.id)) for u in items], total=total, page=page, page_size=page_size)
+    return Page(items=[user_out(u, classes.get(u.id)) for u in items], total=total, page=params.page, page_size=params.page_size)
 
 
 @router.post("", response_model=UserCreated, status_code=201)

@@ -31,7 +31,7 @@ def test_student_practice_flow_updates_mastery(client, db):
 
 def test_teacher_assigns_personal_review_to_class(client, db):
     admin = take(client, db, right=False)
-    klass = client.get("/api/classes").json()[0]
+    klass = client.get("/api/classes").json()["items"][0]
     klass2, _ = klass_with_student(client, db, admin, "hs02")
     client.post(f"/api/classes/{klass['id']}/members", json={"user_ids": [client.get('/api/users', params={'q': 'hs02'}).json()['items'][0]['id']]})
     r = client.post(f"/api/classes/{klass['id']}/adaptive-assignments",

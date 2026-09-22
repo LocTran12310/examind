@@ -14,6 +14,6 @@ def test_mastery_endpoints(client, db):
     student_id = s.get("/api/auth/me").json()["id"]
     assert client.get(f"/api/students/{student_id}/mastery").json() == rows
     assert s.get(f"/api/students/{student_id}/mastery").status_code == 403
-    klass = client.get("/api/classes").json()[0]
+    klass = client.get("/api/classes").json()["items"][0]
     ov = client.get(f"/api/classes/{klass['id']}/overview").json()
     assert ov[0]["username"] == "hs01" and len(ov[0]["weakest"]) >= 1 and ov[0]["review"] is None

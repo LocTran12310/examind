@@ -15,7 +15,7 @@ def test_class_crud_and_members(client, db):
     detail = client.get(f"/api/classes/{cid}").json()
     assert detail["member_count"] == 2 and {m["username"] for m in detail["members"]} == {"hs01", "hs02"}
     assert client.delete(f"/api/classes/{cid}/members/{a.id}").status_code == 204
-    assert client.get("/api/classes").json()[0]["member_count"] == 1
+    assert client.get("/api/classes").json()["items"][0]["member_count"] == 1
     # a student can be in several classes
     c2 = client.post("/api/classes", json={"name": "Toán nâng cao", "school_year": "2026-2027"}).json()["id"]
     client.post(f"/api/classes/{c2}/members", json={"user_ids": [str(b.id)]})
@@ -40,4 +40,4 @@ def test_class_isolation(client, db):
     db.commit()
     assert client.get(f"/api/classes/{theirs.id}").status_code == 404
     assert client.delete(f"/api/classes/{theirs.id}").status_code == 404
-    assert [c["name"] for c in client.get("/api/classes").json()] == ["11B"]
+    assert [c["name"] for c in client.get("/api/classes").json()["items"]] == ["11B"]

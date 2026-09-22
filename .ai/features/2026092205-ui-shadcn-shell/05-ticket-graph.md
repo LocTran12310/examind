@@ -3,7 +3,7 @@
 # Ticket graph — 2026092205-ui-shadcn-shell
 
 - Units of Work: **4**
-- Tickets: **13** (3 done)
+- Tickets: **13** (6 done)
 - Total effort: **5.2d**
 - Critical path: **1.6d** across 4 tickets
 - Theoretical minimum duration with unlimited parallelism: **1.6d**
@@ -30,9 +30,9 @@ graph LR
     T_01_03["✓ T-01-03<br/>Login and change-password on shadcn"]
   end
   subgraph UOW_02["UOW-02 · Server-side DataTable with URL state on users, organisations, classes"]
-    T_02_01["T-02-01<br/>API paging helper (q, column filters, sort, page, page_size=all)"]
-    T_02_02["T-02-02<br/>Users, orgs, classes endpoints on the paging helper"]
-    T_02_03["T-02-03<br/>DataTable: filter row, toolbar, selection, pagination, useTableQuery (URL)"]
+    T_02_01["✓ T-02-01<br/>API paging helper (q, column filters, sort, page, page_size=all)"]
+    T_02_02["✓ T-02-02<br/>Users, orgs, classes endpoints on the paging helper"]
+    T_02_03["✓ T-02-03<br/>DataTable: filter row, toolbar, selection, pagination, useTableQuery (URL)"]
     T_02_04["T-02-04<br/>Users, organisations, classes screens on DataTable"]
   end
   subgraph UOW_03["UOW-03 · All remaining lists on the DataTable"]
@@ -95,9 +95,9 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-01-01 | UOW-01 | web | feature | 3h | — | AC-01, AC-02 | done |
 | T-01-02 | UOW-01 | web | feature | 4h | T-01-01 | AC-03, AC-04, AC-05 | done |
 | T-01-03 | UOW-01 | web | feature | 1h | T-01-01 | AC-01 | done |
-| T-02-01 | UOW-02 | api | feature | 3h | — | AC-10 | todo |
-| T-02-02 | UOW-02 | api | feature | 3h | T-02-01 | AC-10 | todo |
-| T-02-03 | UOW-02 | web | feature | 4h | T-01-01 | AC-06, AC-07, AC-08, AC-09 | todo |
+| T-02-01 | UOW-02 | api | feature | 3h | — | AC-10 | done |
+| T-02-02 | UOW-02 | api | feature | 3h | T-02-01 | AC-10 | done |
+| T-02-03 | UOW-02 | web | feature | 4h | T-01-01 | AC-06, AC-07, AC-08, AC-09 | done |
 | T-02-04 | UOW-02 | web | feature | 4h | T-02-02, T-02-03, T-01-02 | AC-11 | todo |
 | T-03-01 | UOW-03 | api | feature | 3h | T-02-01 | AC-10 | todo |
 | T-03-02 | UOW-03 | web | feature | 4h | T-03-01, T-02-03 | AC-11 | todo |

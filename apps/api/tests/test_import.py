@@ -30,7 +30,7 @@ def test_preview_and_commit_30_students(client, db):
     assert r.status_code == 201, r.text
     created = r.json()["created"]
     assert len(created) == 30 and all(len(c["temp_password"]) == 10 for c in created)
-    classes = {c["name"]: c["member_count"] for c in client.get("/api/classes").json()}
+    classes = {c["name"]: c["member_count"] for c in client.get("/api/classes").json()["items"]}
     assert classes == {"10A1": 15, "10A2": 15}
     # an imported student must change the password on first login
     first = created[0]

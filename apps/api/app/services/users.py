@@ -1,7 +1,7 @@
 """User management inside one organisation (US-05, A-02, A-05, A-09)."""
 import re
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from unidecode import unidecode
 
@@ -11,6 +11,7 @@ from app.core.security import hash_password
 from app.deps import OrgScope
 from app.models import ClassMember, User
 from app.services import audit, auth
+from app.services.paging import Col, ListParams, paginate
 
 USERNAME_RE = re.compile(r"^[a-z0-9._-]{3,64}$")
 USERNAME_MSG = "Tên đăng nhập 3–64 ký tự: chữ không dấu, số, dấu . _ -"
@@ -60,22 +61,26 @@ def get_user(db: Session, scope: OrgScope, user_id) -> User:
     return user
 
 
-def list_users(db: Session, scope: OrgScope, q="", role=None, class_id=None, active=None, page=1, page_size=50):
+USER_COLS = {
+    "username": Col(User.username),
+    "full_name": Col(User.full_name),
+    "email": Col(User.email),
+    "role": Col(User.role, "exact"),
+    "is_active": Col(User.is_active, "bool"),
+    "must_change_password": Col(User.must_change_password, "bool"),
+    "created_at": Col(User.created_at, "date"),
+    "last_login_at": Col(User.last_login_at, "date"),
+}
+
+
+def list_users(db: Session, scope: OrgScope, params: ListParams, class_id=None):
     stmt = select(User).where(User.organization_id == scope.org_id)
     if scope.role == "teacher":
         stmt = stmt.where(User.role == "student")
-    if role:
-        stmt = stmt.where(User.role == role)
-    if active is not None:
-        stmt = stmt.where(User.is_active.is_(active))
     if class_id:
         stmt = stmt.where(User.id.in_(select(ClassMember.user_id).where(ClassMember.class_id == class_id)))
-    if q:
-        like = f"%{q.strip()}%"
-        stmt = stmt.where(or_(User.username.ilike(like), User.full_name.ilike(like)))
-    total = db.scalar(select(func.count()).select_from(stmt.subquery()))
-    items = db.scalars(stmt.order_by(User.full_name).offset((page - 1) * page_size).limit(page_size)).all()
-    return items, total
+    return paginate(db, stmt, params, USER_COLS, search=[User.username, User.full_name, User.email],
+                    default_sort=[User.full_name, User.id])
 
 
 def create_user(db: Session, scope: OrgScope, full_name: str, role: str, username: str | None = None,

@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
@@ -9,6 +9,7 @@ from app.models import Organization, User
 from app.schemas.common import Page
 from app.schemas.orgs import AdminCredential, OrgCreate, OrgCreated, OrgOut, OrgUpdate
 from app.services import orgs
+from app.services.paging import ListParams, list_params
 
 router = APIRouter(prefix="/admin/orgs", tags=["admin"])
 SuperAdmin = Depends(require_role("super_admin"))
@@ -20,11 +21,11 @@ def _out(org: Organization, count: int = 0) -> OrgOut:
 
 
 @router.get("", response_model=Page[OrgOut])
-def list_orgs(q: str = "", include_deleted: bool = False, page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, le=200),
-              _: User = SuperAdmin, db: Session = Depends(get_db)):
-    items, total = orgs.list_orgs(db, q, include_deleted, page, page_size)
+def list_orgs(include_deleted: bool = False, params: ListParams = Depends(list_params), _: User = SuperAdmin, db: Session = Depends(get_db)):
+    """Column filters: code, name (text) · status (exact) · created_at (date)."""
+    items, total = orgs.list_orgs(db, params, include_deleted)
     counts = orgs.user_counts(db, [o.id for o in items])
-    return Page(items=[_out(o, counts.get(o.id, 0)) for o in items], total=total, page=page, page_size=page_size)
+    return Page(items=[_out(o, counts.get(o.id, 0)) for o in items], total=total, page=params.page, page_size=params.page_size)
 
 
 @router.post("", response_model=OrgCreated, status_code=201)
