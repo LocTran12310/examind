@@ -12,7 +12,7 @@ import { FormDialog } from "@/components/app/FormDialog";
 import { FormField } from "@/components/app/FormField";
 import { PageHeader } from "@/components/app/PageHeader";
 import { DataTable } from "@/components/data-table/DataTable";
-import { ToolbarButton } from "@/components/data-table/Toolbar";
+import { ToolbarButton } from "@/components/common/DataTable/Toolbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api, ApiError } from "@/lib/api";

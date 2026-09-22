@@ -7,13 +7,14 @@ import { PageHeader } from "@/components/app/PageHeader";
 import { api } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
 import type { Page, ParsedQuestion, Tag, Taxonomy, Topic } from "@/lib/types";
+// eslint-disable-next-line no-restricted-imports -- screen moves to a page hook in its own slice
+import { useTagOptionsQuery } from "@/hooks/react-query/use-query-tag";
 
 export default function NewQuestionPage() {
   const router = useRouter();
   const { data: taxonomy } = useApi<Taxonomy>("/taxonomy");
   const { data: topics } = useApi<Topic[]>("/topics");
-  const { data: tagsPage } = useApi<Page<Tag>>("/tags?page_size=all");
-  const tags = tagsPage?.items;
+  const { data: tags } = useTagOptionsQuery(null);
   if (!taxonomy || !topics || !tags) return null;
   const initial = { ...formValueOf(), subject_id: taxonomy.subjects.find((s) => s.code === "toan")?.id ?? null };
   return (

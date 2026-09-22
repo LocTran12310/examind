@@ -1,3 +1,9 @@
+// moved to interfaces/ and constants/ (architecture-refactor); re-exported for the screens not moved yet
+export type { Tag, TagGroup } from "@/interfaces/tag.interface";
+export type { Taxonomy } from "@/interfaces/taxonomy.interface";
+export { TAG_GROUP_LABEL } from "@/constants/tag.constant";
+import type { Tag } from "@/interfaces/tag.interface";
+
 export type Role = "super_admin" | "org_admin" | "teacher" | "student";
 
 export interface OrgRef {
@@ -196,26 +202,8 @@ export interface Topic {
   child_count: number;
 }
 
-export interface Taxonomy {
-  subjects: { id: string; code: string; name: string }[];
-  grades: { id: string; level: number; name: string; school_level_id?: string | null; school_level_name?: string | null }[];
-  semesters: { id: string; code: string; name: string }[];
-}
 
-export interface Tag {
-  id: string;
-  group: "method" | "skill" | "source" | "custom";
-  name: string;
-  /** null = shared by every subject */
-  subject_id?: string | null;
-}
 
-export const TAG_GROUP_LABEL: Record<Tag["group"], string> = {
-  method: "Phương pháp",
-  skill: "Kỹ năng",
-  source: "Nguồn đề",
-  custom: "Khác",
-};
 
 export type DocStatus = "queued" | "processing" | "parsed" | "failed";
 

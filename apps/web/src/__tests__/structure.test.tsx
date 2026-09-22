@@ -28,7 +28,7 @@ function serve() {
     route("GET", /^\/api\/grades\?/, page([{ id: "g10", level: 10, name: "Lớp 10", school_level_id: "thpt", class_count: 2 }])),
     route("GET", /^\/api\/classes\?/, page([{ id: "c1", name: "10A1", grade: 10, grade_id: "g10", school_year: "2026-2027", member_count: 15, created_at: "" }])),
     route("GET", /^\/api\/users\?/, page([{ id: "s1", username: "buivanchau", full_name: "Bùi Văn Châu", role: "student", class_ids: ["c1"] }])),
-    route("DELETE", "/api/grades/g10", { error: { code: "in_use", message: "Khối còn 2 lớp" } }, 409),
+    route("DELETE", "/api/grades/g10", { code: "in_use", message: "Khối còn 2 lớp" }, 409),
   );
 }
 

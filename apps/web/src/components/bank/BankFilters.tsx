@@ -2,7 +2,7 @@
 
 import { Search, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
-import { DebouncedInput } from "@/components/data-table/FilterCell";
+import { DebouncedInput } from "@/components/common/DataTable/FilterCell";
 import { Button } from "@/components/ui/button";
 import type { BankFacets, Tag, Taxonomy, Topic } from "@/lib/types";
 import { FilterChips } from "./FilterChips";

@@ -1,11 +1,12 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import BankPage from "@/app/(app)/org/bank/page";
 import { BankFilters } from "@/components/bank/BankFilters";
 import { QuestionRow } from "@/components/bank/QuestionRow";
 import type { BankFacets, ParsedQuestion, Tag, Taxonomy, Topic } from "@/lib/types";
-import { lastQuery, mockFetch, route } from "./helpers";
+import { lastBody, lastQuery, mockFetch, route } from "./helpers";
+import { renderWithQuery as render } from "./helpers";
 import { searchOf, setUrl } from "./router-mock";
 
 vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);
@@ -58,7 +59,7 @@ describe("bank", () => {
       route("GET", /^\/api\/questions\/facets\?/, { subjects: { s: 45 }, topics: {}, types: {}, difficulties: {}, grades: {}, periods: {}, school_years: {}, tags: {} }),
       route("GET", "/api/taxonomy", taxonomy),
       route("GET", "/api/topics?subject_id=s", topics),
-      route("GET", /^\/api\/tags\?/, { items: [], total: 0, page: 1, page_size: 1000 }),
+      route("POST", "/api/tags/search", { data: [], total: 0, page: 1, limit: 1000 }),
     );
     const u = userEvent.setup();
     render(<BankPage />);
@@ -66,7 +67,7 @@ describe("bank", () => {
     const first = lastQuery(fetch, "/questions");
     expect([first.get("subject_id"), first.get("grade"), first.get("page")]).toEqual(["s", "10", "2"]);
     expect(screen.getByText("Hiển thị 21–40 trên 45 kết quả")).toBeInTheDocument();
-    expect(lastQuery(fetch, "/tags").get("subject_id")).toBe("s");
+    await waitFor(() => expect(lastBody(fetch, "/tags/search").subject_id).toBe("s"));
     await u.click(screen.getByRole("button", { name: "Trang sau" }));
     await waitFor(() => expect(lastQuery(fetch, "/questions").get("page")).toBe("3"));
     expect(searchOf().get("grade")).toBe("10");
@@ -80,7 +81,7 @@ describe("bank", () => {
       route("GET", /^\/api\/questions\/facets\?/, { subjects: { s: 5, ly: 9, none: 2 }, topics: {}, types: {}, difficulties: {}, grades: {}, periods: {}, school_years: {}, tags: {} }),
       route("GET", "/api/taxonomy", two),
       route("GET", /^\/api\/topics\?/, []),
-      route("GET", /^\/api\/tags\?/, { items: [], total: 0, page: 1, page_size: 1000 }),
+      route("POST", "/api/tags/search", { data: [], total: 0, page: 1, limit: 1000 }),
     );
     const u = userEvent.setup();
     render(<BankPage />);

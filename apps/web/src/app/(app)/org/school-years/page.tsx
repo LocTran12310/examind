@@ -14,7 +14,7 @@ import { PageHeader } from "@/components/app/PageHeader";
 import { ToneBadge } from "@/components/app/ToneBadge";
 import { useYear } from "@/components/app/YearContext";
 import { DataTable } from "@/components/data-table/DataTable";
-import { ToolbarButton } from "@/components/data-table/Toolbar";
+import { ToolbarButton } from "@/components/common/DataTable/Toolbar";
 import { nextYearCode, YearForm } from "@/components/years/YearForm";
 import { api, ApiError } from "@/lib/api";
 import { type SchoolYear, YEAR_STATUS_LABEL } from "@/lib/types";

@@ -7,7 +7,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { FormDialog } from "@/components/app/FormDialog";
 import { DataTable } from "@/components/data-table/DataTable";
-import { ToolbarButton } from "@/components/data-table/Toolbar";
+import { ToolbarButton } from "@/components/common/DataTable/Toolbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api, ApiError } from "@/lib/api";

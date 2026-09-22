@@ -35,7 +35,7 @@ describe("LoginForm", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ error: { code: "invalid_credentials", message: "Sai tổ chức, tên đăng nhập hoặc mật khẩu" } }), {
+        new Response(JSON.stringify({ code: "invalid_credentials", message: "Sai tổ chức, tên đăng nhập hoặc mật khẩu" }), {
           status: 401,
           headers: { "content-type": "application/json" },
         }),

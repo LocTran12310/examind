@@ -64,7 +64,7 @@ describe("exam runner", () => {
   });
 
   it("an answer after the deadline closes the exam", async () => {
-    mockFetch((url, init) => (init?.method === "PUT" ? { status: 409, body: { error: { code: "attempt_closed", message: "Bài làm đã kết thúc" } } } : undefined));
+    mockFetch((url, init) => (init?.method === "PUT" ? { status: 409, body: { code: "attempt_closed", message: "Bài làm đã kết thúc" } } : undefined));
     const onFinished = vi.fn();
     render(<ExamRunner view={view()} onFinished={onFinished} />);
     fireEvent.click(screen.getByTestId("option-A"));

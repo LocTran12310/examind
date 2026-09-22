@@ -10,7 +10,7 @@ import { useMe } from "@/app/(app)/AppShell";
 import { FormDialog } from "@/components/app/FormDialog";
 import { PageHeader } from "@/components/app/PageHeader";
 import { DataTable } from "@/components/data-table/DataTable";
-import { useTableQuery } from "@/components/data-table/useTableQuery";
+import { useTableQuery } from "@/hooks/common/use-table-query";
 import { ClassForm } from "@/components/org/ClassForms";
 import { MemberManager } from "@/components/org/MemberManager";
 import { GradeForm, LevelForm } from "@/components/structure/StructureForms";

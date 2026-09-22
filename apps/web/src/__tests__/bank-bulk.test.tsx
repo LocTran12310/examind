@@ -32,7 +32,7 @@ describe("bulk actions", () => {
   });
 
   it("deletes each selected question after confirmation", async () => {
-    const f = mockFetch(route("DELETE", "/api/questions/a", undefined, 204), route("DELETE", "/api/questions/b", { error: { code: "question_in_use", message: "x" } }, 409));
+    const f = mockFetch(route("DELETE", "/api/questions/a", undefined, 204), route("DELETE", "/api/questions/b", { code: "question_in_use", message: "x" }, 409));
     const onClear = vi.fn();
     const u = userEvent.setup();
     render(<BulkActions ids={["a", "b"]} topics={topics} tags={[]} onDone={() => {}} onClear={onClear} />);

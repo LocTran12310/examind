@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useMe } from "@/app/(app)/AppShell";
 import { PageHeader } from "@/components/app/PageHeader";
 import { DataTable } from "@/components/data-table/DataTable";
-import { useTableQuery } from "@/components/data-table/useTableQuery";
+import { useTableQuery } from "@/hooks/common/use-table-query";
 import { reviewColumns } from "@/components/review/ReviewList";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";

@@ -1,4 +1,7 @@
+import { QueryClientProvider } from "@tanstack/react-query";
+import { render, type RenderOptions } from "@testing-library/react";
 import { vi } from "vitest";
+import { makeQueryClient } from "@/lib/common/query-client";
 
 type Handler = (url: string, init?: RequestInit) => { status?: number; body?: unknown } | undefined;
 
@@ -16,7 +19,7 @@ export function mockFetch(...handlers: Handler[]) {
       const r = h(String(url), init);
       if (r) return jsonResponse(r.status ?? 200, r.body);
     }
-    return jsonResponse(404, { error: { code: "not_found", message: "not mocked: " + url } });
+    return jsonResponse(404, { code: "not_found", message: "not mocked: " + url });
   });
   vi.stubGlobal("fetch", fn);
   return fn;
@@ -48,3 +51,20 @@ export function lastQuery(fetch: { mock: { calls: unknown[][] } }, path: string)
 }
 
 export const page = <T,>(items: T[], total = items.length, pageNo = 1, size = 20) => ({ items, total, page: pageNo, page_size: size });
+
+/** Search answer (`POST /<resource>/search`). */
+export const searchPage = <T,>(data: T[], total = data.length, pageNo = 1, limit = 20) => ({ data, total, page: pageNo, limit });
+
+/** Body of the last POST to a path. */
+export function lastBody(fetch: { mock: { calls: unknown[][] } }, path: string): Record<string, unknown> {
+  const call = [...fetch.mock.calls].reverse().find((c) => String(c[0]) === `/api${path}` && (c[1] as RequestInit | undefined)?.method === "POST");
+  if (!call) throw new Error(`no POST to ${path}`);
+  return JSON.parse(String((call[1] as RequestInit).body));
+}
+
+/** Render inside a fresh QueryClient (no retries, nothing shared between tests). */
+export function renderWithQuery(ui: React.ReactElement, options?: RenderOptions) {
+  const client = makeQueryClient();
+  client.setDefaultOptions({ queries: { retry: false, staleTime: 0, refetchOnWindowFocus: false } });
+  return { client, ...render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>, options) };
+}

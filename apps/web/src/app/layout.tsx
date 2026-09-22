@@ -3,6 +3,7 @@ import { Be_Vietnam_Pro } from "next/font/google";
 import "katex/dist/katex.min.css";
 import "./globals.css";
 import { ThemeProvider } from "@/components/app/ThemeProvider";
+import { Providers } from "@/components/layout/Providers/Providers";
 import { cn } from "@/lib/utils";
 
 const font = Be_Vietnam_Pro({
@@ -20,7 +21,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="vi" className={cn("font-sans", font.variable)} suppressHydrationWarning>
       <body className="font-sans antialiased">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <Providers>{children}</Providers>
+        </ThemeProvider>
       </body>
     </html>
   );

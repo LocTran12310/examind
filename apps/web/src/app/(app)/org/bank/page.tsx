@@ -13,14 +13,16 @@ import { SUBJECT_SCOPED } from "@/components/bank/filters";
 import { NO_SUBJECT, SubjectTabs } from "@/components/bank/SubjectTabs";
 import { BulkActions } from "@/components/bank/BulkBar";
 import { QuestionRow } from "@/components/bank/QuestionRow";
-import { Pagination } from "@/components/data-table/Pagination";
-import { Toolbar, ToolbarButton, ToolbarSeparator } from "@/components/data-table/Toolbar";
-import { useTableQuery } from "@/components/data-table/useTableQuery";
+import { Pagination } from "@/components/common/DataTable/Pagination";
+import { Toolbar, ToolbarButton, ToolbarSeparator } from "@/components/common/DataTable/Toolbar";
+import { useTableQuery } from "@/hooks/common/use-table-query";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useApi } from "@/lib/hooks";
 import type { BankFacets, Page, ParsedQuestion, Tag, Taxonomy, Topic } from "@/lib/types";
 import { cn } from "@/lib/utils";
+// eslint-disable-next-line no-restricted-imports -- screen moves to a page hook in its own slice
+import { useTagOptionsQuery } from "@/hooks/react-query/use-query-tag";
 
 const subjectKey = (orgId: string) => `examind.bank.subject.${orgId}`;
 function storedSubject(orgId?: string): string | null {
@@ -42,8 +44,7 @@ export default function BankPage() {
   const { data, reload, loading } = useApi<Page<ParsedQuestion>>(subject ? `/questions?${query}` : null);
   const scoped = subject && subject !== NO_SUBJECT ? subject : null;
   const { data: topics } = useApi<Topic[]>(scoped ? `/topics?subject_id=${scoped}` : null);
-  const { data: tagsPage } = useApi<Page<Tag>>(scoped ? `/tags?page_size=all&subject_id=${scoped}` : subject ? "/tags?page_size=all&subject_id=shared" : null);
-  const tags = tagsPage?.items;
+  const { data: tags } = useTagOptionsQuery(scoped || "shared", !!(scoped || subject));
   const [selected, setSelected] = useState<Set<string>>(new Set());
   useEffect(() => setSelected(new Set()), [query]);
 

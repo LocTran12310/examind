@@ -11,6 +11,8 @@ import { PageHeader } from "@/components/app/PageHeader";
 import { api } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
 import { DIFFICULTY_LABEL, STATUS_LABEL, type ParsedQuestion, type QuestionStatus, type Page, type Tag, type Taxonomy, type Topic } from "@/lib/types";
+// eslint-disable-next-line no-restricted-imports -- screen moves to a page hook in its own slice
+import { useTagOptionsQuery } from "@/hooks/react-query/use-query-tag";
 
 export default function BankQuestionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -19,8 +21,7 @@ export default function BankQuestionPage({ params }: { params: Promise<{ id: str
   // a question with a subject only offers that subject's topics and tags (subject-scoped-bank, ui-polish A-04)
   const sid = q?.subject_id;
   const { data: topics } = useApi<Topic[]>(q ? (sid ? `/topics?subject_id=${sid}` : "/topics") : null);
-  const { data: tagsPage } = useApi<Page<Tag>>(q ? `/tags?page_size=all${sid ? `&subject_id=${sid}` : ""}` : null);
-  const tags = tagsPage?.items;
+  const { data: tags } = useTagOptionsQuery(sid || null, !!q);
   const [editing, setEditing] = useState(false);
   if (!q || !taxonomy || !topics || !tags) return null;
   const primary = q.topics.find((t) => t.is_primary);

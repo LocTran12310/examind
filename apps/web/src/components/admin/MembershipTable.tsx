@@ -11,7 +11,7 @@ import { HistoryPanel } from "@/components/app/HistoryPanel";
 import { OptionSelect } from "@/components/app/OptionSelect";
 import { ToneBadge } from "@/components/app/ToneBadge";
 import { DataTable } from "@/components/data-table/DataTable";
-import { ToolbarButton } from "@/components/data-table/Toolbar";
+import { ToolbarButton } from "@/components/common/DataTable/Toolbar";
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";

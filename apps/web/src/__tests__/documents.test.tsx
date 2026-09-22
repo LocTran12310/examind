@@ -110,7 +110,7 @@ describe("documents", () => {
   });
 
   it("requires a file and shows server field errors", async () => {
-    mockFetch(route("POST", "/api/documents", { error: { code: "unsupported_file", message: "Chỉ hỗ trợ", fields: { file: "Lưu lại dưới dạng .docx" } } }, 422));
+    mockFetch(route("POST", "/api/documents", { code: "unsupported_file", message: "Chỉ hỗ trợ", details: { fields: { file: "Lưu lại dưới dạng .docx" } } }, 422));
     render(<UploadForm taxonomy={taxonomy} onUploaded={() => {}} />);
     await userEvent.click(screen.getByRole("button", { name: "Tải lên và tách câu" }));
     expect(screen.getByText("Chọn file đề")).toBeInTheDocument();

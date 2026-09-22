@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { FormDialog } from "@/components/app/FormDialog";
 import { PageHeader } from "@/components/app/PageHeader";
 import { DataTable } from "@/components/data-table/DataTable";
-import { ToolbarButton } from "@/components/data-table/Toolbar";
+import { ToolbarButton } from "@/components/common/DataTable/Toolbar";
 import { documentColumns } from "@/components/documents/DocumentList";
 import { ProcessingConfigPanel } from "@/components/documents/ProcessingConfig";
 import { UploadForm } from "@/components/documents/UploadForm";

@@ -3,7 +3,7 @@
 # Ticket graph — 2026092212-architecture-refactor
 
 - Units of Work: **7**
-- Tickets: **31** (3 done)
+- Tickets: **31** (5 done)
 - Total effort: **13.8d**
 - Critical path: **4.6d** across 10 tickets
 - Theoretical minimum duration with unlimited parallelism: **4.6d**
@@ -31,8 +31,8 @@ graph LR
     T_01_01["✓ T-01-01<br/>Neutral wording in docs and comments"]
     T_01_02["✓ T-01-02<br/>Shared kernel, error body, request id, import-linter"]
     T_01_03["✓ T-01-03<br/>taxonomy/tags module in four layers + POST /tags/search"]
-    T_01_04["T-01-04<br/>Web skeleton: query client, http, search body, keys, lint boundaries"]
-    T_01_05["T-01-05<br/>DataTable on React Query + Tags page slice"]
+    T_01_04["✓ T-01-04<br/>Web skeleton: query client, http, search body, keys, lint boundaries"]
+    T_01_05["✓ T-01-05<br/>DataTable on React Query + Tags page slice"]
   end
   subgraph UOW_02["UOW-02 · Topics, taxonomy and the academic context"]
     T_02_01["T-02-01<br/>taxonomy: subjects, grades, topics tree"]
@@ -162,8 +162,8 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-01-01 | UOW-01 | infra | feature | 1h | — | AC-08 | done |
 | T-01-02 | UOW-01 | infra | feature | 4h | — | AC-01, AC-03 | done |
 | T-01-03 | UOW-01 | api | feature | 3h | T-01-02 | AC-01, AC-02 | done |
-| T-01-04 | UOW-01 | web | feature | 3h | — | AC-04 | todo |
-| T-01-05 | UOW-01 | web | feature | 3h | T-01-03, T-01-04 | AC-04, AC-05 | todo |
+| T-01-04 | UOW-01 | web | feature | 3h | — | AC-04 | done |
+| T-01-05 | UOW-01 | web | feature | 3h | T-01-03, T-01-04 | AC-04, AC-05 | done |
 | T-02-01 | UOW-02 | api | feature | 4h | T-01-03 | AC-01, AC-02, AC-06 | todo |
 | T-02-02 | UOW-02 | api | feature | 4h | T-01-02 | AC-01, AC-02, AC-06 | todo |
 | T-02-03 | UOW-02 | api | feature | 4h | T-02-02 | AC-01, AC-02, AC-06 | todo |

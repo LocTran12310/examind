@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { BackLink } from "@/components/app/BackLink";
-import { useTableQuery } from "@/components/data-table/useTableQuery";
+import { useTableQuery } from "@/hooks/common/use-table-query";
 import { setUrl } from "./router-mock";
 
 vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);

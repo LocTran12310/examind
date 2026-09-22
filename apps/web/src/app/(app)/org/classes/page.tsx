@@ -9,7 +9,7 @@ import { useMemo, useState } from "react";
 import { FormDialog } from "@/components/app/FormDialog";
 import { PageHeader } from "@/components/app/PageHeader";
 import { DataTable } from "@/components/data-table/DataTable";
-import { useTableQuery } from "@/components/data-table/useTableQuery";
+import { useTableQuery } from "@/hooks/common/use-table-query";
 import { useYear } from "@/components/app/YearContext";
 import { ClassForm } from "@/components/org/ClassForms";
 import { MemberManager } from "@/components/org/MemberManager";

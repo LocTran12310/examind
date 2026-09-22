@@ -35,7 +35,7 @@ describe("admin orgs", () => {
   });
 
   it("renders field errors", async () => {
-    mockFetch(route("POST", "/api/admin/orgs", { error: { code: "conflict", message: "Mã tổ chức đã tồn tại", fields: { code: "Mã tổ chức đã tồn tại" } } }, 409));
+    mockFetch(route("POST", "/api/admin/orgs", { code: "conflict", message: "Mã tổ chức đã tồn tại", details: { fields: { code: "Mã tổ chức đã tồn tại" } } }, 409));
     render(<OrgCreateForm onDone={() => {}} />);
     await userEvent.type(screen.getByLabelText(/Mã tổ chức/), "TRUNGTAMA");
     await userEvent.type(screen.getByLabelText("Tên tổ chức"), "X");

@@ -37,7 +37,7 @@ describe("review queue", () => {
   });
 
   it("blocking issues are reported and the question stays", async () => {
-    mockFetch(route("POST", "/api/review/questions/q1/action", { error: { code: "has_blocking_issues", message: "Câu còn lỗi: thiếu đáp án" } }, 409));
+    mockFetch(route("POST", "/api/review/questions/q1/action", { code: "has_blocking_issues", message: "Câu còn lỗi: thiếu đáp án" }, 409));
     render(<ReviewQueue doc={{ id: "d", mime: "application/vnd" }} initial={[pq("q1", 1), pq("q2", 2)]} topics={topics} />);
     expect(screen.queryByTestId("source-page")).toBeNull();
     press("Enter");

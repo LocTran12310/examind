@@ -9,21 +9,23 @@ const compat = new FlatCompat({
   baseDirectory: __dirname,
 });
 
+// ui-shadcn-shell ADR-01: import each shadcn component from its own file, as in the shadcn docs.
+const BASE_PATHS = [
+  { name: "@/components/ui", message: 'Import from "@/components/ui/<component>" (shadcn) instead.' },
+  { name: "@/components/ui/native-select", message: "Dùng OptionSelect (shadcn Select), không dùng NativeSelect" },
+];
+const BASE_PATTERNS = [{ group: ["@/components/ui/index"], message: "There is no components/ui barrel." }];
+
+// architecture-refactor ADR-06: route → page component → page hook → query hook → service → http
+const HTTP_ONLY_IN_SERVICES = { name: "@/lib/common/http", importNames: ["http", "api"], message: "Chỉ services/* gọi http; dùng hook trong hooks/react-query." };
+const QUERY_ONLY_IN_HOOKS = { name: "@tanstack/react-query", allowTypeImports: true, message: "React Query chỉ dùng trong hooks/react-query (và Providers)." };
+const restrict = (paths, patterns = []) => ["error", { paths: [...BASE_PATHS, ...paths], patterns: [...BASE_PATTERNS, ...patterns] }];
+
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
-    // ui-shadcn-shell ADR-01: import each shadcn component from its own file, as in the shadcn docs.
     rules: {
-      "no-restricted-imports": [
-        "error",
-        {
-          paths: [
-            { name: "@/components/ui", message: 'Import from "@/components/ui/<component>" (shadcn) instead.' },
-            { name: "@/components/ui/native-select", message: "Dùng OptionSelect (shadcn Select), không dùng NativeSelect" },
-          ],
-          patterns: [{ group: ["@/components/ui/index"], message: "There is no components/ui barrel." }],
-        },
-      ],
+      "no-restricted-imports": restrict([HTTP_ONLY_IN_SERVICES, QUERY_ONLY_IN_HOOKS]),
       // native pickers look different on every browser: use DatePicker / DateTimePicker / OptionSelect
       "no-restricted-syntax": [
         "error",
@@ -33,6 +35,34 @@ const eslintConfig = [
         },
         { selector: "JSXOpeningElement[name.name='select']", message: "Dùng OptionSelect (shadcn Select), không dùng <select>" },
       ],
+    },
+  },
+  {
+    files: ["src/services/**"],
+    rules: { "no-restricted-imports": restrict([QUERY_ONLY_IN_HOOKS], [{ group: ["react", "@/components/*", "@/hooks/*"], message: "services chỉ gọi http, không phụ thuộc UI." }]) },
+  },
+  {
+    files: ["src/hooks/react-query/**"],
+    rules: { "no-restricted-imports": restrict([HTTP_ONLY_IN_SERVICES]) },
+  },
+  {
+    files: ["src/lib/common/query-client.ts", "src/lib/api.ts", "src/components/layout/Providers/**", "src/__tests__/**", "src/**/*.test.{ts,tsx}"],
+    rules: { "no-restricted-imports": restrict([]) },
+  },
+  {
+    files: ["src/app/**"],
+    rules: {
+      "no-restricted-imports": restrict([HTTP_ONLY_IN_SERVICES, QUERY_ONLY_IN_HOOKS], [
+        { group: ["@/services/*", "@/hooks/react-query/*"], message: "Route chỉ render page component; dữ liệu đi qua page hook." },
+      ]),
+    },
+  },
+  {
+    files: ["src/components/common/**"],
+    rules: {
+      "no-restricted-imports": restrict([HTTP_ONLY_IN_SERVICES, QUERY_ONLY_IN_HOOKS], [
+        { group: ["@/components/page-components/*"], message: "components/common không phụ thuộc một trang cụ thể." },
+      ]),
     },
   },
   {

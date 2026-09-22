@@ -20,6 +20,8 @@ import { api, ApiError } from "@/lib/api";
 import { qs, useApi } from "@/lib/hooks";
 import { fmt } from "@/lib/dates";
 import { TYPE_LABEL, type Assignment, type BlueprintRow, type Exam, type Page, type ParsedQuestion, type QuestionType, type SchoolClass, type Tag, type Topic } from "@/lib/types";
+// eslint-disable-next-line no-restricted-imports -- screen moves to a page hook in its own slice
+import { useTagOptionsQuery } from "@/hooks/react-query/use-query-tag";
 
 export default function ExamBuilderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -27,8 +29,7 @@ export default function ExamBuilderPage({ params }: { params: Promise<{ id: stri
   // the matrix only offers the exam's subject (subject-scoped-bank A-07)
   const sid = exam?.subject_id;
   const { data: topics } = useApi<Topic[]>(exam ? (sid ? `/topics?subject_id=${sid}` : "/topics") : null);
-  const { data: tagsPage } = useApi<Page<Tag>>(exam ? `/tags?page_size=all${sid ? `&subject_id=${sid}` : ""}` : null);
-  const tags = tagsPage?.items;
+  const { data: tags } = useTagOptionsQuery(sid || null, !!exam);
   const [shortfalls, setShortfalls] = useState<{ row: number; missing: number }[]>([]);
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
