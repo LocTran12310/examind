@@ -44,9 +44,9 @@ describe("DataTable", () => {
     expect(searchOf().get("name_op")).toBe("+");
     expect(screen.getByRole("button", { name: "Kiểu lọc Họ tên: Bắt đầu bằng" })).toHaveTextContent("+");
     // dates: a range by default; ≥ turns it into one day with the operator
-    expect(screen.getByLabelText("Tạo lúc từ ngày")).toBeInTheDocument();
+    expect(screen.getByLabelText("Tạo lúc trong khoảng")).toBeInTheDocument();
     // the shadcn date picker (Popover + Calendar), not a native date input
-    await u.click(screen.getByLabelText("Tạo lúc từ ngày"));
+    await u.click(screen.getByLabelText("Tạo lúc trong khoảng"));
     await u.click(within(await screen.findByRole("grid")).getByRole("button", { name: /\b15\b/ }));
     const day = searchOf().get("created_at_from");
     expect(day).toMatch(/^\d{4}-\d{2}-15$/);

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { DatePicker } from "@/components/app/DatePicker";
+import { DatePicker, DateRangePicker } from "@/components/app/DatePicker";
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -144,6 +144,22 @@ export function FilterCell({ spec, name, label, get, set }: { spec: FilterSpec; 
       const menu = <OpMenu label={label} value={op} options={[...COMPARE_OPS, { value: RANGE, label: "Trong khoảng" }]} onChange={choose} />;
       if (op === RANGE)
         return (
+          <InputGroup className={group}>
+            <InputGroupAddon align="inline-start" className="pl-0.5">
+              {menu}
+            </InputGroupAddon>
+            <DateRangePicker
+              size="sm"
+              className="flex-1"
+              triggerClassName="h-full border-0 bg-transparent shadow-none dark:bg-transparent"
+              aria-label={`${label} trong khoảng`}
+              from={get(`${key}_from`)}
+              to={get(`${key}_to`)}
+              onChange={(f, t) => set({ [`${key}_from`]: f || null, [`${key}_to`]: t || null })}
+            />
+          </InputGroup>
+        );
+      return (
           <div className="flex items-center gap-1">
             <InputGroup className={group}>
               <InputGroupAddon align="inline-start" className="pl-0.5">

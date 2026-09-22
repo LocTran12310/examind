@@ -450,3 +450,4 @@ Tests at close of F9–F11: API 298 (incl. the 18 official files), web 134; tsc/
 - **Chặn tái phát:** ESLint báo lỗi khi import `ui/native-select`, dùng `<select>`, hoặc dùng `type="date|datetime-local|time|month|week"` ngoài `components/ui`.
 - **Kiểm tra:** tsc/eslint sạch; vitest 144/144, trong đó có test mới `date-picker.test.tsx`.
   - Kiểm tra trên trình duyệt, cả trang lẫn dialog Giao bài không còn `<select>` hay ô ngày native. Riêng dialog có một `<select aria-hidden>`: đó là thẻ ẩn Radix tự thêm để gửi form, không phải control hiển thị.
+- **Sửa thêm (ảnh chụp lọc "Trong khoảng"):** hai ô ngày từ/đến không vừa cột, ô "đến" bị cắt mất. Thay bằng `DateRangePicker`: một nút duy nhất hiển thị "dd/MM/yyyy – dd/MM/yyyy", một lịch; bấm lần 1 chọn ngày bắt đầu, lần 2 chọn ngày kết thúc (bấm ngày sớm hơn thì tự đảo), có nút xoá. URL vẫn dùng `<col>_from` / `<col>_to`. Test mới được thêm; vitest 145/145.

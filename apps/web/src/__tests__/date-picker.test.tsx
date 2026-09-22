@@ -2,7 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
-import { DatePicker, DateTimePicker } from "@/components/app/DatePicker";
+import { DatePicker, DateRangePicker, DateTimePicker } from "@/components/app/DatePicker";
 
 function Day({ initial = "" }: { initial?: string }) {
   const [v, setV] = useState(initial);
@@ -20,6 +20,16 @@ function Moment({ initial }: { initial: string }) {
     <>
       <DateTimePicker aria-label="Mở lúc" value={v} onChange={setV} />
       <output>{v}</output>
+    </>
+  );
+}
+
+function Range() {
+  const [r, setR] = useState({ from: "2026-09-10", to: "" });
+  return (
+    <>
+      <DateRangePicker aria-label="Tạo lúc" from={r.from} to={r.to} onChange={(from, to) => setR({ from, to })} />
+      <output data-testid="range">{`${r.from}|${r.to}`}</output>
     </>
   );
 }
@@ -49,5 +59,21 @@ describe("DatePicker (shadcn Popover + Calendar, no native date input)", () => {
     await u.tab();
     expect(screen.getByRole("status")).toHaveTextContent("2026-09-22T08:05");
     expect(time).toHaveValue("08:05");
+  });
+
+  it("DateRangePicker: one trigger, first click = start, second = end (swapped when earlier)", async () => {
+    const u = userEvent.setup();
+    render(<Range />);
+    const trigger = screen.getByRole("button", { name: "Tạo lúc" });
+    expect(trigger).toHaveTextContent("10/09/2026 – …");
+    await u.click(trigger);
+    const grid = await screen.findByRole("grid");
+    await u.click(within(grid).getByRole("button", { name: /\b20\b/ }));
+    expect(screen.getByTestId("range")).toHaveTextContent("2026-09-20|");
+    expect(screen.getByText("Chọn ngày kết thúc")).toBeInTheDocument();
+    await u.click(within(screen.getByRole("grid")).getByRole("button", { name: /\b5\b/ }));
+    expect(screen.getByTestId("range")).toHaveTextContent("2026-09-05|2026-09-20");
+    expect(screen.queryByRole("grid")).toBeNull();
+    expect(trigger).toHaveTextContent("05/09/2026 – 20/09/2026");
   });
 });

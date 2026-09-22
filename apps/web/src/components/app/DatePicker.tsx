@@ -89,6 +89,84 @@ export function DatePicker({
   );
 }
 
+/** One trigger for a day range `from`–`to` (either end may be empty): the first click picks the
+ *  start, the second the end (swapped when earlier), so a range fits one table-filter cell. */
+export function DateRangePicker({
+  from,
+  to,
+  onChange,
+  placeholder = "Từ ngày – đến ngày",
+  size = "default",
+  className,
+  triggerClassName,
+  "aria-label": ariaLabel,
+}: {
+  from: string;
+  to: string;
+  onChange: (from: string, to: string) => void;
+  placeholder?: string;
+  size?: "sm" | "default";
+  className?: string;
+  triggerClassName?: string;
+  "aria-label"?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [picking, setPicking] = useState(false); // start picked, waiting for the end
+  const start = toDay(from);
+  const end = toDay(to);
+  const text = from || to ? `${from ? formatDate(from) : "…"} – ${to ? formatDate(to) : "…"}` : placeholder;
+  return (
+    <Popover
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        setPicking(false);
+      }}
+    >
+      <div className={cn("relative flex min-w-0 items-center", className)}>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            aria-label={ariaLabel}
+            title={from || to ? text : undefined}
+            className={cn("w-full min-w-0 justify-start gap-1.5 px-2 font-normal", size === "sm" ? "h-7 text-xs" : "h-9", !(from || to) && "text-muted-foreground", (from || to) && "pr-7", triggerClassName)}
+          >
+            <CalendarDays className="size-3.5 shrink-0 opacity-60" />
+            <span className="truncate tabular-nums">{text}</span>
+          </Button>
+        </PopoverTrigger>
+        {(from || to) && (
+          <Button type="button" variant="ghost" size="icon-xs" className="absolute right-0.5 size-6" aria-label={`Xóa ${ariaLabel ?? "khoảng ngày"}`} onClick={() => onChange("", "")}>
+            <X />
+          </Button>
+        )}
+      </div>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="range"
+          locale={vi}
+          selected={start || end ? { from: start ?? end, to: picking ? undefined : end } : undefined}
+          defaultMonth={start ?? end}
+          captionLayout="dropdown"
+          onSelect={(_range, day) => {
+            const d = fromDay(day);
+            if (!picking || !from) {
+              onChange(d, "");
+              setPicking(true);
+              return;
+            }
+            onChange(d < from ? d : from, d < from ? from : d);
+            setPicking(false);
+            setOpen(false);
+          }}
+        />
+        <p className="border-t px-3 py-1.5 text-xs text-muted-foreground">{picking ? "Chọn ngày kết thúc" : "Chọn ngày bắt đầu"}</p>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 /** Date + time in business time, same value as `datetime-local` (`YYYY-MM-DDTHH:mm`). */
 export function DateTimePicker({
   value,
