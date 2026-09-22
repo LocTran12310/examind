@@ -1,7 +1,7 @@
 """Chuyển năm học (school-years US-05)."""
 from sqlalchemy import select
 
-from app.models import ClassMember, SchoolClass
+from app.modules.academic.domain.entities import ClassMember, SchoolClass
 from tests.factories import login_as, make_user
 
 
@@ -59,13 +59,14 @@ def test_commit_with_exceptions_is_idempotent_and_can_activate(client, db):
     again = client.post(f"/api/school-years/{year['id']}/rollover/commit", json={**body, "activate_target": False}).json()
     assert again["classes_created"] == []
     assert members("11A1") == {people["an"].id}
-    assert "rollover.commit" in [e["action"] for e in client.get("/api/audit", params={"target_id": year["id"]}).json()["items"]]
+    assert "rollover.commit" in [e["action"] for e in client.post("/api/audit/search", json={"target_id": year["id"]}).json()["data"]]
 
 
 def test_only_org_admin(client, db):
-    from app.services.school_years import current_code, ensure_year
+    from app.modules.academic.interface.deps import academic_api
 
     t = login_as(client, db, "teacher")
-    y = ensure_year(db, t.organization_id, current_code())
+    academic = academic_api(db)
+    y = academic.ensure_year(t.organization_id, academic.current_code())
     db.commit()
     assert client.post(f"/api/school-years/{y.id}/rollover/preview", json={}).status_code == 403

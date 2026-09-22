@@ -1,9 +1,9 @@
 from datetime import timedelta
 import threading
 
-from app.core import db as dbmod
-from app.core.security import now
-from app.models import Job
+from app.shared.infrastructure import db as dbmod
+from app.shared.domain.clock import utcnow as now
+from app.worker.queue import Job
 from app.worker import queue
 
 

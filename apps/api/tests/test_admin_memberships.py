@@ -42,7 +42,7 @@ def test_home_membership_rules_and_history(client, db):
     db.refresh(u)
     assert u.role == "org_admin"  # home role mirrored
     client.post(f"/api/admin/orgs/{b.id}/members", json={"org_code": "tta", "username": "lan", "role": "teacher"})
-    actions = [e["action"] for e in client.get("/api/audit", params={"target_id": str(u.id)}).json()["items"]]
+    actions = [e["action"] for e in client.post("/api/audit/search", json={"target_id": str(u.id)}).json()["data"]]
     assert actions[:2] == ["member.link", "member.update"]
     system = client.get("/api/me/orgs").json()[0]["id"]
     assert client.post(f"/api/admin/users/{u.id}/memberships", json={"org_id": system, "role": "teacher"}).status_code == 422

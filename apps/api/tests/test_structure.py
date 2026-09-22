@@ -1,7 +1,9 @@
 """School structure: levels › grades › classes (school-structure-multi-org US-01, US-02)."""
 from sqlalchemy import select
 
-from app.models import Grade, Organization, SchoolClass, SchoolLevel
+from app.modules.academic.domain.entities import Grade, SchoolClass, SchoolLevel
+
+from app.modules.identity.domain.entities import Organization
 from tests.factories import login_as
 
 

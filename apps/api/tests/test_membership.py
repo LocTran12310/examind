@@ -1,5 +1,5 @@
 """Users in several organisations (school-structure-multi-org US-03, US-04)."""
-from app.models import OrganizationMember
+from app.modules.identity.domain.entities import Membership
 from tests.factories import PASSWORD, login_as, make_org, make_user
 
 
@@ -13,7 +13,7 @@ def _two_orgs(db):
     a = make_org(db, "tta", "Trung tâm A")
     b = make_org(db, "ttb", "Trung tâm B")
     lan = make_user(db, b, "gvlan", role="teacher", full_name="Cô Lan")  # home = B
-    db.add(OrganizationMember(user_id=lan.id, organization_id=a.id, role="org_admin"))
+    db.add(Membership(user_id=lan.id, organization_id=a.id, role="org_admin"))
     make_user(db, a, "hsa", full_name="Học sinh A")
     make_user(db, b, "hsb", full_name="Học sinh B")
     db.commit()
@@ -23,7 +23,7 @@ def _two_orgs(db):
 def test_home_membership_is_created_for_every_account(db):
     org = make_org(db, "ttx")
     u = make_user(db, org, "x1", role="teacher")
-    m = db.get(OrganizationMember, (u.id, org.id))
+    m = db.get(Membership, (u.id, org.id))
     assert m is not None and m.role == "teacher" and m.is_active
     u.role = "org_admin"
     db.commit()
@@ -61,7 +61,7 @@ def test_login_opens_the_last_org_and_removed_membership_is_refused(client, db):
     client.post("/api/auth/logout")
     assert _login(client, "ttb", "gvlan")["org"]["code"] == "tta"
     # membership disabled while the token for A is still valid → next request refused, refresh lands in B
-    m = db.get(OrganizationMember, (lan.id, a.id))
+    m = db.get(Membership, (lan.id, a.id))
     m.is_active = False
     db.commit()
     assert client.post("/api/users/search", json={}).status_code == 401
@@ -115,7 +115,7 @@ def test_per_org_roles_in_checks(client, db):
     """AC-13: a teacher in A who is a student in B."""
     a, b, _ = _two_orgs(db)
     minh = make_user(db, b, "minh", role="student", full_name="Minh")
-    db.add(OrganizationMember(user_id=minh.id, organization_id=a.id, role="teacher"))
+    db.add(Membership(user_id=minh.id, organization_id=a.id, role="teacher"))
     db.commit()
     login_as(client, db, "org_admin", org=a, username="admin_a")
     doc_ok = client.post("/api/users/search", json={"filters": {"role": {"value": "teacher"}}}).json()["data"]
@@ -124,7 +124,7 @@ def test_per_org_roles_in_checks(client, db):
     # hsb is not a member of A → cannot join A's class
     from sqlalchemy import select
 
-    from app.models import User
+    from app.modules.identity.domain.entities import User
 
     hsb_id = db.scalar(select(User.id).where(User.username == "hsb"))
     assert client.post(f"/api/classes/{k['id']}/members", json={"user_ids": [str(hsb_id)]}).status_code == 404

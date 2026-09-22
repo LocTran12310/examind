@@ -1,6 +1,6 @@
 import pytest
 
-from app.services.scoring import grade, same_short_answer, scaled
+from app.modules.assessment.domain.services.scoring import grade, same_short_answer, scaled
 
 
 def test_mcq():

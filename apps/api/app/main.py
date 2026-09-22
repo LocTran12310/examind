@@ -1,14 +1,18 @@
 from fastapi import APIRouter, FastAPI
 from sqlalchemy import text
 
-from app.core import db as dbmod, storage
-from app.core.config import get_settings
-from app.core.logging import setup as setup_logging
+from app.shared.infrastructure import db as dbmod, storage
+from app.shared.infrastructure.config import get_settings
+from app.shared.infrastructure.logging import setup as setup_logging
 
 setup_logging(get_settings().log_level)
 
 app = FastAPI(title="Examind API", docs_url="/api/docs", openapi_url="/api/openapi.json")
 from app.modules.academic.interface.deps import academic_api  # noqa: E402
+from app.modules.analytics.infrastructure.adapters.assessment import AssessmentExams  # noqa: E402
+from app.modules.analytics.infrastructure.adapters.roster import AcademicRoster as AnalyticsRoster  # noqa: E402
+from app.modules.analytics.interface import deps as analytics_deps  # noqa: E402
+from app.modules.assessment.infrastructure.adapters.analytics import AnalyticsFactListener  # noqa: E402
 from app.modules.assessment.infrastructure.adapters.bank import BankQuestions  # noqa: E402
 from app.modules.assessment.infrastructure.adapters.roster import AcademicRoster  # noqa: E402
 from app.modules.assessment.infrastructure.adapters.subjects import TaxonomySubjects  # noqa: E402
@@ -24,7 +28,6 @@ from app.modules.ingestion.infrastructure.adapters.bank import BankAdapter  # no
 from app.modules.ingestion.interface import deps as ingestion_deps  # noqa: E402
 from app.modules.taxonomy.interface.deps import taxonomy_api  # noqa: E402
 from app.seed.org_seeder import SeedOrgSeeder  # noqa: E402
-from app.services.mastery import MasteryFactListener  # noqa: E402
 from app.shared.interface import errors, request_id  # noqa: E402
 from app.shared.interface.auth import register_actor_resolver  # noqa: E402
 
@@ -44,13 +47,15 @@ ingestion_deps.register_bank(lambda db: BankAdapter(bank_deps.bank_api(db)))
 ingestion_deps.register_source_tags(taxonomy_api)
 ingestion_deps.register_exam_drafts(lambda db: AssessmentExamDrafts(assessment_deps.assessment_api(db)))
 # assessment draws and shows questions through the bank, targets classes (academic) and students (identity), checks
-# subjects (taxonomy) and tells analytics (old layout: topic mastery) about every answer fact; the bank keeps a question
-# an exam uses
+# subjects (taxonomy) and tells analytics (topic mastery) about every answer fact; the bank keeps a question an exam uses
 assessment_deps.register_bank(lambda db: BankQuestions(bank_deps.bank_api(db)))
 assessment_deps.register_roster(lambda db: AcademicRoster(academic_api(db), identity_deps.identity_api(db)))
 assessment_deps.register_subjects(lambda db: TaxonomySubjects(taxonomy_api(db)))
-assessment_deps.register_fact_listener(MasteryFactListener)
+assessment_deps.register_fact_listener(lambda db: AnalyticsFactListener(analytics_deps.analytics_api(db)))
 IN_USE_CHECKS.append(lambda db, question_id: assessment_deps.assessment_api(db).question_in_use(question_id))
+# analytics lists classes (academic) and members (identity), and builds personal review exams through assessment
+analytics_deps.register_roster(lambda db: AnalyticsRoster(db, academic_api(db), identity_deps.identity_api(db)))
+analytics_deps.register_assessment(lambda db: AssessmentExams(assessment_deps.assessment_api(db)))
 
 api = APIRouter(prefix="/api")
 
@@ -68,19 +73,15 @@ def health():
     return {"status": status, "db": db_ok, "storage": storage_ok}
 
 
-# each migrated module exposes app.modules.<context>.interface.router:router
-MODULES: list[str] = ["taxonomy", "academic", "identity", "bank", "ingestion", "assessment"]
+# each module exposes app.modules.<context>.interface.router:router
+MODULES: list[str] = ["taxonomy", "academic", "identity", "bank", "ingestion", "assessment", "analytics", "audit"]
 
 
 def include_routers() -> None:
     import importlib
 
-    from app import routers
-
     for name in MODULES:
         api.include_router(importlib.import_module(f"app.modules.{name}.interface.router").router)
-    for r in routers.all_routers():
-        api.include_router(r)
 
 
 include_routers()

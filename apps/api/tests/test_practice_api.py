@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from app.core.security import now
+from app.shared.domain.clock import utcnow as now
 from tests.exam_helpers import display_key, klass_with_student, login
 from tests.test_mastery import take
 

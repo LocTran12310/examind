@@ -6,7 +6,7 @@ from collections.abc import Callable
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
-from app.core.config import get_settings
+from app.shared.infrastructure.config import get_settings
 from app.modules.ingestion.application.commands.create_exam_from_document import CreateExamFromDocumentHandler
 from app.modules.ingestion.application.commands.delete_ai_model import DeleteAiModelHandler
 from app.modules.ingestion.application.commands.delete_document import DeleteDocumentHandler

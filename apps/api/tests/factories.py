@@ -1,5 +1,5 @@
-from app.core.security import hash_password
-from app.models import Organization, User
+from app.modules.identity.infrastructure.adapters.passwords import hash_password
+from app.modules.identity.domain.entities import Organization, User
 
 PASSWORD = "Secret123!"
 
@@ -30,7 +30,7 @@ def login_as(client, db, role="super_admin", org=None, username=None):
     """Create (if needed) and log in a user; returns the user."""
     from sqlalchemy import select
 
-    from app.models.org import SYSTEM_ORG_CODE
+    from app.modules.identity.domain.entities import SYSTEM_ORG_CODE
 
     if role == "super_admin":
         org = db.scalar(select(Organization).where(Organization.code == SYSTEM_ORG_CODE))

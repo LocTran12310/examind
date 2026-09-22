@@ -1,6 +1,10 @@
 from sqlalchemy import func, select, text
 
-from app.models.taxonomy import Grade, Semester, Subject, Topic
+from app.modules.academic.domain.entities import Grade
+
+from app.modules.taxonomy.domain.entities import Semester, Subject
+
+from app.modules.taxonomy.domain.topics import Topic
 from app.seed.math_topics import MATH_TREE
 from app.seed.org_template import seed_org
 from tests.factories import make_org

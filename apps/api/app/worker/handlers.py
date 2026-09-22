@@ -1,7 +1,9 @@
 """Job handlers registered with the worker queue; each job type calls an application command of its module.
-The modules the ingestion pipeline and the attempt sweep talk to are wired here as in the API's composition root
-(app/main.py)."""
+The modules the ingestion pipeline, the attempt sweep (grading → topic mastery) and the key audit talk to are wired here
+as in the API's composition root (app/main.py)."""
 from app.modules.academic.interface.deps import academic_api
+from app.modules.analytics.interface import deps as analytics_deps
+from app.modules.assessment.infrastructure.adapters.analytics import AnalyticsFactListener
 from app.modules.assessment.infrastructure.adapters.bank import BankQuestions
 from app.modules.assessment.infrastructure.adapters.roster import AcademicRoster
 from app.modules.assessment.infrastructure.adapters.subjects import TaxonomySubjects
@@ -12,7 +14,6 @@ from app.modules.ingestion.application.commands.ingest_document import IngestDoc
 from app.modules.ingestion.infrastructure.adapters.bank import BankAdapter
 from app.modules.ingestion.interface import deps as ingestion_deps
 from app.modules.taxonomy.interface.deps import taxonomy_api
-from app.services.mastery import MasteryFactListener
 from app.worker.queue import FAILURE_HOOKS, handler
 
 ingestion_deps.register_bank(lambda db: BankAdapter(bank_deps.bank_api(db)))
@@ -20,7 +21,7 @@ ingestion_deps.register_source_tags(taxonomy_api)
 assessment_deps.register_bank(lambda db: BankQuestions(bank_deps.bank_api(db)))
 assessment_deps.register_roster(lambda db: AcademicRoster(academic_api(db), identity_deps.identity_api(db)))
 assessment_deps.register_subjects(lambda db: TaxonomySubjects(taxonomy_api(db)))
-assessment_deps.register_fact_listener(MasteryFactListener)
+assessment_deps.register_fact_listener(lambda db: AnalyticsFactListener(analytics_deps.analytics_api(db)))
 
 
 @handler("ingest_document")
@@ -34,3 +35,8 @@ FAILURE_HOOKS["ingest_document"] = lambda db, payload, error: ingestion_deps.mar
 def sweep_expired_attempts(db) -> int:
     """Abandoned attempts past their deadline are submitted (the worker commits)."""
     return assessment_deps.assessment_api(db).sweep_expired()
+
+
+def audit_answer_keys(db) -> list:
+    """Questions whose key the students' answers contradict are flagged (adaptive-review A-09; the worker commits)."""
+    return bank_deps.bank_api(db).audit_keys()

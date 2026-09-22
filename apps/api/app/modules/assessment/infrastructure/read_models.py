@@ -5,8 +5,11 @@ import uuid
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.modules.assessment.application.dto import AssignmentRow, ExamQuestionRow, ExamSummary, Person
+from app.modules.assessment.application.dto import (
+    AssignmentRow, ExamQuestionRow, ExamSummary, Person, PersonalReviewRow, PracticeAttemptRow,
+)
 from app.modules.assessment.domain.entities import Assignment, Attempt, AttemptAnswer, Exam
+from app.modules.assessment.domain.services.scoring import scaled
 from app.modules.assessment.infrastructure import orm  # noqa: F401  (mapping)
 from app.shared.application.search import Page, SearchRequest
 from app.shared.infrastructure.schema.academic import classes
@@ -97,3 +100,25 @@ class SqlResultReader:
             return {}
         rows = self.session.execute(select(users.c.id, users.c.full_name, users.c.username).where(users.c.id.in_(list(user_ids))))
         return {r.id: Person(r.id, r.full_name, r.username) for r in rows}
+
+
+class SqlPersonalReader:
+    def __init__(self, session: Session):
+        self.session = session
+
+    def practice_attempts(self, student_id: uuid.UUID, limit: int) -> list[PracticeAttemptRow]:
+        rows = self.session.execute(select(Attempt, Exam).join(Exam, e_c.id == at_c.exam_id)
+                                    .where(at_c.student_id == student_id, at_c.assignment_id.is_(None))
+                                    .order_by(at_c.started_at.desc()).limit(limit)).all()
+        return [PracticeAttemptRow(a.id, e.title, a.status, a.started_at, a.submitted_at,
+                                   scaled(a.score or 0, a.max_score or 0) if a.status == "submitted" else None, dict(e.settings or {}))
+                for a, e in rows]
+
+    def latest_review(self, student_id: uuid.UUID) -> PersonalReviewRow | None:
+        t_c = assignment_targets.c
+        row = self.session.execute(
+            select(Assignment, at_c.status).join(Exam, e_c.id == a_c.exam_id)
+            .join(assignment_targets, t_c.assignment_id == a_c.id)
+            .outerjoin(attempts, (at_c.assignment_id == a_c.id) & (at_c.student_id == student_id))
+            .where(t_c.user_id == student_id, e_c.source == "adaptive").order_by(a_c.created_at.desc()).limit(1)).first()
+        return PersonalReviewRow(row[0].id, row[0].title, row[1] or "not_started") if row else None

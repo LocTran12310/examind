@@ -1,6 +1,6 @@
 from datetime import date, datetime
 
-from app.core.timezone import business_date, business_today
+from app.shared.infrastructure.timezone import business_date, business_today
 
 
 class TzCalendar:

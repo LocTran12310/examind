@@ -2,9 +2,9 @@ from datetime import timedelta
 
 from sqlalchemy import select
 
-from app.core.security import now
-from app.models import Question
-from app.services.key_audit import evidence_for
+from app.shared.domain.clock import utcnow as now
+from app.modules.bank.domain.entities import Question
+from app.modules.bank.domain.services.key_audit import evidence_for
 from tests.exam_helpers import assign, display_key, exam_with_questions, klass_with_student, login
 
 

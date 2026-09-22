@@ -13,7 +13,7 @@ qc = questions.c
 
 def release_duplicates_of(session: Session, gone) -> None:
     """Before questions are deleted: copies marked "duplicate" of them go back to review.
-    `gone` selects the question ids (a list or a SELECT); the old layout's re-parse passes a SELECT."""
+    `gone` selects the question ids (a list or a SELECT); a document's re-parse passes a SELECT."""
     session.execute(update(questions).where(qc.duplicate_of.in_(gone), qc.status == "duplicate")
                     .values(status="needs_review", duplicate_of=None).execution_options(synchronize_session=False))
 
@@ -50,6 +50,9 @@ class SqlQuestionRepository:
         if spot_check is not None:
             stmt = stmt.where(qc.spot_check.is_(spot_check))
         return list(self.session.scalars(stmt))
+
+    def with_status(self, status: str) -> list[Question]:
+        return list(self.session.scalars(select(Question).where(qc.status == status)))
 
     def add(self, q: Question) -> None:
         self.session.add(q)

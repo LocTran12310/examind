@@ -1,7 +1,10 @@
 from sqlalchemy import select
 
-from app.models import Question, SourceDocument
-from app.services.triage import triage_legacy_drafts
+from app.modules.bank.domain.entities import Question
+
+from app.modules.ingestion.domain.entities import SourceDocument
+from app.modules.bank.domain.services.search_text import for_question
+from app.modules.bank.interface.deps import bank_api
 from tests.factories import make_org
 from tests.test_documents_api import run_jobs, sample, teacher_with_taxonomy, upload
 
@@ -55,21 +58,17 @@ def test_legacy_drafts_triaged(db):
                  solution="g", status="draft", issues=[], confidence=1.0)
     db.add(q)
     db.commit()
-    assert triage_legacy_drafts(db) == 1
+    assert bank_api(db).triage_legacy_drafts() == 1
     assert q.status == "auto_approved" and q.search_text
 
 
 def test_same_template_different_numbers_is_not_duplicate(db):
-    from app.services.triage import triage_questions
-
     org = make_org(db)
     opts = [{"label": l, "content": l} for l in "ABCD"]
     a = Question(organization_id=org.id, type="mcq", stem="Tọa độ đỉnh của parabol $y = x^2 - 4x + 3$ là", options=opts,
                  answer={"key": "A"}, solution="g", issues=[], confidence=1.0, status="approved", search_text="")
     db.add(a)
     db.flush()
-    from app.services.search_text import for_question
-
     a.search_text = for_question(a.stem, a.options)
     b = Question(organization_id=org.id, type="mcq", stem="Tọa độ đỉnh của parabol $y = x^2 - 6x + 5$ là", options=opts,
                  answer={"key": "A"}, solution="g", issues=[], confidence=1.0, status="draft")
@@ -77,5 +76,5 @@ def test_same_template_different_numbers_is_not_duplicate(db):
                  answer={"key": "A"}, solution="g", issues=[], confidence=1.0, status="draft")
     db.add_all([b, c])
     db.flush()
-    triage_questions(db, [b, c], 0.85)
+    bank_api(db).triage([b, c], 0.85)
     assert b.status == "auto_approved" and c.status == "duplicate" and c.duplicate_of == a.id

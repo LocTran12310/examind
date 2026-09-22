@@ -1,7 +1,8 @@
 """School years with HK1/HK2 (school-years US-01, US-02)."""
 from datetime import date
 
-from app.services.school_years import current_code, default_dates, term_for_date
+from app.modules.academic.domain.services.calendar import current_code, default_dates, term_for_date
+from app.shared.infrastructure.timezone import business_today
 from tests.factories import login_as
 
 
@@ -17,7 +18,7 @@ def _admin(client, db):
 def test_org_starts_with_the_current_year_active_and_terms(client, db):
     _admin(client, db)
     years = client.post("/api/school-years/search", json={}).json()["data"]
-    assert [(y["code"], y["status"]) for y in years] == [(current_code(), "active")]
+    assert [(y["code"], y["status"]) for y in years] == [(current_code(business_today()), "active")]
     assert [t["code"] for t in years[0]["terms"]] == ["hk1", "hk2"]
 
 
@@ -61,11 +62,11 @@ def test_closed_year_stays_editable_and_every_change_is_in_the_history(client, d
     k = client.post("/api/classes", json={"name": "10A1"}).json()
     client.post(f"/api/school-years/{cur['id']}/close")
     assert client.patch(f"/api/classes/{k['id']}", json={"name": "10A1-CLC"}).status_code == 200
-    h = client.get("/api/audit", params={"target_id": k["id"]}).json()
-    last = h["items"][0]
+    h = client.post("/api/audit/search", json={"target_id": k["id"]}).json()
+    last = h["data"][0]
     assert last["action"] == "class.update" and last["data"]["closed_year"] is True
     assert last["data"]["changes"] == {"name": ["10A1", "10A1-CLC"]}
-    year_h = [e["action"] for e in client.get("/api/audit", params={"target_id": cur["id"]}).json()["items"]]
+    year_h = [e["action"] for e in client.post("/api/audit/search", json={"target_id": cur["id"]}).json()["data"]]
     assert "year.close" in year_h
 
 
@@ -73,7 +74,7 @@ def test_teachers_read_years_but_cannot_change_them_or_read_history(client, db):
     login_as(client, db, "teacher")
     assert client.post("/api/school-years/search", json={}).status_code == 200
     assert client.post("/api/school-years", json={"code": "2031-2032"}).status_code == 403
-    assert client.get("/api/audit").status_code == 403
+    assert client.post("/api/audit/search", json={}).status_code == 403
 
 
 def test_date_helpers():

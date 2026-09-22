@@ -2,7 +2,7 @@
 The identity module maps its dataclasses onto them; other contexts read their columns through SQLAlchemy Core."""
 import uuid
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Table, UniqueConstraint, func
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, Integer, String, Table, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import CITEXT, JSONB, UUID
 
 from app.shared.infrastructure.db import metadata
@@ -68,3 +68,8 @@ refresh_tokens = Table(
     Column("expires_at", DateTime(timezone=True), nullable=False),
     Column("revoked_at", DateTime(timezone=True)),
 )
+
+# indexes the migrations create (declared here so the metadata matches the database; `alembic check` is empty)
+Index("ix_organization_members_org_role", organization_members.c.organization_id, organization_members.c.role)
+Index("ix_users_org_full_name", users.c.organization_id, users.c.full_name, users.c.id)
+Index("ix_users_org_username", users.c.organization_id, users.c.username)

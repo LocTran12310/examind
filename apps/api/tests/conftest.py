@@ -15,7 +15,8 @@ from fastapi.testclient import TestClient  # noqa: E402
 from sqlalchemy import create_engine, text  # noqa: E402
 from sqlalchemy.engine import make_url  # noqa: E402
 
-from app.core import db as dbmod  # noqa: E402
+import app.metadata  # noqa: E402,F401  (every table and mapping)
+from app.shared.infrastructure import db as dbmod  # noqa: E402
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -49,7 +50,7 @@ def _clean(_database):
         ).scalars().all()
         if tables:
             conn.execute(text("TRUNCATE " + ", ".join(f'"{t}"' for t in tables) + " RESTART IDENTITY CASCADE"))
-    from app.routers.auth import ip_limiter
+    from app.modules.identity.interface.deps import ip_limiter
     from app.seed.bootstrap import extra_seeders, seed_system
 
     ip_limiter.reset()

@@ -5,7 +5,7 @@ import unicodedata
 
 from sqlalchemy import func, select
 
-from app.models import SourceDocument
+from app.modules.ingestion.domain.entities import SourceDocument
 from tests.test_documents_api import run_jobs, sample, teacher_with_taxonomy
 
 
@@ -63,7 +63,7 @@ def test_replace_swaps_the_file_of_the_chosen_document(client, db):
 
 
 def test_deleting_the_original_releases_its_duplicates(client, db):
-    from app.models import Question
+    from app.modules.bank.domain.entities import Question
 
     teacher_with_taxonomy(client, db)
     first = up(client, "de.docx", sample("de-mau-toan10.docx")).json()["document"]["id"]

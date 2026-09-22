@@ -2,11 +2,11 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core import db as dbmod
-from app.core.config import get_settings
-from app.core.security import hash_password
-from app.models import Organization, User
-from app.models.org import SYSTEM_ORG_CODE
+import app.metadata  # noqa: F401  (every table and mapping)
+from app.modules.identity.domain.entities import SYSTEM_ORG_CODE, Organization, User
+from app.modules.identity.infrastructure.adapters.passwords import hash_password
+from app.shared.infrastructure import db as dbmod
+from app.shared.infrastructure.config import get_settings
 
 
 def seed_system(db: Session) -> tuple[Organization, User]:
@@ -32,7 +32,7 @@ def seed_system(db: Session) -> tuple[Organization, User]:
 
 
 def run() -> None:
-    from app.core import storage
+    from app.shared.infrastructure import storage
 
     try:
         storage.ensure_bucket()
@@ -41,8 +41,6 @@ def run() -> None:
     with dbmod.session_factory()() as db:
         seed_system(db)
         extra_seeders(db)
-        from app.services.triage import triage_legacy_drafts
-
         triage_legacy_drafts(db)
         backfill_mastery_if_missing(db)
         db.commit()
@@ -69,14 +67,18 @@ def seed_demo(db: Session, org_id) -> None:
 
 
 
+def triage_legacy_drafts(db: Session) -> int:
+    """Questions stored before the review workflow existed are triaged once (the bank)."""
+    from app.modules.bank.interface.deps import bank_api
+
+    return bank_api(db).triage_legacy_drafts()
+
+
 def backfill_mastery_if_missing(db: Session) -> int:
     """Answers graded before mastery tracking existed (adaptive-review AC-03)."""
-    from app.models import AnswerFact, StudentTopicMastery
-    from app.services.mastery import backfill
+    from app.modules.analytics.interface.deps import analytics_api
 
-    if db.scalar(select(StudentTopicMastery.student_id).limit(1)) is None and db.scalar(select(AnswerFact.id).limit(1)) is not None:
-        return backfill(db)
-    return 0
+    return analytics_api(db).rebuild_mastery_if_missing()
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from app.services.question_quality import blocking, evaluate, reevaluate, triage_status
+from app.shared.domain.question_quality import blocking, evaluate, reevaluate, triage_status
 
 OPTS = [{"label": l, "content": l.lower()} for l in "ABCD"]
 

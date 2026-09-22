@@ -1,6 +1,10 @@
 from sqlalchemy import select
 
-from app.models import Organization, Question, ReviewEvent, Topic
+from app.modules.bank.domain.entities import Question, ReviewEvent
+
+from app.modules.identity.domain.entities import Organization
+
+from app.modules.taxonomy.domain.topics import Topic
 from tests.test_documents_api import run_jobs, sample, upload
 from tests.test_review_api import setup_admin
 

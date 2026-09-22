@@ -8,7 +8,7 @@ import uuid
 from sqlalchemy import select, text, update
 from sqlalchemy.orm import Session
 
-from app.core.security import now
+from app.shared.domain.clock import utcnow as now
 from app.shared.domain.ids import new_id
 from app.shared.infrastructure.db import mapper_registry
 from app.shared.infrastructure.schema.jobs import jobs

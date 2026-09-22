@@ -1,6 +1,6 @@
 from sqlalchemy import text
 
-from app.models import Question, ReviewEvent
+from app.modules.bank.domain.entities import Question, ReviewEvent
 from tests.factories import make_org
 
 

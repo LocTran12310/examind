@@ -1,31 +1,14 @@
 from collections.abc import Iterator
-from datetime import datetime
-import uuid
 
-from sqlalchemy import DateTime, create_engine, func
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, registry, sessionmaker
 
-from app.core.config import get_settings
+from app.shared.infrastructure.config import get_settings
 
-
-class Base(DeclarativeBase):
-    pass
-
-
-# one registry and one MetaData for the whole schema: declarative classes (old layout) and the
-# dataclasses each module maps imperatively (architecture-refactor ADR-01) share them
-mapper_registry = Base.registry
-metadata = Base.metadata
-
-
-class IdMixin:
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-
-
-class TimestampMixin:
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-
+# one registry and one MetaData for the whole schema: the tables live in shared/infrastructure/schema/<area>.py and
+# each module maps its dataclasses onto them imperatively (architecture-refactor ADR-01)
+mapper_registry = registry()
+metadata = mapper_registry.metadata
 
 _engine = None
 _SessionLocal: sessionmaker | None = None

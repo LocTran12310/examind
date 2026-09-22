@@ -5,9 +5,9 @@ import pytest
 from cryptography.fernet import Fernet
 from sqlalchemy import select
 
-from app.core.config import get_settings
+from app.shared.infrastructure.config import get_settings
 from app.modules.ingestion.infrastructure.adapters import llm
-from app.models import Question
+from app.modules.bank.domain.entities import Question
 from tests.test_documents_api import run_jobs, sample, teacher_with_taxonomy, upload
 
 

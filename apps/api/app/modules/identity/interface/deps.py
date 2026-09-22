@@ -5,7 +5,7 @@ import uuid
 from fastapi import Depends, Request
 from sqlalchemy.orm import Session
 
-from app.core.config import get_settings
+from app.shared.infrastructure.config import get_settings
 from app.modules.identity.application.api import IdentityApi
 from app.modules.identity.application.commands.add_membership import AddMembershipHandler
 from app.modules.identity.application.commands.change_org_status import ChangeOrgStatusHandler
@@ -102,7 +102,7 @@ def _issuer(db: Session) -> SessionIssuer:
 
 
 def identity_api(db: Session) -> IdentityApi:
-    """The identity context for the old layout, on the caller's session."""
+    """The identity context for another context (through the composition root), on the caller's session."""
     return IdentityApi(SqlUserRepository(db), SqlOrganizationRepository(db), SqlMembershipRepository(db))
 
 

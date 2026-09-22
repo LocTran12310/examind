@@ -1,5 +1,5 @@
 """FileStorage over the S3-compatible object store (MinIO)."""
-from app.core import storage
+from app.shared.infrastructure import storage
 
 
 class S3FileStorage:

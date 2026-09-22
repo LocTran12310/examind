@@ -1,7 +1,7 @@
 """Physical tables of the academic area: school years, terms, classes and their members (ADR-01)."""
 import uuid
 
-from sqlalchemy import Column, Date, DateTime, ForeignKey, SmallInteger, String, Table, UniqueConstraint, func
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Index, SmallInteger, String, Table, UniqueConstraint, func, text
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.shared.infrastructure.db import metadata
@@ -53,3 +53,6 @@ class_members = Table(
     Column("joined_at", DateTime(timezone=True), server_default=func.now(), nullable=False),
     Column("left_at", DateTime(timezone=True)),
 )
+
+# indexes the migrations create (declared here so the metadata matches the database; `alembic check` is empty)
+Index("uq_school_years_one_active", school_years.c.organization_id, unique=True, postgresql_where=text("status = 'active'"))

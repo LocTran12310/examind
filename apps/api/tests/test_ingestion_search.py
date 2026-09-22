@@ -2,7 +2,7 @@
 import pytest
 from cryptography.fernet import Fernet
 
-from app.core.config import get_settings
+from app.shared.infrastructure.config import get_settings
 from tests.factories import login_as
 from tests.test_documents_api import sample, teacher_with_taxonomy, upload
 

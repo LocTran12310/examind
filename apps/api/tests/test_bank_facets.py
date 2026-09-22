@@ -3,8 +3,14 @@ import uuid
 
 from sqlalchemy import select
 
-from app.models import Question, QuestionTag, QuestionTopic, SourceDocument, Subject, Tag, Topic
-from app.models.taxonomy import topic_label
+from app.modules.bank.domain.entities import Question, QuestionTag, QuestionTopic
+
+from app.modules.ingestion.domain.entities import SourceDocument
+
+from app.modules.taxonomy.domain.entities import Subject, Tag
+
+from app.modules.taxonomy.domain.topics import Topic
+from app.modules.taxonomy.domain.topics import topic_label
 from tests.test_review_api import setup_admin
 
 

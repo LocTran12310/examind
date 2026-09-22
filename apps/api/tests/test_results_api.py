@@ -1,7 +1,7 @@
 from datetime import timedelta
 
-from app.core.security import now
-from app.models import Assignment
+from app.shared.domain.clock import utcnow as now
+from app.modules.assessment.domain.entities import Assignment
 from tests.exam_helpers import assign, display_key, exam_with_questions, klass_with_student, login
 
 

@@ -3,7 +3,9 @@ import uuid
 
 from sqlalchemy import select, text
 
-from app.models import AnswerFact, Topic
+from app.modules.assessment.domain.entities import AnswerFact
+
+from app.modules.taxonomy.domain.topics import Topic
 from tests.exam_helpers import assign, display_key, display_wrong, exam_with_questions, klass_with_student, login
 
 

@@ -13,7 +13,7 @@ from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import ColumnElement, Select
 
-from app.core.timezone import day_end_exclusive, day_start
+from app.shared.infrastructure.timezone import day_end_exclusive, day_start
 from app.shared.application.search import COMPARE_OPS, TEXT_OPS, Filter, SearchRequest
 from app.shared.domain.errors import Invalid
 

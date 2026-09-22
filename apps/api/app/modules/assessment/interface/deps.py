@@ -35,7 +35,7 @@ from app.modules.assessment.application.queries.search_assignments import Search
 from app.modules.assessment.application.queries.search_exam_questions import SearchExamQuestionsHandler
 from app.modules.assessment.application.queries.search_exams import SearchExamsHandler
 from app.modules.assessment.domain.ports import FactListener, QuestionBank, Roster, Subjects
-from app.modules.assessment.infrastructure.read_models import SqlAssignmentReader, SqlExamReader, SqlResultReader
+from app.modules.assessment.infrastructure.read_models import SqlAssignmentReader, SqlExamReader, SqlPersonalReader, SqlResultReader
 from app.modules.assessment.infrastructure.repositories import (
     SqlAnswerFacts, SqlAssignmentRepository, SqlAttemptRepository, SqlExamRepository,
 )
@@ -89,9 +89,9 @@ def grading(db: Session) -> Grading:
 
 
 def assessment_api(db: Session) -> AssessmentApi:
-    """Assessment for another context, the worker or the old layout, on the caller's session."""
-    return AssessmentApi(SqlExamRepository(db), SqlAttemptRepository(db), _bank_of(db), _registered(_subjects, "subjects")(db),
-                         grading(db), utcnow, SqlUnitOfWork(db))
+    """Assessment for another context or the worker, on the caller's session."""
+    return AssessmentApi(SqlExamRepository(db), SqlAttemptRepository(db), SqlAssignmentRepository(db), _bank_of(db),
+                         _registered(_subjects, "subjects")(db), grading(db), SqlPersonalReader(db), utcnow, SqlUnitOfWork(db))
 
 
 # ------------------------------------------------------------------ exams

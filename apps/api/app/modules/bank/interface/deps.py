@@ -76,7 +76,7 @@ def _staff_directory(db: Session) -> StaffDirectory:
 
 
 def bank_api(db: Session) -> BankApi:
-    """The bank for another context or the old layout, on the caller's session."""
+    """The bank for another context, the worker or the bootstrap, on the caller's session."""
     return BankApi(SqlQuestionRepository(db), SqlQuestionReader(db), _RegisteredTaxonomy(db), SqlDuplicateFinder(db),
                    SqlAnswerStats(db), SqlReviewLog(db), SqlUnitOfWork(db), SqlDocumentQuestions(db))
 

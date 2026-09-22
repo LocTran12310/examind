@@ -1,7 +1,9 @@
 """Answers remember year, term and classes; reports and the student record use it (school-years US-03, US-04)."""
 from sqlalchemy import select
 
-from app.models import AnswerFact, SchoolYear
+from app.modules.academic.domain.entities import SchoolYear
+
+from app.modules.assessment.domain.entities import AnswerFact
 from tests.exam_helpers import assign, display_key, exam_with_questions, login
 from tests.factories import make_user
 

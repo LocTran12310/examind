@@ -15,7 +15,7 @@ import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.core.images import Canvas  # noqa: E402
+from app.shared.infrastructure.png import Canvas  # noqa: E402
 
 LABELS = "ABCD"
 

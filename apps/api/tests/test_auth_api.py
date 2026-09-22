@@ -3,7 +3,7 @@ import time
 
 import pytest
 
-from app.routers.auth import ip_limiter
+from app.modules.identity.interface.deps import ip_limiter
 from tests.factories import PASSWORD, make_org, make_user
 
 

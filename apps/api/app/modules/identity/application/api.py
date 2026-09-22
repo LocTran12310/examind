@@ -1,4 +1,4 @@
-"""What other contexts (and the old layout) may ask the identity context (architecture-refactor ADR-01)."""
+"""What other contexts may ask the identity context (architecture-refactor ADR-01)."""
 import uuid
 
 from app.modules.identity.application.common import role_in

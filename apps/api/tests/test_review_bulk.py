@@ -1,7 +1,7 @@
 from sqlalchemy import select
 
-from app.models import Question
-from app.services.answer_key import parse
+from app.modules.bank.domain.entities import Question
+from app.modules.bank.domain.services.answer_key import parse
 from tests.test_documents_api import run_jobs, sample, upload
 from tests.test_review_api import setup_admin
 

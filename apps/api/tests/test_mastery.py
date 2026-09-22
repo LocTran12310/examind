@@ -1,7 +1,8 @@
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
-from app.models import StudentTopicMastery
-from app.services import mastery
+from app.modules.analytics.domain.entities import TopicMastery
+from app.modules.analytics.domain.services import mastery
+from app.modules.analytics.interface.deps import analytics_api
 from tests.exam_helpers import assign, display_key, display_wrong, exam_with_questions, klass_with_student, login
 
 
@@ -26,27 +27,27 @@ def take(client, db, right: bool, username="hs01"):
 
 def test_grading_updates_mastery_and_backfill_matches(client, db):
     admin = take(client, db, right=True)
-    rows = db.scalars(select(StudentTopicMastery)).all()
+    rows = db.scalars(select(TopicMastery)).all()
     assert rows and all(r.mastery > 0.5 and r.answers >= 1 for r in rows)
     before = {(r.student_id, r.topic_id): (round(r.mastery, 6), r.answers) for r in rows}
-    assert mastery.backfill(db, admin.organization_id) >= 4
+    assert analytics_api(db).rebuild_mastery(admin.organization_id) >= 4
     db.commit()
-    after = {(r.student_id, r.topic_id): (round(r.mastery, 6), r.answers) for r in db.scalars(select(StudentTopicMastery))}
+    after = {(r.student_id, r.topic_id): (round(r.mastery, 6), r.answers) for r in db.scalars(select(TopicMastery))}
     assert after == before
 
 
 def test_wrong_answers_lower_mastery(client, db):
     take(client, db, right=False)
-    assert all(r.mastery < 0.5 for r in db.scalars(select(StudentTopicMastery)))
+    assert all(r.mastery < 0.5 for r in db.scalars(select(TopicMastery)))
 
 
 def test_bootstrap_backfills_when_table_is_empty(client, db):
     from app.seed.bootstrap import backfill_mastery_if_missing
 
     take(client, db, right=True)
-    db.execute(StudentTopicMastery.__table__.delete())
+    db.execute(delete(TopicMastery))
     db.commit()
     assert backfill_mastery_if_missing(db) >= 4
     db.commit()
-    assert db.scalars(select(StudentTopicMastery)).first() is not None
+    assert db.scalars(select(TopicMastery)).first() is not None
     assert backfill_mastery_if_missing(db) == 0

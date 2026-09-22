@@ -1,4 +1,5 @@
 """Dependency rules of the layered API (architecture-refactor AC-01, ADR-05)."""
+import configparser
 import os
 import pkgutil
 import subprocess
@@ -41,3 +42,23 @@ def test_every_module_has_the_four_layers():
         base = os.path.join(os.path.dirname(app.modules.__file__), name)
         missing = [layer for layer in ("domain", "application", "infrastructure", "interface") if not os.path.isdir(os.path.join(base, layer))]
         assert not missing, f"{name}: missing {missing}"
+
+
+def test_every_module_is_in_the_layers_contract():
+    cfg = configparser.ConfigParser()
+    cfg.read(os.path.join(HERE, ".importlinter"))
+    containers = cfg["importlinter:contract:module-layers"]["containers"].split()
+    assert sorted(c.removeprefix("app.modules.") for c in containers if c.startswith("app.modules.")) == sorted(_modules())
+
+
+def test_the_old_layout_is_gone():
+    base = os.path.join(HERE, "app")
+    left = [p for p in ("routers", "services", "models", "schemas", "core", "deps.py") if os.path.exists(os.path.join(base, p))]
+    assert not left, f"old layout still present: {left}"
+    graph = grimp.build_graph("app")
+    old = [m for m in graph.modules if m.split(".")[1:2] and m.split(".")[1] in ("routers", "services", "models", "schemas", "core", "deps")]
+    assert not old, old
+
+
+def test_the_eight_modules():
+    assert sorted(_modules()) == sorted(["identity", "academic", "taxonomy", "bank", "ingestion", "assessment", "analytics", "audit"])

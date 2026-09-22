@@ -4,9 +4,9 @@ import httpx
 import pytest
 from cryptography.fernet import Fernet
 
-from app.core.config import get_settings
+from app.shared.infrastructure.config import get_settings
 from app.modules.ingestion.infrastructure.adapters import llm
-from app.models import AiModel
+from app.modules.ingestion.domain.entities import AiModel
 from tests.factories import login_as
 
 

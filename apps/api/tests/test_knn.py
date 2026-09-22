@@ -2,7 +2,9 @@ import subprocess
 
 from sqlalchemy import select
 
-from app.models import Question, Topic
+from app.modules.bank.domain.entities import Question
+
+from app.modules.taxonomy.domain.topics import Topic
 from tests.test_documents_api import run_jobs, sample, upload
 from tests.test_review_api import setup_admin
 

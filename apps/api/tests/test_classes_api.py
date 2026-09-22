@@ -33,7 +33,7 @@ def test_class_isolation(client, db):
     db.commit()
     mine = client.post("/api/classes", json={"name": "11B"}).json()["id"]
     assert client.post(f"/api/classes/{mine}/members", json={"user_ids": [str(stranger.id)]}).status_code == 404
-    from app.models import SchoolClass
+    from app.modules.academic.domain.entities import SchoolClass
 
     theirs = SchoolClass(organization_id=other.id, name="X", school_year="2026-2027")
     db.add(theirs)

@@ -1,17 +1,66 @@
+"""Sessions through the identity handlers on a real database (login, refresh rotation, logout, revocation, password)."""
 from datetime import timedelta
+from types import SimpleNamespace
 
 import pytest
 
-from app.core.errors import AppError
-from app.core.security import decode_access_token, now
-from app.services import auth
+from app.modules.identity.application.commands.change_password import ChangePassword, ChangePasswordHandler
+from app.modules.identity.application.commands.login import Login, LoginHandler
+from app.modules.identity.application.commands.logout import Logout, LogoutHandler
+from app.modules.identity.application.commands.refresh_session import RefreshSession, RefreshSessionHandler
+from app.modules.identity.domain.entities import User
+from app.modules.identity.infrastructure.adapters.passwords import Argon2PasswordHasher
+from app.modules.identity.infrastructure.adapters.tokens import TokenSecrets, decode_access_token
+from app.modules.identity.infrastructure.repositories import SqlOrganizationRepository, SqlRefreshTokenRepository, SqlUserRepository
+from app.modules.identity.interface import deps
+from app.shared.application.actor import Actor
+from app.shared.domain.clock import utcnow as now
+from app.shared.domain.errors import DomainError
+from app.shared.infrastructure.sql_unit_of_work import SqlUnitOfWork
+from app.shared.interface.errors import status_of
 from tests.factories import PASSWORD, make_org, make_user
 
 
+class _NoThrottle:
+    def hit(self, key: str) -> bool:
+        return True
+
+
+def _session(db, s):
+    return SimpleNamespace(user=db.get(User, s.me.id), access_token=s.access_token, refresh_token=s.refresh_token)
+
+
+class auth:  # noqa: N801  (reads like the calls it replaces)
+    @staticmethod
+    def login(db, org_code, username, password):
+        handle = LoginHandler(SqlOrganizationRepository(db), SqlUserRepository(db), Argon2PasswordHasher(), deps._issuer(db), _NoThrottle(),
+                              deps._policy(), SqlUnitOfWork(db))
+        return _session(db, handle(Login(org_code, username, password)))
+
+    @staticmethod
+    def refresh(db, raw_token):
+        handle = RefreshSessionHandler(SqlRefreshTokenRepository(db), SqlUserRepository(db), SqlOrganizationRepository(db), TokenSecrets(),
+                                       deps._issuer(db), SqlUnitOfWork(db))
+        return _session(db, handle(RefreshSession(raw_token)))
+
+    @staticmethod
+    def logout(db, raw_token):
+        LogoutHandler(deps._issuer(db), SqlUnitOfWork(db))(Logout(raw_token))
+
+    @staticmethod
+    def revoke_org_tokens(db, org_id):
+        SqlRefreshTokenRepository(db).revoke_org(org_id, now())
+
+    @staticmethod
+    def change_password(db, user, current_password, new_password):
+        actor = Actor(user_id=user.id, org_id=user.organization_id, role=user.role, is_super=user.is_super)
+        ChangePasswordHandler(SqlUserRepository(db), Argon2PasswordHasher(), SqlUnitOfWork(db))(actor, ChangePassword(current_password, new_password))
+
+
 def _code(fn):
-    with pytest.raises(AppError) as e:
+    with pytest.raises(DomainError) as e:
         fn()
-    return e.value.code, e.value.status
+    return e.value.code, status_of(e.value)
 
 
 def test_login_is_case_insensitive(db):

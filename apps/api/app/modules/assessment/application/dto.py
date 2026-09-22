@@ -89,3 +89,23 @@ def attempt_brief(t: Attempt, show_score: bool, scale_to: float = 10) -> Attempt
     return AttemptBrief(id=t.id, status=t.status, started_at=t.started_at, deadline_at=t.deadline_at, submitted_at=t.submitted_at,
                         score=t.score if visible else None, max_score=t.max_score, needs_grading=t.needs_grading,
                         score10=scaled(t.score, t.max_score or 0, scale_to) if visible else None)
+
+
+@dataclass(frozen=True)
+class PracticeAttemptRow:
+    """A personal practice attempt (no assignment) with its exam's title and settings (analytics shows the plan)."""
+    attempt_id: uuid.UUID
+    title: str
+    status: str
+    started_at: datetime | None
+    submitted_at: datetime | None
+    score10: float | None  # on a 10 scale, once submitted
+    settings: dict
+
+
+@dataclass(frozen=True)
+class PersonalReviewRow:
+    """The latest personal review exam assigned to a student and where the student is with it."""
+    assignment_id: uuid.UUID
+    title: str
+    status: str  # not_started | in_progress | submitted

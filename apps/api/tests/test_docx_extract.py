@@ -1,7 +1,7 @@
 import os
 import re
 
-from app.core.images import Canvas
+from app.shared.infrastructure.png import Canvas
 from app.modules.ingestion.infrastructure.adapters.pandoc import extract_docx
 from app.modules.ingestion.domain.services.splitter import split
 

@@ -1,6 +1,10 @@
 from sqlalchemy import func, select
 
-from app.models import AuditLog, Organization, Topic, User
+from app.modules.audit.domain.entities import AuditEntry
+
+from app.modules.identity.domain.entities import Organization, User
+
+from app.modules.taxonomy.domain.topics import Topic
 from tests.factories import PASSWORD, login_as, make_org, make_user
 
 
@@ -19,7 +23,7 @@ def test_create_org_seeds_and_returns_temp_password(client, db):
     assert db.scalar(select(func.count()).select_from(Topic).where(Topic.organization_id == org_id)) > 50
     admin = db.scalar(select(User).where(User.organization_id == org_id))
     assert admin.role == "org_admin" and admin.must_change_password
-    assert db.scalar(select(func.count()).select_from(AuditLog).where(AuditLog.action == "org.create")) == 1
+    assert db.scalar(select(func.count()).select_from(AuditEntry).where(AuditEntry.action == "org.create")) == 1
     # the new admin can log in with the temp password
     client.cookies.clear()
     r = client.post("/api/auth/login", json={"org_code": "TRUNGTAMA", "username": "admin", "password": body["admin"]["temp_password"]})

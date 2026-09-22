@@ -4,9 +4,18 @@ import math
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.images import Canvas
-from app.models import Question, Subject
-from app.services.assets import store_image
+import app.metadata  # noqa: F401  (every table and mapping)
+from app.modules.bank.domain.entities import Question
+from app.modules.ingestion.application.commands.store_asset import StoreImage
+from app.modules.ingestion.infrastructure.adapters.storage import S3FileStorage
+from app.modules.ingestion.infrastructure.repositories import SqlAssetRepository
+from app.modules.taxonomy.domain.entities import Subject
+from app.shared.infrastructure.png import Canvas
+
+
+def store_image(db: Session, org_id, data: bytes):
+    """The picture stored as an asset of the org (ingestion's asset store)."""
+    return StoreImage(SqlAssetRepository(db), S3FileStorage())(org_id, data)
 
 
 def _parabola_png() -> bytes:

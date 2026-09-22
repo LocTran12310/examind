@@ -4,7 +4,10 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.taxonomy import Grade, SchoolLevel, Semester, Subject, Topic, topic_label
+import app.metadata  # noqa: F401  (every table and mapping)
+from app.modules.academic.domain.entities import Grade, SchoolLevel
+from app.modules.taxonomy.domain.entities import Semester, Subject
+from app.modules.taxonomy.domain.topics import Topic, topic_label
 from app.seed.math_topics import MATH_TREE
 
 SUBJECTS = [("toan", "Toán"), ("ly", "Vật lý"), ("hoa", "Hóa học"), ("sinh", "Sinh học"), ("van", "Ngữ văn"), ("anh", "Tiếng Anh")]
@@ -41,9 +44,10 @@ def seed_org(db: Session, org_id: uuid.UUID) -> None:
             db.add(Semester(organization_id=org_id, code=code, name=name, sort=i))
     db.flush()
 
-    from app.services.school_years import current_code, ensure_year
+    from app.modules.academic.interface.deps import academic_api
 
-    ensure_year(db, org_id, current_code())  # every org opens with the current school year (active when none is)
+    academic = academic_api(db)
+    academic.ensure_year(org_id, academic.current_code())  # every org opens with the current school year (active when none is)
 
     math = subjects["toan"]
     has_topics = db.scalar(select(Topic.id).where(Topic.organization_id == org_id, Topic.subject_id == math.id).limit(1))

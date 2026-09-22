@@ -25,15 +25,9 @@ def error_response(request: Request, status: int, code: str, message: str, field
 
 
 def install(app: FastAPI) -> None:
-    from app.core.errors import AppError  # the old layout's error, until it is retired
-
     @app.exception_handler(DomainError)
     async def _domain(request: Request, exc: DomainError):
         return error_response(request, status_of(exc), exc.code, exc.message, exc.fields)
-
-    @app.exception_handler(AppError)
-    async def _app_error(request: Request, exc: AppError):
-        return error_response(request, exc.status, exc.code, exc.message, exc.fields)
 
     @app.exception_handler(RequestValidationError)
     async def _validation(request: Request, exc: RequestValidationError):

@@ -1,7 +1,8 @@
-"""What other contexts (and the old layout) may ask the bank (architecture-refactor ADR-01)."""
+"""What other contexts, the worker and the bootstrap may ask the bank (architecture-refactor ADR-01)."""
 import uuid
 
 from app.modules.bank.application.commands.audit_keys import AuditKeys, AuditKeysHandler
+from app.modules.bank.application.commands.triage_legacy_drafts import TriageLegacyDraftsHandler
 from app.modules.bank.application.commands.triage_questions import TriageQuestions, TriageQuestionsHandler
 from app.modules.bank.application.common import resolve_filters
 from app.modules.bank.application.dto import BankFilters, QuestionView, TriageCounts
@@ -48,6 +49,10 @@ class BankApi:
     def triage(self, questions: list[Question], threshold: float, seed: str = "") -> TriageCounts:
         """Flushed with the caller's transaction (ingestion)."""
         return TriageQuestionsHandler(self.duplicates, self.uow)(TriageQuestions(questions, threshold, seed))
+
+    def triage_legacy_drafts(self) -> int:
+        """Questions stored before the review workflow existed are still `draft`: triaged once (the bootstrap commits)."""
+        return TriageLegacyDraftsHandler(self.questions, self.duplicates, self.uow)()
 
     def audit_keys(self, org_id: uuid.UUID | None = None) -> list[uuid.UUID]:
         """Flushed with the caller's transaction (the worker commits)."""

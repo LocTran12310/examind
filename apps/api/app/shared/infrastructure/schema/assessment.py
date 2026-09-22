@@ -4,7 +4,7 @@ answer_facts through SQL."""
 import uuid
 
 from sqlalchemy import (
-    Boolean, CheckConstraint, Column, DateTime, Float, ForeignKey, Integer, SmallInteger, String, Table, Text, func,
+    Boolean, CheckConstraint, Column, DateTime, Float, ForeignKey, Index, Integer, SmallInteger, String, Table, Text, func,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 
@@ -134,3 +134,10 @@ answer_facts = Table(
     Column("term_code", String(8)),
     Column("class_ids", ARRAY(UUID(as_uuid=True)), nullable=False, default=list, server_default="{}"),
 )
+
+# indexes the migrations create (declared here so the metadata matches the database; `alembic check` is empty)
+Index("ix_answer_facts_student_question", answer_facts.c.student_id, answer_facts.c.question_id, answer_facts.c.created_at)
+Index("ix_answer_facts_class_ids", answer_facts.c.class_ids, postgresql_using="gin")
+Index("ix_answer_facts_tags", answer_facts.c.tag_ids, postgresql_using="gin")
+Index("ix_answer_facts_topic", answer_facts.c.topic_path, postgresql_using="gist")
+Index("ix_attempts_open", attempts.c.status, attempts.c.deadline_at)

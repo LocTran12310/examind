@@ -8,9 +8,9 @@ import time
 
 import structlog
 
-from app.core import db as dbmod
-from app.core.config import get_settings
-from app.core.logging import setup as setup_logging
+from app.shared.infrastructure import db as dbmod
+from app.shared.infrastructure.config import get_settings
+from app.shared.infrastructure.logging import setup as setup_logging
 from app.worker import queue
 
 HEARTBEAT = pathlib.Path("/tmp/worker-heartbeat")
@@ -55,9 +55,9 @@ def main() -> None:
             last_audit = time.monotonic()
             with factory() as db:
                 try:
-                    from app.services.key_audit import audit
+                    from app.worker.handlers import audit_answer_keys
 
-                    flagged = audit(db)
+                    flagged = audit_answer_keys(db)
                     db.commit()
                     if flagged:
                         log.warning("worker.key_audit_flagged", count=len(flagged))

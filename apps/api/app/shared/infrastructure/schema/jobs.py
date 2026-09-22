@@ -1,7 +1,7 @@
 """The Postgres job queue (exam-ingestion ADR-01): the worker claims rows with SKIP LOCKED; modules enqueue into it."""
 import uuid
 
-from sqlalchemy import Column, DateTime, Integer, String, Table, Text, func
+from sqlalchemy import Column, DateTime, Index, Integer, String, Table, Text, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 
 from app.shared.infrastructure.db import metadata
@@ -21,3 +21,6 @@ jobs = Table(
     Column("error", Text),
     Column("finished_at", DateTime(timezone=True)),
 )
+
+# indexes the migrations create (declared here so the metadata matches the database; `alembic check` is empty)
+Index("ix_jobs_claim", jobs.c.status, jobs.c.run_after, jobs.c.created_at)

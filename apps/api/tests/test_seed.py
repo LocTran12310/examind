@@ -1,6 +1,6 @@
 from sqlalchemy import func, select
 
-from app.models import Organization, User
+from app.modules.identity.domain.entities import Organization, User
 from app.seed.bootstrap import seed_system
 
 

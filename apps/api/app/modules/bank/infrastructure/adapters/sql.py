@@ -25,7 +25,7 @@ class SqlReviewDocuments:
         self.session.flush()
         self.session.execute(update(source_documents).where(d.id == document_id, d.organization_id == org_id).values(assigned_to=user_id)
                              .execution_options(synchronize_session=False))
-        self.session.expire_all()  # a loaded SourceDocument (old layout) must see the new reviewer
+        self.session.expire_all()  # a SourceDocument already loaded in this session must see the new reviewer
 
 
 class SqlReviewSettings:

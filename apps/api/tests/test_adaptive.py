@@ -3,9 +3,14 @@ import time
 
 from sqlalchemy import select, text
 
-from app.core.security import now
-from app.models import AnswerFact, Question, QuestionTopic, StudentTopicMastery, Topic, User
-from app.services import adaptive
+from app.shared.domain.clock import utcnow as now
+from app.modules.analytics.domain.entities import TopicMastery
+from app.modules.assessment.domain.entities import AnswerFact
+from app.modules.bank.domain.entities import Question, QuestionTopic
+from app.modules.identity.domain.entities import User
+from app.modules.taxonomy.domain.topics import Topic
+from app.modules.analytics.domain.services.practice import target_difficulties
+from app.modules.analytics.interface.deps import practice_planner
 from tests.test_mastery import take
 
 
@@ -23,7 +28,7 @@ def test_no_history_gives_balanced_exam(client, db):
 
     s = make_user(db, admin.organization, "moi", role="student")
     db.commit()
-    plan = adaptive.build_plan(db, admin.organization_id, s.id, count=10, seed=1)
+    plan = practice_planner(db).build(admin.organization_id, s.id, count=10, seed=1)
     assert len(plan.picks) == 10 and "Chưa có dữ liệu" in plan.note
     assert len({p.question_id for p in plan.picks}) == 10
 
@@ -33,12 +38,12 @@ def test_composition_targets_weak_topics_and_reasks_old_mistakes(client, db):
     # make the mistakes older than 24 h so they are due for a re-ask
     db.execute(text("update answer_facts set created_at = created_at - interval '2 days'"))
     db.commit()
-    plan = adaptive.build_plan(db, admin.organization_id, student.id, count=20, seed=3)
+    plan = practice_planner(db).build(admin.organization_id, student.id, count=20, seed=3)
     reasons = [p.reason for p in plan.picks]
     assert len(plan.picks) == 20 and len(plan.ids()) == 20
     assert reasons.count("Ôn lại câu từng làm sai") == 2
-    weak_topics = [tp for m, tp in db.execute(select(StudentTopicMastery, Topic).join(Topic, Topic.id == StudentTopicMastery.topic_id)
-                                                .where(StudentTopicMastery.student_id == student.id).order_by(StudentTopicMastery.mastery)).all()][:3]
+    weak_topics = [tp for m, tp in db.execute(select(TopicMastery, Topic).join(Topic, Topic.id == TopicMastery.topic_id)
+                                                .where(TopicMastery.student_id == student.id).order_by(TopicMastery.mastery)).all()][:3]
     weak_paths = [t.path for t in weak_topics]
     parents = {t.path.rsplit(".", 1)[0] for t in weak_topics if "." in t.path}
     in_weak = 0
@@ -58,14 +63,14 @@ def test_excludes_recent_correct_and_flagged(client, db):
     for q in flagged:
         q.status = "flagged"
     db.commit()
-    plan = adaptive.build_plan(db, admin.organization_id, student.id, count=20, seed=5)
+    plan = practice_planner(db).build(admin.organization_id, student.id, count=20, seed=5)
     assert not (plan.ids() & recent) and not (plan.ids() & {q.id for q in flagged})
 
 
 def test_difficulty_targets():
-    assert adaptive.target_difficulties(0.2) == ["nb", "th"]
-    assert adaptive.target_difficulties(0.55) == ["th", "vd"]
-    assert adaptive.target_difficulties(0.9) == ["vd", "vdc"]
+    assert target_difficulties(0.2) == ["nb", "th"]
+    assert target_difficulties(0.55) == ["th", "vd"]
+    assert target_difficulties(0.9) == ["vd", "vdc"]
 
 
 def test_generation_speed(client, db):
@@ -85,5 +90,5 @@ def test_generation_speed(client, db):
     db.commit()
     db.execute(text("analyze"))
     t = time.perf_counter()
-    plan = adaptive.build_plan(db, admin.organization_id, student.id, count=20, seed=1)
+    plan = practice_planner(db).build(admin.organization_id, student.id, count=20, seed=1)
     assert len(plan.picks) == 20 and time.perf_counter() - t < 0.5, time.perf_counter() - t

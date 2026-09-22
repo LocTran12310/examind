@@ -1,4 +1,4 @@
-from app.services.users import base_username
+from app.modules.identity.domain.services.accounts import base_username
 from tests.factories import PASSWORD, login_as, make_org, make_user
 
 

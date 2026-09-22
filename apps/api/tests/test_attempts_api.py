@@ -2,8 +2,8 @@ from datetime import timedelta
 
 from sqlalchemy import select
 
-from app.core.security import now
-from app.models import AnswerFact, Attempt
+from app.shared.domain.clock import utcnow as now
+from app.modules.assessment.domain.entities import AnswerFact, Attempt
 from tests.exam_helpers import assign, display_key, exam_with_questions, key_of, klass_with_student, login
 
 
@@ -72,9 +72,9 @@ def test_sweep_closes_abandoned_attempts(client, db):
     a = db.get(Attempt, att)
     a.deadline_at = now() - timedelta(minutes=5)
     db.commit()
-    from app.services.attempts import sweep_expired
+    from app.modules.assessment.interface.deps import assessment_api
 
-    assert sweep_expired(db) == 1
+    assert assessment_api(db).sweep_expired() == 1
     db.commit()
     db.expire_all()
     assert db.get(Attempt, att).status == "submitted"
@@ -90,7 +90,7 @@ def test_other_students_cannot_see_attempt(client, db):
 
 
 def test_shuffled_options_are_relabelled_for_students(client, db):
-    from app.models import Question
+    from app.modules.bank.domain.entities import Question
 
     _, _, _, s, att = started(client, db)
     a = db.get(Attempt, att)

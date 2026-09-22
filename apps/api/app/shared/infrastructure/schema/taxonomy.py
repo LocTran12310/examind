@@ -1,7 +1,7 @@
 """Physical tables of the taxonomy area (architecture-refactor ADR-01)."""
 import uuid
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, SmallInteger, String, Table, UniqueConstraint, func
+from sqlalchemy import Column, DateTime, ForeignKey, Index, Integer, SmallInteger, String, Table, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.types import UserDefinedType
 
@@ -36,7 +36,7 @@ def _created() -> Column:
 tags = Table(
     "tags", metadata,
     Column("id", UUID(as_uuid=True), primary_key=True),
-    Column("created_at", DateTime(timezone=True), server_default=func.now()),
+    Column("created_at", DateTime(timezone=True), server_default=func.now(), nullable=False),
     Column("organization_id", UUID(as_uuid=True), ForeignKey("organizations.id"), index=True, nullable=False),
     Column("group", String(16), nullable=False),
     Column("name", String(100), nullable=False),
@@ -90,3 +90,7 @@ topics = Table(
     Column("path", LtreeType(), nullable=False),
     Column("sort", Integer, nullable=False, default=0),
 )
+
+# indexes the migrations create (declared here so the metadata matches the database; `alembic check` is empty)
+Index("ix_topics_path", topics.c.path, postgresql_using="gist")
+Index("uq_topics_org_path", topics.c.organization_id, topics.c.path, unique=True)

@@ -5,7 +5,9 @@ from alembic import command
 from alembic.config import Config
 from sqlalchemy import select
 
-from app.models import Question, QuestionTag, Subject, Tag
+from app.modules.bank.domain.entities import Question, QuestionTag
+
+from app.modules.taxonomy.domain.entities import Subject, Tag
 from tests.conftest import HERE, TEST_URL
 from tests.test_review_api import setup_admin
 

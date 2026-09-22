@@ -10,7 +10,7 @@ import time
 
 import httpx
 
-from app.core.config import get_settings
+from app.shared.infrastructure.config import get_settings
 from app.modules.ingestion.domain.entities import AiModel
 from app.modules.ingestion.domain.errors import LlmError
 from app.modules.ingestion.domain.ports import ChatResult

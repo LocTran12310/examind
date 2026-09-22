@@ -1,4 +1,4 @@
-from app.core.images import Canvas
+from app.shared.infrastructure.png import Canvas
 from tests.factories import login_as, make_org, make_user
 
 

@@ -2,7 +2,9 @@
 from typing import Protocol
 import uuid
 
-from app.modules.assessment.application.dto import AssignmentRow, ExamQuestionRow, ExamSummary, Person
+from app.modules.assessment.application.dto import (
+    AssignmentRow, ExamQuestionRow, ExamSummary, Person, PersonalReviewRow, PracticeAttemptRow,
+)
 from app.modules.assessment.domain.entities import Attempt, AttemptAnswer
 from app.shared.application.search import Page, SearchRequest
 
@@ -33,3 +35,15 @@ class ResultReader(Protocol):
     def answers(self, attempt_ids: list[uuid.UUID]) -> list[AttemptAnswer]: ...
 
     def people(self, user_ids: set[uuid.UUID]) -> dict[uuid.UUID, Person]: ...
+
+
+class PersonalReader(Protocol):
+    """Personal review exams (source adaptive): a student's practice attempts and the latest review assigned."""
+
+    def practice_attempts(self, student_id: uuid.UUID, limit: int) -> list[PracticeAttemptRow]:
+        """The student's attempts outside any assignment, newest first."""
+        ...
+
+    def latest_review(self, student_id: uuid.UUID) -> PersonalReviewRow | None:
+        """The newest assignment of a personal review exam targeting the student."""
+        ...

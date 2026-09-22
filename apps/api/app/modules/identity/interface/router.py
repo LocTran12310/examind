@@ -3,7 +3,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, File, Request, Response, UploadFile
 
-from app.core.config import get_settings
+from app.shared.infrastructure.config import get_settings
 from app.modules.identity.application.commands.add_membership import AddMembership, AddMembershipHandler
 from app.modules.identity.application.commands.change_org_status import ChangeOrgStatus, ChangeOrgStatusHandler
 from app.modules.identity.application.commands.change_password import ChangePassword, ChangePasswordHandler

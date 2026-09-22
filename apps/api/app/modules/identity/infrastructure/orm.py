@@ -1,5 +1,5 @@
 """Maps the identity dataclasses onto their tables (architecture-refactor ADR-01). Importing this module is enough;
-mapping happens once. `User.organization` (the home org) stays for the old layout's readers."""
+mapping happens once. `User.organization` (the home org) is a convenience for the seeds and the tests."""
 from sqlalchemy import event, inspect
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import relationship

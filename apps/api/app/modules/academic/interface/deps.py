@@ -41,7 +41,7 @@ from app.shared.infrastructure.sql_unit_of_work import SqlUnitOfWork
 
 
 def academic_api(db: Session) -> AcademicApi:
-    """The academic context for another context or the old layout, on the caller's session."""
+    """The academic context for another context, the seeds or the tests, on the caller's session."""
     return AcademicApi(SqlSchoolYearRepository(db), SqlClassRepository(db), SqlGradeRepository(db), SqlAuditTrail(db), TzCalendar())
 
 

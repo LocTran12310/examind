@@ -2,7 +2,7 @@
 The bank module maps its dataclasses onto them; other contexts read their columns through SQLAlchemy Core."""
 import uuid
 
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, SmallInteger, String, Table, Text, func
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Index, Integer, SmallInteger, String, Table, Text, func, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 
 from app.shared.infrastructure.db import metadata
@@ -83,3 +83,8 @@ review_events = Table(
     Column("before", JSONB(none_as_null=True)),
     Column("after", JSONB(none_as_null=True)),
 )
+
+# indexes the migrations create (declared here so the metadata matches the database; `alembic check` is empty)
+Index("ix_questions_org_status", questions.c.organization_id, questions.c.status)
+Index("uq_question_topics_primary", question_topics.c.question_id, unique=True, postgresql_where=text("is_primary"))
+Index("ix_questions_search_trgm", questions.c.search_text, postgresql_using="gin", postgresql_ops={"search_text": "gin_trgm_ops"})

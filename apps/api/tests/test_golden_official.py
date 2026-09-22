@@ -13,7 +13,7 @@ import pytest
 from app.modules.ingestion.infrastructure.image_store import document_store
 from app.modules.ingestion.infrastructure.adapters.pandoc import extract_docx
 from app.modules.ingestion.domain.services.splitter import split
-from app.services.scoring import same_short_answer
+from app.shared.domain.answers import same_short_answer
 from tests.factories import make_org
 
 EXPECTED = json.loads((Path(__file__).parent / "golden" / "official_expected.json").read_text(encoding="utf-8"))["documents"]

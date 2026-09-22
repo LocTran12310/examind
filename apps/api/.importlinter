@@ -1,5 +1,5 @@
 # Dependency rules (architecture-refactor ADR-05). Run: uv run lint-imports
-# A new module under app/modules/ is added to the layers contract below.
+# Every module under app/modules/ is listed in the layers contract below (tests/test_architecture.py checks it).
 [importlinter]
 root_package = app
 include_external_packages = True
@@ -20,6 +20,8 @@ containers =
     app.modules.bank
     app.modules.ingestion
     app.modules.assessment
+    app.modules.analytics
+    app.modules.audit
 
 [importlinter:contract:pure-domain]
 name = Domain code imports no framework, ORM, web or storage library
@@ -37,10 +39,6 @@ forbidden_modules =
     app.shared.application
     app.shared.infrastructure
     app.shared.interface
-    app.core
-    app.models
-    app.services
-    app.routers
 
 [importlinter:contract:pure-application]
 name = Application code depends on ports, not on frameworks or adapters
@@ -56,17 +54,15 @@ forbidden_modules =
     starlette
     app.shared.infrastructure
     app.shared.interface
-    app.core
-    app.models
-    app.services
-    app.routers
 
 [importlinter:contract:shared-kernel]
-name = The shared kernel never imports a module or the old layout's routers/services
+name = The shared kernel never imports a module or the composition root
 type = forbidden
 source_modules =
     app.shared
 forbidden_modules =
     app.modules
-    app.services
-    app.routers
+    app.main
+    app.metadata
+    app.worker
+    app.seed
