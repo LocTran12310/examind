@@ -122,7 +122,9 @@ def members(db: Session, scope: OrgScope, class_id) -> list[User]:
 def add_members(db: Session, scope: OrgScope, class_id, user_ids) -> int:
     get_class(db, scope, class_id)
     ids = set(user_ids)
-    valid = set(db.scalars(select(User.id).where(User.id.in_(ids), User.organization_id == scope.org_id)))
+    from app.services.membership import member_ids
+
+    valid = member_ids(db, scope.org_id, ids)
     if ids - valid:
         raise not_found("Không tìm thấy người dùng")
     if valid:

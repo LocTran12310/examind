@@ -92,3 +92,75 @@ def test_super_admin_sees_every_org_and_works_inside_as_org_admin(client, db):
     assert (me["org"]["code"], me["role"], me["is_super"]) == ("tta", "org_admin", True)
     assert "hsa" in {u["username"] for u in client.get("/api/users").json()["items"]}
     assert client.get("/api/admin/orgs").status_code == 200  # still a platform admin
+
+
+def test_linked_member_is_listed_with_role_and_home_org(client, db):
+    a, b, lan = _two_orgs(db)
+    login_as(client, db, "org_admin", org=a, username="admin_a")
+    rows = {u["username"]: u for u in client.get("/api/users").json()["items"]}
+    assert (rows["gvlan"]["role"], rows["gvlan"]["is_home"], rows["gvlan"]["home_org_code"]) == ("org_admin", False, "ttb")
+    assert rows["hsa"]["is_home"] is True and "hsb" not in rows
+    assert client.get("/api/users", params={"role": "org_admin"}).json()["total"] == 2  # admin_a + gvlan (role in A)
+    # A cannot reset the password or rename an account it does not own
+    assert client.post(f"/api/users/{lan.id}/reset-password").status_code == 403
+    assert client.patch(f"/api/users/{lan.id}", json={"full_name": "X"}).status_code == 403
+    # but can change the role in A and lock access to A only
+    assert client.patch(f"/api/users/{lan.id}", json={"role": "teacher"}).json()["role"] == "teacher"
+    assert client.patch(f"/api/users/{lan.id}", json={"is_active": False}).json()["is_active"] is False
+    db.refresh(lan)
+    assert lan.is_active and lan.role == "teacher"  # home account untouched
+
+
+def test_per_org_roles_in_checks(client, db):
+    """AC-13: a teacher in A who is a student in B."""
+    a, b, _ = _two_orgs(db)
+    minh = make_user(db, b, "minh", role="student", full_name="Minh")
+    db.add(OrganizationMember(user_id=minh.id, organization_id=a.id, role="teacher"))
+    db.commit()
+    login_as(client, db, "org_admin", org=a, username="admin_a")
+    doc_ok = client.get("/api/users", params={"role": "teacher"}).json()["items"]
+    assert [u["username"] for u in doc_ok] == ["minh"]
+    k = client.post("/api/classes", json={"name": "10A1"}).json()
+    # hsb is not a member of A → cannot join A's class
+    from sqlalchemy import select
+
+    from app.models import User
+
+    hsb_id = db.scalar(select(User.id).where(User.username == "hsb"))
+    assert client.post(f"/api/classes/{k['id']}/members", json={"user_ids": [str(hsb_id)]}).status_code == 404
+    assert client.post(f"/api/classes/{k['id']}/members", json={"user_ids": [str(minh.id)]}).status_code == 204
+
+
+def test_link_and_unlink_an_account(client, db):
+    a, b, _ = _two_orgs(db)
+    make_user(db, b, "gvhoa", role="teacher", full_name="Cô Hoa")
+    db.commit()
+    login_as(client, db, "org_admin", org=a, username="admin_a")
+    assert client.post("/api/users/link", json={"org_code": "ttb", "username": "nobody", "role": "teacher"}).status_code == 404
+    r = client.post("/api/users/link", json={"org_code": "TTB", "username": "gvhoa", "role": "teacher"})
+    assert r.status_code == 201 and (r.json()["is_home"], r.json()["role"]) == (False, "teacher")
+    assert client.post("/api/users/link", json={"org_code": "ttb", "username": "gvhoa", "role": "teacher"}).status_code == 409
+    hoa = r.json()["id"]
+    k = client.post("/api/classes", json={"name": "10A9"}).json()
+    client.post(f"/api/classes/{k['id']}/members", json={"user_ids": [hoa]})
+    # Hoa can now switch to A
+    hoa_client = client.__class__(client.app)
+    _login(hoa_client, "ttb", "gvhoa")
+    assert "tta" in [o["code"] for o in hoa_client.get("/api/me/orgs").json()]
+    assert hoa_client.post("/api/auth/switch-org", json={"org_id": str(a.id)}).status_code == 200
+    # unlink: access to A ends, A's class memberships go, the account still works in B
+    assert client.delete(f"/api/users/{hoa}/membership").status_code == 204
+    assert client.get(f"/api/classes/{k['id']}").json()["member_count"] == 0
+    assert hoa_client.get("/api/users").status_code == 401
+    hoa_client.cookies.delete("ex_access")
+    assert hoa_client.post("/api/auth/refresh").status_code == 204
+    assert hoa_client.get("/api/auth/me").json()["org"]["code"] == "ttb"
+    # the home membership cannot be removed
+    hsa = next(u["id"] for u in client.get("/api/users").json()["items"] if u["username"] == "hsa")
+    assert client.delete(f"/api/users/{hsa}/membership").status_code == 422
+
+
+def test_teachers_cannot_link(client, db):
+    a, _, _ = _two_orgs(db)
+    login_as(client, db, "teacher", org=a, username="gv_a")
+    assert client.post("/api/users/link", json={"org_code": "ttb", "username": "gvlan", "role": "teacher"}).status_code == 403

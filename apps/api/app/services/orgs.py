@@ -37,7 +37,11 @@ def _guard_system(org: Organization) -> None:
 
 
 def user_counts(db: Session, org_ids) -> dict:
-    rows = db.execute(select(User.organization_id, func.count()).where(User.organization_id.in_(org_ids)).group_by(User.organization_id))
+    from app.models import OrganizationMember
+
+    rows = db.execute(select(OrganizationMember.organization_id, func.count()).where(OrganizationMember.organization_id.in_(org_ids),
+                                                                                   OrganizationMember.is_active.is_(True))
+                      .group_by(OrganizationMember.organization_id))
     return dict(rows.all())
 
 

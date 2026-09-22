@@ -27,8 +27,9 @@ def my_mastery(scope: OrgScope = Depends(org_scope), db: Session = Depends(get_d
 
 @router.get("/students/{student_id}/mastery")
 def student_mastery(student_id: uuid.UUID, scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
-    u = db.get(User, student_id)
-    if u is None or u.organization_id != scope.org_id:
+    from app.services.membership import member_ids
+
+    if not member_ids(db, scope.org_id, {student_id}):
         raise not_found("Không tìm thấy học sinh")
     return mastery.rows_for(db, scope.org_id, student_id)
 
@@ -40,10 +41,13 @@ def weakest(rows: list[dict], n: int = 3) -> list[dict]:
 
 @router.get("/classes/{class_id}/overview")
 def class_overview(class_id: uuid.UUID, scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
+    from app.services.membership import roles_in
+
     members = class_service.members(db, scope, class_id)
+    roles = roles_in(db, scope.org_id, [u.id for u in members])
     out = []
     for u in members:
-        if u.role != "student":
+        if roles.get(u.id) != "student":
             continue
         latest = db.execute(
             select(Assignment, Attempt.status).join(Exam, Exam.id == Assignment.exam_id)

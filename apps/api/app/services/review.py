@@ -74,7 +74,9 @@ def assign(db: Session, scope: OrgScope, doc_id, user_id) -> SourceDocument:
         raise not_found("Không tìm thấy tài liệu")
     if user_id is not None:
         u = db.get(User, uuid.UUID(str(user_id)))
-        if u is None or u.organization_id != scope.org_id or u.role not in ("teacher", "org_admin"):
+        from app.services.membership import role_in
+
+        if u is None or role_in(db, u, scope.org_id) not in ("teacher", "org_admin") or u.role == "super_admin":
             raise validation("Chỉ giao cho giáo viên của trung tâm", "assigned_to")
     doc.assigned_to = uuid.UUID(str(user_id)) if user_id else None
     return doc

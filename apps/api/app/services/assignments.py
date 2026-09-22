@@ -29,8 +29,12 @@ def student_ids(db: Session, a: Assignment) -> set:
     ids = {t.user_id for t in targets if t.user_id}
     class_ids = [t.class_id for t in targets if t.class_id]
     if class_ids:
+        from app.models import OrganizationMember
+
         ids |= set(db.scalars(select(ClassMember.user_id).join(User, User.id == ClassMember.user_id)
-                              .where(ClassMember.class_id.in_(class_ids), User.role == "student", User.is_active.is_(True))))
+                              .join(OrganizationMember, (OrganizationMember.user_id == User.id) & (OrganizationMember.organization_id == a.organization_id))
+                              .where(ClassMember.class_id.in_(class_ids), OrganizationMember.role == "student",
+                                     OrganizationMember.is_active.is_(True), User.is_active.is_(True))))
     return ids
 
 
@@ -56,10 +60,10 @@ def create(db: Session, scope: OrgScope, exam_id, data: dict, class_ids: list, u
         c = db.get(SchoolClass, cid)
         if c is None or c.organization_id != scope.org_id:
             raise validation("Lớp không hợp lệ", "class_ids")
-    for uid in user_ids:
-        u = db.get(User, uid)
-        if u is None or u.organization_id != scope.org_id or u.role != "student":
-            raise validation("Học sinh không hợp lệ", "user_ids")
+    from app.services.membership import member_ids
+
+    if set(user_ids) - member_ids(db, scope.org_id, set(user_ids), "student"):
+        raise validation("Học sinh không hợp lệ", "user_ids")
     a = Assignment(organization_id=scope.org_id, exam_id=exam.id, title=(data.get("title") or exam.title).strip(),
                    open_at=data["open_at"], close_at=data["close_at"], duration_minutes=data["duration_minutes"],
                    max_attempts=data.get("max_attempts", 1), shuffle_questions=data.get("shuffle_questions", True),

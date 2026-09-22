@@ -101,7 +101,9 @@ def heatmap(db: Session, scope: OrgScope, class_id, level: int = 1, subject_id=N
     for r in rows:
         cells.setdefault(str(r["student_id"]), {})[str(r["topic_id"])] = {"ratio": round(r["p"] / r["m"], 4) if r["m"] else None, "answered": r["n"]}
     members = db.execute(text("select u.id, u.full_name, u.username from users u join class_members cm on cm.user_id = u.id "
-                              "where cm.class_id = :k and u.role = 'student' order by u.full_name"), {"k": uuid.UUID(str(class_id))}).mappings().all()
+                              "join organization_members om on om.user_id = u.id and om.organization_id = :org and om.is_active "
+                              "where cm.class_id = :k and om.role = 'student' order by u.full_name"),
+                         {"k": uuid.UUID(str(class_id)), "org": scope.org_id}).mappings().all()
     return {"columns": columns, "rows": [{"student_id": m["id"], "full_name": m["full_name"], "username": m["username"],
                                           "cells": cells.get(str(m["id"]), {})} for m in members]}
 

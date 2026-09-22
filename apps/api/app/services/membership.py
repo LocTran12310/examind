@@ -83,6 +83,14 @@ def member_ids(db: Session, org_id, ids, role: str | tuple[str, ...] | None = No
     return set(db.scalars(members_stmt(org_id, role).with_only_columns(User.id).where(User.id.in_(list(ids)))))
 
 
+def roles_in(db: Session, org_id, user_ids) -> dict:
+    """{user_id: role} for active memberships of `org_id`."""
+    if not user_ids:
+        return {}
+    return dict(db.execute(select(OrganizationMember.user_id, OrganizationMember.role).where(
+        OrganizationMember.organization_id == org_id, OrganizationMember.user_id.in_(list(user_ids)), OrganizationMember.is_active.is_(True))).all())
+
+
 def link(db: Session, scope, org_code: str, username: str, role: str) -> tuple[User, OrganizationMember]:
     """Add an existing account from another org (A-10)."""
     if scope.role != "org_admin":

@@ -191,8 +191,12 @@ def assign_to_class(db: Session, scope, class_id, count: int, open_at, close_at,
         raise validation("Thời lượng từ 1 đến 600 phút", "duration_minutes")
     count = max(5, min(50, int(count)))
     created = 0
-    for u in class_service.members(db, scope, class_id):
-        if u.role != "student" or not u.is_active:
+    from app.services.membership import roles_in
+
+    members = class_service.members(db, scope, class_id)
+    roles = roles_in(db, scope.org_id, [u.id for u in members])
+    for u in members:
+        if roles.get(u.id) != "student" or not u.is_active:
             continue
         plan = build_plan(db, scope.org_id, u.id, count)
         if not plan.picks:

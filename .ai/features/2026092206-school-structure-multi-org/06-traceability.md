@@ -16,6 +16,6 @@
 | AC-10 | T-02-02 | UOW-02 | done |
 | AC-11 | T-03-02, T-03-03 | UOW-03 | open |
 | AC-12 | T-03-02, T-03-03 | UOW-03 | open |
-| AC-13 | T-03-01 | UOW-03 | open |
+| AC-13 | T-03-01 | UOW-03 | done |
 
 Coverage: **13/13** acceptance criteria.
