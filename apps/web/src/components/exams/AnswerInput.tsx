@@ -23,7 +23,7 @@ export function AnswerInput({ q, value, onChange }: { q: AttemptQuestion; value:
                 aria-pressed={cur[o.label] === v}
                 aria-label={`${o.label} ${v ? "Đúng" : "Sai"}`}
                 onClick={() => onChange({ ...cur, [o.label]: v })}
-                className={cn("rounded-md border px-3 py-1", cur[o.label] === v ? (v ? "border-green-600 bg-emerald-500/10 text-green-800" : "border-red-500 bg-destructive/10 text-destructive") : "border-input")}
+                className={cn("rounded-md border px-3 py-1", cur[o.label] === v ? (v ? "border-emerald-600 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" : "border-destructive bg-destructive/10 text-destructive") : "border-input")}
               >
                 {v ? "Đúng" : "Sai"}
               </button>

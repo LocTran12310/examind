@@ -5,26 +5,26 @@ WEB = "apps/web"
 UI = f"{WEB}/src/components/ui"
 
 UOWS = [
-    dict(id="UOW-01", slug="shell-theme", title="shadcn foundation, theme and app shell",
+    dict(dod_done=True, id="UOW-01", slug="shell-theme", title="shadcn foundation, theme and app shell",
          requirements=["US-01", "US-02"], risk="medium",
          demo=["Sign in as trungtama/admin → left sidebar with icons, header right: org, theme, avatar menu",
                "Toggle Tối → whole app dark, refresh keeps it; collapse sidebar to icons",
                "Sign in as a student → same shell with student menu; phone width → menu opens as a sheet"],
          in_scope=["shadcn init + components", "ThemeProvider", "AppSidebar, header, OrgSwitcher (current org), UserMenu", "Login / change-password pages"]),
-    dict(id="UOW-02", slug="data-table", title="Server-side DataTable with URL state on users, organisations, classes",
+    dict(dod_done=True, id="UOW-02", slug="data-table", title="Server-side DataTable with URL state on users, organisations, classes",
          requirements=["US-03", "US-04"], depends_on=["UOW-01"], risk="high",
          demo=["Users: type 'bui' in Họ tên filter → URL ?full_name=bui, request carries it, 20/page",
                "Open the copied URL in a new tab → same rows, inputs filled",
                "Tick 2 users → Xóa asks to confirm; Sửa disabled; Nạp reloads",
                "Organisations and Classes use the same table"],
          in_scope=["paging helper + endpoints", "DataTable, filter row, toolbar, pagination, useTableQuery", "Users, orgs, classes screens"]),
-    dict(id="UOW-03", slug="lists", title="All remaining lists on the DataTable",
+    dict(dod_done=True, id="UOW-03", slug="lists", title="All remaining lists on the DataTable",
          requirements=["US-03", "US-04"], depends_on=["UOW-02"],
          demo=["Documents, review, exams, assignments, AI models, tags: column filters + paging from the server",
                "Exams: select a row → detail panel lists its questions",
                "Bank: filters on the left + search, pages from the server, cards unchanged"],
          in_scope=["Bare-list endpoints → Page", "List screens"]),
-    dict(id="UOW-04", slug="flows", title="Every other screen on shadcn components, old barrel removed",
+    dict(dod_done=True, id="UOW-04", slug="flows", title="Every other screen on shadcn components, old barrel removed",
          requirements=["US-01", "US-04"], depends_on=["UOW-02"],
          demo=["Upload a document, review with hotkeys, edit a question, build and take an exam, see results and reports — in dark mode",
                "`grep -r \"@/components/ui\\\"\"` finds nothing; lint forbids it"],
@@ -79,16 +79,16 @@ t(id="T-03-03", uow="UOW-03", title="Question bank: shadcn filters, URL state, s
   touches=[f"{WEB}/src/app/(app)/org/bank/page.tsx", f"{WEB}/src/components/bank/BankFilters.tsx", f"{WEB}/src/components/bank/BulkBar.tsx", f"{WEB}/src/components/bank/QuestionRow.tsx"],
   context="Cards kept; shared Pagination.", done_when=["Filters in URL", "Shared pagination"])
 t(id="T-04-01", uow="UOW-04", title="Upload, document detail, review queue, question editor/form on shadcn",
-  layer="web", estimate="4h", depends_on=["T-02-03"], verifies=["AC-12"], tests=[f"{WEB}/src/components/review/ReviewQueue.test.tsx", f"{WEB}/src/components/review/QuestionEditor.test.tsx", f"{WEB}/src/__tests__/upload.test.tsx"],
+  layer="web", estimate="4h", depends_on=["T-02-03"], verifies=["AC-12"], tests=[f"{WEB}/src/components/review/ReviewQueue.test.tsx", f"{WEB}/src/components/review/QuestionEditor.test.tsx", f"{WEB}/src/__tests__/documents.test.tsx", f"{WEB}/src/__tests__/question-edit.test.tsx"],
   touches=[f"{WEB}/src/components/documents/UploadForm.tsx", f"{WEB}/src/components/review/ReviewQueue.tsx", f"{WEB}/src/components/review/QuestionEditor.tsx", f"{WEB}/src/components/bank/QuestionForm.tsx"],
   context="Hotkeys unchanged.", done_when=["Hotkeys work", "Dialogs are shadcn"])
 t(id="T-04-02", uow="UOW-04", title="Exam builder, assign, runner, results, essay grading, reports, adaptive, topic tree on shadcn",
-  layer="web", estimate="4h", depends_on=["T-02-03"], verifies=["AC-12"], tests=[f"{WEB}/src/components/exams/ExamRunner.test.tsx", f"{WEB}/src/components/topics/TopicTree.test.tsx", f"{WEB}/src/__tests__/reports.test.tsx"],
+  layer="web", estimate="4h", depends_on=["T-02-03"], verifies=["AC-12"], tests=[f"{WEB}/src/components/exams/ExamRunner.test.tsx", f"{WEB}/src/components/topics/TopicTree.test.tsx", f"{WEB}/src/components/reports/TopicStatsTree.test.tsx", f"{WEB}/src/__tests__/assignment-report.test.tsx", f"{WEB}/src/__tests__/result.test.tsx"],
   touches=[f"{WEB}/src/app/(app)/org/exams/[id]/page.tsx", f"{WEB}/src/components/exams/ExamRunner.tsx", f"{WEB}/src/components/exams/ResultView.tsx", f"{WEB}/src/components/reports/Heatmap.tsx", f"{WEB}/src/components/topics/TopicTree.tsx"],
   context="Dark-mode colours via tokens; heatmap uses CSS vars.", done_when=["Runner works", "Heatmap readable in dark"])
 t(id="T-04-03", uow="UOW-04", title="Remove old barrel, ESLint no-restricted-imports, full web test pass, build",
   layer="test", estimate="2h", depends_on=["T-04-01", "T-04-02", "T-03-02", "T-03-03", "T-02-04", "T-01-03"], verifies=["AC-01", "AC-12"],
-  tests=[f"{WEB}/src"], touches=[f"{WEB}/src/components/ui/index.tsx", f"{WEB}/eslint.config.mjs"], assumptions=["A-09"],
+  tests=[f"{WEB}/src"], touches=[f"{WEB}/eslint.config.mjs", f"{WEB}/src/__tests__/ui-barrel.test.ts"], assumptions=["A-09"],
   context="ADR-01.", done_when=["No import of the barrel", "Lint rule", "tsc/eslint/build clean", "Web tests ≥ 84 cases"])
 
 TICKETS = T

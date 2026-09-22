@@ -40,10 +40,10 @@ describe("topic tree", () => {
   });
 
   it("shows the server refusal when deleting a node with children", async () => {
-    vi.spyOn(window, "confirm").mockReturnValue(true);
     mockFetch(route("DELETE", "/api/topics/nh", { error: { code: "topic_has_children", message: "Chuyên đề còn nhánh con" } }, 409));
     render(<TopicTree topics={topics} subjectId="s" onChange={() => {}} />);
     await userEvent.click(within(screen.getByTestId("topic-Nguyên hàm")).getByRole("button", { name: "Xóa" }));
+    await userEvent.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Xóa" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Chuyên đề còn nhánh con");
   });
 

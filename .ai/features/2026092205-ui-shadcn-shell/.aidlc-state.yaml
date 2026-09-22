@@ -5,7 +5,7 @@ slug: 2026092205-ui-shadcn-shell
 profile: none
 created: 2026-09-22T09:55:04
 ruleset: 5
-current_gate: G3
+current_gate: G5
 history:
   - gate: G0
     action: passed
@@ -177,3 +177,58 @@ history:
     at: 2026-09-22T10:40:40
     by: Loc Tran
     ticket: T-03-03
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-22T10:48:29
+    by: Loc Tran
+    ticket: T-04-01
+  - gate: G4
+    action: evidence
+    at: 2026-09-22T10:48:34
+    by: Loc Tran
+    ticket: T-04-01
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-22T10:48:34
+    by: Loc Tran
+    ticket: T-04-01
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-22T10:48:34
+    by: Loc Tran
+    ticket: T-04-02
+  - gate: G4
+    action: evidence
+    at: 2026-09-22T10:48:36
+    by: Loc Tran
+    ticket: T-04-02
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-22T10:48:36
+    by: Loc Tran
+    ticket: T-04-02
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-22T10:48:36
+    by: Loc Tran
+    ticket: T-04-03
+  - gate: G4
+    action: evidence
+    at: 2026-09-22T10:48:44
+    by: Loc Tran
+    ticket: T-04-03
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-22T10:48:44
+    by: Loc Tran
+    ticket: T-04-03
+  - gate: G4
+    action: passed
+    at: 2026-09-22T10:49:15
+    by: Loc Tran
+    evidence: every done ticket has a passing verification run; all 13 tickets done, all UoW checklists ticked
+  - gate: G5
+    action: passed
+    at: 2026-09-22T10:49:15
+    by: Loc Tran
+    evidence: assumptions resolved, ADRs settled, graph valid

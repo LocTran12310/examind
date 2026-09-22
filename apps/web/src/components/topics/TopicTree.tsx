@@ -1,5 +1,6 @@
 "use client";
 
+import { ConfirmDialog } from "@/components/app/ConfirmDialog";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { FormAlert } from "@/components/app/FormAlert";
@@ -20,6 +21,7 @@ export function TopicTree({ topics, subjectId, onChange, readOnly }: { topics: T
   const [editing, setEditing] = useState<string | null>(null);
   const [adding, setAdding] = useState<string | null>(null); // parent id, or "root"
   const [dialog, setDialog] = useState<Dialog>(null);
+  const [deleting, setDeleting] = useState<TopicNode | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const toggle = (id: string) => setOpen((s) => {
@@ -86,7 +88,7 @@ export function TopicTree({ topics, subjectId, onChange, readOnly }: { topics: T
                 size="sm"
                 variant="ghost"
                 className="text-destructive"
-                onClick={() => window.confirm(`Xóa "${node.name}"?`) && run(() => api(`/topics/${node.id}`, { method: "DELETE" }))}
+                onClick={() => setDeleting(node)}
               >
                 Xóa
               </Button>
@@ -133,6 +135,19 @@ export function TopicTree({ topics, subjectId, onChange, readOnly }: { topics: T
           + Mạch kiến thức
         </Button>
       )}
+      <ConfirmDialog
+        open={!!deleting}
+        onOpenChange={(o) => !o && setDeleting(null)}
+        destructive
+        title={`Xóa "${deleting?.name ?? ""}"?`}
+        description="Chỉ xóa được nhánh chưa có câu hỏi và nhánh con."
+        confirmLabel="Xóa"
+        onConfirm={async () => {
+          const node = deleting!;
+          setDeleting(null);
+          await run(() => api(`/topics/${node.id}`, { method: "DELETE" }));
+        }}
+      />
       <FormDialog open={!!dialog} title={dialog?.kind === "move" ? "Di chuyển chuyên đề" : "Gộp chuyên đề"} onOpenChange={(o) => !o && setDialog(null)}>
         {dialog && (
           <TargetPicker

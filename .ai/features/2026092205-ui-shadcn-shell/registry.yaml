@@ -291,7 +291,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-02-03
     blocks:
@@ -309,7 +309,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-02-03
     blocks:
@@ -328,7 +328,7 @@ ticket:
     layer: test
     type: feature
     estimate_hours: 2
-    status: todo
+    status: done
     depends_on:
       - T-04-01
       - T-04-02
@@ -341,5 +341,5 @@ ticket:
       - AC-01
       - AC-12
     touches:
-      - apps/web/src/components/ui/index.tsx   # new
       - apps/web/eslint.config.mjs   # new
+      - apps/web/src/__tests__/ui-barrel.test.ts   # new

@@ -58,7 +58,7 @@ export function QuestionView({
                   className={cn(
                     "flex w-full items-start gap-2 rounded-lg border px-3 py-2 text-left",
                     onSelect ? "cursor-pointer hover:border-primary" : "cursor-default",
-                    isKey && "border-green-500 bg-emerald-500/10",
+                    isKey && "border-emerald-500 bg-emerald-500/10",
                     !isKey && isPicked && mode === "result" && "border-destructive bg-destructive/10",
                     !isKey && isPicked && mode !== "result" && "border-primary bg-primary/10",
                     !isKey && !isPicked && "border-border",

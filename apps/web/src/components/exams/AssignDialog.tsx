@@ -1,5 +1,6 @@
 "use client";
 
+import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { FormAlert } from "@/components/app/FormAlert";
 import { Button } from "@/components/ui/button";
@@ -76,10 +77,10 @@ export function AssignDialog({ examId, title, classes, onDone }: { examId: strin
         </FormField>
         <div className="space-y-1 pt-6 text-sm">
           <label className="flex items-center gap-2">
-            <input type="checkbox" checked={v.shuffle_questions} onChange={(e) => set("shuffle_questions", e.target.checked)} /> Đảo thứ tự câu
+            <Checkbox checked={v.shuffle_questions} onCheckedChange={(v) => set("shuffle_questions", v === true)} /> Đảo thứ tự câu
           </label>
           <label className="flex items-center gap-2">
-            <input type="checkbox" checked={v.shuffle_options} onChange={(e) => set("shuffle_options", e.target.checked)} /> Đảo phương án
+            <Checkbox checked={v.shuffle_options} onCheckedChange={(v) => set("shuffle_options", v === true)} /> Đảo phương án
           </label>
         </div>
       </div>

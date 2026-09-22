@@ -6,6 +6,7 @@ import { QuestionView } from "@/components/question/QuestionView";
 import { FormAlert } from "@/components/app/FormAlert";
 import { ToneBadge } from "@/components/app/ToneBadge";
 import { Panel } from "@/components/app/Panel";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { fmt } from "@/lib/dates";
 import type { AttemptResult, ResultQuestion } from "@/lib/types";
 import { EssayGrader } from "./EssayGrader";
@@ -23,21 +24,21 @@ function YourAnswer({ q }: { q: ResultQuestion }) {
   const r = q.response ?? {};
   if (q.type === "true_false") {
     return (
-      <table className="mt-2 text-sm" data-testid="tf-result">
-        <tbody>
+      <Table className="mt-2 w-auto text-sm" data-testid="tf-result">
+        <TableBody>
           {q.options.map((o) => {
             const mine = r[o.label];
             const key = (q.answer ?? {})[o.label];
             return (
-              <tr key={o.label}>
-                <td className="pr-3 font-semibold">{o.label})</td>
-                <td className={cn("pr-3", mine === key ? "text-emerald-700 dark:text-emerald-400" : "text-destructive")}>Bạn: {mine === undefined ? "—" : mine ? "Đúng" : "Sai"}</td>
-                <td className="text-muted-foreground">Đáp án: {key ? "Đúng" : "Sai"}</td>
-              </tr>
+              <TableRow key={o.label}>
+                <TableCell className="font-semibold">{o.label})</TableCell>
+                <TableCell className={cn(mine === key ? "text-emerald-700 dark:text-emerald-400" : "text-destructive")}>Bạn: {mine === undefined ? "—" : mine ? "Đúng" : "Sai"}</TableCell>
+                <TableCell className="text-muted-foreground">Đáp án: {key ? "Đúng" : "Sai"}</TableCell>
+              </TableRow>
             );
           })}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     );
   }
   if (q.type === "short_answer") return <p className={cn("mt-2 text-sm", q.is_correct ? "text-emerald-700 dark:text-emerald-400" : "text-destructive")}>Bạn trả lời: {String(r.value ?? "—")}</p>;

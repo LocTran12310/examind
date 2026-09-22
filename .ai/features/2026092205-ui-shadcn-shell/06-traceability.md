@@ -4,7 +4,7 @@
 
 | AC | Covered by | UoW | Status |
 |----|-----------|-----|--------|
-| AC-01 | T-01-01, T-01-03, T-04-03 | UOW-01, UOW-04 | open |
+| AC-01 | T-01-01, T-01-03, T-04-03 | UOW-01, UOW-04 | done |
 | AC-02 | T-01-01 | UOW-01 | done |
 | AC-03 | T-01-02 | UOW-01 | done |
 | AC-04 | T-01-02 | UOW-01 | done |
@@ -15,6 +15,6 @@
 | AC-09 | T-02-03 | UOW-02 | done |
 | AC-10 | T-02-01, T-02-02, T-03-01 | UOW-02, UOW-03 | done |
 | AC-11 | T-02-04, T-03-02, T-03-03 | UOW-02, UOW-03 | done |
-| AC-12 | T-04-01, T-04-02, T-04-03 | UOW-04 | open |
+| AC-12 | T-04-01, T-04-02, T-04-03 | UOW-04 | done |
 
 Coverage: **12/12** acceptance criteria.

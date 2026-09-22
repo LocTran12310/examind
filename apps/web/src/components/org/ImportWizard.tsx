@@ -1,5 +1,6 @@
 "use client";
 
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useState } from "react";
@@ -119,7 +120,7 @@ export function ImportWizard({ orgCode }: { orgCode: string }) {
             {hasErrors && <ToneBadge tone="red">{preview.error_count} dòng lỗi</ToneBadge>}
             {hasErrors && (
               <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={skipErrors} onChange={(e) => setSkipErrors(e.target.checked)} /> Bỏ qua các dòng lỗi
+                <Checkbox checked={skipErrors} onCheckedChange={(v) => setSkipErrors(v === true)} /> Bỏ qua các dòng lỗi
               </label>
             )}
             <Button disabled={!canCommit || busy} onClick={commit} className="ml-auto">

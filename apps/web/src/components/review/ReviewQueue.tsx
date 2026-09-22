@@ -25,7 +25,7 @@ const LEGEND: [string, string][] = [
 export function FlagPanel({ ev }: { ev: NonNullable<ParsedQuestion["flag_evidence"]> }) {
   const total = Object.values(ev.option_counts).reduce((a, b) => a + b, 0) || 1;
   return (
-    <div className="mb-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-red-900" data-testid="flag-panel">
+    <div className="mb-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive" data-testid="flag-panel">
       <div className="font-medium">Nghi sai đáp án: {ev.reason}</div>
       <div className="mt-2 flex flex-wrap gap-3">
         {Object.entries(ev.option_counts)

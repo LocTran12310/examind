@@ -1,5 +1,6 @@
 "use client";
 
+import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
 import { use, useState } from "react";
 import { AssignDialog } from "@/components/exams/AssignDialog";
@@ -31,7 +32,8 @@ export default function ExamBuilderPage({ params }: { params: Promise<{ id: stri
   const [preview, setPreview] = useState<null | "exam" | "review">(null);
   const [error, setError] = useState<string | null>(null);
   const [assigning, setAssigning] = useState(false);
-  const { data: classes } = useApi<SchoolClass[]>("/classes");
+  const { data: classesPage } = useApi<Page<SchoolClass>>("/classes?page_size=all");
+  const classes = classesPage?.items;
   const { data: assignedPage, reload: reloadAssigned } = useApi<Page<Assignment>>(`/assignments?exam_id=${id}&page_size=all`);
   const assigned = assignedPage?.items;
 
@@ -186,7 +188,7 @@ export default function ExamBuilderPage({ params }: { params: Promise<{ id: stri
       </FormDialog>
       <FormDialog open={!!preview} title="Xem trước đề" wide onOpenChange={(o) => !o && setPreview(null)}>
         <label className="mb-4 flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={preview === "review"} onChange={(e) => setPreview(e.target.checked ? "review" : "exam")} /> Hiện đáp án và lời giải
+          <Checkbox checked={preview === "review"} onCheckedChange={(v) => setPreview(v === true ? "review" : "exam")} /> Hiện đáp án và lời giải
         </label>
         <div className="max-h-[70vh] space-y-6 overflow-y-auto" data-testid="exam-preview">
           {exam.questions.map((q) => (

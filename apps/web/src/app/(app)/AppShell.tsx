@@ -35,7 +35,7 @@ export function AppShell({ me, children, sidebarOpen = true }: { me: Me; childre
             <SidebarTrigger aria-label="Mở menu" />
             <Separator orientation="vertical" className="mx-1 h-5" />
             <div className="min-w-0 flex-1 truncate text-sm">
-              {group && <span className="text-muted-foreground">{group.label} / </span>}
+              {group && <span className="hidden text-muted-foreground md:inline">{group.label} / </span>}
               <span className="font-medium">{item?.label ?? "Examind"}</span>
             </div>
             <div className="flex items-center gap-1">

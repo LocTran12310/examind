@@ -19,3 +19,14 @@
 
   Before the `(organization_id, full_name, id)` index (migration 0011) the last page took 1 104 ms.
 - Tests: `data-table.test.tsx` (debounce → URL → request, link restores state, paging, sort cycle, selection/confirm/reload, Back), `users/orgs/classes.test.tsx`, API `test_paging.py`.
+
+## UOW-03 — All lists on the DataTable (2026-09-22, live stack)
+- /org/review (dark mode): server-paged document list with counts, progress bars, reviewer select and "Duyệt N câu" links; "Của tôi" switch writes `?mine=true`.
+- Documents, exams (row → "Chi tiết" panel with the exam's questions), AI models (toolbar Kiểm tra / Bật-Tắt / Phát hiện Ollama), tags (dialog CRUD) and the question bank (filters in the URL, bulk actions in the toolbar, shared pagination) — covered by `documents/exams/ai-models/tags/review-list/bank/bank-bulk.test.tsx`.
+- API: every former bare list returns `Page` (`test_paging.py::test_former_bare_lists_are_paged`); 213 API tests pass.
+
+## UOW-04 — Every other screen on shadcn, barrel removed (2026-09-22, live stack)
+- Dark mode checked in the browser: review queue (answer highlight, hotkey legend, source page), reports ("Kết quả theo chuyên đề" tree with bars), student home and result view (score, per-part and per-topic bars, correct option highlighted).
+- Found and fixed while checking: /org/reports and the exam page still read `/classes` as an array (crash "v.map is not a function") → both use the paged response now.
+- Phone width (375 px): sidebar opens as a sheet from the header button; breadcrumb group hidden below `md`.
+- `components/ui/` contains only shadcn CLI files (`ui-barrel.test.ts`); ESLint `no-restricted-imports` forbids `@/components/ui`; `tsc`, `eslint`, `next build` clean; 103 web tests pass.

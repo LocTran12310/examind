@@ -3,7 +3,7 @@
 # Ticket graph — 2026092205-ui-shadcn-shell
 
 - Units of Work: **4**
-- Tickets: **13** (10 done)
+- Tickets: **13** (13 done)
 - Total effort: **5.2d**
 - Critical path: **1.6d** across 4 tickets
 - Theoretical minimum duration with unlimited parallelism: **1.6d**
@@ -41,9 +41,9 @@ graph LR
     T_03_03["✓ T-03-03<br/>Question bank: shadcn filters, URL state, server paging"]
   end
   subgraph UOW_04["UOW-04 · Every other screen on shadcn components, old barrel removed"]
-    T_04_01["T-04-01<br/>Upload, document detail, review queue, question editor/form on shadcn"]
-    T_04_02["T-04-02<br/>Exam builder, assign, runner, results, essay grading, reports, adaptive, topic tree on shadcn"]
-    T_04_03["T-04-03<br/>Remove old barrel, ESLint no-restricted-imports, full web test pass, build"]
+    T_04_01["✓ T-04-01<br/>Upload, document detail, review queue, question editor/form on shadcn"]
+    T_04_02["✓ T-04-02<br/>Exam builder, assign, runner, results, essay grading, reports, adaptive, topic tree on shadcn"]
+    T_04_03["✓ T-04-03<br/>Remove old barrel, ESLint no-restricted-imports, full web test pass, build"]
   end
   T_01_01 --> T_01_02
   T_01_01 --> T_01_03
@@ -102,6 +102,6 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-03-01 | UOW-03 | api | feature | 3h | T-02-01 | AC-10 | done |
 | T-03-02 | UOW-03 | web | feature | 4h | T-03-01, T-02-03 | AC-11 | done |
 | T-03-03 | UOW-03 | web | feature | 3h | T-02-03 | AC-11, AC-08 | done |
-| T-04-01 | UOW-04 | web | feature | 4h | T-02-03 | AC-12 | todo |
-| T-04-02 | UOW-04 | web | feature | 4h | T-02-03 | AC-12 | todo |
-| T-04-03 | UOW-04 | test | feature | 2h | T-04-01, T-04-02, T-03-02, T-03-03, T-02-04, T-01-03 | AC-01, AC-12 | todo |
+| T-04-01 | UOW-04 | web | feature | 4h | T-02-03 | AC-12 | done |
+| T-04-02 | UOW-04 | web | feature | 4h | T-02-03 | AC-12 | done |
+| T-04-03 | UOW-04 | test | feature | 2h | T-04-01, T-04-02, T-03-02, T-03-03, T-02-04, T-01-03 | AC-01, AC-12 | done |

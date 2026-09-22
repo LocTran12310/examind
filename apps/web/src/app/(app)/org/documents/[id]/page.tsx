@@ -1,5 +1,6 @@
 "use client";
 
+import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { use, useEffect, useState } from "react";
@@ -103,7 +104,7 @@ export default function DocumentPage({ params }: { params: Promise<{ id: string 
               {questions.length} câu · {low} câu cần xem
             </span>
             <label className="flex items-center gap-2">
-              <input type="checkbox" checked={onlyIssues} onChange={(e) => setOnlyIssues(e.target.checked)} /> Chỉ hiện câu cần xem
+              <Checkbox checked={onlyIssues} onCheckedChange={(v) => setOnlyIssues(v === true)} /> Chỉ hiện câu cần xem
             </label>
             <a className="ml-auto text-primary hover:underline" href={`/api/documents/${doc.id}/file`}>
               Tải file gốc

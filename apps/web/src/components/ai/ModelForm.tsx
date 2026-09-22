@@ -1,5 +1,6 @@
 "use client";
 
+import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { FormAlert } from "@/components/app/FormAlert";
 import { Button } from "@/components/ui/button";
@@ -69,13 +70,13 @@ export function ModelForm({ initial, existing, onDone }: { initial: ModelDraft; 
         <div className="space-y-2 text-sm">
           <span className="font-medium text-foreground/80">Khả năng</span>
           <label className="flex items-center gap-2">
-            <input type="checkbox" checked={d.capabilities.includes("text")} onChange={() => toggleCap("text")} /> Văn bản (tách câu, gắn chuyên đề)
+            <Checkbox checked={d.capabilities.includes("text")} onCheckedChange={() => toggleCap("text")} /> Văn bản (tách câu, gắn chuyên đề)
           </label>
           <label className="flex items-center gap-2">
-            <input type="checkbox" checked={d.capabilities.includes("vision")} onChange={() => toggleCap("vision")} /> Đọc ảnh (OCR bằng AI)
+            <Checkbox checked={d.capabilities.includes("vision")} onCheckedChange={() => toggleCap("vision")} /> Đọc ảnh (OCR bằng AI)
           </label>
           <label className="flex items-center gap-2">
-            <input type="checkbox" checked={d.is_free} onChange={(e) => set("is_free", e.target.checked)} /> Miễn phí (tự host)
+            <Checkbox checked={d.is_free} onCheckedChange={(v) => set("is_free", v === true)} /> Miễn phí (tự host)
           </label>
         </div>
       </div>

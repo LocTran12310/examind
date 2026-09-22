@@ -9,7 +9,7 @@ import { Panel } from "@/components/app/Panel";
 import { PageHeader } from "@/components/app/PageHeader";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { qs, useApi } from "@/lib/hooks";
-import type { GroupStat, SchoolClass, TopicStat } from "@/lib/types";
+import type { GroupStat, SchoolClass, TopicStat, Page } from "@/lib/types";
 
 const TABS = [
   ["topics", "Theo chuyên đề"],
@@ -23,7 +23,8 @@ export default function ReportsPage() {
   const [tab, setTab] = useState<(typeof TABS)[number][0]>("topics");
   const [classId, setClassId] = useState("");
   const [level, setLevel] = useState("1");
-  const { data: classes } = useApi<SchoolClass[]>("/classes");
+  const { data: classesPage } = useApi<Page<SchoolClass>>("/classes?page_size=all");
+  const classes = classesPage?.items;
   const filters = qs({ class_id: classId });
   const { data: topics } = useApi<TopicStat[]>(tab === "topics" ? `/stats/topics${filters}` : null);
   const { data: groups } = useApi<GroupStat[]>(["tag", "type", "difficulty"].includes(tab) ? `/stats/groups${qs({ by: tab, class_id: classId })}` : null);

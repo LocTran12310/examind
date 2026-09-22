@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DataTable } from "@/components/data-table/DataTable";
 import { mockFetch } from "./helpers";
-import { currentUrl, router, routerMock, searchOf, setUrl } from "./router-mock";
+import { currentUrl, router, searchOf, setUrl } from "./router-mock";
 
 vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);
 

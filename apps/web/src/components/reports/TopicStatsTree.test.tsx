@@ -33,6 +33,6 @@ describe("reports", () => {
     expect(screen.getByTestId("heatmap")).toHaveTextContent("100%");
     expect(heatColor(0)).toContain("hsl(0");
     expect(heatColor(1)).toContain("hsl(120");
-    expect(heatColor(null)).toBe("#f3f4f6");
+    expect(heatColor(null)).toBe("var(--muted)");
   });
 });

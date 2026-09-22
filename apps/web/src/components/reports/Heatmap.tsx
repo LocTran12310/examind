@@ -6,7 +6,7 @@ export interface HeatmapData {
 }
 
 export function heatColor(r: number | null | undefined): string {
-  if (r === null || r === undefined) return "#f3f4f6";
+  if (r === null || r === undefined) return "var(--muted)";
   const hue = Math.round(r * 120); // 0 red → 120 green
   return `hsl(${hue} 70% ${85 - r * 20}%)`;
 }
@@ -33,7 +33,7 @@ export function Heatmap({ data }: { data: HeatmapData }) {
               {data.columns.map((c) => {
                 const cell = r.cells[c.id];
                 return (
-                  <td key={c.id} className="h-8 min-w-14 rounded text-center" style={{ background: heatColor(cell?.ratio) }} title={cell ? `${cell.answered} lượt` : "chưa làm"}>
+                  <td key={c.id} className="h-8 min-w-14 rounded text-center text-neutral-900 tabular-nums" style={{ background: heatColor(cell?.ratio) }} title={cell ? `${cell.answered} lượt` : "chưa làm"}>
                     {cell?.ratio === null || cell?.ratio === undefined ? "" : `${Math.round(cell.ratio * 100)}%`}
                   </td>
                 );

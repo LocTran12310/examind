@@ -1,5 +1,6 @@
 "use client";
 
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useRef, useState } from "react";
 import { QuestionView } from "@/components/question/QuestionView";
 import { FormAlert } from "@/components/app/FormAlert";
@@ -109,8 +110,9 @@ export function QuestionFields({ draft, setDraft }: { draft: Draft; setDraft: (d
         </NativeSelect>
       </FormField>
       <MdArea label="Đề bài" value={draft.stem} onChange={(v) => set("stem", v)} rows={4} testId="stem" />
-      {(draft.type === "mcq" || draft.type === "true_false") &&
-        draft.options.map((o, i) => (
+      {(draft.type === "mcq" || draft.type === "true_false") && (
+        <RadioGroup className="grid gap-2" value={draft.type === "mcq" ? (draft.answer?.key ?? "") : ""} onValueChange={(k) => set("answer", { key: k })}>
+        {draft.options.map((o, i) => (
           <div key={i} className="flex items-start gap-2">
             <Input aria-label={`Nhãn ${i + 1}`} className="w-12" value={o.label} onChange={(e) => setOption(i, { label: e.target.value })} />
             <div className="flex-1">
@@ -118,7 +120,7 @@ export function QuestionFields({ draft, setDraft }: { draft: Draft; setDraft: (d
             </div>
             {draft.type === "mcq" ? (
               <label className="mt-2 flex items-center gap-1 text-sm">
-                <input type="radio" name="answer" checked={draft.answer?.key === o.label} onChange={() => set("answer", { key: o.label })} /> đúng
+                <RadioGroupItem value={o.label} aria-label={`${o.label} đúng`} /> đúng
               </label>
             ) : (
               <NativeSelect
@@ -137,6 +139,8 @@ export function QuestionFields({ draft, setDraft }: { draft: Draft; setDraft: (d
             )}
           </div>
         ))}
+        </RadioGroup>
+      )}
       {draft.type === "short_answer" && (
         <FormField label="Đáp án">
           <Input value={(draft.answer?.value as string) ?? ""} onChange={(e) => set("answer", e.target.value ? { value: e.target.value } : null)} />

@@ -1,6 +1,6 @@
 ---
 feature: ui-shadcn-shell
-adr_count: 4
+adr_count: 6
 ---
 
 # Logical design — shadcn UI, app shell and server-side data tables
@@ -73,4 +73,16 @@ Request log already records path + query; slow list queries (> 300 ms) logged wi
 **Context:** Need headless columns, selection, sorting UI that matches shadcn's data-table guide.
 **Decision:** `@tanstack/react-table` with manualPagination/manualSorting/manualFiltering.
 **Consequences:** Same pattern as the shadcn docs; no client-side row model for filtering.
+**Status:** accepted
+
+### ADR-05 — shadcn NativeSelect in dense forms, Radix Select in tables and filters
+**Context:** 14 native `<select>`s in editors/forms (answer key per option, blueprint rows, upload metadata); Radix Select needs a sentinel for empty values and is heavier per row.
+**Decision:** Forms with many inline selects use shadcn `NativeSelect` (a shadcn component, styled with the theme); table filters, toolbars and single-choice form fields use Radix `Select` through `components/app/OptionSelect`.
+**Consequences:** Both follow the shadcn docs; keyboard/mobile behaviour of native selects is kept where rows repeat.
+**Status:** accepted
+
+### ADR-06 — TanStack Table pinned to v8
+**Context:** `pnpm add @tanstack/react-table` installed v9, whose API (`getCoreRowModel` removed) no longer matches the shadcn data-table guide.
+**Decision:** Pin `@tanstack/react-table@^8` until the shadcn guide moves to v9.
+**Consequences:** One deliberate upgrade later; DataTable is the only consumer.
 **Status:** accepted
