@@ -178,12 +178,14 @@ def resolve_grade(db: Session, scope: OrgScope, grade_id=None, grade: int | None
 
 # ------------------------------------------------------------------ tree
 
-def tree(db: Session, scope: OrgScope, school_year: str | None = None) -> dict:
+def tree(db: Session, scope: OrgScope, school_year: str | None = None, school_year_id=None) -> dict:
     members = (select(ClassMember.class_id, func.count().label("n")).group_by(ClassMember.class_id).subquery())
     cstmt = (select(SchoolClass, func.coalesce(members.c.n, 0)).outerjoin(members, members.c.class_id == SchoolClass.id)
              .where(SchoolClass.organization_id == scope.org_id).order_by(SchoolClass.name))
     if school_year:
         cstmt = cstmt.where(SchoolClass.school_year == school_year)
+    if school_year_id:
+        cstmt = cstmt.where(SchoolClass.school_year_id == school_year_id)
     by_grade: dict = {}
     for c, n in db.execute(cstmt):
         by_grade.setdefault(c.grade_id, []).append({"id": c.id, "name": c.name, "school_year": c.school_year, "member_count": n})

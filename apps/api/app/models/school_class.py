@@ -15,7 +15,8 @@ class SchoolClass(IdMixin, TimestampMixin, Base):
     name: Mapped[str] = mapped_column(String(100))
     grade: Mapped[int | None] = mapped_column(SmallInteger)  # cache of grades.level for bank/exam filters
     grade_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("grades.id"), index=True)
-    school_year: Mapped[str] = mapped_column(String(9))  # "2026-2027"
+    school_year: Mapped[str] = mapped_column(String(9))  # "2026-2027" — cache of school_years.code
+    school_year_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("school_years.id"), index=True)
 
 
 class ClassMember(Base):

@@ -23,8 +23,9 @@ def _grade(g, n=0) -> GradeOut:
 
 
 @router.get("/structure", response_model=StructureOut)
-def get_structure(school_year: str | None = None, scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
-    return structure.tree(db, scope, school_year)
+def get_structure(school_year: str | None = None, school_year_id: uuid.UUID | None = None, scope: OrgScope = Depends(staff_scope),
+                  db: Session = Depends(get_db)):
+    return structure.tree(db, scope, school_year, school_year_id)
 
 
 @router.get("/school-levels", response_model=Page[LevelOut])

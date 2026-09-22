@@ -41,6 +41,10 @@ def seed_org(db: Session, org_id: uuid.UUID) -> None:
             db.add(Semester(organization_id=org_id, code=code, name=name, sort=i))
     db.flush()
 
+    from app.services.school_years import current_code, ensure_year
+
+    ensure_year(db, org_id, current_code())  # every org opens with the current school year (active when none is)
+
     math = subjects["toan"]
     has_topics = db.scalar(select(Topic.id).where(Topic.organization_id == org_id, Topic.subject_id == math.id).limit(1))
     if not has_topics:
