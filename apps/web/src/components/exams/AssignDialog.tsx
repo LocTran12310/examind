@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/app/FormField";
 import { Input } from "@/components/ui/input";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { OptionSelect } from "@/components/app/OptionSelect";
 import { api } from "@/lib/api";
 import { fromLocalInput, toLocalInput } from "@/lib/dates";
 import { useMutation } from "@/lib/hooks";
 import type { Assignment, ResultsPolicy, SchoolClass } from "@/lib/types";
+import { DateTimePicker } from "@/components/app/DatePicker";
 
 export function AssignDialog({ examId, title, classes, onDone }: { examId: string; title: string; classes: SchoolClass[]; onDone: (a: Assignment) => void }) {
   const [v, setV] = useState({
@@ -57,10 +58,10 @@ export function AssignDialog({ examId, title, classes, onDone }: { examId: strin
       </FormField>
       <div className="grid gap-3 sm:grid-cols-2">
         <FormField label="Mở lúc" error={m.fields.open_at}>
-          <Input type="datetime-local" value={v.open_at} onChange={(e) => set("open_at", e.target.value)} />
+          {(f) => <DateTimePicker {...f} value={v.open_at} onChange={(x) => set("open_at", x)} />}
         </FormField>
         <FormField label="Đóng lúc" error={m.fields.close_at}>
-          <Input type="datetime-local" value={v.close_at} onChange={(e) => set("close_at", e.target.value)} />
+          {(f) => <DateTimePicker {...f} value={v.close_at} onChange={(x) => set("close_at", x)} />}
         </FormField>
         <FormField label="Thời gian làm (phút)" error={m.fields.duration_minutes}>
           <Input type="number" min={1} max={600} value={v.duration_minutes} onChange={(e) => set("duration_minutes", Number(e.target.value))} />
@@ -69,11 +70,18 @@ export function AssignDialog({ examId, title, classes, onDone }: { examId: strin
           <Input type="number" min={1} max={20} value={v.max_attempts} onChange={(e) => set("max_attempts", Number(e.target.value))} />
         </FormField>
         <FormField label="Xem kết quả">
-          <NativeSelect className="w-full" value={v.results_policy} onChange={(e) => set("results_policy", e.target.value as ResultsPolicy)}>
-            <NativeSelectOption value="after_submit">Ngay sau khi nộp</NativeSelectOption>
-            <NativeSelectOption value="after_close">Sau khi đóng bài</NativeSelectOption>
-            <NativeSelectOption value="never">Chỉ xem điểm</NativeSelectOption>
-          </NativeSelect>
+          {(f) => (
+            <OptionSelect
+              {...f}
+              value={v.results_policy}
+              onValueChange={(x) => set("results_policy", x as ResultsPolicy)}
+              options={[
+                { value: "after_submit", label: "Ngay sau khi nộp" },
+                { value: "after_close", label: "Sau khi đóng bài" },
+                { value: "never", label: "Chỉ xem điểm" },
+              ]}
+            />
+          )}
         </FormField>
         <div className="space-y-1 pt-6 text-sm">
           <Label className="font-normal">

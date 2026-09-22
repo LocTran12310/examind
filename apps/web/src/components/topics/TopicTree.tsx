@@ -8,7 +8,7 @@ import { ToneBadge } from "@/components/app/ToneBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormDialog } from "@/components/app/FormDialog";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { OptionSelect } from "@/components/app/OptionSelect";
 import { api, ApiError } from "@/lib/api";
 import { LEVEL_LABEL, type Topic } from "@/lib/types";
 import { buildTree, flatten, isInSubtree, type TopicNode } from "./tree";
@@ -214,14 +214,13 @@ function TargetPicker({
   return (
     <div className="space-y-4">
       {note && <FormAlert kind="warning">{note}</FormAlert>}
-      <NativeSelect className="w-full" value={target} onChange={(e) => setTarget(e.target.value)} aria-label="Chuyên đề đích">
-        {allowRoot && <NativeSelectOption value="">— Cấp gốc —</NativeSelectOption>}
-        {options.map(({ node, depth }) => (
-          <NativeSelectOption key={node.id} value={node.id}>
-            {"  ".repeat(depth) + (depth ? "└ " : "") + node.name}
-          </NativeSelectOption>
-        ))}
-      </NativeSelect>
+      <OptionSelect
+        value={target}
+        onValueChange={setTarget}
+        aria-label="Chuyên đề đích"
+        emptyLabel={allowRoot ? "— Cấp gốc —" : undefined}
+        options={options.map(({ node, depth }) => ({ value: node.id, label: "  ".repeat(depth) + (depth ? "└ " : "") + node.name }))}
+      />
       <div className="flex justify-end">
         <Button onClick={() => onPick(target || null)} disabled={!allowRoot && !target}>
           {action}

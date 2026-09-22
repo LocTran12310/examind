@@ -2,15 +2,9 @@
 
 import { FormField } from "@/components/app/FormField";
 import { Input } from "@/components/ui/input";
-import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from "@/components/ui/native-select";
+import { OptionSelect } from "@/components/app/OptionSelect";
 import { parsePeriod, periodOptions, periodValue } from "@/lib/exam-period";
 import type { DocumentMeta, SchoolYear, Taxonomy } from "@/lib/types";
-
-function groupBy<T extends { group: string }>(items: T[]): Record<string, T[]> {
-  const out: Record<string, T[]> = {};
-  for (const i of items) (out[i.group] ??= []).push(i);
-  return out;
-}
 
 /** Môn / Lớp / Đợt / Năm học / Nguồn đề. An empty field is filled from the exam header when the
  *  file is read (`emptyLabel`), so an official file needs no typing at all. */
@@ -34,52 +28,46 @@ export function DocumentMetaFields({
   return (
     <div className="grid gap-3 sm:grid-cols-3">
       <FormField label="Môn" error={errors.subject_id}>
-        <NativeSelect className="w-full" value={value.subject_id ?? ""} onChange={(e) => set("subject_id", e.target.value)}>
-          <NativeSelectOption value="">{emptyLabel}</NativeSelectOption>
-          {taxonomy.subjects.map((s) => (
-            <NativeSelectOption key={s.id} value={s.id}>
-              {s.name}
-            </NativeSelectOption>
-          ))}
-        </NativeSelect>
+        {(f) => (
+          <OptionSelect
+            {...f}
+            value={value.subject_id ?? ""}
+            onValueChange={(v) => set("subject_id", v)}
+            emptyLabel={emptyLabel}
+            options={taxonomy.subjects.map((s) => ({ value: s.id, label: s.name }))}
+          />
+        )}
       </FormField>
       <FormField label="Lớp" error={errors.grade}>
-        <NativeSelect className="w-full" value={value.grade ?? ""} onChange={(e) => set("grade", e.target.value ? Number(e.target.value) : undefined)}>
-          <NativeSelectOption value="">{emptyLabel}</NativeSelectOption>
-          {taxonomy.grades.map((g) => (
-            <NativeSelectOption key={g.id} value={g.level}>
-              {g.name}
-            </NativeSelectOption>
-          ))}
-        </NativeSelect>
+        {(f) => (
+          <OptionSelect
+            {...f}
+            value={value.grade != null ? String(value.grade) : ""}
+            onValueChange={(v) => set("grade", v ? Number(v) : undefined)}
+            emptyLabel={emptyLabel}
+            options={taxonomy.grades.map((g) => ({ value: String(g.level), label: g.name }))}
+          />
+        )}
       </FormField>
       <FormField label="Đợt kiểm tra" error={errors.semester_code ?? errors.exam_kind}>
-        <NativeSelect className="w-full" value={periodValue(value.semester_code, value.exam_kind)} onChange={(e) => onChange({ ...value, ...parsePeriod(e.target.value) })}>
-          <NativeSelectOption value="">{emptyLabel}</NativeSelectOption>
-          {Object.entries(groupBy(periodOptions())).map(([group, opts]) => (
-            <NativeSelectOptGroup key={group} label={group}>
-              {opts.map((o) => (
-                <NativeSelectOption key={o.value} value={o.value}>
-                  {o.label}
-                </NativeSelectOption>
-              ))}
-            </NativeSelectOptGroup>
-          ))}
-        </NativeSelect>
+        {(f) => (
+          <OptionSelect
+            {...f}
+            value={periodValue(value.semester_code, value.exam_kind)}
+            onValueChange={(v) => onChange({ ...value, ...parsePeriod(v) })}
+            emptyLabel={emptyLabel}
+            options={periodOptions()}
+          />
+        )}
       </FormField>
       <FormField label="Năm học" error={errors.school_year}>
-        {yearCodes.length ? (
-          <NativeSelect className="w-full" value={value.school_year ?? ""} onChange={(e) => set("school_year", e.target.value)}>
-            <NativeSelectOption value="">{emptyLabel}</NativeSelectOption>
-            {yearCodes.map((c) => (
-              <NativeSelectOption key={c} value={c}>
-                {c}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
-        ) : (
-          <Input value={value.school_year ?? ""} placeholder="2024-2025" onChange={(e) => set("school_year", e.target.value)} />
-        )}
+        {(f) =>
+          yearCodes.length ? (
+            <OptionSelect {...f} value={value.school_year ?? ""} onValueChange={(v) => set("school_year", v)} emptyLabel={emptyLabel} options={yearCodes.map((c) => ({ value: c, label: c }))} />
+          ) : (
+            <Input {...f} value={value.school_year ?? ""} placeholder="2024-2025" onChange={(e) => set("school_year", e.target.value)} />
+          )
+        }
       </FormField>
       <FormField label="Nguồn đề" error={errors.source_name} hint="Ví dụ: THPT Chu Văn An">
         <Input value={value.source_name ?? ""} placeholder={emptyLabel === "—" ? undefined : emptyLabel} onChange={(e) => set("source_name", e.target.value)} />

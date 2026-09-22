@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DatePicker } from "@/components/app/DatePicker";
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -148,10 +149,10 @@ export function FilterCell({ spec, name, label, get, set }: { spec: FilterSpec; 
               <InputGroupAddon align="inline-start" className="pl-0.5">
                 {menu}
               </InputGroupAddon>
-              <InputGroupInput type="date" aria-label={`${label} từ ngày`} className="px-1" value={get(`${key}_from`)} onChange={(e) => set({ [`${key}_from`]: e.target.value || null })} />
+              <DatePicker size="sm" className="flex-1" triggerClassName="h-full border-0 bg-transparent shadow-none dark:bg-transparent" aria-label={`${label} từ ngày`} value={get(`${key}_from`)} onChange={(d) => set({ [`${key}_from`]: d || null })} />
             </InputGroup>
             <span className="text-muted-foreground">–</span>
-            <Input type="date" aria-label={`${label} đến ngày`} className={`${cls} min-w-0 px-1`} value={get(`${key}_to`)} onChange={(e) => set({ [`${key}_to`]: e.target.value || null })} />
+            <DatePicker size="sm" className="min-w-0 flex-1" aria-label={`${label} đến ngày`} value={get(`${key}_to`)} onChange={(d) => set({ [`${key}_to`]: d || null })} />
           </div>
         );
       return (
@@ -159,7 +160,7 @@ export function FilterCell({ spec, name, label, get, set }: { spec: FilterSpec; 
           <InputGroupAddon align="inline-start" className="pl-0.5">
             {menu}
           </InputGroupAddon>
-          <InputGroupInput type="date" aria-label={`Lọc ${label}`} className="px-1" value={get(key)} onChange={(e) => set({ [key]: e.target.value || null, [opKey]: op === "=" ? null : op })} />
+          <DatePicker size="sm" className="flex-1" triggerClassName="h-full border-0 bg-transparent shadow-none dark:bg-transparent" aria-label={`Lọc ${label}`} value={get(key)} onChange={(d) => set({ [key]: d || null, [opKey]: op === "=" ? null : op })} />
         </InputGroup>
       );
     }

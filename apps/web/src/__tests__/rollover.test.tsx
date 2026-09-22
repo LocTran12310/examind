@@ -30,7 +30,9 @@ describe("rollover wizard", () => {
     expect(within(c10).getByRole("textbox", { name: "Lớp mới của 10A1" })).toHaveValue("11A1");
     expect(screen.getByTestId("plan-12C")).toHaveTextContent("Tốt nghiệp");
     expect(screen.getByLabelText("Tổng hợp")).toHaveTextContent("Lên lớp: 2");
-    await u.selectOptions(within(c10).getByRole("combobox", { name: "Năm mới của Bình" }), "retain");
+    await u.click(within(c10).getByRole("combobox", { name: "Năm mới của Bình" }));
+    await u.click(await screen.findByRole("option", { name: "Ở lại lớp (10A1)" }));
+    expect(within(c10).getByRole("combobox", { name: "Năm mới của Bình" })).toHaveTextContent("Ở lại lớp (10A1)");
     expect(screen.getByLabelText("Tổng hợp")).toHaveTextContent("Ở lại lớp: 1");
     await u.click(screen.getByRole("button", { name: "Xác nhận chuyển năm" }));
     const dlg = await screen.findByRole("alertdialog");

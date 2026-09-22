@@ -19,18 +19,23 @@ function Harness({ onChange }: { onChange: (v: ProcessingConfig) => void }) {
 
 afterEach(() => vi.unstubAllGlobals());
 
+async function pick(field: string, option: string) {
+  await userEvent.click(screen.getByRole("combobox", { name: field }));
+  await userEvent.click(await screen.findByRole("option", { name: option }));
+}
+
 describe("processing config", () => {
   it("picks mode, split models with fallback, and vision model", async () => {
     const onChange = vi.fn();
     render(<Harness onChange={onChange} />);
     expect(screen.queryByLabelText("Model tách câu")).toBeNull();
-    await userEvent.selectOptions(screen.getByLabelText("Chế độ tách câu"), "rule_ai");
-    await userEvent.selectOptions(screen.getByLabelText("Model tách câu"), "qwen");
-    await userEvent.selectOptions(screen.getByLabelText("Model dự phòng"), "gpt");
-    await userEvent.selectOptions(screen.getByLabelText("Đọc ảnh scan (OCR)"), "vision");
-    await userEvent.selectOptions(screen.getByLabelText("Model đọc ảnh"), "vl");
+    await pick("Chế độ tách câu", "Quy tắc + AI cho câu khó");
+    await pick("Model tách câu", "qwen · Free");
+    await pick("Model dự phòng", "gpt · Trả phí");
+    await pick("Đọc ảnh scan (OCR)", "AI đọc ảnh");
+    await pick("Model đọc ảnh", "vl · Free");
     expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ split_mode: "rule_ai", split_models: ["qwen", "gpt"], ocr: "vision", vision_model: "vl" }));
-    expect(screen.getAllByRole("option", { name: "gpt · Trả phí" }).length).toBeGreaterThan(0);
+    expect(screen.getByRole("combobox", { name: "Model dự phòng" })).toHaveTextContent("gpt · Trả phí");
   });
 
   it("upload sends the chosen config", async () => {

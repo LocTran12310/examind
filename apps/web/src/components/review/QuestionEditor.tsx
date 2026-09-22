@@ -11,7 +11,7 @@ import { FormField } from "@/components/app/FormField";
 import { Input } from "@/components/ui/input";
 import { Kbd } from "@/components/ui/kbd";
 import { Label } from "@/components/ui/label";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { OptionSelect } from "@/components/app/OptionSelect";
 import { api, ApiError } from "@/lib/api";
 import type { ParsedQuestion, Question, QuestionOption, QuestionType } from "@/lib/types";
 
@@ -74,20 +74,17 @@ export function QuestionFields({ draft, setDraft }: { draft: Draft; setDraft: (d
   return (
     <div className="space-y-3">
       <FormField label="Loại câu">
-        <NativeSelect
-          className="w-full"
-          value={draft.type}
-          onChange={(e) => {
-            const type = e.target.value as QuestionType;
-            setDraft({ ...draft, type, options: draft.options.length && (type === "mcq" || type === "true_false") ? draft.options : defaultOptions(type), answer: null });
-          }}
-        >
-          {TYPES.map(([k, v]) => (
-            <NativeSelectOption key={k} value={k}>
-              {v}
-            </NativeSelectOption>
-          ))}
-        </NativeSelect>
+        {(f) => (
+          <OptionSelect
+            {...f}
+            value={draft.type}
+            onValueChange={(v) => {
+              const type = v as QuestionType;
+              setDraft({ ...draft, type, options: draft.options.length && (type === "mcq" || type === "true_false") ? draft.options : defaultOptions(type), answer: null });
+            }}
+            options={TYPES.map(([k, v]) => ({ value: k, label: v }))}
+          />
+        )}
       </FormField>
       <MdArea label="Đề bài" value={draft.stem} onChange={(v) => set("stem", v)} rows={4} testId="stem" />
       {(draft.type === "mcq" || draft.type === "true_false") && (
@@ -103,19 +100,21 @@ export function QuestionFields({ draft, setDraft }: { draft: Draft; setDraft: (d
                 <RadioGroupItem value={o.label} aria-label={`${o.label} đúng`} /> đúng
               </Label>
             ) : (
-              <NativeSelect
+              <OptionSelect
                 aria-label={`Đúng/sai ${o.label}`}
+                className="w-20"
                 value={o.is_true === true ? "d" : o.is_true === false ? "s" : ""}
-                onChange={(e) => {
-                  const v = e.target.value === "d" ? true : e.target.value === "s" ? false : null;
+                onValueChange={(s) => {
+                  const v = s === "d" ? true : s === "s" ? false : null;
                   const options = draft.options.map((x, j) => (j === i ? { ...x, is_true: v } : x));
                   setDraft({ ...draft, options, answer: Object.fromEntries(options.map((x) => [x.label, x.is_true ?? null])) as Question["answer"] });
                 }}
-              >
-                <NativeSelectOption value="">?</NativeSelectOption>
-                <NativeSelectOption value="d">Đ</NativeSelectOption>
-                <NativeSelectOption value="s">S</NativeSelectOption>
-              </NativeSelect>
+                emptyLabel="?"
+                options={[
+                  { value: "d", label: "Đ" },
+                  { value: "s", label: "S" },
+                ]}
+              />
             )}
           </div>
         ))}

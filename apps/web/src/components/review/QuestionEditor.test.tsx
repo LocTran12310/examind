@@ -19,7 +19,9 @@ describe("question editor", () => {
     const f = mockFetch(route("PATCH", "/api/questions/q1", { ...q, type: "mcq" }));
     const onSaved = vi.fn();
     render(<QuestionEditor question={q} onSaved={onSaved} onCancel={() => {}} />);
-    await userEvent.selectOptions(screen.getByLabelText("Loại câu"), "mcq");
+    await userEvent.click(screen.getByRole("combobox", { name: "Loại câu" }));
+    await userEvent.click(await screen.findByRole("option", { name: "Trắc nghiệm 4 phương án" }));
+    expect(screen.getByRole("combobox", { name: "Loại câu" })).toHaveTextContent("Trắc nghiệm 4 phương án");
     for (const [i, v] of ["1", "2", "3", "4"].entries()) fireEvent.change(screen.getByLabelText(`Phương án ${"ABCD"[i]}`), { target: { value: v } });
     await userEvent.click(screen.getAllByRole("radio")[1]);
     fireEvent.change(screen.getByTestId("stem"), { target: { value: "Giá trị của $2^1$ bằng" } });

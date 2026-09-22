@@ -53,7 +53,9 @@ describe("topic tree", () => {
     await userEvent.click(within(screen.getByTestId("topic-Nguyên hàm")).getByRole("button", { name: "Mở rộng" }));
     await userEvent.click(within(screen.getByTestId("topic-Nguyên hàm cơ bản")).getByRole("button", { name: "Di chuyển" }));
     const dialog = screen.getByRole("dialog");
-    await userEvent.selectOptions(within(dialog).getByLabelText("Chuyên đề đích"), "tp");
+    await userEvent.click(within(dialog).getByRole("combobox", { name: "Chuyên đề đích" }));
+    await userEvent.click(await screen.findByRole("option", { name: /Tích phân$/ }));
+    expect(within(dialog).getByRole("combobox", { name: "Chuyên đề đích" })).toHaveTextContent("Tích phân");
     await userEvent.click(within(dialog).getByRole("button", { name: "Di chuyển" }));
     await waitFor(() => expect(f).toHaveBeenCalled());
     expect(JSON.parse(String(f.mock.calls[0][1]?.body))).toEqual({ parent_id: "tp" });

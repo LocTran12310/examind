@@ -5,7 +5,7 @@ import { useMe } from "@/app/(app)/AppShell";
 import { TopicTree } from "@/components/topics/TopicTree";
 import { EmptyState } from "@/components/app/EmptyState";
 import { PageHeader } from "@/components/app/PageHeader";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { OptionSelect } from "@/components/app/OptionSelect";
 import { qs, useApi } from "@/lib/hooks";
 import type { Taxonomy, Topic } from "@/lib/types";
 
@@ -23,13 +23,7 @@ export default function TopicsPage() {
         title="Cây chuyên đề"
         description="Nhấp đúp vào tên để đổi tên. Câu hỏi gắn vào nhánh cuối; thống kê cộng dồn lên các cấp trên."
         actions={
-          <NativeSelect value={subjectId} onChange={(e) => setSubjectId(e.target.value)} aria-label="Môn học">
-            {tax?.subjects.map((s) => (
-              <NativeSelectOption key={s.id} value={s.id}>
-                {s.name}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
+          <OptionSelect className="w-48" value={subjectId} onValueChange={setSubjectId} aria-label="Môn học" options={(tax?.subjects ?? []).map((s) => ({ value: s.id, label: s.name }))} />
         }
       />
       {topics && topics.length === 0 && <EmptyState>Môn này chưa có cây chuyên đề. Thêm mạch kiến thức đầu tiên bên dưới.</EmptyState>}

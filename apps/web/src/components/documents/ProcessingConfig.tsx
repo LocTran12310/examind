@@ -4,7 +4,7 @@ import { FormField } from "@/components/app/FormField";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { OptionSelect } from "@/components/app/OptionSelect";
 import type { AiModel, ProcessingConfig } from "@/lib/types";
 
 const MODES: [ProcessingConfig["split_mode"], string][] = [
@@ -38,67 +38,54 @@ export function ProcessingConfigFields({
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       <FormField label="Chế độ tách câu">
-        <NativeSelect className="w-full" value={value.split_mode} onChange={(e) => set("split_mode", e.target.value as ProcessingConfig["split_mode"])}>
-          {MODES.map(([k, v]) => (
-            <NativeSelectOption key={k} value={k}>
-              {v}
-            </NativeSelectOption>
-          ))}
-        </NativeSelect>
+        {(f) => <OptionSelect {...f} value={value.split_mode} onValueChange={(v) => set("split_mode", v as ProcessingConfig["split_mode"])} options={MODES.map(([k, v]) => ({ value: k, label: v }))} />}
       </FormField>
       <FormField label="Đọc ảnh scan (OCR)">
-        <NativeSelect className="w-full" value={value.ocr} onChange={(e) => set("ocr", e.target.value as ProcessingConfig["ocr"])}>
-          {OCR.map(([k, v]) => (
-            <NativeSelectOption key={k} value={k} disabled={k === "vision" && vision.length === 0}>
-              {v}
-            </NativeSelectOption>
-          ))}
-        </NativeSelect>
+        {(f) => (
+          <OptionSelect
+            {...f}
+            value={value.ocr}
+            onValueChange={(v) => set("ocr", v as ProcessingConfig["ocr"])}
+            options={OCR.map(([k, v]) => ({ value: k, label: v, disabled: k === "vision" && vision.length === 0 }))}
+          />
+        )}
       </FormField>
       {value.split_mode !== "rule" && (
         <>
           <FormField label="Model tách câu" hint={text.length ? undefined : "Chưa có model — thêm ở trang Model AI"}>
-            <NativeSelect className="w-full" value={primary} onChange={(e) => set("split_models", [e.target.value, fallback].filter(Boolean))}>
-              <NativeSelectOption value="">—</NativeSelectOption>
-              {text.map((m) => (
-                <NativeSelectOption key={m.id} value={m.id}>
-                  {label(m)}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
+            {(f) => (
+              <OptionSelect
+                {...f}
+                value={primary}
+                onValueChange={(v) => set("split_models", [v, fallback].filter(Boolean))}
+                emptyLabel="—"
+                options={text.map((m) => ({ value: m.id, label: label(m) }))}
+              />
+            )}
           </FormField>
           <FormField label="Model dự phòng">
-            <NativeSelect className="w-full" value={fallback} onChange={(e) => set("split_models", [primary, e.target.value].filter(Boolean))}>
-              <NativeSelectOption value="">—</NativeSelectOption>
-              {text.filter((m) => m.id !== primary).map((m) => (
-                <NativeSelectOption key={m.id} value={m.id}>
-                  {label(m)}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
+            {(f) => (
+              <OptionSelect
+                {...f}
+                value={fallback}
+                onValueChange={(v) => set("split_models", [primary, v].filter(Boolean))}
+                emptyLabel="—"
+                options={text.filter((m) => m.id !== primary).map((m) => ({ value: m.id, label: label(m) }))}
+              />
+            )}
           </FormField>
         </>
       )}
       <FormField label="Model gắn chuyên đề" hint="Để trống: chỉ dùng từ khóa">
-        <NativeSelect className="w-full" value={value.tag_model ?? ""} onChange={(e) => set("tag_model", e.target.value || null)}>
-          <NativeSelectOption value="">—</NativeSelectOption>
-          {text.map((m) => (
-            <NativeSelectOption key={m.id} value={m.id}>
-              {label(m)}
-            </NativeSelectOption>
-          ))}
-        </NativeSelect>
+        {(f) => (
+          <OptionSelect {...f} value={value.tag_model ?? ""} onValueChange={(v) => set("tag_model", v || null)} emptyLabel="—" options={text.map((m) => ({ value: m.id, label: label(m) }))} />
+        )}
       </FormField>
       {value.ocr === "vision" && (
         <FormField label="Model đọc ảnh">
-          <NativeSelect className="w-full" value={value.vision_model ?? ""} onChange={(e) => set("vision_model", e.target.value || null)}>
-            <NativeSelectOption value="">—</NativeSelectOption>
-            {vision.map((m) => (
-              <NativeSelectOption key={m.id} value={m.id}>
-                {label(m)}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
+          {(f) => (
+            <OptionSelect {...f} value={value.vision_model ?? ""} onValueChange={(v) => set("vision_model", v || null)} emptyLabel="—" options={vision.map((m) => ({ value: m.id, label: label(m) }))} />
+          )}
         </FormField>
       )}
       {showThreshold && (

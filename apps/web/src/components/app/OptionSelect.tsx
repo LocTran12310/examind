@@ -10,6 +10,7 @@ export interface Option {
   label: React.ReactNode;
   /** options with the same group are listed under that heading, in first-seen order */
   group?: string;
+  disabled?: boolean;
 }
 
 function grouped(options: Option[]): [string | undefined, Option[]][] {
@@ -62,14 +63,14 @@ export function OptionSelect({
             <SelectGroup key={`${group}-${i}`}>
               <SelectLabel>{group}</SelectLabel>
               {items.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
+                <SelectItem key={o.value} value={o.value} disabled={o.disabled}>
                   {o.label}
                 </SelectItem>
               ))}
             </SelectGroup>
           ) : (
             items.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
+              <SelectItem key={o.value} value={o.value} disabled={o.disabled}>
                 {o.label}
               </SelectItem>
             ))

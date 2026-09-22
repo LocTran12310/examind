@@ -15,7 +15,9 @@ describe("question form", () => {
     fireEvent.change(screen.getByTestId("stem"), { target: { value: "Cho $\\vec u = (1;2)$. Độ dài bằng" } });
     for (const [i, v] of ["$\\sqrt5$", "3", "5", "1"].entries()) fireEvent.change(screen.getByLabelText(`Phương án ${"ABCD"[i]}`), { target: { value: v } });
     await userEvent.click(screen.getAllByRole("radio")[0]);
-    await userEvent.selectOptions(screen.getByLabelText("Mức độ"), "th");
+    await userEvent.click(screen.getByRole("combobox", { name: "Mức độ" }));
+    await userEvent.click(await screen.findByRole("option", { name: "Thông hiểu" }));
+    expect(screen.getByRole("combobox", { name: "Mức độ" })).toHaveTextContent("Thông hiểu");
     await userEvent.click(screen.getByTestId("pick-topic"));
     await userEvent.click(within(screen.getByRole("tree", { name: "Cây chuyên đề" })).getByText("Vectơ"));
     await userEvent.click(within(screen.getByTestId("tag-options")).getByRole("checkbox"));

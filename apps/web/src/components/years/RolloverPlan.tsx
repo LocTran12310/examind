@@ -5,7 +5,7 @@ import { ToneBadge } from "@/components/app/ToneBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { OptionSelect } from "@/components/app/OptionSelect";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export type Action = "promote" | "retain" | "transfer" | "graduate";
@@ -95,20 +95,17 @@ export function RolloverPlan({ plan, onChange }: { plan: Plan; onChange: (classe
                           <TableCell>{s.full_name}</TableCell>
                           <TableCell className="font-mono text-muted-foreground">{s.username}</TableCell>
                           <TableCell>
-                            <NativeSelect
+                            <OptionSelect
                               aria-label={`Năm mới của ${s.full_name}`}
                               value={s.action}
-                              onChange={(e) =>
-                                update(i, (x) => ({ ...x, students: x.students.map((y, j) => (j === k ? { ...y, action: e.target.value as Action } : y)) }))
+                              onValueChange={(v) =>
+                                update(i, (x) => ({ ...x, students: x.students.map((y, j) => (j === k ? { ...y, action: v as Action } : y)) }))
                               }
-                            >
-                              {options.map((a) => (
-                                <NativeSelectOption key={a} value={a}>
-                                  {ACTION_LABEL[a]}
-                                  {a === "retain" ? ` (${c.source_name})` : a === "promote" && c.target_name ? ` (${c.target_name})` : ""}
-                                </NativeSelectOption>
-                              ))}
-                            </NativeSelect>
+                              options={options.map((a) => ({
+                                value: a,
+                                label: `${ACTION_LABEL[a]}${a === "retain" ? ` (${c.source_name})` : a === "promote" && c.target_name ? ` (${c.target_name})` : ""}`,
+                              }))}
+                            />
                           </TableCell>
                         </TableRow>
                       ))}

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/app/FormField";
 import { Input } from "@/components/ui/input";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { OptionSelect } from "@/components/app/OptionSelect";
 import { api } from "@/lib/api";
 import { useMutation } from "@/lib/hooks";
 import { PROVIDER_LABEL, type AiModel, type Provider } from "@/lib/types";
@@ -51,13 +51,7 @@ export function ModelForm({ initial, existing, onDone }: { initial: ModelDraft; 
           <Input value={d.name} onChange={(e) => set("name", e.target.value)} placeholder="Qwen 2.5 7B (máy chủ trung tâm)" required />
         </FormField>
         <FormField label="Nhà cung cấp" error={m.fields.provider}>
-          <NativeSelect className="w-full" value={d.provider} onChange={(e) => set("provider", e.target.value as Provider)}>
-            {Object.entries(PROVIDER_LABEL).map(([k, v]) => (
-              <NativeSelectOption key={k} value={k}>
-                {v}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
+          {(f) => <OptionSelect {...f} value={d.provider} onValueChange={(v) => set("provider", v as Provider)} options={Object.entries(PROVIDER_LABEL).map(([k, v]) => ({ value: k, label: v }))} />}
         </FormField>
         <FormField label="Tên model" error={m.fields.model} hint="Ví dụ qwen2.5:7b, gpt-4o-mini, claude-sonnet-5">
           <Input value={d.model} onChange={(e) => set("model", e.target.value)} required />

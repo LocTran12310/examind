@@ -45,10 +45,14 @@ describe("DataTable", () => {
     expect(screen.getByRole("button", { name: "Kiểu lọc Họ tên: Bắt đầu bằng" })).toHaveTextContent("+");
     // dates: a range by default; ≥ turns it into one day with the operator
     expect(screen.getByLabelText("Tạo lúc từ ngày")).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText("Tạo lúc từ ngày"), { target: { value: "2026-09-22" } });
+    // the shadcn date picker (Popover + Calendar), not a native date input
+    await u.click(screen.getByLabelText("Tạo lúc từ ngày"));
+    await u.click(within(await screen.findByRole("grid")).getByRole("button", { name: /\b15\b/ }));
+    const day = searchOf().get("created_at_from");
+    expect(day).toMatch(/^\d{4}-\d{2}-15$/);
     await u.click(screen.getByRole("button", { name: "Kiểu lọc Tạo lúc: Trong khoảng" }));
     await u.click(screen.getByRole("menuitemradio", { name: /Lớn hơn hoặc bằng/ }));
-    expect([searchOf().get("created_at"), searchOf().get("created_at_op"), searchOf().get("created_at_from")]).toEqual(["2026-09-22", ">=", null]);
+    expect([searchOf().get("created_at"), searchOf().get("created_at_op"), searchOf().get("created_at_from")]).toEqual([day, ">=", null]);
     await waitFor(() => expect(requested(fetch).get("created_at_op")).toBe(">="));
   });
 

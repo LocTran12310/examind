@@ -27,15 +27,21 @@ const doc = (o: Partial<SourceDocument> = {}): SourceDocument => ({
 
 afterEach(() => vi.unstubAllGlobals());
 
+async function pick(field: string, option: string) {
+  await userEvent.click(screen.getByRole("combobox", { name: field }));
+  await userEvent.click(await screen.findByRole("option", { name: option }));
+}
+
 describe("documents", () => {
   it("uploads the file with metadata and reports duplicates", async () => {
     const f = mockFetch(route("POST", "/api/documents", { document: doc(), duplicate: true }, 200));
     const onUploaded = vi.fn();
     render(<UploadForm taxonomy={taxonomy} onUploaded={onUploaded} />);
     fireEvent.change(screen.getByTestId("file"), { target: { files: [new File(["x"], "de.docx")] } });
-    await userEvent.selectOptions(screen.getByLabelText("Môn"), "s-toan");
-    await userEvent.selectOptions(screen.getByLabelText("Lớp"), "10");
-    await userEvent.selectOptions(screen.getByLabelText("Đợt kiểm tra"), "hk2|Cuối kỳ");
+    await pick("Môn", "Toán");
+    await pick("Lớp", "Lớp 10");
+    await pick("Đợt kiểm tra", "Cuối kỳ 2");
+    expect(screen.getByRole("combobox", { name: "Đợt kiểm tra" })).toHaveTextContent("Cuối kỳ 2");
     await userEvent.type(screen.getByLabelText(/Nguồn đề/), "THPT A");
     await userEvent.click(await screen.findByRole("button", { name: "Tải lên và tách câu" }));
     await waitFor(() => expect(onUploaded).toHaveBeenCalledWith(expect.objectContaining({ id: "d1" }), true));
@@ -55,7 +61,7 @@ describe("documents", () => {
     );
     const onFinished = vi.fn();
     render(<UploadForm taxonomy={taxonomy} onFinished={onFinished} />);
-    expect(screen.getByLabelText("Môn")).toHaveDisplayValue("Tự nhận từ đề");
+    expect(screen.getByRole("combobox", { name: "Môn" })).toHaveTextContent("Tự nhận từ đề");
     const files = ["de1.docx", "de2.docx", "de3.pdf", "ghichu.txt"].map((name) => new File(["x"], name));
     fireEvent.change(screen.getByTestId("file"), { target: { files } });
     expect(screen.getByText("Bỏ qua 1 file không phải .docx, .pdf hoặc ảnh")).toBeInTheDocument();
@@ -139,7 +145,7 @@ describe("documents", () => {
     render(<ThemeProvider><DocumentInfo doc={d} taxonomy={taxonomy} onSaved={onSaved} /></ThemeProvider>);
     expect(screen.getByTestId("document-info")).toHaveTextContent("Sở GD&ĐT Ninh Bình · 2024-2025 · Toán · Lớp 12 · Thi thử lần 1 · 90 phút");
     await userEvent.click(screen.getByRole("button", { name: "Sửa thông tin" }));
-    await userEvent.selectOptions(screen.getByLabelText("Lớp"), "10");
+    await pick("Lớp", "Lớp 10");
     await userEvent.click(screen.getByRole("button", { name: "Lưu" }));
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
     const body = JSON.parse(String(f.mock.calls[0][1]?.body));

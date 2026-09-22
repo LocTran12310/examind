@@ -10,7 +10,6 @@ import { Panel } from "@/components/app/Panel";
 import { PageHeader } from "@/components/app/PageHeader";
 import { OptionSelect } from "@/components/app/OptionSelect";
 import { useYear } from "@/components/app/YearContext";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { qs, useApi } from "@/lib/hooks";
 import type { GroupStat, SchoolClass, TopicStat, Page } from "@/lib/types";
 
@@ -75,11 +74,17 @@ export default function ReportsPage() {
           <>
             <div className="mb-3 flex items-center gap-2 text-sm">
               Cấp chuyên đề
-              <NativeSelect aria-label="Cấp" value={level} onChange={(e) => setLevel(e.target.value)}>
-                <NativeSelectOption value="1">Mạch kiến thức</NativeSelectOption>
-                <NativeSelectOption value="2">Chuyên đề</NativeSelectOption>
-                <NativeSelectOption value="3">Chủ đề con</NativeSelectOption>
-              </NativeSelect>
+              <OptionSelect
+                aria-label="Cấp"
+                className="w-44"
+                value={level}
+                onValueChange={setLevel}
+                options={[
+                  { value: "1", label: "Mạch kiến thức" },
+                  { value: "2", label: "Chuyên đề" },
+                  { value: "3", label: "Chủ đề con" },
+                ]}
+              />
             </div>
             {!classId ? <p className="text-sm text-muted-foreground">Chọn một lớp để xem bản đồ nhiệt.</p> : heat && <Heatmap data={heat} />}
           </>

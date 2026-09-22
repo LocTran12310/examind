@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import { fromLocalInput, toLocalInput } from "@/lib/dates";
 import { useMutation } from "@/lib/hooks";
+import { DateTimePicker } from "@/components/app/DatePicker";
 
 export function ClassAdaptiveDialog({ classId, onDone }: { classId: string; onDone: (created: number) => void }) {
   const [v, setV] = useState({ count: 15, duration_minutes: 30, open_at: toLocalInput(new Date()), close_at: toLocalInput(new Date(Date.now() + 3 * 86400_000)) });
@@ -35,10 +36,10 @@ export function ClassAdaptiveDialog({ classId, onDone }: { classId: string; onDo
           <Input type="number" min={1} max={600} value={v.duration_minutes} onChange={(e) => setV({ ...v, duration_minutes: Number(e.target.value) })} />
         </FormField>
         <FormField label="Mở lúc">
-          <Input type="datetime-local" value={v.open_at} onChange={(e) => setV({ ...v, open_at: e.target.value })} />
+          {(f) => <DateTimePicker {...f} value={v.open_at} onChange={(x) => setV({ ...v, open_at: x })} />}
         </FormField>
         <FormField label="Đóng lúc" error={m.fields.close_at}>
-          <Input type="datetime-local" value={v.close_at} onChange={(e) => setV({ ...v, close_at: e.target.value })} />
+          {(f) => <DateTimePicker {...f} value={v.close_at} onChange={(x) => setV({ ...v, close_at: x })} />}
         </FormField>
       </div>
       <div className="flex justify-end">

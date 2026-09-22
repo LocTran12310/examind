@@ -435,3 +435,18 @@ Tests at close of F9–F11: API 298 (incl. the 18 official files), web 134; tsc/
   The splitter now treats "HẾT" and exam-header lines as a boundary that closes the question, and reads "n.X | n.X …"
   rows as answer keys anywhere (test added; golden unchanged). All 18 files re-parsed; the Ninh Bình exam + assignment
   re-created (no attempts existed); every unused image deleted (524 → 263 images left, all referenced; 0 orphans).
+
+## 18. Follow-up: bỏ hết control native (2026-09-22, ảnh chụp ma trận đề)
+- **Nguyên nhân sót:** lần rà trước chỉ grep thẻ `<select>`. Nó bỏ sót component `NativeSelect` (bọc `<select>` thật, 25 chỗ trong 12 file) và các ô `type="date"` / `datetime-local` (13 chỗ).
+- **Select:** cả 25 chỗ NativeSelect đã chuyển sang `OptionSelect`, tức Select popover của shadcn, nay có thêm `disabled` cho từng option. Các chỗ đã đổi:
+  - ma trận đề (BlueprintEditor);
+  - form câu hỏi, sửa câu hỏi, cây chuyên đề, trang chuyên đề;
+  - báo cáo, model AI, cấu hình tách đề;
+  - metadata tài liệu, giao bài, kế hoạch lên lớp.
+- **Ngày/giờ:** thêm `components/ui/calendar` (lấy qua shadcn CLI) và `components/app/DatePicker.tsx`.
+  - `DatePicker` giữ giá trị `YYYY-MM-DD`, hiển thị dd/MM/yyyy, lịch tiếng Việt có dropdown tháng/năm và nút xoá.
+  - `DateTimePicker` giữ nguyên hợp đồng `datetime-local` (`YYYY-MM-DDTHH:mm`, giờ nghiệp vụ +07:00): chọn ngày trên lịch, gõ giờ HH:mm. Chọn ngày mà chưa có giờ thì mặc định 07:00.
+  - Đã áp dụng ở: YearForm (6 ô), Giao bài (mở/đóng), Giao bài thích ứng (mở/đóng), bộ lọc cột kiểu ngày của DataTable (khoảng và một ngày).
+- **Chặn tái phát:** ESLint báo lỗi khi import `ui/native-select`, dùng `<select>`, hoặc dùng `type="date|datetime-local|time|month|week"` ngoài `components/ui`.
+- **Kiểm tra:** tsc/eslint sạch; vitest 144/144, trong đó có test mới `date-picker.test.tsx`.
+  - Kiểm tra trên trình duyệt, cả trang lẫn dialog Giao bài không còn `<select>` hay ô ngày native. Riêng dialog có một `<select aria-hidden>`: đó là thẻ ẩn Radix tự thêm để gửi form, không phải control hiển thị.

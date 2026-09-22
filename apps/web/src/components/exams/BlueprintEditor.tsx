@@ -6,7 +6,7 @@ import { FormAlert } from "@/components/app/FormAlert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormDialog } from "@/components/app/FormDialog";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { OptionSelect } from "@/components/app/OptionSelect";
 import { DIFFICULTY_LABEL, TYPE_LABEL, type BlueprintRow, type Tag, type Topic } from "@/lib/types";
 
 export function BlueprintEditor({
@@ -37,29 +37,29 @@ export function BlueprintEditor({
             <Button variant="outline" size="sm" onClick={() => setPicking(i)}>
               {r.topic_id && byId.get(r.topic_id) ? topicLabel(byId.get(r.topic_id)!, byId) : "Chọn chuyên đề…"}
             </Button>
-            <NativeSelect aria-label="Tag" value={r.tag_id ?? ""} onChange={(e) => set(i, { tag_id: e.target.value || null })}>
-              <NativeSelectOption value="">hoặc tag…</NativeSelectOption>
-              {tags.map((t) => (
-                <NativeSelectOption key={t.id} value={t.id}>
-                  {t.name}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-            <NativeSelect aria-label="Loại câu" value={r.type} onChange={(e) => set(i, { type: e.target.value as BlueprintRow["type"] })}>
-              {Object.entries(TYPE_LABEL).map(([k, v]) => (
-                <NativeSelectOption key={k} value={k}>
-                  {v}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-            <NativeSelect aria-label="Mức độ" value={r.difficulty ?? ""} onChange={(e) => set(i, { difficulty: e.target.value || null })}>
-              <NativeSelectOption value="">Mọi mức độ</NativeSelectOption>
-              {Object.entries(DIFFICULTY_LABEL).map(([k, v]) => (
-                <NativeSelectOption key={k} value={k}>
-                  {v}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
+            <OptionSelect
+              aria-label="Tag"
+              className="w-36"
+              value={r.tag_id ?? ""}
+              onValueChange={(v) => set(i, { tag_id: v || null })}
+              emptyLabel="hoặc tag…"
+              options={tags.map((t) => ({ value: t.id, label: t.name }))}
+            />
+            <OptionSelect
+              aria-label="Loại câu"
+              className="w-40"
+              value={r.type}
+              onValueChange={(v) => set(i, { type: v as BlueprintRow["type"] })}
+              options={Object.entries(TYPE_LABEL).map(([k, v]) => ({ value: k, label: v }))}
+            />
+            <OptionSelect
+              aria-label="Mức độ"
+              className="w-36"
+              value={r.difficulty ?? ""}
+              onValueChange={(v) => set(i, { difficulty: (v || null) as BlueprintRow["difficulty"] })}
+              emptyLabel="Mọi mức độ"
+              options={Object.entries(DIFFICULTY_LABEL).map(([k, v]) => ({ value: k, label: v }))}
+            />
             <Input aria-label="Số câu" type="number" min={1} max={200} className="w-20" value={r.count} onChange={(e) => set(i, { count: Number(e.target.value) })} />
             <Button size="sm" variant="ghost" onClick={() => setRows(rows.filter((_, j) => j !== i))} aria-label="Xóa dòng">
               ✕

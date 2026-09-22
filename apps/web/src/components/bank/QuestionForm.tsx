@@ -11,7 +11,7 @@ import { Kbd } from "@/components/ui/kbd";
 import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/app/FormField";
 import { FormDialog } from "@/components/app/FormDialog";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { OptionSelect } from "@/components/app/OptionSelect";
 import { ApiError } from "@/lib/api";
 import { DIFFICULTY_LABEL, TAG_GROUP_LABEL, type ParsedQuestion, type Question, type Tag, type Taxonomy, type Topic } from "@/lib/types";
 import { TopicPicker, topicLabel } from "./TopicPicker";
@@ -83,34 +83,37 @@ export function QuestionForm({
         <QuestionFields draft={v} setDraft={(d) => setV({ ...v, ...d })} />
         <div className="grid gap-3 sm:grid-cols-3">
           <FormField label="Môn">
-            <NativeSelect className="w-full" value={v.subject_id ?? ""} onChange={(e) => setV({ ...v, subject_id: e.target.value || null })}>
-              <NativeSelectOption value="">—</NativeSelectOption>
-              {taxonomy.subjects.map((s) => (
-                <NativeSelectOption key={s.id} value={s.id}>
-                  {s.name}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
+            {(f) => (
+              <OptionSelect
+                {...f}
+                value={v.subject_id ?? ""}
+                onValueChange={(x) => setV({ ...v, subject_id: x || null })}
+                emptyLabel="—"
+                options={taxonomy.subjects.map((s) => ({ value: s.id, label: s.name }))}
+              />
+            )}
           </FormField>
           <FormField label="Lớp">
-            <NativeSelect className="w-full" value={v.grade ?? ""} onChange={(e) => setV({ ...v, grade: e.target.value ? Number(e.target.value) : null })}>
-              <NativeSelectOption value="">—</NativeSelectOption>
-              {taxonomy.grades.map((g) => (
-                <NativeSelectOption key={g.id} value={g.level}>
-                  {g.name}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
+            {(f) => (
+              <OptionSelect
+                {...f}
+                value={v.grade != null ? String(v.grade) : ""}
+                onValueChange={(x) => setV({ ...v, grade: x ? Number(x) : null })}
+                emptyLabel="—"
+                options={taxonomy.grades.map((g) => ({ value: String(g.level), label: g.name }))}
+              />
+            )}
           </FormField>
           <FormField label="Mức độ">
-            <NativeSelect className="w-full" value={v.difficulty ?? ""} onChange={(e) => setV({ ...v, difficulty: e.target.value || null })}>
-              <NativeSelectOption value="">—</NativeSelectOption>
-              {Object.entries(DIFFICULTY_LABEL).map(([k, l]) => (
-                <NativeSelectOption key={k} value={k}>
-                  {l}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
+            {(f) => (
+              <OptionSelect
+                {...f}
+                value={v.difficulty ?? ""}
+                onValueChange={(x) => setV({ ...v, difficulty: (x || null) as typeof v.difficulty })}
+                emptyLabel="—"
+                options={Object.entries(DIFFICULTY_LABEL).map(([k, l]) => ({ value: k, label: l }))}
+              />
+            )}
           </FormField>
         </div>
         <FormField label="Chuyên đề chính">

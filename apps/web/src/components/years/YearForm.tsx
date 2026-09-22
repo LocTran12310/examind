@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import { useMutation } from "@/lib/hooks";
 import type { SchoolYear } from "@/lib/types";
+import { DatePicker } from "@/components/app/DatePicker";
 
 export function nextYearCode(code?: string): string {
   const y = code ? Number(code.slice(5)) : new Date().getFullYear();
@@ -62,24 +63,24 @@ export function YearForm({ year, suggest, onDone }: { year?: SchoolYear; suggest
         <>
           <div className="grid grid-cols-2 gap-4">
             <FormField label="Bắt đầu" error={m.fields.start_date}>
-              <Input type="date" value={v.start_date} onChange={set("start_date")} />
+              {(f) => <DatePicker {...f} clearable={false} value={v.start_date} onChange={(d) => setV({ ...v, start_date: d })} />}
             </FormField>
             <FormField label="Kết thúc" error={m.fields.end_date}>
-              <Input type="date" value={v.end_date} onChange={set("end_date")} />
+              {(f) => <DatePicker {...f} clearable={false} value={v.end_date} onChange={(d) => setV({ ...v, end_date: d })} />}
             </FormField>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <FormField label="Học kỳ 1 từ" error={m.fields.terms}>
-              <Input type="date" value={v.hk1_start} onChange={set("hk1_start")} />
+              {(f) => <DatePicker {...f} clearable={false} value={v.hk1_start} onChange={(d) => setV({ ...v, hk1_start: d })} />}
             </FormField>
             <FormField label="đến">
-              <Input type="date" value={v.hk1_end} onChange={set("hk1_end")} />
+              {(f) => <DatePicker {...f} clearable={false} value={v.hk1_end} onChange={(d) => setV({ ...v, hk1_end: d })} />}
             </FormField>
             <FormField label="Học kỳ 2 từ">
-              <Input type="date" value={v.hk2_start} onChange={set("hk2_start")} />
+              {(f) => <DatePicker {...f} clearable={false} value={v.hk2_start} onChange={(d) => setV({ ...v, hk2_start: d })} />}
             </FormField>
             <FormField label="đến">
-              <Input type="date" value={v.hk2_end} onChange={set("hk2_end")} />
+              {(f) => <DatePicker {...f} clearable={false} value={v.hk2_end} onChange={(d) => setV({ ...v, hk2_end: d })} />}
             </FormField>
           </div>
         </>

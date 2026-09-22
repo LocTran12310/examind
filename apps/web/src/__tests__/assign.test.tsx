@@ -25,7 +25,9 @@ describe("assign and student home", () => {
     render(<AssignDialog examId="e1" title="Kiểm tra" classes={[klass]} onDone={onDone} />);
     expect(screen.getByRole("button", { name: "Giao bài" })).toBeDisabled();
     await userEvent.click(screen.getByLabelText(/10A1/));
-    await userEvent.selectOptions(screen.getByLabelText("Xem kết quả"), "after_close");
+    await userEvent.click(screen.getByRole("combobox", { name: "Xem kết quả" }));
+    await userEvent.click(await screen.findByRole("option", { name: "Sau khi đóng bài" }));
+    expect(screen.getByRole("combobox", { name: "Xem kết quả" })).toHaveTextContent("Sau khi đóng bài");
     await userEvent.click(screen.getByRole("button", { name: "Giao bài" }));
     await waitFor(() => expect(onDone).toHaveBeenCalled());
     const body = JSON.parse(String(f.mock.calls[0][1]?.body));
