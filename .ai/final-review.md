@@ -310,4 +310,4 @@ Tests at close: API 246, web 120; tsc/eslint/build clean. Evidence: `.ai/feature
 - **Pagination is responsive to its container** (not the viewport): labels, first/last buttons and the long summary drop out step by step (`‹ [1] / 2 ›  20  1–20 / 32` on a phone). The header's org/year selectors are compact on phones.
 - **Topic filter is a tree**: checkbox tree with expand/collapse and accent-free search; choosing a parent includes all its children, choosing every child selects the parent; several branches can be combined. URL: `topic_ids=a,b` (each id includes its subtree on the server); old `topic_id` links still work.
 - Known test-environment note: jsdom has no layout, so tests set values with `fireEvent.change` for inputs inside resizable panels.
-- Tests: API 247, web 123; tsc/eslint/build clean.
+- Tests: API 246, web 123; tsc/eslint/build clean.
