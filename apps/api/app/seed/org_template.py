@@ -4,12 +4,13 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.taxonomy import Grade, Semester, Subject, Topic, topic_label
+from app.models.taxonomy import Grade, SchoolLevel, Semester, Subject, Topic, topic_label
 from app.seed.math_topics import MATH_TREE
 
 SUBJECTS = [("toan", "Toán"), ("ly", "Vật lý"), ("hoa", "Hóa học"), ("sinh", "Sinh học"), ("van", "Ngữ văn"), ("anh", "Tiếng Anh")]
 SEMESTERS = [("hk1", "Học kỳ 1"), ("hk2", "Học kỳ 2")]
 GRADES = range(6, 13)
+LEVELS = [("thcs", "Trung học cơ sở", 6, 9), ("thpt", "Trung học phổ thông", 10, 12)]  # A-01
 
 
 def seed_org(db: Session, org_id: uuid.UUID) -> None:
@@ -19,10 +20,21 @@ def seed_org(db: Session, org_id: uuid.UUID) -> None:
         if code not in subjects:
             subjects[code] = Subject(organization_id=org_id, code=code, name=name, sort=i)
             db.add(subjects[code])
-    have_grades = set(db.scalars(select(Grade.level).where(Grade.organization_id == org_id)))
-    for g in GRADES:
-        if g not in have_grades:
-            db.add(Grade(organization_id=org_id, level=g, name=f"Lớp {g}"))
+    levels = list(db.scalars(select(SchoolLevel).where(SchoolLevel.organization_id == org_id)))
+    if not levels:  # seed the defaults once; afterwards the org owns its levels (A-01)
+        levels = [SchoolLevel(organization_id=org_id, code=code, name=name, grade_from=lo, grade_to=hi, sort=i)
+                  for i, (code, name, lo, hi) in enumerate(LEVELS)]
+        db.add_all(levels)
+    db.flush()
+    have_grades = list(db.scalars(select(Grade).where(Grade.organization_id == org_id)))
+    level_of = lambda n: next((lv for lv in levels if lv.grade_from <= n <= lv.grade_to), None)  # noqa: E731
+    if not have_grades:  # first seed only: grades the org deletes later must not come back on boot
+        for g in GRADES:
+            lv = level_of(g)
+            db.add(Grade(organization_id=org_id, level=g, name=f"Lớp {g}", school_level_id=lv.id if lv else None))
+    for g in have_grades:
+        if g.school_level_id is None and (lv := level_of(g.level)):
+            g.school_level_id = lv.id
     have_sem = set(db.scalars(select(Semester.code).where(Semester.organization_id == org_id)))
     for i, (code, name) in enumerate(SEMESTERS):
         if code not in have_sem:

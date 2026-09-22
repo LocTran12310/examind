@@ -13,7 +13,8 @@ class SchoolClass(IdMixin, TimestampMixin, Base):
 
     organization_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("organizations.id"), index=True)
     name: Mapped[str] = mapped_column(String(100))
-    grade: Mapped[int | None] = mapped_column(SmallInteger)
+    grade: Mapped[int | None] = mapped_column(SmallInteger)  # cache of grades.level for bank/exam filters
+    grade_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("grades.id"), index=True)
     school_year: Mapped[str] = mapped_column(String(9))  # "2026-2027"
 
 

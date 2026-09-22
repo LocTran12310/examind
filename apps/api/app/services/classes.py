@@ -43,6 +43,7 @@ MEMBER_COUNT = func.count(ClassMember.user_id)
 CLASS_COLS = {
     "name": Col(SchoolClass.name),
     "grade": Col(SchoolClass.grade, "number"),
+    "grade_id": Col(SchoolClass.grade_id, "uuid"),
     "school_year": Col(SchoolClass.school_year, "exact"),
     "member_count": Col(MEMBER_COUNT, filterable=False),
     "created_at": Col(SchoolClass.created_at, "date"),
@@ -68,20 +69,30 @@ def find_or_create(db: Session, scope: OrgScope, name: str, school_year: str | N
     return create_class(db, scope, name, school_year, grade)
 
 
-def create_class(db: Session, scope: OrgScope, name: str, school_year: str, grade: int | None) -> SchoolClass:
+def create_class(db: Session, scope: OrgScope, name: str, school_year: str, grade: int | None, grade_id=None) -> SchoolClass:
+    from app.services.structure import resolve_grade
+
+    g = resolve_grade(db, scope, grade_id, grade)
+    if g is not None:
+        grade = g.level
     _check(name, school_year, grade)
     if db.scalar(select(SchoolClass.id).where(SchoolClass.organization_id == scope.org_id, SchoolClass.name == name.strip(),
                                               SchoolClass.school_year == school_year)):
         raise conflict("Lớp đã tồn tại trong năm học này", "name")
-    c = SchoolClass(organization_id=scope.org_id, name=name.strip(), school_year=school_year, grade=grade)
+    c = SchoolClass(organization_id=scope.org_id, name=name.strip(), school_year=school_year, grade=grade, grade_id=g.id if g else None)
     db.add(c)
     db.flush()
     audit.record(db, scope.user, scope.org_id, "class.create", "class", c.id, name=c.name)
     return c
 
 
-def update_class(db: Session, scope: OrgScope, class_id, name=None, school_year=None, grade=None) -> SchoolClass:
+def update_class(db: Session, scope: OrgScope, class_id, name=None, school_year=None, grade=None, grade_id=None) -> SchoolClass:
+    from app.services.structure import resolve_grade
+
     c = get_class(db, scope, class_id)
+    g = resolve_grade(db, scope, grade_id, grade) if (grade_id or grade is not None) else None
+    if g is not None:
+        grade = g.level
     new_name = name.strip() if name is not None else c.name
     new_year = school_year or c.school_year
     _check(new_name, new_year, grade if grade is not None else c.grade)
@@ -92,6 +103,7 @@ def update_class(db: Session, scope: OrgScope, class_id, name=None, school_year=
     c.name, c.school_year = new_name, new_year
     if grade is not None:
         c.grade = grade
+        c.grade_id = g.id if g else None
     return c
 
 

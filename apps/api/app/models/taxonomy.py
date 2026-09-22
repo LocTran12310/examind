@@ -40,6 +40,19 @@ class Subject(IdMixin, Base):
     sort: Mapped[int] = mapped_column(Integer, default=0)
 
 
+class SchoolLevel(IdMixin, TimestampMixin, Base):
+    """Cấp học (THCS, THPT…) owned by an org; grades 'belong' to the level whose range contains them."""
+    __tablename__ = "school_levels"
+    __table_args__ = (UniqueConstraint("organization_id", "code", name="uq_school_levels_org_code"),)
+
+    organization_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("organizations.id"), index=True)
+    code: Mapped[str] = mapped_column(String(20))
+    name: Mapped[str] = mapped_column(String(100))
+    grade_from: Mapped[int] = mapped_column(SmallInteger)
+    grade_to: Mapped[int] = mapped_column(SmallInteger)
+    sort: Mapped[int] = mapped_column(Integer, default=0)
+
+
 class Grade(IdMixin, Base):
     __tablename__ = "grades"
     __table_args__ = (UniqueConstraint("organization_id", "level"),)
@@ -47,6 +60,7 @@ class Grade(IdMixin, Base):
     organization_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("organizations.id"), index=True)
     level: Mapped[int] = mapped_column(SmallInteger)
     name: Mapped[str] = mapped_column(String(50))
+    school_level_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("school_levels.id"), index=True)
 
 
 class Semester(IdMixin, Base):

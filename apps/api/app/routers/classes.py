@@ -24,7 +24,7 @@ def list_classes(params: ListParams = Depends(list_params), scope: OrgScope = De
 
 @router.post("", response_model=ClassOut, status_code=201)
 def create_class(body: ClassCreate, scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
-    c = classes.create_class(db, scope, body.name, body.school_year or classes.current_school_year(), body.grade)
+    c = classes.create_class(db, scope, body.name, body.school_year or classes.current_school_year(), body.grade, body.grade_id)
     db.refresh(c)
     return class_out(c)
 
@@ -38,7 +38,7 @@ def get_class(class_id: uuid.UUID, scope: OrgScope = Depends(staff_scope), db: S
 
 @router.patch("/{class_id}", response_model=ClassOut)
 def update_class(class_id: uuid.UUID, body: ClassUpdate, scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
-    return class_out(classes.update_class(db, scope, class_id, body.name, body.school_year, body.grade))
+    return class_out(classes.update_class(db, scope, class_id, body.name, body.school_year, body.grade, body.grade_id))
 
 
 @router.delete("/{class_id}", status_code=204)
