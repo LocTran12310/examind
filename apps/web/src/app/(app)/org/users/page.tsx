@@ -1,100 +1,151 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
+import { Download, KeyRound, Lock, LockOpen, Upload } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { useMe } from "@/app/(app)/AppShell";
+import { ConfirmDialog } from "@/components/app/ConfirmDialog";
+import { FormDialog } from "@/components/app/FormDialog";
+import { PageHeader } from "@/components/app/PageHeader";
+import { ToneBadge } from "@/components/app/ToneBadge";
+import { DataTable } from "@/components/data-table/DataTable";
+import { ToolbarButton } from "@/components/data-table/Toolbar";
+import { useTableQuery } from "@/components/data-table/useTableQuery";
 import { TempPassword, UserCreateForm, UserEditForm } from "@/components/org/UserForm";
-import { UserTable } from "@/components/org/UserTable";
-import { Alert, Button, Empty, Input, Modal, PageHeader, Select } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
-import { qs, useApi } from "@/lib/hooks";
-import { type Credential, type Page, type SchoolClass, type User } from "@/lib/types";
+import { downloadText, toCsv } from "@/lib/csv";
+import { fmt } from "@/lib/dates";
+import { useApi } from "@/lib/hooks";
+import { type Credential, type Page, ROLE_LABEL, type SchoolClass, type User } from "@/lib/types";
+
+function status(u: User) {
+  if (!u.is_active) return <ToneBadge tone="red">Đã khóa</ToneBadge>;
+  if (u.must_change_password) return <ToneBadge tone="amber">Chờ đổi mật khẩu</ToneBadge>;
+  return <ToneBadge tone="green">Hoạt động</ToneBadge>;
+}
 
 export default function UsersPage() {
   const me = useMe();
-  const [q, setQ] = useState("");
-  const [role, setRole] = useState("");
-  const [classId, setClassId] = useState("");
+  const tq = useTableQuery();
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<User | null>(null);
+  const [resetFor, setResetFor] = useState<User | null>(null);
   const [reset, setReset] = useState<Credential | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const { data, reload } = useApi<Page<User>>(`/users${qs({ q, role, class_id: classId, page_size: 200 })}`);
-  const { data: classes } = useApi<SchoolClass[]>("/classes");
-  const className = (id: string) => classes?.find((c) => c.id === id)?.name ?? "";
+  const [version, setVersion] = useState(0);
+  const { data: classes } = useApi<Page<SchoolClass>>("/classes?page_size=all");
+  const classById = useMemo(() => new Map(classes?.items.map((c) => [c.id, c]) ?? []), [classes]);
+  const refresh = () => setVersion((v) => v + 1);
 
-  async function act(fn: () => Promise<unknown>) {
-    setError(null);
+  const columns = useMemo<ColumnDef<User, unknown>[]>(
+    () => [
+      { accessorKey: "full_name", header: "Họ tên", meta: { filter: { kind: "text" }, sort: "full_name" } },
+      { accessorKey: "username", header: "Tên đăng nhập", cell: ({ row }) => <span className="font-mono">{row.original.username}</span>, meta: { filter: { kind: "text" }, sort: "username" } },
+      ...(me.role === "org_admin"
+        ? [
+            {
+              accessorKey: "role",
+              header: "Vai trò",
+              cell: ({ row }) => ROLE_LABEL[row.original.role],
+              meta: { filter: { kind: "select", options: (["student", "teacher", "org_admin"] as const).map((r) => ({ value: r, label: ROLE_LABEL[r] })) }, sort: "role" },
+            } satisfies ColumnDef<User, unknown>,
+          ]
+        : []),
+      {
+        id: "class_id",
+        header: "Lớp",
+        cell: ({ row }) => row.original.class_ids.map((id) => classById.get(id)?.name).filter(Boolean).join(", "),
+        meta: { filter: { kind: "select", options: (classes?.items ?? []).map((c) => ({ value: c.id, label: `${c.name} (${c.school_year})` })) } },
+      },
+      { accessorKey: "is_active", header: "Trạng thái", cell: ({ row }) => status(row.original), meta: { filter: { kind: "select", options: [{ value: "true", label: "Hoạt động" }, { value: "false", label: "Đã khóa" }] } } },
+      {
+        accessorKey: "last_login_at",
+        header: "Đăng nhập gần nhất",
+        cell: ({ row }) => fmt(row.original.last_login_at),
+        meta: { filter: { kind: "date" }, sort: "last_login_at" },
+      },
+    ],
+    [me.role, classes, classById],
+  );
+
+  async function setActive(users: User[], active: boolean) {
     try {
-      await fn();
-      await reload();
+      for (const u of users.filter((u) => u.id !== me.id)) await api(`/users/${u.id}`, { method: "PATCH", body: { is_active: active } });
+      toast.success(active ? "Đã mở khóa" : "Đã khóa");
+      refresh();
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Có lỗi xảy ra");
+      toast.error(e instanceof ApiError ? e.message : "Có lỗi xảy ra");
     }
+  }
+
+  async function exportCsv() {
+    const q = new URLSearchParams(tq.apiParams);
+    q.set("page", "1");
+    q.set("page_size", "all");
+    const page = await api<Page<User>>(`/users?${q}`);
+    const rows = page.items.map((u) => ({ ...u, role: ROLE_LABEL[u.role], classes: u.class_ids.map((id) => classById.get(id)?.name).join(" ") }));
+    downloadText("nguoi-dung.csv", toCsv(rows, [["full_name", "Họ tên"], ["username", "Tên đăng nhập"], ["email", "Email"], ["role", "Vai trò"], ["classes", "Lớp"]]));
   }
 
   return (
     <>
-      <PageHeader
-        title={me.role === "teacher" ? "Học sinh" : "Người dùng"}
-        subtitle={data ? `${data.total} tài khoản` : undefined}
-        actions={
+      <PageHeader title={me.role === "teacher" ? "Học sinh" : "Người dùng"} />
+      <DataTable
+        path="/users"
+        columns={columns}
+        getRowId={(u) => u.id}
+        reloadKey={version}
+        onAdd={() => setCreating(true)}
+        onEdit={setEditing}
+        actions={({ selected }) => (
           <>
-            <Link href="/org/users/import">
-              <Button>Nhập từ file</Button>
-            </Link>
-            <Button variant="primary" onClick={() => setCreating(true)}>
-              Thêm tài khoản
-            </Button>
+            <ToolbarButton disabled={selected.length !== 1} onClick={() => setResetFor(selected[0])}>
+              <KeyRound /> Đặt lại mật khẩu
+            </ToolbarButton>
+            <ToolbarButton disabled={!selected.some((u) => u.is_active && u.id !== me.id)} onClick={() => void setActive(selected, false)}>
+              <Lock /> Khóa
+            </ToolbarButton>
+            <ToolbarButton disabled={!selected.some((u) => !u.is_active)} onClick={() => void setActive(selected, true)}>
+              <LockOpen /> Mở khóa
+            </ToolbarButton>
+            <ToolbarButton asChild>
+              <Link href="/org/users/import">
+                <Upload /> Nhập khẩu
+              </Link>
+            </ToolbarButton>
+            <ToolbarButton onClick={() => void exportCsv()}>
+              <Download /> Xuất khẩu
+            </ToolbarButton>
           </>
-        }
-      />
-      <div className="mb-4 flex flex-wrap gap-3">
-        <Input placeholder="Tìm theo tên hoặc tên đăng nhập" className="max-w-xs" value={q} onChange={(e) => setQ(e.target.value)} />
-        {me.role === "org_admin" && (
-          <Select value={role} onChange={(e) => setRole(e.target.value)} aria-label="Vai trò">
-            <option value="">Tất cả vai trò</option>
-            <option value="student">Học sinh</option>
-            <option value="teacher">Giáo viên</option>
-            <option value="org_admin">Quản trị</option>
-          </Select>
         )}
-        <Select value={classId} onChange={(e) => setClassId(e.target.value)} aria-label="Lớp">
-          <option value="">Tất cả lớp</option>
-          {classes?.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name} ({c.school_year})
-            </option>
-          ))}
-        </Select>
-      </div>
-      {error && <div className="mb-3"><Alert>{error}</Alert></div>}
-      {data && data.items.length === 0 ? (
-        <Empty>Chưa có tài khoản nào. Thêm từng người hoặc nhập từ file CSV/Excel.</Empty>
-      ) : (
-        data && (
-          <UserTable
-            users={data.items}
-            meId={me.id}
-            className={className}
-            onEdit={setEditing}
-            onReset={(u) =>
-              window.confirm(`Đặt lại mật khẩu cho ${u.full_name}?`) &&
-              act(async () => setReset(await api<Credential>(`/users/${u.id}/reset-password`, { method: "POST" })))
-            }
-            onToggle={(u) => act(() => api(`/users/${u.id}`, { method: "PATCH", body: { is_active: !u.is_active } }))}
-          />
-        )
-      )}
-      <Modal open={creating} title="Thêm tài khoản" onClose={() => (setCreating(false), void reload())}>
-        <UserCreateForm myRole={me.role} orgCode={me.org.code} onDone={() => (setCreating(false), void reload())} />
-      </Modal>
-      <Modal open={!!editing} title="Sửa tài khoản" onClose={() => setEditing(null)}>
-        {editing && <UserEditForm user={editing} myRole={me.role} onDone={() => (setEditing(null), void reload())} />}
-      </Modal>
-      <Modal open={!!reset} title="Đã đặt lại mật khẩu" onClose={() => setReset(null)}>
+        emptyText="Chưa có tài khoản nào. Thêm từng người hoặc nhập từ file CSV/Excel."
+      />
+      <FormDialog open={creating} onOpenChange={(o) => (setCreating(o), o || refresh())} title="Thêm tài khoản">
+        <UserCreateForm myRole={me.role} orgCode={me.org.code} onDone={() => (setCreating(false), refresh())} />
+      </FormDialog>
+      <FormDialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)} title="Sửa tài khoản">
+        {editing && <UserEditForm user={editing} myRole={me.role} onDone={() => (setEditing(null), refresh())} />}
+      </FormDialog>
+      <ConfirmDialog
+        open={!!resetFor}
+        onOpenChange={(o) => !o && setResetFor(null)}
+        title={`Đặt lại mật khẩu cho ${resetFor?.full_name ?? ""}?`}
+        description="Mật khẩu cũ và mọi phiên đăng nhập của người này sẽ bị hủy."
+        confirmLabel="Đặt lại"
+        onConfirm={async () => {
+          const u = resetFor!;
+          setResetFor(null);
+          try {
+            setReset(await api<Credential>(`/users/${u.id}/reset-password`, { method: "POST" }));
+          } catch (e) {
+            toast.error(e instanceof ApiError ? e.message : "Có lỗi xảy ra");
+          }
+        }}
+      />
+      <FormDialog open={!!reset} onOpenChange={(o) => !o && setReset(null)} title="Đã đặt lại mật khẩu">
         {reset && <TempPassword username={reset.username} password={reset.temp_password} orgCode={me.org.code} />}
-      </Modal>
+      </FormDialog>
     </>
   );
 }

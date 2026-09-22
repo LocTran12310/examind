@@ -1,76 +1,90 @@
 "use client";
 
-import { useState } from "react";
-import { Alert, Button, Card, Empty, Input, Table, td, th } from "@/components/ui";
+import type { ColumnDef } from "@tanstack/react-table";
+import { UserPlus } from "lucide-react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import { FormDialog } from "@/components/app/FormDialog";
+import { DataTable } from "@/components/data-table/DataTable";
+import { ToolbarButton } from "@/components/data-table/Toolbar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { api, ApiError } from "@/lib/api";
 import { qs, useApi } from "@/lib/hooks";
-import type { ClassDetail, Page, User } from "@/lib/types";
+import type { Page, User } from "@/lib/types";
 
-export function MemberManager({ detail, onChange }: { detail: ClassDetail; onChange: () => void }) {
+const COLUMNS: ColumnDef<User, unknown>[] = [
+  { accessorKey: "full_name", header: "Họ tên", meta: { filter: { kind: "text" }, sort: "full_name" } },
+  { accessorKey: "username", header: "Tên đăng nhập", cell: ({ row }) => <span className="font-mono">{row.original.username}</span>, meta: { filter: { kind: "text" }, sort: "username" } },
+];
+
+function AddStudents({ classId, onAdded }: { classId: string; onAdded: () => void }) {
   const [q, setQ] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const { data: candidates } = useApi<Page<User>>(q.length >= 2 ? `/users${qs({ q, role: "student", page_size: 20 })}` : null);
-  const memberIds = new Set(detail.members.map((m) => m.id));
-
-  async function run(fn: () => Promise<unknown>) {
-    setError(null);
-    try {
-      await fn();
-      onChange();
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Có lỗi xảy ra");
-    }
-  }
-
+  const [added, setAdded] = useState<Set<string>>(new Set());
+  const { data } = useApi<Page<User>>(q.trim().length >= 2 ? `/users${qs({ q, role: "student", page_size: 20 })}` : null);
   return (
-    <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-      <div>
-        {error && <div className="mb-3"><Alert>{error}</Alert></div>}
-        {detail.members.length === 0 ? (
-          <Empty>Lớp chưa có học sinh.</Empty>
-        ) : (
-          <Table>
-            <thead className="bg-gray-50">
-              <tr>
-                <th className={th}>Họ tên</th>
-                <th className={th}>Tên đăng nhập</th>
-                <th className={th} />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {detail.members.map((m) => (
-                <tr key={m.id} data-testid={`member-${m.username}`}>
-                  <td className={td}>{m.full_name}</td>
-                  <td className={`${td} font-mono`}>{m.username}</td>
-                  <td className={`${td} text-right`}>
-                    <Button size="sm" variant="danger" onClick={() => run(() => api(`/classes/${detail.id}/members/${m.id}`, { method: "DELETE" }))}>
-                      Xóa khỏi lớp
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        )}
-      </div>
-      <Card>
-        <h2 className="mb-2 font-medium">Thêm học sinh</h2>
-        <Input placeholder="Tìm tên hoặc tên đăng nhập" value={q} onChange={(e) => setQ(e.target.value)} />
-        <ul className="mt-3 divide-y divide-gray-100">
-          {candidates?.items
-            .filter((u) => !memberIds.has(u.id))
-            .map((u) => (
-              <li key={u.id} className="flex items-center justify-between py-2 text-sm">
-                <span>
-                  {u.full_name} <span className="font-mono text-gray-500">{u.username}</span>
-                </span>
-                <Button size="sm" onClick={() => run(() => api(`/classes/${detail.id}/members`, { body: { user_ids: [u.id] } }))}>
-                  Thêm
-                </Button>
-              </li>
-            ))}
-        </ul>
-      </Card>
+    <div className="grid gap-3">
+      <Input autoFocus aria-label="Tìm học sinh" placeholder="Tìm tên hoặc tên đăng nhập (≥ 2 ký tự)" value={q} onChange={(e) => setQ(e.target.value)} />
+      <ul className="max-h-80 divide-y overflow-y-auto">
+        {data?.items
+          .filter((u) => !u.class_ids.includes(classId) && !added.has(u.id))
+          .map((u) => (
+            <li key={u.id} className="flex items-center justify-between py-2 text-sm">
+              <span>
+                {u.full_name} <span className="font-mono text-muted-foreground">{u.username}</span>
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    await api(`/classes/${classId}/members`, { body: { user_ids: [u.id] } });
+                    setAdded((s) => new Set(s).add(u.id));
+                    onAdded();
+                  } catch (e) {
+                    toast.error(e instanceof ApiError ? e.message : "Có lỗi xảy ra");
+                  }
+                }}
+              >
+                Thêm
+              </Button>
+            </li>
+          ))}
+      </ul>
     </div>
+  );
+}
+
+/** Students of one class as a server-paged table (`prefix` keeps its URL params apart). */
+export function MemberManager({ classId, prefix = "m.", onChange }: { classId: string; prefix?: string; onChange?: () => void }) {
+  const [adding, setAdding] = useState(false);
+  const [version, setVersion] = useState(0);
+  const params = useMemo(() => ({ class_id: classId }), [classId]);
+  const changed = () => (setVersion((v) => v + 1), onChange?.());
+  return (
+    <>
+      <DataTable
+        path="/users"
+        prefix={prefix}
+        params={params}
+        columns={COLUMNS}
+        getRowId={(u) => u.id}
+        reloadKey={version}
+        onDelete={async (rows) => {
+          for (const u of rows) await api(`/classes/${classId}/members/${u.id}`, { method: "DELETE" });
+          onChange?.();
+        }}
+        deleteLabel={(rows) => `Xóa ${rows.length} học sinh khỏi lớp?`}
+        actions={() => (
+          <ToolbarButton onClick={() => setAdding(true)}>
+            <UserPlus /> Thêm học sinh
+          </ToolbarButton>
+        )}
+        emptyText="Lớp chưa có học sinh."
+      />
+      <FormDialog open={adding} onOpenChange={setAdding} title="Thêm học sinh vào lớp">
+        <AddStudents classId={classId} onAdded={changed} />
+      </FormDialog>
+    </>
   );
 }

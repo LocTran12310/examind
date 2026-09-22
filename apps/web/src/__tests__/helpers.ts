@@ -29,3 +29,22 @@ export const route =
     const hit = typeof pattern === "string" ? url === pattern : pattern.test(url);
     return m === method && hit ? { status, body } : undefined;
   };
+
+export const me = (role: import("@/lib/types").Role = "org_admin", o: Partial<import("@/lib/types").Me> = {}): import("@/lib/types").Me => ({
+  id: "me",
+  username: "admin",
+  full_name: "Quản Trị",
+  role,
+  must_change_password: false,
+  org: { id: "o1", code: "trungtama", name: "Trung tâm A" },
+  ...o,
+});
+
+/** Last request to a path, as URLSearchParams. */
+export function lastQuery(fetch: { mock: { calls: unknown[][] } }, path: string): URLSearchParams {
+  const call = [...fetch.mock.calls].reverse().find((c) => String(c[0]).startsWith(`/api${path}?`) || String(c[0]) === `/api${path}`);
+  if (!call) throw new Error(`no request to ${path}`);
+  return new URL(String(call[0]), "http://x").searchParams;
+}
+
+export const page = <T,>(items: T[], total = items.length, pageNo = 1, size = 20) => ({ items, total, page: pageNo, page_size: size });

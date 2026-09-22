@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, Button, CopyButton, Field, Input, Select } from "@/components/ui";
+import { CopyButton } from "@/components/app/CopyButton";
+import { FormAlert } from "@/components/app/FormAlert";
+import { FormField } from "@/components/app/FormField";
+import { OptionSelect } from "@/components/app/OptionSelect";
+import { Button } from "@/components/ui/button";
+import { DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
 import { useMutation } from "@/lib/hooks";
 import { ROLE_LABEL, type Role, type User } from "@/lib/types";
@@ -10,11 +16,13 @@ export function rolesManagedBy(role: Role): Role[] {
   return role === "org_admin" ? ["student", "teacher", "org_admin"] : ["student"];
 }
 
+const roleOptions = (role: Role) => rolesManagedBy(role).map((r) => ({ value: r, label: ROLE_LABEL[r] }));
+
 export function TempPassword({ username, password, orgCode }: { username: string; password: string; orgCode: string }) {
   return (
-    <div className="space-y-2">
+    <div className="grid gap-2">
       <p className="text-sm">Mật khẩu tạm (chỉ hiển thị một lần, người dùng phải đổi khi đăng nhập):</p>
-      <div className="flex items-center gap-2 rounded-md bg-gray-50 p-3 font-mono text-sm">
+      <div className="flex items-center justify-between gap-2 rounded-md bg-muted p-3 font-mono text-sm">
         <span data-testid="temp-cred">
           {orgCode} / {username} / {password}
         </span>
@@ -34,51 +42,41 @@ export function UserCreateForm({ myRole, orgCode, onDone }: { myRole: Role; orgC
 
   if (created)
     return (
-      <div className="space-y-4">
-        <Alert tone="green">Đã tạo tài khoản.</Alert>
+      <div className="grid gap-4">
+        <FormAlert kind="success">Đã tạo tài khoản.</FormAlert>
         <TempPassword username={created.username} password={created.password} orgCode={orgCode} />
-        <div className="flex justify-end">
-          <Button variant="primary" onClick={onDone}>
-            Xong
-          </Button>
-        </div>
+        <DialogFooter>
+          <Button onClick={onDone}>Xong</Button>
+        </DialogFooter>
       </div>
     );
 
   return (
     <form
-      className="space-y-4"
+      className="grid gap-4"
       onSubmit={async (e) => {
         e.preventDefault();
-        const r = await m.run(() =>
-          api<{ user: User; temp_password: string }>("/users", { body: { full_name: fullName, username: username || null, role } }),
-        );
+        const r = await m.run(() => api<{ user: User; temp_password: string }>("/users", { body: { full_name: fullName, username: username || null, role } }));
         if (r) setCreated({ username: r.user.username, password: r.temp_password });
       }}
     >
-      {m.message && !Object.keys(m.fields).length && <Alert>{m.message}</Alert>}
-      <Field label="Họ tên" error={m.fields.full_name}>
-        <Input value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-      </Field>
-      <Field label="Tên đăng nhập" error={m.fields.username} hint="Để trống để tự tạo từ họ tên">
-        <Input value={username} onChange={(e) => setUsername(e.target.value)} />
-      </Field>
+      {m.message && !Object.keys(m.fields).length && <FormAlert>{m.message}</FormAlert>}
+      <FormField label="Họ tên" error={m.fields.full_name}>
+        {(f) => <Input {...f} value={fullName} onChange={(e) => setFullName(e.target.value)} required />}
+      </FormField>
+      <FormField label="Tên đăng nhập" error={m.fields.username} hint="Để trống để tự tạo từ họ tên">
+        {(f) => <Input {...f} value={username} onChange={(e) => setUsername(e.target.value)} />}
+      </FormField>
       {roles.length > 1 && (
-        <Field label="Vai trò">
-          <Select value={role} onChange={(e) => setRole(e.target.value as Role)} className="w-full">
-            {roles.map((r) => (
-              <option key={r} value={r}>
-                {ROLE_LABEL[r]}
-              </option>
-            ))}
-          </Select>
-        </Field>
+        <FormField label="Vai trò">
+          {(f) => <OptionSelect {...f} value={role} onValueChange={(v) => setRole(v as Role)} options={roleOptions(myRole)} />}
+        </FormField>
       )}
-      <div className="flex justify-end">
-        <Button variant="primary" type="submit" disabled={m.busy}>
+      <DialogFooter>
+        <Button type="submit" disabled={m.busy}>
           Tạo tài khoản
         </Button>
-      </div>
+      </DialogFooter>
     </form>
   );
 }
@@ -90,7 +88,7 @@ export function UserEditForm({ user, myRole, onDone }: { user: User; myRole: Rol
   const m = useMutation();
   return (
     <form
-      className="space-y-4"
+      className="grid gap-4"
       onSubmit={async (e) => {
         e.preventDefault();
         const body: Record<string, unknown> = { full_name: fullName, email };
@@ -99,32 +97,22 @@ export function UserEditForm({ user, myRole, onDone }: { user: User; myRole: Rol
         if (r) onDone();
       }}
     >
-      {m.message && !Object.keys(m.fields).length && <Alert>{m.message}</Alert>}
-      <Field label="Tên đăng nhập">
-        <Input value={user.username} disabled />
-      </Field>
-      <Field label="Họ tên" error={m.fields.full_name}>
-        <Input value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-      </Field>
-      <Field label="Email" error={m.fields.email}>
-        <Input value={email} onChange={(e) => setEmail(e.target.value)} type="email" />
-      </Field>
+      {m.message && !Object.keys(m.fields).length && <FormAlert>{m.message}</FormAlert>}
+      <FormField label="Tên đăng nhập">{(f) => <Input {...f} value={user.username} disabled />}</FormField>
+      <FormField label="Họ tên" error={m.fields.full_name}>
+        {(f) => <Input {...f} value={fullName} onChange={(e) => setFullName(e.target.value)} required />}
+      </FormField>
+      <FormField label="Email" error={m.fields.email}>
+        {(f) => <Input {...f} value={email} onChange={(e) => setEmail(e.target.value)} type="email" />}
+      </FormField>
       {myRole === "org_admin" && (
-        <Field label="Vai trò">
-          <Select value={role} onChange={(e) => setRole(e.target.value as Role)} className="w-full">
-            {rolesManagedBy(myRole).map((r) => (
-              <option key={r} value={r}>
-                {ROLE_LABEL[r]}
-              </option>
-            ))}
-          </Select>
-        </Field>
+        <FormField label="Vai trò">{(f) => <OptionSelect {...f} value={role} onValueChange={(v) => setRole(v as Role)} options={roleOptions(myRole)} />}</FormField>
       )}
-      <div className="flex justify-end">
-        <Button variant="primary" type="submit" disabled={m.busy}>
+      <DialogFooter>
+        <Button type="submit" disabled={m.busy}>
           Lưu
         </Button>
-      </div>
+      </DialogFooter>
     </form>
   );
 }

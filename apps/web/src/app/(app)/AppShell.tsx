@@ -13,6 +13,9 @@ import type { Me } from "@/lib/types";
 
 const MeContext = createContext<Me | null>(null);
 
+/** Provides the signed-in user without the shell (tests, isolated widgets). */
+export const MeProvider = MeContext.Provider;
+
 export function useMe(): Me {
   const me = useContext(MeContext);
   if (!me) throw new Error("useMe outside AppShell");
