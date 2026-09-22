@@ -7,7 +7,7 @@ EXAMIN_DIR   ?=
 
 .DEFAULT_GOAL := help
 .PHONY: help up down logs ps dev api-dev web-dev migrate revision seed test test-api test-web test-unit \
-        lint lint-api lint-web fmt typecheck build golden backup
+        lint lint-api lint-web fix typecheck build golden backup
 
 help: ## Show this list
 	@grep -hE '^[a-z][a-zA-Z0-9_-]*:.*?## ' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[1m%-12s\033[0m %s\n", $$1, $$2}'
@@ -82,7 +82,7 @@ lint-web: ## eslint (import boundaries included)
 typecheck: ## tsc --noEmit
 	cd apps/web && pnpm typecheck
 
-fmt: ## ruff --fix on the API (mechanical fixes only)
+fix: ## ruff --fix on the API (mechanical lint fixes; there is no formatter, see AGENTS.md)
 	cd apps/api && uv run ruff check --fix .
 
 build: ## Production build of the web app

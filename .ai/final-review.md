@@ -548,8 +548,11 @@ Not a planned feature: repo hygiene asked for in chat after F13 ("chuẩn hoá 1
   mechanically (import order, unused imports, encode/utf-8, datetime.UTC), the rest by hand — `raise … from None`
   on 8 re-raises, unused locals, one duplicated dict key in the MathType symbol table (`0x2206`, same value both
   times, no behaviour change), three `# noqa: E501` on long data lines. `scripts/verify.sh` and `make test-api`
-  now run ruff before the import contracts, so every recorded evidence run includes it. Formatting (`ruff format`)
-  was **not** applied — it would rewrite the whole tree; the style stays as written.
+  now run ruff before the import contracts, so every recorded evidence run includes it.
+- **No formatter, on purpose.** A trial run showed `ruff format` (line length 160) would rewrite 298 Python files
+  and Prettier 183 TypeScript files, expanding the dense one-line style the code is written in — Loc Tran chose to
+  keep linting only (chat, 2026-09-23). The decision is written into `AGENTS.md` (ground rule 6) and
+  `CONTRIBUTING.md` so it is not added back by mistake; `make fix` is ruff's mechanical lint fixes, not formatting.
 - **CI.** `.github/workflows/ci.yml` runs the same commands as locally (API: ruff, lint-imports, the suite in the
   api-test image; web: tsc, eslint, vitest, next build) plus a PR template. There is no remote yet, so it has
   never executed — it will first run when the repo gets one.

@@ -42,6 +42,8 @@ Cần: Docker, `uv`, Node 20+ với `pnpm`. Không cần cài Postgres hay MinIO
 
 - Sửa file trong `apps/web/src/components/ui` bằng tay (đó là output của shadcn CLI).
 - Nới lỏng luật lint để code lọt qua.
+- Thêm formatter (ruff format, Prettier) hoặc format lại file mà mình không sửa: repo cố tình viết dày, chỉ dùng
+  linter. Muốn đổi thì bàn trước.
 - Xoá hoặc ghi đè dữ liệu thật (drop, truncate, xoá hàng loạt, xoá object MinIO, viết lại lịch sử git) khi chưa
   được yêu cầu đúng việc đó. Sao lưu trước bằng `make backup`.
 - Commit `.env`, dump trong `backups/`, hay bất kỳ khoá bí mật nào.

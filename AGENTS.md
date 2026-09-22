@@ -20,11 +20,14 @@ This file is the contract every agent (Codex, Claude Code, an IDE assistant) fol
    changes on the way is reported and recorded.
 5. **Write like the file you are in.** Same comment density, same naming, Vietnamese in user-facing strings,
    English in code and docs. No decorative comments, no restating the obvious.
-6. **No external project is ever named** in code, comments, docs or commit messages. Conventions here are
+6. **Style is written, not generated.** The repo has linters (ruff, ESLint, the import contracts) but **no
+   formatter on purpose**: the code packs related fields and short clauses on one line, and `ruff format` /
+   Prettier would expand all of it. Do not add one, do not reformat a file you are not otherwise changing.
+7. **No external project is ever named** in code, comments, docs or commit messages. Conventions here are
    Examind's own.
-7. **Never run destructive commands on live data** (drop/truncate, mass delete, history rewrite, deleting
+8. **Never run destructive commands on live data** (drop/truncate, mass delete, history rewrite, deleting
    MinIO objects) without the owner asking for that exact action. Back up first: `pg_dump` into `backups/`.
-8. **Secrets stay out of the repo.** `.env` is ignored; `.env.example` documents every variable.
+9. **Secrets stay out of the repo.** `.env` is ignored; `.env.example` documents every variable.
 
 ## Commands
 
@@ -39,7 +42,7 @@ make test-web           # tsc + eslint + vitest
 make golden             # the 18 official exam papers (needs EXAMIN_DIR)
 make migrate            # alembic upgrade head
 make revision m="..."   # new Alembic revision (autogenerate)
-make fmt                # ruff --fix on the API
+make fix                # ruff --fix on the API (lint fixes; no formatter — see below)
 ```
 
 `scripts/verify.sh <paths…>` runs exactly the tests named (API paths run in docker, web paths in vitest);
