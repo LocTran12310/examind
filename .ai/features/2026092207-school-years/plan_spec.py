@@ -64,7 +64,7 @@ t(id="T-03-01", uow="UOW-03", title="Rollover service: preview + idempotent comm
   assumptions=["A-07"], context="ADR-03.", done_when=["Name mapping", "Exceptions", "Idempotent", "Close/activate option"])
 t(id="T-03-02", uow="UOW-03", title="Chuyển năm học wizard page",
   layer="web", estimate="4h", depends_on=["T-03-01", "T-01-03"], verifies=["AC-09", "AC-10"], tests=[f"{WEB}/src/__tests__/rollover.test.tsx"],
-  touches=[f"{WEB}/src/app/(app)/org/school-years/[id]/rollover/page.tsx", f"{WEB}/src/components/years/RolloverPlan.tsx"],
+  touches=[f"{WEB}/src/app/(app)/org/school-years/[id]/rollover/page.tsx", f"{WEB}/src/components/years/RolloverPlan.tsx", f"{WEB}/src/components/years/RolloverWizard.tsx"],
   context="Per-class cards, per-student action select, summary, confirm.", done_when=["Edit actions", "Commit", "Result summary"])
 t(id="T-04-01", uow="UOW-04", title="Đợt kiểm tra helper, upload + bank + document labels",
   layer="web", estimate="2h", depends_on=["T-01-01"], verifies=["AC-12"], tests=[f"{WEB}/src/__tests__/documents.test.tsx", f"{WEB}/src/__tests__/bank.test.tsx"],

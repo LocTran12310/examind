@@ -218,7 +218,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-03-01
       - T-01-03
@@ -229,6 +229,7 @@ ticket:
     touches:
       - apps/web/src/app/(app)/org/school-years/[id]/rollover/page.tsx   # new
       - apps/web/src/components/years/RolloverPlan.tsx   # new
+      - apps/web/src/components/years/RolloverWizard.tsx   # new
   - id: T-04-01
     uow: UOW-04
     title: 'Đợt kiểm tra helper, upload + bank + document labels'
