@@ -2,8 +2,8 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ProcessingConfigFields } from "@/components/documents/ProcessingConfig";
-import { UploadForm } from "@/components/documents/UploadForm";
+import { ProcessingConfigFields } from "@/components/common/ProcessingConfig/ProcessingConfig";
+import { UploadForm } from "@/components/page-components/Documents/UploadForm/UploadForm";
 import type { AiModel, ProcessingConfig } from "@/lib/types";
 import { mockFetch, renderWithQuery as render, route } from "./helpers";
 

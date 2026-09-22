@@ -4,7 +4,9 @@ import { FormField } from "@/components/app/FormField";
 import { Input } from "@/components/ui/input";
 import { OptionSelect } from "@/components/app/OptionSelect";
 import { parsePeriod, periodOptions, periodValue } from "@/lib/exam-period";
-import type { DocumentMeta, SchoolYear, Taxonomy } from "@/lib/types";
+import type { DocumentMeta } from "@/interfaces/document.interface";
+import type { SchoolYear } from "@/interfaces/school-year.interface";
+import type { Taxonomy } from "@/interfaces/taxonomy.interface";
 
 /** Môn / Lớp / Đợt / Năm học / Nguồn đề. An empty field is filled from the exam header when the
  *  file is read (`emptyLabel`), so an official file needs no typing at all. */

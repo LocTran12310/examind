@@ -1,11 +1,12 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { emptyDraft, ModelForm } from "@/components/ai/ModelForm";
+import { ModelForm } from "@/components/page-components/AiModels/ModelForm/ModelForm";
+import { emptyDraft } from "@/lib/page-libs/ai-models/model-draft";
 import { MeProvider } from "@/app/(app)/AppShell";
 import AiModelsPage from "@/app/(app)/org/ai-models/page";
 import type { AiModel } from "@/lib/types";
-import { me, mockFetch, page, route } from "./helpers";
+import { me, mockFetch, renderWithQuery as render, route, searchPage } from "./helpers";
 import { setUrl } from "./router-mock";
 
 vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);
@@ -21,7 +22,7 @@ describe("ai models", () => {
   it("badges show system/free/paid/key and the toolbar tests the selected models", async () => {
     setUrl("/org/ai-models");
     mockFetch(
-      route("GET", /^\/api\/ai-models\?/, page([model({ id: "s", name: "Sys", system: true, editable: false }), model({ id: "p", name: "GPT", provider: "openai", is_free: false, has_key: true })])),
+      route("POST", "/api/ai-models/search", searchPage([model({ id: "s", name: "Sys", system: true, editable: false }), model({ id: "p", name: "GPT", provider: "openai", is_free: false, has_key: true })])),
       route("POST", "/api/ai-models/p/test", { ok: true, latency_ms: 120 }),
     );
     const u = userEvent.setup();

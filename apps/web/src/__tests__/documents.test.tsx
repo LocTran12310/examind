@@ -2,12 +2,12 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import DocumentsPage from "@/app/(app)/org/documents/page";
-import { ParsedQuestionCard } from "@/components/documents/ParsedQuestion";
-import { DocumentInfo } from "@/components/documents/DocumentInfo";
-import { UploadForm } from "@/components/documents/UploadForm";
+import { ParsedQuestionCard } from "@/components/page-components/DocumentDetail/ParsedQuestionCard/ParsedQuestionCard";
+import { DocumentInfo } from "@/components/page-components/DocumentDetail/DocumentInfo/DocumentInfo";
+import { UploadForm } from "@/components/page-components/Documents/UploadForm/UploadForm";
 import { ThemeProvider } from "@/components/app/ThemeProvider";
 import type { ParsedQuestion, SourceDocument, Taxonomy } from "@/lib/types";
-import { mockFetch, page, renderWithQuery as render, route } from "./helpers";
+import { mockFetch, renderWithQuery as render, route, searchPage } from "./helpers";
 import { currentUrl, setUrl } from "./router-mock";
 
 vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);
@@ -124,15 +124,15 @@ describe("documents", () => {
     const fetch = mockFetch(
       route("GET", "/api/taxonomy", taxonomy),
       route("GET", "/api/org/settings/ingestion", doc().processing_config),
-      route("GET", /^\/api\/ai-models\?/, page([])),
-      route("GET", /^\/api\/documents\?/, page([doc(), doc({ id: "d2", filename: "b.pdf", status: "processing" })])),
+      route("POST", "/api/ai-models/search", searchPage([])),
+      route("POST", "/api/documents/search", searchPage([doc(), doc({ id: "d2", filename: "b.pdf", status: "processing" })])),
     );
     render(<DocumentsPage />);
     const row = (await screen.findByText("de.docx")).closest("tr")!;
     await waitFor(() => expect(row).toHaveTextContent("Toán · Lớp 10 · Giữa kỳ 1"));
     expect(row).toHaveTextContent("Đã tách · 40 câu");
     expect(screen.getByText("b.pdf").closest("tr")).toHaveTextContent("Đang xử lý");
-    const count = () => fetch.mock.calls.filter(([u]) => String(u).startsWith("/api/documents?")).length;
+    const count = () => fetch.mock.calls.filter(([u]) => u === "/api/documents/search").length;
     const before = count();
     await waitFor(() => expect(count()).toBeGreaterThan(before), { timeout: 3000 });
   });
@@ -169,14 +169,14 @@ describe("documents", () => {
 
 describe("document page", () => {
   it("creates an exam from the document and opens it", async () => {
-    const { DocumentDetail } = await import("@/components/documents/DocumentDetail");
+    const { DocumentDetailPage } = await import("@/components/page-components/DocumentDetail/DocumentDetailPage");
     const f = mockFetch(
       route("GET", "/api/documents/d1", doc()),
       route("GET", "/api/taxonomy", taxonomy),
       route("GET", "/api/documents/d1/questions", []),
       route("POST", "/api/documents/d1/exam", { exam_id: "e9", added: 21, skipped: 1 }, 201),
     );
-    render(<ThemeProvider><DocumentDetail id="d1" /></ThemeProvider>);
+    render(<ThemeProvider><DocumentDetailPage id="d1" /></ThemeProvider>);
     await userEvent.click(await screen.findByRole("button", { name: "Tạo đề từ tài liệu" }));
     expect(await screen.findByText("Đã tạo đề thi với 21 câu — bỏ qua 1 câu chưa duyệt")).toBeInTheDocument();
     expect(currentUrl()).toBe("/org/exams/e9");

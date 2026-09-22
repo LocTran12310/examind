@@ -1,9 +1,9 @@
 "use client";
 
 import { use } from "react";
-import { DocumentDetail } from "@/components/documents/DocumentDetail";
+import { DocumentDetailPage } from "@/components/page-components/DocumentDetail/DocumentDetailPage";
 
-export default function DocumentPage({ params }: { params: Promise<{ id: string }> }) {
+export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  return <DocumentDetail id={id} />;
+  return <DocumentDetailPage id={id} />;
 }

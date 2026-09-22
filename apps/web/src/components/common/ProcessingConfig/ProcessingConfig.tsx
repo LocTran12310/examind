@@ -5,7 +5,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { OptionSelect } from "@/components/app/OptionSelect";
-import type { AiModel, ProcessingConfig } from "@/lib/types";
+import type { AiModel } from "@/interfaces/ai-model.interface";
+import type { ProcessingConfig } from "@/interfaces/document.interface";
 
 const MODES: [ProcessingConfig["split_mode"], string][] = [
   ["rule", "Chỉ quy tắc (nhanh, miễn phí)"],

@@ -3,7 +3,7 @@
 import { periodLabel } from "@/lib/exam-period";
 import { QuestionView } from "@/components/common/QuestionView/QuestionView";
 import { ToneBadge } from "@/components/app/ToneBadge";
-import type { ParsedQuestion as PQ } from "@/lib/types";
+import type { ParsedQuestion as PQ } from "@/interfaces/question.interface";
 
 const PART = (p: string | null) => (p ? `Phần ${["", "I", "II", "III", "IV", "V"][Number(p)] ?? p} · ` : "");
 const METHOD: Record<string, string> = { rule: "Quy tắc", llm: "AI", ocr: "OCR" };

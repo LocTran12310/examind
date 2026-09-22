@@ -4,7 +4,6 @@ export type { DetectedHeader, DocStatus, DocumentMeta, ProcessingConfig, SourceD
 export type { ReviewDocument } from "@/interfaces/review.interface";
 export { DIFFICULTY_LABEL, STATUS_LABEL, TYPE_LABEL } from "@/constants/question.constant";
 import type { ParsedQuestion, Question, QuestionType } from "@/interfaces/question.interface";
-import type { DocStatus } from "@/interfaces/document.interface";
 export type { Tag, TagGroup } from "@/interfaces/tag.interface";
 export type { Taxonomy } from "@/interfaces/taxonomy.interface";
 export { TAG_GROUP_LABEL } from "@/constants/tag.constant";
@@ -31,34 +30,9 @@ export interface Page<T> {
 
 export const EXAM_KINDS = ["Giữa kỳ", "Cuối kỳ", "Khảo sát", "Thi thử", "Ôn tập", "Khác"];
 
-export const DOC_STATUS_LABEL: Record<DocStatus, string> = {
-  queued: "Đang chờ",
-  processing: "Đang xử lý",
-  parsed: "Đã tách",
-  failed: "Lỗi",
-};
-
-export type Provider = "ollama" | "openai" | "anthropic";
-
-export interface AiModel {
-  id: string;
-  name: string;
-  provider: Provider;
-  model: string;
-  base_url: string | null;
-  capabilities: ("text" | "vision")[];
-  is_free: boolean;
-  enabled: boolean;
-  system: boolean;
-  has_key: boolean;
-  editable: boolean;
-}
-
-export const PROVIDER_LABEL: Record<Provider, string> = {
-  ollama: "Ollama (máy chủ riêng)",
-  openai: "Tương thích OpenAI",
-  anthropic: "Anthropic",
-};
+export { DOC_STATUS_LABEL } from "@/constants/document.constant";
+export type { AiModel, Provider } from "@/interfaces/ai-model.interface";
+export { PROVIDER_LABEL } from "@/constants/ai-model.constant";
 
 export interface BlueprintRow {
   topic_id?: string | null;

@@ -98,3 +98,21 @@ export const REVIEW_KEYS = {
   DOCUMENT: (id: string) => ["review", "document", id] as const,
   QUEUE: (id: string) => ["review", "queue", id] as const,
 };
+
+/** Uploaded source documents; parsing creates questions, so their mutations refresh the bank and review too. */
+export const DOCUMENT_KEYS = {
+  ALL: ["documents"] as const,
+  SEARCH: (body: unknown) => ["documents", "search", body] as const,
+  DETAIL: (id: string) => ["documents", "detail", id] as const,
+  QUESTIONS: (id: string) => ["documents", "questions", id] as const,
+};
+
+export const AI_MODEL_KEYS = {
+  ALL: ["ai-models"] as const,
+  SEARCH: (body: unknown) => ["ai-models", "search", body] as const,
+  OPTIONS: ["ai-models", "options"] as const,
+};
+
+export const INGESTION_SETTINGS_KEYS = {
+  ALL: ["ingestion-settings"] as const,
+};

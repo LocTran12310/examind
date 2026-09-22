@@ -46,3 +46,35 @@ export interface SourceDocument {
   created_at: string;
   finished_at: string | null;
 }
+
+/** A document already uploaded, as the duplicate check describes it. */
+export interface DocumentBrief {
+  id: string;
+  filename: string;
+  status: string;
+  question_count: number;
+  created_at: string;
+}
+
+/** Answer of `POST /documents/check`, one per probed file (same order). */
+export interface DuplicateCheck {
+  name?: string;
+  same_file: DocumentBrief | null;
+  same_name: DocumentBrief[];
+}
+
+export type DuplicateChoice = "skip" | "replace" | "keep_both";
+
+/** Answer of `POST /documents`. */
+export interface UploadResult {
+  document: SourceDocument;
+  duplicate: boolean;
+  action?: string;
+}
+
+/** Answer of `POST /documents/{id}/exam`. */
+export interface DocumentExamResult {
+  exam_id: string;
+  added: number;
+  skipped: number;
+}

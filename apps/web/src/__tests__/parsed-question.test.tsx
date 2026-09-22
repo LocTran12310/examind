@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { metaChips, ParsedQuestionCard } from "@/components/documents/ParsedQuestion";
+import { metaChips, ParsedQuestionCard } from "@/components/page-components/DocumentDetail/ParsedQuestionCard/ParsedQuestionCard";
 import type { ParsedQuestion } from "@/lib/types";
 
 const q = (o: Partial<ParsedQuestion> = {}): ParsedQuestion => ({
