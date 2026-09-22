@@ -1,5 +1,6 @@
 "use client";
 
+import { ListLayout } from "@/components/app/ListLayout";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ArrowRightLeft, CheckCircle2, History, Lock, LockOpen } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -76,46 +77,47 @@ export default function SchoolYearsPage() {
 
   return (
     <>
-      <PageHeader title="Năm học" description="Mỗi năm có Học kỳ 1 và Học kỳ 2. Năm đã khóa vẫn sửa được; mọi thay đổi được ghi vào lịch sử." />
-      <DataTable<SchoolYear>
-        path="/school-years"
-        columns={columns}
-        getRowId={(y) => y.id}
-        reloadKey={version}
-        onAdd={admin ? () => setCreating(true) : undefined}
-        addLabel="Thêm năm học"
-        onEdit={admin ? setEditing : undefined}
-        onDelete={admin ? async (rows) => { for (const y of rows) await api(`/school-years/${y.id}`, { method: "DELETE" }); changed(); } : undefined}
-        deleteLabel={(rows) => `Xóa ${rows.length} năm học? Chỉ xóa được năm chưa có lớp.`}
-        actions={({ selected }) => {
-          const one = selected.length === 1 ? selected[0] : null;
-          return (
-            <>
-              {admin && (
-                <>
-                  <ToolbarButton disabled={!one || one.status === "active"} onClick={() => one && setActivating(one)}>
-                    <CheckCircle2 /> Đặt làm năm đang học
+      <ListLayout header={<PageHeader title="Năm học" description="Mỗi năm có Học kỳ 1 và Học kỳ 2. Năm đã khóa vẫn sửa được; mọi thay đổi được ghi vào lịch sử." />}>
+        <DataTable<SchoolYear>
+          path="/school-years"
+          columns={columns}
+          getRowId={(y) => y.id}
+          reloadKey={version}
+          onAdd={admin ? () => setCreating(true) : undefined}
+          addLabel="Thêm năm học"
+          onEdit={admin ? setEditing : undefined}
+          onDelete={admin ? async (rows) => { for (const y of rows) await api(`/school-years/${y.id}`, { method: "DELETE" }); changed(); } : undefined}
+          deleteLabel={(rows) => `Xóa ${rows.length} năm học? Chỉ xóa được năm chưa có lớp.`}
+          actions={({ selected }) => {
+            const one = selected.length === 1 ? selected[0] : null;
+            return (
+              <>
+                {admin && (
+                  <>
+                    <ToolbarButton disabled={!one || one.status === "active"} onClick={() => one && setActivating(one)}>
+                      <CheckCircle2 /> Đặt làm năm đang học
+                    </ToolbarButton>
+                    <ToolbarButton disabled={!one || one.status === "closed"} onClick={() => one && void setStatus(one, "close")}>
+                      <Lock /> Khóa
+                    </ToolbarButton>
+                    <ToolbarButton disabled={!one || one.status !== "closed"} onClick={() => one && void setStatus(one, "reopen")}>
+                      <LockOpen /> Mở lại
+                    </ToolbarButton>
+                    <ToolbarButton disabled={!one} onClick={() => one && router.push(`/org/school-years/${one.id}/rollover`)}>
+                      <ArrowRightLeft /> Chuyển năm học
+                    </ToolbarButton>
+                  </>
+                )}
+                {admin && (
+                  <ToolbarButton disabled={!one} onClick={() => one && setHistory(one)}>
+                    <History /> Lịch sử
                   </ToolbarButton>
-                  <ToolbarButton disabled={!one || one.status === "closed"} onClick={() => one && void setStatus(one, "close")}>
-                    <Lock /> Khóa
-                  </ToolbarButton>
-                  <ToolbarButton disabled={!one || one.status !== "closed"} onClick={() => one && void setStatus(one, "reopen")}>
-                    <LockOpen /> Mở lại
-                  </ToolbarButton>
-                  <ToolbarButton disabled={!one} onClick={() => one && router.push(`/org/school-years/${one.id}/rollover`)}>
-                    <ArrowRightLeft /> Chuyển năm học
-                  </ToolbarButton>
-                </>
-              )}
-              {admin && (
-                <ToolbarButton disabled={!one} onClick={() => one && setHistory(one)}>
-                  <History /> Lịch sử
-                </ToolbarButton>
-              )}
-            </>
-          );
-        }}
-      />
+                )}
+              </>
+            );
+          }}
+        />
+      </ListLayout>
       <ConfirmDialog
         open={!!activating}
         onOpenChange={(o) => !o && setActivating(null)}

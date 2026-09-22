@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import ClassesPage from "@/app/(app)/org/classes/page";
@@ -63,7 +63,8 @@ describe("classes", () => {
     await u.click(await screen.findByText("10A1"));
     expect(await screen.findByText("HS01")).toBeInTheDocument();
     expect(lastQuery(fetch, "/users").get("class_id")).toBe("c1");
-    await u.type(screen.getAllByRole("textbox", { name: "Lọc Họ tên" })[0], "an");
+    // jsdom has no layout, so the resize handle's hit-test claims every pointer down; set the value directly
+    fireEvent.change(screen.getAllByRole("textbox", { name: "Lọc Họ tên" })[0], { target: { value: "an" } });
     await waitFor(() => expect(searchOf().get("m.full_name")).toBe("an"), { timeout: 1500 });
     await waitFor(() => expect(lastQuery(fetch, "/users").get("full_name")).toBe("an"));
     expect(lastQuery(fetch, "/classes").get("full_name")).toBeNull();

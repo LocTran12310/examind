@@ -1,5 +1,7 @@
 "use client";
 
+import { ListLayout } from "@/components/app/ListLayout";
+import { MasterDetail } from "@/components/app/MasterDetail";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import { MembershipTable } from "@/components/admin/MembershipTable";
@@ -29,10 +31,14 @@ export default function AccountsPage() {
   );
   return (
     <>
-      <PageHeader title="Tài khoản" description="Mọi tài khoản của mọi tổ chức. Chọn một tài khoản để gán vào tổ chức." />
-      <DataTable path="/admin/users" columns={columns} getRowId={(a) => a.id} selectable={false} onRowActivate={setActive} activeRowId={active?.id} />
-      {active && (
-        <Card className="mt-4">
+      <ListLayout header={<PageHeader title="Tài khoản" description="Mọi tài khoản của mọi tổ chức. Chọn một tài khoản để gán vào tổ chức." />}>
+        <MasterDetail
+          id="accounts"
+          master={
+            <DataTable path="/admin/users" columns={columns} getRowId={(a) => a.id} selectable={false} onRowActivate={setActive} activeRowId={active?.id} />
+          }
+          detail={active  && (
+            <Card className="min-h-full">
           <CardHeader>
             <CardTitle>Tổ chức của {active.full_name}</CardTitle>
             <CardDescription>
@@ -43,7 +49,9 @@ export default function AccountsPage() {
             <MembershipTable key={active.id} side={{ kind: "user", userId: active.id, userName: active.full_name }} />
           </CardContent>
         </Card>
-      )}
+          )}
+        />
+      </ListLayout>
     </>
   );
 }

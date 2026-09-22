@@ -1,5 +1,6 @@
 "use client";
 
+import { ListLayout } from "@/components/app/ListLayout";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Download, KeyRound, Link2, Lock, LockOpen, Unlink, Upload } from "lucide-react";
 import Link from "next/link";
@@ -109,47 +110,48 @@ export default function UsersPage() {
 
   return (
     <>
-      <PageHeader title={me.role === "teacher" ? "Học sinh" : "Người dùng"} />
-      <DataTable
-        path="/users"
-        columns={columns}
-        getRowId={(u) => u.id}
-        reloadKey={version}
-        onAdd={() => setCreating(true)}
-        onEdit={setEditing}
-        actions={({ selected }) => (
-          <>
-            <ToolbarButton disabled={selected.length !== 1 || selected[0].is_home === false} onClick={() => setResetFor(selected[0])}>
-              <KeyRound /> Đặt lại mật khẩu
-            </ToolbarButton>
-            <ToolbarButton disabled={!selected.some((u) => u.is_active && u.id !== me.id)} onClick={() => void setActive(selected, false)}>
-              <Lock /> Khóa
-            </ToolbarButton>
-            <ToolbarButton disabled={!selected.some((u) => !u.is_active)} onClick={() => void setActive(selected, true)}>
-              <LockOpen /> Mở khóa
-            </ToolbarButton>
-            {me.role === "org_admin" && (
-              <>
-                <ToolbarButton onClick={() => setLinking(true)}>
-                  <Link2 /> Thêm tài khoản có sẵn
-                </ToolbarButton>
-                <ToolbarButton disabled={!selected.some((u) => u.is_home === false)} onClick={() => setUnlinking(selected.filter((u) => u.is_home === false))}>
-                  <Unlink /> Gỡ khỏi tổ chức
-                </ToolbarButton>
-              </>
-            )}
-            <ToolbarButton asChild>
-              <Link href="/org/users/import">
-                <Upload /> Nhập khẩu
-              </Link>
-            </ToolbarButton>
-            <ToolbarButton onClick={() => void exportCsv()}>
-              <Download /> Xuất khẩu
-            </ToolbarButton>
-          </>
-        )}
-        emptyText="Chưa có tài khoản nào. Thêm từng người hoặc nhập từ file CSV/Excel."
-      />
+      <ListLayout header={<PageHeader title={me.role === "teacher" ? "Học sinh" : "Người dùng"} />}>
+        <DataTable
+          path="/users"
+          columns={columns}
+          getRowId={(u) => u.id}
+          reloadKey={version}
+          onAdd={() => setCreating(true)}
+          onEdit={setEditing}
+          actions={({ selected }) => (
+            <>
+              <ToolbarButton disabled={selected.length !== 1 || selected[0].is_home === false} onClick={() => setResetFor(selected[0])}>
+                <KeyRound /> Đặt lại mật khẩu
+              </ToolbarButton>
+              <ToolbarButton disabled={!selected.some((u) => u.is_active && u.id !== me.id)} onClick={() => void setActive(selected, false)}>
+                <Lock /> Khóa
+              </ToolbarButton>
+              <ToolbarButton disabled={!selected.some((u) => !u.is_active)} onClick={() => void setActive(selected, true)}>
+                <LockOpen /> Mở khóa
+              </ToolbarButton>
+              {me.role === "org_admin" && (
+                <>
+                  <ToolbarButton onClick={() => setLinking(true)}>
+                    <Link2 /> Thêm tài khoản có sẵn
+                  </ToolbarButton>
+                  <ToolbarButton disabled={!selected.some((u) => u.is_home === false)} onClick={() => setUnlinking(selected.filter((u) => u.is_home === false))}>
+                    <Unlink /> Gỡ khỏi tổ chức
+                  </ToolbarButton>
+                </>
+              )}
+              <ToolbarButton asChild>
+                <Link href="/org/users/import">
+                  <Upload /> Nhập khẩu
+                </Link>
+              </ToolbarButton>
+              <ToolbarButton onClick={() => void exportCsv()}>
+                <Download /> Xuất khẩu
+              </ToolbarButton>
+            </>
+          )}
+          emptyText="Chưa có tài khoản nào. Thêm từng người hoặc nhập từ file CSV/Excel."
+        />
+      </ListLayout>
       <FormDialog open={creating} onOpenChange={(o) => (setCreating(o), o || refresh())} title="Thêm tài khoản">
         <UserCreateForm myRole={me.role} orgCode={me.org.code} onDone={() => (setCreating(false), refresh())} />
       </FormDialog>

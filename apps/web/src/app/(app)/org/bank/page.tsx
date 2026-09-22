@@ -1,5 +1,6 @@
 "use client";
 
+import { ListLayout } from "@/components/app/ListLayout";
 import { Plus, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -40,9 +41,9 @@ export default function BankPage() {
 
   return (
     <>
-      <PageHeader title="Ngân hàng câu hỏi" description={data ? `${data.total.toLocaleString("vi-VN")} câu` : undefined} />
-      <div className="rounded-lg border bg-card">
-        <Toolbar>
+      <ListLayout header={<PageHeader title="Ngân hàng câu hỏi" description={data ? `${data.total.toLocaleString("vi-VN")} câu` : undefined} />}>
+      <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border bg-card">
+        <Toolbar className="shrink-0">
           <ToolbarButton asChild>
             <Link href="/org/bank/new">
               <Plus /> Thêm câu hỏi
@@ -56,6 +57,7 @@ export default function BankPage() {
           </ToolbarButton>
           {selected.size > 0 && <span className="ml-auto pr-2 text-xs opacity-80">Đã chọn {selected.size}</span>}
         </Toolbar>
+        <div className="min-h-0 flex-1 overflow-auto">
         {taxonomy && topics && tags && <BankFilters value={filters} onChange={tq.setFilters} taxonomy={taxonomy} topics={topics} tags={tags} />}
         {items.length > 0 && (
           <label className="flex items-center gap-2 border-b px-3 py-2 text-sm text-muted-foreground">
@@ -82,10 +84,12 @@ export default function BankPage() {
             ))}
           </ul>
         )}
-        <div className="border-t px-2">
+        </div>
+        <div className="shrink-0 border-t px-2">
           <Pagination page={tq.page} pageSize={tq.pageSize} total={data?.total ?? 0} onPage={tq.setPage} onPageSize={tq.setPageSize} />
         </div>
       </div>
+      </ListLayout>
     </>
   );
 }

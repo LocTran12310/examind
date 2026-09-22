@@ -1,5 +1,7 @@
 "use client";
 
+import { ListLayout } from "@/components/app/ListLayout";
+import { StructureSplit } from "@/components/structure/StructureSplit";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ExternalLink, Upload } from "lucide-react";
 import Link from "next/link";
@@ -14,7 +16,6 @@ import { MemberManager } from "@/components/org/MemberManager";
 import { GradeForm, LevelForm } from "@/components/structure/StructureForms";
 import { nodeKey, type NodeRef, parseNode, StructureTree } from "@/components/structure/StructureTree";
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
 import { useYear } from "@/components/app/YearContext";
@@ -149,28 +150,24 @@ export default function StructurePage() {
 
   return (
     <>
-      <PageHeader title="Cơ cấu trường" description={`Cấp học › Khối › Lớp › Học sinh${year ? " · " + year.name : ""}`} />
-      <div className="grid gap-4 lg:grid-cols-[23rem_1fr]">
-        <Card className="h-fit">
-          <CardContent>{data ? <StructureTree data={data} selected={node} onSelect={select} /> : <Skeleton className="h-60" />}</CardContent>
-        </Card>
-        <Card className="min-w-0">
-          <CardHeader>
-            <CardTitle>{title}</CardTitle>
-            {crumbs && <CardDescription>{crumbs}</CardDescription>}
-            {node?.kind === "class" && (
-              <CardAction>
-                <Button variant="outline" size="sm" asChild>
-                  <Link href="/org/users/import">
-                    <Upload /> Nhập học sinh từ file
-                  </Link>
-                </Button>
-              </CardAction>
-            )}
-          </CardHeader>
-          <CardContent>{panel}</CardContent>
-        </Card>
-      </div>
+      <ListLayout header={<PageHeader title="Cơ cấu trường" description={`Cấp học › Khối › Lớp › Học sinh${year ? " · " + year.name : ""}`} />}>
+        <StructureSplit
+          tree={data ? <StructureTree data={data} selected={node} onSelect={select} /> : <Skeleton className="h-60" />}
+          title={title}
+          crumbs={crumbs}
+          action={
+            node?.kind === "class" && (
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/org/users/import">
+                  <Upload /> Nhập học sinh từ file
+                </Link>
+              </Button>
+            )
+          }
+        >
+          {panel}
+        </StructureSplit>
+      </ListLayout>
       <FormDialog open={editing?.kind === "level"} onOpenChange={(o) => !o && setEditing(null)} title={editing?.row ? "Sửa cấp học" : "Thêm cấp học"}>
         {editing?.kind === "level" && <LevelForm level={editing.row} onDone={() => (setEditing(null), changed())} />}
       </FormDialog>

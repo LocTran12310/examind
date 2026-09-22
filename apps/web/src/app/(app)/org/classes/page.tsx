@@ -1,5 +1,7 @@
 "use client";
 
+import { ListLayout } from "@/components/app/ListLayout";
+import { MasterDetail } from "@/components/app/MasterDetail";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
@@ -38,8 +40,11 @@ export default function ClassesPage() {
 
   return (
     <>
-      <PageHeader title="Lớp học" description={`${year ? year.name + " · " : ""}Chọn một lớp để xem học sinh bên dưới.`} />
-      <DataTable
+      <ListLayout header={<PageHeader title="Lớp học" description={`${year ? year.name + " · " : ""}Chọn một lớp để xem học sinh bên dưới.`} />}>
+        <MasterDetail
+          id="classes"
+          master={
+            <DataTable
         path="/classes"
         params={yearParams}
         columns={columns}
@@ -58,8 +63,9 @@ export default function ClassesPage() {
         }}
         activeRowId={active?.id}
       />
-      {active && (
-        <Card className="mt-4">
+          }
+          detail={active  && (
+            <Card className="min-h-full">
           <CardHeader>
             <CardTitle>
               Chi tiết · Lớp {active.name} <span className="font-normal text-muted-foreground">({active.school_year})</span>
@@ -76,7 +82,9 @@ export default function ClassesPage() {
             <MemberManager classId={active.id} onChange={refresh} />
           </CardContent>
         </Card>
-      )}
+          )}
+        />
+      </ListLayout>
       <FormDialog open={creating} onOpenChange={setCreating} title="Tạo lớp">
         <ClassForm onDone={() => (setCreating(false), refresh())} />
       </FormDialog>

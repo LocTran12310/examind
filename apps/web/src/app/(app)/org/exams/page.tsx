@@ -1,5 +1,7 @@
 "use client";
 
+import { ListLayout } from "@/components/app/ListLayout";
+import { MasterDetail } from "@/components/app/MasterDetail";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
@@ -93,8 +95,11 @@ export default function ExamsPage() {
   );
   return (
     <>
-      <PageHeader title="Đề thi & giao bài" description="Tạo đề từ ngân hàng câu hỏi theo ma trận hoặc chọn tay. Chọn một đề để xem câu hỏi bên dưới." />
-      <DataTable
+      <ListLayout header={<PageHeader title="Đề thi & giao bài" description="Tạo đề từ ngân hàng câu hỏi theo ma trận hoặc chọn tay. Chọn một đề để xem câu hỏi bên dưới." />}>
+        <MasterDetail
+          id="exams"
+          master={
+            <DataTable
         path="/exams"
         columns={columns}
         getRowId={(e) => e.id}
@@ -109,8 +114,9 @@ export default function ExamsPage() {
         onRowActivate={setActive}
         activeRowId={active?.id}
       />
-      {active && (
-        <Card className="mt-4">
+          }
+          detail={active  && (
+            <Card className="min-h-full">
           <CardHeader>
             <CardTitle>Chi tiết · {active.title}</CardTitle>
             <CardAction>
@@ -125,7 +131,9 @@ export default function ExamsPage() {
             <ExamDetail id={active.id} />
           </CardContent>
         </Card>
-      )}
+          )}
+        />
+      </ListLayout>
       <FormDialog open={creating} onOpenChange={setCreating} title="Tạo đề mới">
         <NewExamForm />
       </FormDialog>

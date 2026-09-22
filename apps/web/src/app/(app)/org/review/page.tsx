@@ -1,5 +1,6 @@
 "use client";
 
+import { ListLayout } from "@/components/app/ListLayout";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useMe } from "@/app/(app)/AppShell";
@@ -38,7 +39,7 @@ export default function ReviewPage() {
 
   return (
     <>
-      <PageHeader
+      <ListLayout header={<PageHeader
         title="Duyệt câu hỏi"
         description="Chỉ những câu cần mắt người mới vào hàng đợi"
         actions={
@@ -47,15 +48,16 @@ export default function ReviewPage() {
             <Label htmlFor="mine">Của tôi</Label>
           </div>
         }
-      />
-      <DataTable<ReviewDocument>
-        path="/review/documents"
-        columns={columns}
-        getRowId={(r) => r.document.id}
-        selectable={false}
-        reloadKey={version}
-        emptyText="Không có đề nào cần duyệt."
-      />
+      />}>
+        <DataTable<ReviewDocument>
+          path="/review/documents"
+          columns={columns}
+          getRowId={(r) => r.document.id}
+          selectable={false}
+          reloadKey={version}
+          emptyText="Không có đề nào cần duyệt."
+        />
+      </ListLayout>
     </>
   );
 }

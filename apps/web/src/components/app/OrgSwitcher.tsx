@@ -35,10 +35,10 @@ export function OrgSwitcher({ me }: { me: Me }) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" role="combobox" aria-expanded={open} aria-label="Chọn tổ chức" className="max-w-64 justify-between gap-2" disabled={busy}>
+        <Button variant="outline" role="combobox" aria-expanded={open} aria-label="Chọn tổ chức" className="max-w-28 min-w-0 justify-between gap-1.5 px-2 sm:max-w-64 sm:gap-2 sm:px-2.5" disabled={busy}>
           <Building2 className="text-muted-foreground" />
           <span className="truncate">{me.org.name}</span>
-          {!single && <ChevronsUpDown className="text-muted-foreground" />}
+          {!single && <ChevronsUpDown className="hidden text-muted-foreground sm:block" />}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0">

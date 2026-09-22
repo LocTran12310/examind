@@ -1,5 +1,7 @@
 "use client";
 
+import { ListLayout } from "@/components/app/ListLayout";
+import { MasterDetail } from "@/components/app/MasterDetail";
 import type { ColumnDef } from "@tanstack/react-table";
 import { LogIn, Lock, LockOpen } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -83,7 +85,7 @@ export default function OrgsPage() {
 
   return (
     <>
-      <PageHeader
+      <ListLayout header={<PageHeader
         title="Tổ chức"
         description="Chọn một tổ chức để quản lý thành viên bên dưới."
         actions={
@@ -92,8 +94,11 @@ export default function OrgsPage() {
             <Label htmlFor="show-deleted">Hiện tổ chức đã xóa</Label>
           </div>
         }
-      />
-      <DataTable
+      />}>
+        <MasterDetail
+          id="orgs"
+          master={
+            <DataTable
         path="/admin/orgs"
         columns={columns}
         getRowId={(o) => o.id}
@@ -119,8 +124,9 @@ export default function OrgsPage() {
           </>
         )}
       />
-      {active && !active.is_system && (
-        <Card className="mt-4">
+          }
+          detail={active && !active.is_system  && (
+            <Card className="min-h-full">
           <CardHeader>
             <CardTitle>Thành viên · {active.name}</CardTitle>
           </CardHeader>
@@ -128,7 +134,9 @@ export default function OrgsPage() {
             <MembershipTable key={active.id} side={{ kind: "org", orgId: active.id, orgName: active.name }} />
           </CardContent>
         </Card>
-      )}
+          )}
+        />
+      </ListLayout>
       <ConfirmDialog
         open={!!pending}
         onOpenChange={(o) => !o && setPending(null)}

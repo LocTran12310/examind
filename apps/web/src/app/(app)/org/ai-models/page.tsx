@@ -1,5 +1,6 @@
 "use client";
 
+import { ListLayout } from "@/components/app/ListLayout";
 import { Activity, Power, Radar } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -104,38 +105,39 @@ export default function AiModelsPage() {
 
   return (
     <>
-      <PageHeader
+      <ListLayout header={<PageHeader
         title="Model AI"
         description={me.role === "super_admin" ? "Model hệ thống — mọi trung tâm đều thấy" : "Model trung tâm dùng để tách câu, gắn chuyên đề và đọc ảnh"}
-      />
-      <DataTable
-        path="/ai-models"
-        columns={columns}
-        getRowId={(m) => m.id}
-        reloadKey={version}
-        onAdd={() => setAdding(emptyDraft())}
-        addLabel="Thêm model"
-        onEdit={(m) => (m.editable ? setEditing(m) : toast.info("Model hệ thống chỉ quản trị hệ thống sửa được"))}
-        onDelete={async (rows) => {
-          for (const m of rows.filter((m) => m.editable)) await api(`/ai-models/${m.id}`, { method: "DELETE" });
-        }}
-        deleteLabel={(rows) => `Xóa ${rows.filter((m) => m.editable).length} model?`}
-        rowClassName={(m) => (m.enabled ? undefined : "opacity-60")}
-        actions={({ selected }) => (
-          <>
-            <ToolbarButton disabled={!selected.length} onClick={() => void test(selected)}>
-              <Activity /> Kiểm tra
-            </ToolbarButton>
-            <ToolbarButton disabled={!selected.some((m) => m.editable)} onClick={() => void toggle(selected)}>
-              <Power /> Bật/Tắt
-            </ToolbarButton>
-            <ToolbarButton onClick={() => setDiscovering(true)}>
-              <Radar /> Phát hiện Ollama
-            </ToolbarButton>
-          </>
-        )}
-        emptyText="Chưa có model nào. Hệ thống vẫn tách đề bằng quy tắc; thêm model để bật AI."
-      />
+      />}>
+        <DataTable
+          path="/ai-models"
+          columns={columns}
+          getRowId={(m) => m.id}
+          reloadKey={version}
+          onAdd={() => setAdding(emptyDraft())}
+          addLabel="Thêm model"
+          onEdit={(m) => (m.editable ? setEditing(m) : toast.info("Model hệ thống chỉ quản trị hệ thống sửa được"))}
+          onDelete={async (rows) => {
+            for (const m of rows.filter((m) => m.editable)) await api(`/ai-models/${m.id}`, { method: "DELETE" });
+          }}
+          deleteLabel={(rows) => `Xóa ${rows.filter((m) => m.editable).length} model?`}
+          rowClassName={(m) => (m.enabled ? undefined : "opacity-60")}
+          actions={({ selected }) => (
+            <>
+              <ToolbarButton disabled={!selected.length} onClick={() => void test(selected)}>
+                <Activity /> Kiểm tra
+              </ToolbarButton>
+              <ToolbarButton disabled={!selected.some((m) => m.editable)} onClick={() => void toggle(selected)}>
+                <Power /> Bật/Tắt
+              </ToolbarButton>
+              <ToolbarButton onClick={() => setDiscovering(true)}>
+                <Radar /> Phát hiện Ollama
+              </ToolbarButton>
+            </>
+          )}
+          emptyText="Chưa có model nào. Hệ thống vẫn tách đề bằng quy tắc; thêm model để bật AI."
+        />
+      </ListLayout>
       <FormDialog open={discovering} onOpenChange={setDiscovering} title="Phát hiện model Ollama" wide>
         <Discover onPick={(d) => (setDiscovering(false), setAdding(d))} />
       </FormDialog>

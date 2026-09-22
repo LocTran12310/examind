@@ -11,9 +11,10 @@ export function YearSwitcher() {
   if (!years.length || !year) return null;
   return (
     <Select value={year.id} onValueChange={setYear}>
-      <SelectTrigger aria-label="Chọn năm học" className="w-auto gap-2">
-        <CalendarRange className="text-muted-foreground" />
-        <SelectValue />
+      <SelectTrigger aria-label="Chọn năm học" className="w-auto gap-1.5 px-2 sm:gap-2">
+        <CalendarRange className="hidden text-muted-foreground sm:block" />
+        {/* the trigger shows the code only; the list shows the status badges */}
+        <SelectValue>{year.code}</SelectValue>
       </SelectTrigger>
       <SelectContent align="end">
         {years.map((y) => (

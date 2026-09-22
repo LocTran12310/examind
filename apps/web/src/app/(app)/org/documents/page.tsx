@@ -1,5 +1,6 @@
 "use client";
 
+import { ListLayout } from "@/components/app/ListLayout";
 import { FileUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -30,24 +31,25 @@ export default function DocumentsPage() {
 
   return (
     <>
-      <PageHeader title="Đề đã tải lên" description="Tải file Word/PDF/ảnh; hệ thống tự tách từng câu với đáp án, lời giải và hình" />
-      <DataTable
-        path="/documents"
-        columns={columns}
-        getRowId={(d) => d.id}
-        pollWhile={inFlight}
-        actions={() => (
-          <ToolbarButton onClick={() => setUploading(true)}>
-            <FileUp /> Tải đề lên
-          </ToolbarButton>
-        )}
-        onDelete={async (rows) => {
-          for (const d of rows) await api(`/documents/${d.id}`, { method: "DELETE" });
-        }}
-        deleteLabel={(rows) => `Xóa ${rows.length} đề? Câu hỏi chưa dùng trong đề thi sẽ bị xóa theo.`}
-        onRowActivate={(d) => router.push(`/org/documents/${d.id}`)}
-        emptyText="Chưa có đề nào. Bấm “Tải đề lên” để bắt đầu."
-      />
+      <ListLayout header={<PageHeader title="Đề đã tải lên" description="Tải file Word/PDF/ảnh; hệ thống tự tách từng câu với đáp án, lời giải và hình" />}>
+        <DataTable
+          path="/documents"
+          columns={columns}
+          getRowId={(d) => d.id}
+          pollWhile={inFlight}
+          actions={() => (
+            <ToolbarButton onClick={() => setUploading(true)}>
+              <FileUp /> Tải đề lên
+            </ToolbarButton>
+          )}
+          onDelete={async (rows) => {
+            for (const d of rows) await api(`/documents/${d.id}`, { method: "DELETE" });
+          }}
+          deleteLabel={(rows) => `Xóa ${rows.length} đề? Câu hỏi chưa dùng trong đề thi sẽ bị xóa theo.`}
+          onRowActivate={(d) => router.push(`/org/documents/${d.id}`)}
+          emptyText="Chưa có đề nào. Bấm “Tải đề lên” để bắt đầu."
+        />
+      </ListLayout>
       <FormDialog open={uploading} onOpenChange={setUploading} title="Tải đề lên" description="Word (.docx), PDF hoặc ảnh chụp đề" wide>
         {taxonomy && (
           <UploadForm

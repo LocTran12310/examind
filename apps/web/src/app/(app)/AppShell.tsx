@@ -33,23 +33,23 @@ export function AppShell({ me, children, sidebarOpen = true }: { me: Me; childre
       <YearProvider me={me}>
       <SidebarProvider defaultOpen={sidebarOpen}>
         <AppSidebar me={me} />
-        <SidebarInset className="min-w-0">
-          <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur">
+        <SidebarInset className="h-svh min-w-0 overflow-hidden">
+          <header className="z-20 flex h-14 shrink-0 items-center gap-1 border-b bg-background px-2 sm:gap-2 sm:px-3">
             <SidebarTrigger aria-label="Mở menu" />
-            <Separator orientation="vertical" className="mx-1 h-5" />
-            <div className="min-w-0 flex-1 truncate text-sm">
+            <Separator orientation="vertical" className="mx-1 hidden h-5 sm:block" />
+            <div className="hidden min-w-0 flex-1 truncate text-sm sm:block">
               {group && <span className="hidden text-muted-foreground md:inline">{group.label} / </span>}
               <span className="font-medium">{item?.label ?? "Examind"}</span>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="ml-auto flex min-w-0 shrink-0 items-center gap-1">
               <OrgSwitcher me={me} />
               <YearSwitcher />
-              <Separator orientation="vertical" className="mx-1 h-5" />
+              <Separator orientation="vertical" className="mx-1 hidden h-5 sm:block" />
               <ThemeToggle />
               <UserMenu me={me} />
             </div>
           </header>
-          <main className="min-w-0 flex-1 p-4 lg:p-6">{children}</main>
+          <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-auto p-4 lg:p-6">{children}</main>
         </SidebarInset>
       </SidebarProvider>
       </YearProvider>

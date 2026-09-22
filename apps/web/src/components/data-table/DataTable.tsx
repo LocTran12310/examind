@@ -149,8 +149,8 @@ export function DataTable<T>({
   }
 
   return (
-    <div className="rounded-lg border bg-card">
-      <Toolbar>
+    <div data-slot="data-table" className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border bg-card">
+      <Toolbar className="shrink-0">
         {onAdd && (
           <ToolbarButton onClick={onAdd}>
             <Plus /> {addLabel}
@@ -180,8 +180,10 @@ export function DataTable<T>({
           </span>
         )}
       </Toolbar>
+      {/* only this area scrolls; the table's own x-scroll wrapper is disabled so the sticky header works */}
+      <div className="min-h-0 flex-1 overflow-auto [&>[data-slot=table-container]]:overflow-visible">
       <Table>
-        <TableHeader>
+        <TableHeader className="sticky top-0 z-10 bg-card shadow-[inset_0_-1px_0_var(--border)]">
           {table.getHeaderGroups().map((hg) => (
             <TableRow key={hg.id} className="bg-muted/40 hover:bg-muted/40">
               {hg.headers.map((h) => {
@@ -269,12 +271,13 @@ export function DataTable<T>({
           )}
         </TableBody>
         {footer && items.length > 0 && (
-          <TableFooter>
+          <TableFooter className="sticky bottom-0 z-10">
             <TableRow>{footer(items, total)}</TableRow>
           </TableFooter>
         )}
       </Table>
-      <div className="border-t px-2">
+      </div>
+      <div className="shrink-0 border-t px-2">
         <Pagination page={tq.page} pageSize={tq.pageSize} total={total} onPage={tq.setPage} onPageSize={tq.setPageSize} />
       </div>
       {onDelete && (
