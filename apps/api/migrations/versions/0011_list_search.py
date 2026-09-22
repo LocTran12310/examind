@@ -22,9 +22,14 @@ def upgrade() -> None:
     op.execute("CREATE INDEX IF NOT EXISTS ix_users_full_name_trgm ON users USING gin (f_unaccent(full_name) gin_trgm_ops)")
     op.execute("CREATE INDEX IF NOT EXISTS ix_users_username_trgm ON users USING gin (f_unaccent(username) gin_trgm_ops)")
     op.execute("CREATE INDEX IF NOT EXISTS ix_users_email_trgm ON users USING gin (f_unaccent(email) gin_trgm_ops)")
+    # default table order (full_name, id) within an org: keeps deep pages and counts off a full sort
+    op.execute("CREATE INDEX IF NOT EXISTS ix_users_org_full_name ON users (organization_id, full_name, id)")
+    op.execute("CREATE INDEX IF NOT EXISTS ix_users_org_username ON users (organization_id, username)")
 
 
 def downgrade() -> None:
+    op.execute("DROP INDEX IF EXISTS ix_users_org_username")
+    op.execute("DROP INDEX IF EXISTS ix_users_org_full_name")
     op.execute("DROP INDEX IF EXISTS ix_users_email_trgm")
     op.execute("DROP INDEX IF EXISTS ix_users_username_trgm")
     op.execute("DROP INDEX IF EXISTS ix_users_full_name_trgm")
