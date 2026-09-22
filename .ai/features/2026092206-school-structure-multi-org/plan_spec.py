@@ -4,20 +4,20 @@ API = "apps/api"
 WEB = "apps/web"
 
 UOWS = [
-    dict(id="UOW-01", slug="structure", title="Cấp học › Khối › Lớp › Học sinh",
+    dict(dod_done=True, id="UOW-01", slug="structure", title="Cấp học › Khối › Lớp › Học sinh",
          requirements=["US-01", "US-02"], risk="medium",
          demo=["Create org TrungtamC → Cơ cấu trường shows THCS (6–9) and THPT (10–12)",
                "In trungtama: THPT › Khối 10 → add class 10A2 → select it → add/import students",
                "Delete Khối 10 while it has classes → refused 'còn 2 lớp'",
                "Class dialog on Lớp học shows grades grouped by level"],
          in_scope=["Migration 0012 + seed", "structure service + API", "/org/structure page", "GradeSelect in class form"]),
-    dict(id="UOW-02", slug="switch-org", title="Active organisation in the token, header selector",
+    dict(dod_done=True, id="UOW-02", slug="switch-org", title="Active organisation in the token, header selector",
          requirements=["US-03"], depends_on=["UOW-01"], risk="high",
          demo=["Super admin opens the selector → all orgs → picks Trung tâm A → users/classes of A",
                "Log out and in again → lands in Trung tâm A",
                "Suspend Trung tâm A as super admin → selector no longer offers it; session falls back to system"],
          in_scope=["Migration 0013 memberships", "deps scope from token + membership", "switch-org, /me/orgs", "OrgSwitcher wired"]),
-    dict(id="UOW-03", slug="cross-org-members", title="Accounts from other organisations",
+    dict(dod_done=True, id="UOW-03", slug="cross-org-members", title="Accounts from other organisations",
          requirements=["US-04"], depends_on=["UOW-02"], risk="high",
          demo=["Org admin of A: Người dùng → 'Thêm tài khoản có sẵn' → ttb / gvlan / Giáo viên → row with badge 'Từ ttb'",
                "gvlan logs in with ttb → switches to A → sees A's classes; is teacher in A",

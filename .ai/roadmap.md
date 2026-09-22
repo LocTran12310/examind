@@ -10,5 +10,7 @@ Source plan: approved in chat 2026-09-21 (Loc Tran).
 | 3 | `question-review` | Confidence triage, auto-approve, keyboard review queue, answer-key paste, bulk actions, dedupe, question bank CRUD |
 | 4 | `exam-practice` | Exam builder (manual + blueprint by topic/tag), assignments, taking exams, auto grading, results + solutions, stats by topic level/tag/type |
 | 5 | `adaptive-review` | Topic mastery, personalised review exams, "suspect answer key" flags |
+| 6 | `ui-shadcn-shell` | shadcn/ui, theme, sidebar + header shell, server-side DataTable on every list |
+| 7 | `school-structure-multi-org` | Cấp học › Khối › Lớp › Học sinh, users in several orgs, header org selector |
 
 MVP success signal (features 2+3): a teacher gets a 40-question exam into the bank (upload + review) in < 10 minutes, with ≤ 15% of questions needing review.

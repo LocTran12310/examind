@@ -5,7 +5,7 @@ slug: 2026092206-school-structure-multi-org
 profile: none
 created: 2026-09-22T10:51:26
 ruleset: 5
-current_gate: G3
+current_gate: G5
 history:
   - gate: G0
     action: passed
@@ -177,3 +177,13 @@ history:
     at: 2026-09-22T11:11:21
     by: Loc Tran
     ticket: T-01-04
+  - gate: G4
+    action: passed
+    at: 2026-09-22T11:17:50
+    by: Loc Tran
+    evidence: every done ticket has a passing verification run; all 10 tickets done, all UoW checklists ticked
+  - gate: G5
+    action: passed
+    at: 2026-09-22T11:17:50
+    by: Loc Tran
+    evidence: assumptions resolved, ADRs settled, graph valid

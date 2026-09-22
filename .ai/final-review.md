@@ -201,3 +201,67 @@ Status in the registers is `confirmed` with the note "Accepted under blanket pre
 - Topic (de-mau-toan10, 40 labelled), first run: exact node 30/40; one wrong AI pick (Q26 "A ∩ B" → "Đại số tổ hợp") because the AI result always overrode keywords.
 - **Fixed 2026-09-22** (`topic_suggest.py`): keyword/kNN first; the model is only asked about weak matches, and over a weak keyword topic it may only refine to a descendant (never a parent or another branch); a returned `name` is checked against the index; single math symbols (∩ ∪ ⊂) count as cues, so PDF text scores like docx.
   Re-run: docx and PDF both **40/40 in the right branch** (30 exact node, 10 a more specific child), AI tag calls 0 on clean files, splitting unchanged (all 7 files 100%). Questions tagged before the fix keep their old topic — re-parse or fix them in the bank.
+
+## 10. F6 `ui-shadcn-shell` + F7 `school-structure-multi-org` (2026-09-22)
+
+Approved in chat after the MVP review ("Khoan, quay lại với business logic, UI, thao tác" + back-office screenshots). Same rules: gates passed as Loc Tran, tickets `done --no-review` with recorded test runs.
+
+**What changed**
+- **UI on shadcn/ui** (radix base, Nova preset, lucide icons). `components/ui/` holds only CLI-generated files — the old barrel is gone and ESLint forbids importing it. App composites live in `components/app/*` (FormField on shadcn Field, FormDialog, ConfirmDialog, OptionSelect, ToneBadge, Panel, OrgSwitcher, UserMenu, ThemeToggle).
+- **Light / dark / system theme**, navy sidebar that collapses to icons (sheet on phones), header with breadcrumb + **[Tổ chức] | theme | avatar menu** on the right.
+- **One DataTable for every list**: navy toolbar (Thêm mới / Sửa / Xóa with confirm / Nạp + screen actions), search row under the headers, server-side filter/sort/paging, state in the URL (links and Back work), "Chi tiết" panel under the table for classes → học sinh and exams → câu hỏi. 369 360 users: ≤ 212 ms per page.
+- **Cơ cấu trường** `/org/structure`: Cấp học › Khối › Lớp › Học sinh tree with counts + the table for the selected node. New orgs get THCS 6–9 and THPT 10–12; everything is editable per org, deletes are refused while children exist.
+- **One account, several organisations**: `organization_members` (role per org), header selector switches org (super admin sees all orgs and works inside as org admin), "Thêm tài khoản có sẵn" / "Gỡ khỏi tổ chức" on Người dùng, "Vào tổ chức" on the admin org list. Login stays *org code (home) + username + password* and reopens the last org.
+
+**Deviations from the approved plan (please confirm)**
+| Plan said | Built | Why |
+| --- | --- | --- |
+| shadcn Select everywhere | shadcn `NativeSelect` in dense repeated form rows (answer key per option, blueprint rows, upload metadata); Radix `Select` for filters, toolbars and single fields | ADR-05 F6 — both are shadcn components; native keeps mobile/keyboard behaviour where rows repeat |
+| TanStack Table (latest) | pinned `@tanstack/react-table@^8` | v9 changed the API; shadcn's data-table guide is v8 (ADR-06 F6) |
+| Org detail "Thành viên" tab | "Vào tổ chức" + the normal Người dùng page | A-12 F7 — one place to manage members |
+| — | Toasts bottom-right | Top-right covered the org selector |
+
+**Dev data added for the demo**: org `ttb` (admin / admin123456), teacher `ttb / gvlan / giaovien123` linked to Trung tâm A as Giáo viên, class 10A3.
+
+**Tests at close**: API 229 passed, web 110 passed; `tsc`, `eslint`, `next build` clean. Evidence: `.ai/features/2026092205-ui-shadcn-shell/07-demo-evidence.md`, `.ai/features/2026092206-school-structure-multi-org/07-demo-evidence.md`.
+
+**Known limits / not done**
+- Several campuses under one org, shared login by email/SSO, moving question banks between orgs (out of scope in F7).
+- The system org also received THCS/THPT rows from the migration backfill (unused, harmless).
+- "Nhập học sinh từ file" on the structure page opens the existing import screen; it does not preselect the class.
+
+
+### Assumptions — 2026092205-ui-shadcn-shell
+
+| ID | Assumption | Blocking |
+| --- | --- | --- |
+| A-01 | shadcn style new-york, base colour neutral, brand blue as `--primary`; font Be Vietnam Pro kept | no |
+| A-02 | Theme default follows the OS; the choice (light/dark/system) is stored per browser by next-themes | no |
+| A-03 | Table toolbar actions per screen: Thêm mới, Sửa (1 selected), Xóa (≥1, confirm), Nạp; Nhập/Xuất only where import/export exists (users) | no |
+| A-04 | Column filters: text = case/accent-insensitive contains (unaccent ILIKE), select = exact, date = from/to; debounce 300 ms; page sizes 20/50/100, default 20 | no |
+| A-05 | URL param names: `q`, `page`, `page_size`, `sort` (`field` or `-field`), and one param per column filter named after the API field | yes |
+| A-06 | Bare-list endpoints become `Page`; small reference lists used by pickers (topics tree, taxonomy, tags for pickers) keep an unpaged variant via `page_size=all` capped at 1000 | no |
+| A-07 | Students use the same shell; header org switcher shows the current org only until F7 | no |
+| A-08 | Detail panel under the table (back-office "Chi tiết") for exams → questions and classes → students; other lists open a page or dialog | no |
+| A-09 | Existing web tests are rewritten against the new markup; coverage kept at least at today's 84 cases | no |
+
+ADRs: ADR-01 — shadcn components verbatim; ADR-02 — URL is the table state; ADR-03 — One paging helper on the API; ADR-04 — TanStack Table in manual mode; ADR-05 — shadcn NativeSelect in dense forms, Radix Select in tables and filters; ADR-06 — TanStack Table pinned to v8
+
+### Assumptions — 2026092206-school-structure-multi-org
+
+| ID | Assumption | Blocking |
+| --- | --- | --- |
+| A-01 | A school level (Cấp học) is an org-owned entity: code, name, grade range, sort; new orgs get THCS 6–9 and THPT 10–12; Tiểu học is not seeded | yes |
+| A-02 | A grade (Khối) belongs to exactly one level; its grade number must lie in the level's range and is unique per org | yes |
+| A-03 | A class belongs to one grade (`grade_id`); the old integer `classes.grade` stays as a cache so bank/exam filters keep working | no |
+| A-04 | Deleting a level with grades, or a grade with classes, is refused (409 with the count); classes are deleted from the class list as today | no |
+| A-05 | `users.organization_id` is the home org (where the username lives and the user logs in); `organization_members` holds (user, org, role, is_active) and is the source of permissions per org | yes |
+| A-06 | Roles are per org; `users.role` mirrors the home membership so existing code keeps a meaning | no |
+| A-07 | After login the last used org opens (`users.last_org_id`) if its membership is still active and the org can log in; otherwise the home org | no |
+| A-08 | Switching org re-issues the access token; the refresh token follows `last_org_id` | no |
+| A-09 | Super admin sees every org in the selector and works inside it with org_admin rights; audit records the super admin as actor | no |
+| A-10 | An org admin (or super admin) of the target org adds an existing account by home org code + username and a role; removing a membership never deletes the account; the home membership cannot be removed | yes |
+| A-11 | A suspended target org disappears from the selector; if it was active, the next request falls back to the home org | no |
+| A-12 | The org detail "Thành viên" tab from the chat plan is replaced by "Vào tổ chức" (switch) + the normal Users page | no |
+
+ADRs: ADR-01 — Levels and grades are org-owned rows; ADR-02 — Home org + memberships; ADR-03 — The token carries the active org; every request re-checks membership; ADR-04 — Super admin works inside orgs as org_admin

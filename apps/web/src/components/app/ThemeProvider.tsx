@@ -9,7 +9,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     <NextThemes attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <TooltipProvider delayDuration={300}>
         {children}
-        <Toaster richColors closeButton position="top-right" />
+        <Toaster richColors closeButton position="bottom-right" />
       </TooltipProvider>
     </NextThemes>
   );

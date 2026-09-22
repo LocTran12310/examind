@@ -143,12 +143,12 @@ export default function StructurePage() {
   }
 
   const title = !node ? "Cấp học" : found?.klass ? `Lớp ${found.klass.name}` : found?.grade ? found.grade.name : found?.level?.name ?? "";
-  const crumbs = [found?.level?.name, node?.kind !== "grade" ? found?.grade?.name : undefined].filter(Boolean).join(" › ");
+  const crumbs = node?.kind === "level" ? `Khối ${found?.level?.grade_from}–${found?.level?.grade_to}` : [found?.level?.name, node?.kind === "class" ? found?.grade?.name : undefined].filter(Boolean).join(" › ");
 
   return (
     <>
       <PageHeader title="Cơ cấu trường" description="Cấp học › Khối › Lớp › Học sinh" />
-      <div className="grid gap-4 lg:grid-cols-[20rem_1fr]">
+      <div className="grid gap-4 lg:grid-cols-[23rem_1fr]">
         <Card className="h-fit">
           <CardContent>{data ? <StructureTree data={data} selected={node} onSelect={select} /> : <Skeleton className="h-60" />}</CardContent>
         </Card>
