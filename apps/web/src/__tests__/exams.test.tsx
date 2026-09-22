@@ -1,10 +1,10 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import ExamsPage from "@/app/(app)/org/exams/page";
-import type { Exam } from "@/lib/types";
-import { lastQuery, mockFetch, page, route } from "./helpers";
-import { setUrl } from "./router-mock";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import ExamsRoute from "@/app/(app)/org/exams/page";
+import type { Exam } from "@/interfaces/exam.interface";
+import { lastBody, mockFetch, renderWithQuery, route, searchPage } from "./helpers";
+import { currentUrl, setUrl } from "./router-mock";
 
 vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);
 
@@ -14,22 +14,26 @@ const exam = (o: Partial<Exam> = {}): Exam => ({
 });
 
 beforeEach(() => setUrl("/org/exams"));
+afterEach(() => vi.unstubAllGlobals());
 
 const qs = [
   { id: "q1", type: "mcq", stem: "Tọa độ đỉnh của parabol $y=x^2$ là **đúng**", options: [{ label: "A", content: "$(0;0)$" }], answer: { key: "A" }, solution: "", position: 1, points: 5, section: "I", topics: [], tags: [] },
   { id: "q2", type: "essay", stem: "Giải phương trình", options: [], answer: null, solution: "", position: 2, points: 5, section: "IV", topics: [], tags: [] },
 ] as unknown as Exam["questions"];
 
+const calls = (fetch: { mock: { calls: unknown[][] } }, url: string) => fetch.mock.calls.filter(([u]) => u === url);
+
 describe("exams list", () => {
-  it("the list only fetches exams; a row shows its questions in the shared table, rendered", async () => {
+  it("posts /exams/search with the URL filters; a row shows its questions in the shared table, rendered", async () => {
     const fetch = mockFetch(
-      route("GET", /^\/api\/exams\?/, page([exam(), exam({ id: "e2", title: "Đề thi thử THPT" })])),
-      route("GET", /^\/api\/exams\/e1\/questions\?/, page(qs)),
+      route("POST", "/api/exams/search", searchPage([exam(), exam({ id: "e2", title: "Đề thi thử THPT" })])),
+      route("POST", "/api/exams/e1/questions/search", searchPage(qs)),
     );
     const u = userEvent.setup();
-    render(<ExamsPage />);
+    renderWithQuery(<ExamsRoute />);
     await u.type(await screen.findByRole("textbox", { name: "Lọc Đề" }), "15");
-    await waitFor(() => expect(lastQuery(fetch, "/exams").get("title")).toBe("15"), { timeout: 1500 });
+    await waitFor(() => expect(lastBody(fetch, "/exams/search").filters).toEqual({ title: { value: "15" } }), { timeout: 1500 });
+    expect(currentUrl()).toContain("title=15");
     expect(fetch.mock.calls.some(([url]) => String(url).startsWith("/api/exams/e1"))).toBe(false);
     const row = screen.getByRole("button", { name: "Kiểm tra 15 phút" }).closest("tr")!;
     await u.click(within(row).getAllByRole("cell")[2]); // the row, not its title (the title opens the dialog)
@@ -38,18 +42,55 @@ describe("exams list", () => {
     expect(cell.closest("td")!.querySelector("strong")).toHaveTextContent("đúng");
     expect(screen.getByText("Chi tiết · Kiểm tra 15 phút")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Soạn đề & giao bài/ })).toHaveAttribute("href", "/org/exams/e1");
-    expect(lastQuery(fetch, "/exams/e1/questions").get("page")).toBe("1");
+    // the exam goes into the path, not into the body
+    expect(lastBody(fetch, "/exams/e1/questions/search")).toEqual({ page: 1, limit: 20 });
+    expect(calls(fetch, "/api/exams/e1")).toHaveLength(0);
   });
 
-  it("clicking the exam title opens a dialog with the whole exam, fetched on open", async () => {
-    const fetch = mockFetch(route("GET", /^\/api\/exams\?/, page([exam()])), route("GET", "/api/exams/e1", exam({ questions: qs })));
+  it("clicking the exam title opens a dialog with the whole exam, fetched only then", async () => {
+    const fetch = mockFetch(route("POST", "/api/exams/search", searchPage([exam()])), route("GET", "/api/exams/e1", exam({ questions: qs })));
     const u = userEvent.setup();
-    render(<ExamsPage />);
-    await u.click(await screen.findByRole("button", { name: "Kiểm tra 15 phút" }));
+    renderWithQuery(<ExamsRoute />);
+    const title = await screen.findByRole("button", { name: "Kiểm tra 15 phút" });
+    expect(calls(fetch, "/api/exams/e1")).toHaveLength(0);
+    await u.click(title);
     const dialog = await screen.findByRole("dialog");
     expect(await within(dialog).findByTestId("preview-q-1")).toHaveTextContent("Câu 1 · Trắc nghiệm · 5 điểm");
     expect(within(dialog).getByText("Phần I")).toBeInTheDocument();
     expect(dialog.querySelector(".katex")).not.toBeNull();
-    expect(fetch.mock.calls.filter(([url]) => url === "/api/exams/e1")).toHaveLength(1);
+    expect(calls(fetch, "/api/exams/e1")).toHaveLength(1);
+  });
+
+  it("creates an exam and opens it", async () => {
+    const fetch = mockFetch(
+      route("POST", "/api/exams/search", searchPage([exam(), exam({ id: "e2", title: "Đề thi thử THPT" })])),
+      route("POST", "/api/exams", exam({ id: "e9", title: "Đề mới" }), 201),
+    );
+    const u = userEvent.setup();
+    renderWithQuery(<ExamsRoute />);
+    await screen.findByRole("button", { name: "Kiểm tra 15 phút" });
+    await u.click(screen.getByRole("button", { name: /Tạo đề/ }));
+    await u.type(await screen.findByLabelText("Tên đề"), "Đề mới");
+    await u.click(screen.getByRole("button", { name: "Tạo và soạn đề" }));
+    await waitFor(() => expect(currentUrl()).toBe("/org/exams/e9"));
+    expect(lastBody(fetch, "/exams")).toEqual({ title: "Đề mới" });
+  });
+
+  it("deletes the selected exams and refreshes the list", async () => {
+    const fetch = mockFetch(
+      route("POST", "/api/exams/search", searchPage([exam(), exam({ id: "e2", title: "Đề thi thử THPT" })])),
+      route("DELETE", /^\/api\/exams\/e[12]$/, undefined, 204),
+    );
+    const u = userEvent.setup();
+    renderWithQuery(<ExamsRoute />);
+    await screen.findByRole("button", { name: "Kiểm tra 15 phút" });
+    const before = calls(fetch, "/api/exams/search").length;
+    for (const box of screen.getAllByRole("checkbox", { name: "Chọn dòng" })) await u.click(box);
+    await u.click(screen.getByRole("button", { name: "Xóa" }));
+    const confirm = await screen.findByRole("alertdialog");
+    expect(confirm).toHaveTextContent("Xóa 2 đề thi?");
+    await u.click(within(confirm).getByRole("button", { name: "Xóa" }));
+    await waitFor(() => expect(fetch.mock.calls.filter(([, i]) => (i as RequestInit | undefined)?.method === "DELETE")).toHaveLength(2));
+    await waitFor(() => expect(calls(fetch, "/api/exams/search").length).toBeGreaterThan(before)); // refreshed by the mutation
   });
 });

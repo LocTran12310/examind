@@ -1,6 +1,6 @@
 "use client";
 
-import { Bar } from "@/components/exams/ResultView";
+import { ScoreBar } from "@/components/common/ScoreBar/ScoreBar";
 import type { MasteryRow } from "@/lib/types";
 
 export function level(m: number | null): string {
@@ -19,7 +19,7 @@ export function MasteryList({ rows, limit }: { rows: MasteryRow[]; limit?: numbe
           <span className="truncate" title={r.path}>
             {r.name}
           </span>
-          <Bar ratio={r.mastery ?? 0} />
+          <ScoreBar ratio={r.mastery ?? 0} />
           <span className="text-right font-medium">{Math.round((r.mastery ?? 0) * 100)}%</span>
           <span className="text-right text-xs text-muted-foreground">{level(r.mastery)}</span>
         </li>

@@ -1,9 +1,11 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ResultView } from "@/components/exams/ResultView";
-import type { AttemptResult, ResultQuestion } from "@/lib/types";
-import { mockFetch, route } from "./helpers";
+import { AttemptResultPage } from "@/components/page-components/AttemptResult/AttemptResultPage";
+import { ResultView } from "@/components/page-components/AttemptResult/ResultView/ResultView";
+import { MeProvider } from "@/hooks/common/use-me";
+import type { AttemptResult, AttemptView, ResultQuestion } from "@/interfaces/attempt.interface";
+import { lastBody, me, mockFetch, renderWithQuery, route } from "./helpers";
 
 const opts = ["A", "B", "C", "D"].map((l) => ({ label: l, content: `pa ${l}` }));
 const rq = (o: Partial<ResultQuestion>): ResultQuestion => ({
@@ -16,12 +18,13 @@ const result = (o: Partial<AttemptResult> = {}): AttemptResult => ({
   score10: 5, sections: [{ section: "I", points: 0.25, max_points: 0.5 }], topics: [{ topic: "Vectơ", points: 0, max_points: 0.25, count: 1 }],
   questions: [rq({}), rq({ id: "q2", response: { key: "B" }, points: 0.25, is_correct: true })], ...o,
 });
+const essay = rq({ id: "e1", type: "essay", options: [], answer: { text: "mẫu" }, response: { text: "Bài làm" }, points: null, max_points: 1, is_correct: null });
 
 afterEach(() => vi.unstubAllGlobals());
 
 describe("result view", () => {
   it("shows score, breakdowns and per-question feedback", () => {
-    render(<ResultView result={result()} />);
+    renderWithQuery(<ResultView result={result()} />);
     expect(screen.getByTestId("score10")).toHaveTextContent("5");
     expect(screen.getAllByTestId("topic-row")[0]).toHaveTextContent("Vectơ");
     const first = screen.getByTestId("rq-1");
@@ -32,20 +35,57 @@ describe("result view", () => {
   });
 
   it("hidden results explain the policy", () => {
-    render(<ResultView result={result({ hidden: true, reason: "never", questions: undefined })} />);
+    const { rerender } = renderWithQuery(<ResultView result={result({ hidden: true, reason: "never", questions: undefined })} />);
     expect(screen.getByRole("alert")).toHaveTextContent("chỉ cho xem điểm");
+    expect(screen.getByText("5 điểm")).toBeInTheDocument();
+    rerender(<ResultView result={result({ hidden: true, reason: "after_close", available_at: "2026-09-29T00:00:00Z", score10: undefined, questions: undefined })} />);
+    expect(screen.getByRole("alert")).toHaveTextContent("Đáp án và lời giải sẽ hiện sau khi đóng bài (29/09/2026 07:00).");
+    expect(screen.queryByText(/điểm$/)).toBeNull();
   });
 
-  it("teachers grade essays and see tab switches", async () => {
-    const f = mockFetch(route("PATCH", "/api/attempts/att/answers/e1/grade", { score: 1.75, needs_grading: false }));
-    const onChange = vi.fn();
-    const essay = rq({ id: "e1", type: "essay", options: [], answer: { text: "mẫu" }, response: { text: "Bài làm" }, points: null, max_points: 1, is_correct: null });
-    render(<ResultView result={result({ needs_grading: true, questions: [essay] })} staff onChange={onChange} />);
+  it("teachers see whose attempt it is, tab switches, and grade essays (PATCH, then the result refetches)", async () => {
+    const view = { id: "att", student: { id: "s", full_name: "Nguyễn An", username: "an" } } as AttemptView;
+    const f = mockFetch(
+      route("GET", "/api/attempts/att/result", result({ needs_grading: true, questions: [essay] })),
+      route("GET", "/api/attempts/att", view),
+      route("PATCH", "/api/attempts/att/answers/e1/grade", { score: 1.75, needs_grading: false }),
+    );
+    renderWithQuery(
+      <MeProvider value={me("teacher")}>
+        <AttemptResultPage id="att" />
+      </MeProvider>,
+    );
+    expect(await screen.findByText("Bài làm của Nguyễn An (an)")).toBeInTheDocument();
     expect(screen.getByText("Rời tab 2 lần")).toBeInTheDocument();
     await userEvent.type(screen.getByLabelText("Điểm tự luận"), "0.5");
     await userEvent.type(screen.getByLabelText("Nhận xét"), "Thiếu bước 2");
     await userEvent.click(screen.getByRole("button", { name: "Lưu điểm" }));
-    await waitFor(() => expect(onChange).toHaveBeenCalled());
-    expect(JSON.parse(String(f.mock.calls[0][1]?.body))).toEqual({ points: 0.5, comment: "Thiếu bước 2" });
+    await waitFor(() => expect(f.mock.calls.filter(([url]) => url === "/api/attempts/att/result")).toHaveLength(2));
+    const patch = f.mock.calls.find(([url]) => url === "/api/attempts/att/answers/e1/grade")!;
+    expect((patch[1] as RequestInit).method).toBe("PATCH");
+    expect(JSON.parse(String((patch[1] as RequestInit).body))).toEqual({ points: 0.5, comment: "Thiếu bước 2" });
+    expect(() => lastBody(f, "/attempts/att/answers/e1/grade")).toThrow(); // not a POST
+  });
+
+  it("a student neither loads the attempt nor sees the grader", async () => {
+    const f = mockFetch(route("GET", "/api/attempts/att/result", result({ questions: [essay] })));
+    renderWithQuery(
+      <MeProvider value={me("student")}>
+        <AttemptResultPage id="att" />
+      </MeProvider>,
+    );
+    expect(await screen.findByTestId("rq-1")).toBeInTheDocument();
+    expect(screen.queryByTestId("essay-grader")).toBeNull();
+    expect(f.mock.calls.some(([url]) => url === "/api/attempts/att")).toBe(false);
+  });
+
+  it("a failed load shows the error", async () => {
+    mockFetch(route("GET", "/api/attempts/att/result", { code: "not_found", message: "Không tìm thấy bài làm" }, 404));
+    renderWithQuery(
+      <MeProvider value={me("student")}>
+        <AttemptResultPage id="att" />
+      </MeProvider>,
+    );
+    expect(await screen.findByText("Không tìm thấy bài làm")).toBeInTheDocument();
   });
 });

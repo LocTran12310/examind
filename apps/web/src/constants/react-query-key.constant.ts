@@ -116,3 +116,26 @@ export const AI_MODEL_KEYS = {
 export const INGESTION_SETTINGS_KEYS = {
   ALL: ["ingestion-settings"] as const,
 };
+
+/** Exams and their questions; the list never embeds questions. */
+export const EXAM_KEYS = {
+  ALL: ["exams"] as const,
+  SEARCH: (body: unknown) => ["exams", "search", body] as const,
+  DETAIL: (id: string) => ["exams", "detail", id] as const,
+  QUESTIONS: (id: string, body: unknown) => ["exams", "questions", id, body] as const,
+};
+
+/** Assignments (exams given to classes), their reports and the student's own list. */
+export const ASSIGNMENT_KEYS = {
+  ALL: ["assignments"] as const,
+  SEARCH: (body: unknown) => ["assignments", "search", body] as const,
+  REPORT: (id: string) => ["assignments", "report", id] as const,
+  MINE: ["assignments", "mine"] as const,
+};
+
+/** Attempts: the runner's view and the result. */
+export const ATTEMPT_KEYS = {
+  ALL: ["attempts"] as const,
+  DETAIL: (id: string) => ["attempts", "detail", id] as const,
+  RESULT: (id: string) => ["attempts", "result", id] as const,
+};

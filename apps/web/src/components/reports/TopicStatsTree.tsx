@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useMemo, useState } from "react";
-import { Bar } from "@/components/exams/ResultView";
+import { ScoreBar } from "@/components/common/ScoreBar/ScoreBar";
 import type { TopicStat } from "@/lib/types";
 
 interface Node extends TopicStat {
@@ -46,7 +46,7 @@ export function TopicStatsTree({ rows }: { rows: TopicStat[] }) {
             <span className={cn("mr-1 inline-block w-4 text-muted-foreground/70", !n.children.length && "invisible")}>{expanded ? "▾" : "▸"}</span>
             {n.name}
           </Button>
-          <Bar ratio={n.ratio ?? 0} />
+          <ScoreBar ratio={n.ratio ?? 0} />
           <span className="text-right font-medium">{n.ratio === null ? "—" : `${Math.round(n.ratio * 100)}%`}</span>
           <span className="text-right text-xs text-muted-foreground">{n.answered} lượt</span>
         </div>

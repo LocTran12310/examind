@@ -6,7 +6,7 @@ import { FormDialog } from "@/components/app/FormDialog";
 import { HistoryPanel } from "@/components/app/HistoryPanel";
 import { PageHeader } from "@/components/app/PageHeader";
 import { ToneBadge } from "@/components/app/ToneBadge";
-import { Bar } from "@/components/exams/ResultView";
+import { ScoreBar } from "@/components/common/ScoreBar/ScoreBar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -77,7 +77,7 @@ export function StudentRecordPage({ id }: { id: string }) {
                   {y.topics.map((t) => (
                     <div key={t.id} className="grid grid-cols-[10rem_1fr_3rem] items-center gap-2 text-sm">
                       <span className="truncate">{t.name}</span>
-                      <Bar ratio={t.ratio ?? 0} />
+                      <ScoreBar ratio={t.ratio ?? 0} />
                       <span className="text-right tabular-nums">{pct(t.ratio)}</span>
                     </div>
                   ))}

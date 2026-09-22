@@ -1,19 +1,9 @@
 "use client";
 
 import { use } from "react";
-import { AssignmentReport } from "@/components/reports/AssignmentReport";
-import { PageHeader } from "@/components/app/PageHeader";
-import { useApi } from "@/lib/hooks";
-import type { AssignmentReport as Report } from "@/lib/types";
+import { AssignmentReportPage } from "@/components/page-components/AssignmentReport/AssignmentReportPage";
 
-export default function AssignmentReportPage({ params }: { params: Promise<{ id: string }> }) {
+export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { data } = useApi<Report>(`/assignments/${id}/report`);
-  if (!data) return null;
-  return (
-    <>
-      <PageHeader title={data.title} description="Báo cáo bài giao" />
-      <AssignmentReport report={data} />
-    </>
-  );
+  return <AssignmentReportPage id={id} />;
 }

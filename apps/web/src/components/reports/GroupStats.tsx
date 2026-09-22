@@ -1,6 +1,6 @@
 "use client";
 
-import { Bar } from "@/components/exams/ResultView";
+import { ScoreBar } from "@/components/common/ScoreBar/ScoreBar";
 import { DIFFICULTY_LABEL, TYPE_LABEL, type GroupStat, type QuestionType } from "@/lib/types";
 
 export function groupLabel(by: string, g: GroupStat): string {
@@ -16,7 +16,7 @@ export function GroupStats({ by, rows }: { by: string; rows: GroupStat[] }) {
       {rows.map((g) => (
         <li key={g.key} className="grid grid-cols-[1fr_140px_48px_60px] items-center gap-2 text-sm">
           <span className="truncate">{groupLabel(by, g)}</span>
-          <Bar ratio={g.ratio ?? 0} />
+          <ScoreBar ratio={g.ratio ?? 0} />
           <span className="text-right font-medium">{g.ratio === null ? "—" : `${Math.round(g.ratio * 100)}%`}</span>
           <span className="text-right text-xs text-muted-foreground">{g.answered} lượt</span>
         </li>
