@@ -44,7 +44,7 @@ t(id="T-01-02", uow="UOW-01", title="Year service + API (CRUD, activate/close/re
   assumptions=["A-01", "A-04"], context="ADR-05. Classes/structure accept school_year_id; class create defaults to the active year.", done_when=["Closed year edit audited", "Audit paged per target"])
 t(id="T-01-03", uow="UOW-01", title="YearSwitcher + YearProvider, Năm học page, HistoryPanel; classes/structure/class form by year",
   layer="web", estimate="4h", depends_on=["T-01-02"], verifies=["AC-03", "AC-04"], tests=[f"{WEB}/src/__tests__/school-years.test.tsx", f"{WEB}/src/__tests__/classes.test.tsx", f"{WEB}/src/__tests__/structure.test.tsx"],
-  touches=[f"{WEB}/src/components/app/YearSwitcher.tsx", f"{WEB}/src/components/app/HistoryPanel.tsx", f"{WEB}/src/app/(app)/org/school-years/page.tsx", f"{WEB}/src/app/(app)/org/classes/page.tsx", f"{WEB}/src/app/(app)/org/structure/page.tsx"],
+  touches=[f"{WEB}/src/components/app/YearSwitcher.tsx", f"{WEB}/src/components/app/HistoryPanel.tsx", f"{WEB}/src/app/(app)/org/school-years/page.tsx", f"{WEB}/src/app/(app)/org/classes/page.tsx", f"{WEB}/src/app/(app)/org/structure/page.tsx", f"{WEB}/src/components/app/YearContext.tsx", f"{WEB}/src/components/years/YearForm.tsx", f"{WEB}/src/components/org/ClassForms.tsx"],
   assumptions=["A-08"], context="", done_when=["Selector persists per org", "History panel", "Year-scoped lists"])
 t(id="T-02-01", uow="UOW-02", title="Migration 0015: class_members status/dates, answer_facts year/term/class_ids + backfill; snapshot at grading",
   layer="data", estimate="3h", depends_on=["T-01-01"], verifies=["AC-05"], tests=[f"{API}/tests/test_year_history.py"],

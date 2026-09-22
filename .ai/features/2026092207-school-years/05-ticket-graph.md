@@ -3,7 +3,7 @@
 # Ticket graph — 2026092207-school-years
 
 - Units of Work: **4**
-- Tickets: **11** (2 done)
+- Tickets: **11** (3 done)
 - Total effort: **4.5d**
 - Critical path: **1.8d** across 4 tickets
 - Theoretical minimum duration with unlimited parallelism: **1.8d**
@@ -27,7 +27,7 @@ graph LR
   subgraph UOW_01["UOW-01 · School years with HK1/HK2, header year selector, year-scoped classes"]
     T_01_01["✓ T-01-01<br/>Migration 0014: school_years, school_terms, classes.school_year_id + backfill; models"]
     T_01_02["✓ T-01-02<br/>Year service + API (CRUD, activate/close/reopen, terms) + audit read API"]
-    T_01_03["T-01-03<br/>YearSwitcher + YearProvider, Năm học page, HistoryPanel; classes/structure/class form by year"]
+    T_01_03["✓ T-01-03<br/>YearSwitcher + YearProvider, Năm học page, HistoryPanel; classes/structure/class form by year"]
   end
   subgraph UOW_02["UOW-02 · Answers remember year, term and classes; reports by year/term; student record"]
     T_02_01["T-02-01<br/>Migration 0015: class_members status/dates, answer_facts year/term/class_ids + backfill; snapshot at grading"]
@@ -86,7 +86,7 @@ adding people to tickets off this path will not make the feature ship sooner.
 |----|-----|-------|------|-----|-----------|----------|--------|
 | T-01-01 | UOW-01 | data | feature | 2h | — | AC-02 | done |
 | T-01-02 | UOW-01 | api | feature | 4h | T-01-01 | AC-01, AC-04, AC-16 | done |
-| T-01-03 | UOW-01 | web | feature | 4h | T-01-02 | AC-03, AC-04 | todo |
+| T-01-03 | UOW-01 | web | feature | 4h | T-01-02 | AC-03, AC-04 | done |
 | T-02-01 | UOW-02 | data | feature | 3h | T-01-01 | AC-05 | todo |
 | T-02-02 | UOW-02 | api | feature | 3h | T-02-01 | AC-06, AC-07 | todo |
 | T-02-03 | UOW-02 | web | feature | 3h | T-02-01 | AC-08 | todo |

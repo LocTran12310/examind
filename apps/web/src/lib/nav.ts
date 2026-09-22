@@ -3,6 +3,7 @@ import {
   BookOpenCheck,
   Bot,
   Building2,
+  CalendarRange,
   ClipboardList,
   FileStack,
   FileUp,
@@ -46,6 +47,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Lớp & học sinh",
     items: [
+      { href: "/org/school-years", label: "Năm học", roles: STAFF, icon: CalendarRange },
       { href: "/org/structure", label: "Cơ cấu trường", roles: STAFF, icon: School },
       { href: "/org/users", label: "Người dùng", roles: STAFF, icon: Users },
       { href: "/org/classes", label: "Lớp học", roles: STAFF, icon: GraduationCap },

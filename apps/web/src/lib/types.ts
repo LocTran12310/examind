@@ -134,6 +134,7 @@ export interface SchoolClass {
   name: string;
   grade: number | null;
   grade_id?: string | null;
+  school_year_id?: string | null;
   school_year: string;
   member_count: number;
   created_at: string;
@@ -513,4 +514,38 @@ export interface PracticeItem {
   score10: number | null;
   note: string | null;
   groups: { reason: string; topic: string | null; count: number }[];
+}
+
+export type YearStatus = "planning" | "active" | "closed";
+export const YEAR_STATUS_LABEL: Record<YearStatus, string> = { planning: "Chuẩn bị", active: "Đang học", closed: "Đã khóa" };
+
+export interface SchoolTerm {
+  code: "hk1" | "hk2";
+  name: string;
+  start_date: string;
+  end_date: string;
+}
+
+export interface SchoolYear {
+  id: string;
+  code: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  status: YearStatus;
+  terms: SchoolTerm[];
+  class_count: number;
+}
+
+export interface AuditEntry {
+  id: string;
+  created_at: string;
+  organization_id: string;
+  organization_code: string | null;
+  actor_id: string | null;
+  actor_name: string | null;
+  action: string;
+  target_type: string;
+  target_id: string | null;
+  data: Record<string, unknown>;
 }

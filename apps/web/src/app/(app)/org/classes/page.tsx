@@ -8,6 +8,7 @@ import { FormDialog } from "@/components/app/FormDialog";
 import { PageHeader } from "@/components/app/PageHeader";
 import { DataTable } from "@/components/data-table/DataTable";
 import { useTableQuery } from "@/components/data-table/useTableQuery";
+import { useYear } from "@/components/app/YearContext";
 import { ClassForm } from "@/components/org/ClassForms";
 import { MemberManager } from "@/components/org/MemberManager";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,8 @@ import type { SchoolClass } from "@/lib/types";
 
 export default function ClassesPage() {
   const tq = useTableQuery();
+  const { year } = useYear();
+  const yearParams = useMemo(() => ({ school_year_id: year?.id }), [year?.id]);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<SchoolClass | null>(null);
   const [active, setActive] = useState<SchoolClass | null>(null);
@@ -35,9 +38,10 @@ export default function ClassesPage() {
 
   return (
     <>
-      <PageHeader title="Lớp học" description="Chọn một lớp để xem học sinh bên dưới." />
+      <PageHeader title="Lớp học" description={`${year ? year.name + " · " : ""}Chọn một lớp để xem học sinh bên dưới.`} />
       <DataTable
         path="/classes"
+        params={yearParams}
         columns={columns}
         getRowId={(c) => c.id}
         reloadKey={version}

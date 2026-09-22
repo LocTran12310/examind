@@ -5,6 +5,8 @@ import { createContext, useContext } from "react";
 import { AppSidebar } from "@/components/app/AppSidebar";
 import { OrgSwitcher } from "@/components/app/OrgSwitcher";
 import { ThemeToggle } from "@/components/app/ThemeToggle";
+import { YearProvider } from "@/components/app/YearContext";
+import { YearSwitcher } from "@/components/app/YearSwitcher";
 import { UserMenu } from "@/components/app/UserMenu";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -28,6 +30,7 @@ export function AppShell({ me, children, sidebarOpen = true }: { me: Me; childre
   const group = item && groupsFor(me.role, me.is_super).find((g) => g.items.includes(item));
   return (
     <MeContext.Provider value={me}>
+      <YearProvider me={me}>
       <SidebarProvider defaultOpen={sidebarOpen}>
         <AppSidebar me={me} />
         <SidebarInset className="min-w-0">
@@ -40,6 +43,7 @@ export function AppShell({ me, children, sidebarOpen = true }: { me: Me; childre
             </div>
             <div className="flex items-center gap-1">
               <OrgSwitcher me={me} />
+              <YearSwitcher />
               <Separator orientation="vertical" className="mx-1 h-5" />
               <ThemeToggle />
               <UserMenu me={me} />
@@ -48,6 +52,7 @@ export function AppShell({ me, children, sidebarOpen = true }: { me: Me; childre
           <main className="min-w-0 flex-1 p-4 lg:p-6">{children}</main>
         </SidebarInset>
       </SidebarProvider>
+      </YearProvider>
     </MeContext.Provider>
   );
 }

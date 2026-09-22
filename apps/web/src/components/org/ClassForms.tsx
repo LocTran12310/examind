@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { FormAlert } from "@/components/app/FormAlert";
 import { FormField } from "@/components/app/FormField";
+import { OptionSelect } from "@/components/app/OptionSelect";
+import { useYear } from "@/components/app/YearContext";
 import { GradeSelect } from "@/components/structure/GradeSelect";
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
@@ -20,14 +22,15 @@ export function currentSchoolYear(d = new Date()): string {
 export function ClassForm({ klass, gradeId, onDone }: { klass?: SchoolClass; gradeId?: string; onDone: () => void }) {
   const [name, setName] = useState(klass?.name ?? "");
   const [grade, setGrade] = useState(klass?.grade_id ?? gradeId ?? "");
-  const [year, setYear] = useState(klass?.school_year ?? currentSchoolYear());
+  const { years, year: selected } = useYear();
+  const [yearId, setYearId] = useState(klass?.school_year_id ?? selected?.id ?? "");
   const m = useMutation();
   return (
     <form
       className="grid gap-4"
       onSubmit={async (e) => {
         e.preventDefault();
-        const body = { name, grade_id: grade || null, school_year: year };
+        const body = yearId ? { name, grade_id: grade || null, school_year_id: yearId } : { name, grade_id: grade || null, school_year: currentSchoolYear() };
         const r = await m.run(() => (klass ? api(`/classes/${klass.id}`, { method: "PATCH", body }) : api("/classes", { body })));
         if (r) onDone();
       }}
@@ -40,8 +43,14 @@ export function ClassForm({ klass, gradeId, onDone }: { klass?: SchoolClass; gra
         <FormField label="Khối" error={m.fields.grade}>
           {(f) => <GradeSelect {...f} value={grade} onValueChange={(v) => setGrade(v)} />}
         </FormField>
-        <FormField label="Năm học" error={m.fields.school_year}>
-          {(f) => <Input {...f} value={year} onChange={(e) => setYear(e.target.value)} />}
+        <FormField label="Năm học" error={m.fields.school_year ?? m.fields.school_year_id}>
+          {(f) =>
+            years.length ? (
+              <OptionSelect {...f} value={yearId} onValueChange={setYearId} options={years.map((y) => ({ value: y.id, label: y.code }))} />
+            ) : (
+              <Input {...f} value={currentSchoolYear()} disabled />
+            )
+          }
         </FormField>
       </div>
       <DialogFooter>

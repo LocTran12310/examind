@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
+import { useYear } from "@/components/app/YearContext";
 import { useApi } from "@/lib/hooks";
 import type { GradeRow, SchoolClass, SchoolLevel, Structure } from "@/lib/types";
 
@@ -44,7 +45,8 @@ export default function StructurePage() {
   const admin = me.role === "org_admin";
   const tq = useTableQuery();
   const node = parseNode(tq.get("node"));
-  const { data, reload } = useApi<Structure>("/structure");
+  const { year } = useYear();
+  const { data, reload } = useApi<Structure>(year ? `/structure?school_year_id=${year.id}` : "/structure");
   const [editing, setEditing] = useState<Editing>(null);
   const [version, setVersion] = useState(0);
   const changed = () => {
@@ -113,7 +115,7 @@ export default function StructurePage() {
       <DataTable<SchoolClass>
         path="/classes"
         prefix="c."
-        params={{ grade_id: found.grade.id }}
+        params={{ grade_id: found.grade.id, school_year_id: year?.id }}
         columns={classCols}
         getRowId={(r) => r.id}
         reloadKey={version}
@@ -147,7 +149,7 @@ export default function StructurePage() {
 
   return (
     <>
-      <PageHeader title="Cơ cấu trường" description="Cấp học › Khối › Lớp › Học sinh" />
+      <PageHeader title="Cơ cấu trường" description={`Cấp học › Khối › Lớp › Học sinh${year ? " · " + year.name : ""}`} />
       <div className="grid gap-4 lg:grid-cols-[23rem_1fr]">
         <Card className="h-fit">
           <CardContent>{data ? <StructureTree data={data} selected={node} onSelect={select} /> : <Skeleton className="h-60" />}</CardContent>

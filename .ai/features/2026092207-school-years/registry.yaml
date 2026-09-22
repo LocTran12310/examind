@@ -122,7 +122,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-01-02
     blocks:
@@ -137,6 +137,9 @@ ticket:
       - apps/web/src/app/(app)/org/school-years/page.tsx   # new
       - apps/web/src/app/(app)/org/classes/page.tsx   # new
       - apps/web/src/app/(app)/org/structure/page.tsx   # new
+      - apps/web/src/components/app/YearContext.tsx   # new
+      - apps/web/src/components/years/YearForm.tsx   # new
+      - apps/web/src/components/org/ClassForms.tsx   # new
   - id: T-02-01
     uow: UOW-02
     title: 'Migration 0015: class_members status/dates, answer_facts year/term/class_ids + backfill; snapshot at grading'
