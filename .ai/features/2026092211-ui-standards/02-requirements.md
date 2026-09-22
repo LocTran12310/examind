@@ -16,7 +16,7 @@ When I pick them in the upload form
 Then each shows what it matches and a choice (skip / re-parse; replace / keep both / skip), skipped files are not sent, the same content is never stored twice
 ```
 
-## US-02 — back-office filter operators
+## US-02 — Filter operators
 **Priority:** must
 
 **AC-02** — Operators

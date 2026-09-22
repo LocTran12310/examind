@@ -20,7 +20,7 @@ adr_count: 3
 ## Alternatives rejected
 | Option | Why not |
 | --- | --- |
-| back-office POST-body filters | Examind keeps list state in the URL (F6) |
+| POST-body filters | Examind keeps list state in the URL (F6) |
 | Browser-local display | Reports and schedules must read the same everywhere |
 
 ## Domain model
@@ -49,9 +49,9 @@ Audit `document.replace`.
 
 ## ADRs
 
-### ADR-01 — back-office operators in URL params
-**Context:** One convention across Loc Tran's products.
-**Decision:** the reference symbols/labels, serialized as `<col>_op`.
+### ADR-01 — Filter operators in URL params
+**Context:** One operator convention for every list.
+**Decision:** Fixed symbols/labels, serialized as `<col>_op`.
 **Consequences:** Links keep filters; server whitelist.
 **Status:** accepted
 

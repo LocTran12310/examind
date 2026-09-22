@@ -5,7 +5,7 @@ UOWS = [
     dict(dod_done=True, id="UOW-01", slug="duplicates", title="Duplicate uploads: check, skip, re-parse, replace, keep both",
          requirements=["US-01"], risk="high", demo=["Upload a reference file again → 'Đã có file giống hệt' → Bỏ qua → nothing stored"],
          in_scope=["check endpoint", "on_duplicate", "upload form choices", "golden runner re-parses"]),
-    dict(dod_done=True, id="UOW-02", slug="filters-time", title="back-office filter operators and business time zone",
+    dict(dod_done=True, id="UOW-02", slug="filters-time", title="Filter operators and business time zone",
          requirements=["US-02", "US-03"], risk="medium", demo=["Người dùng: Họ tên + Bắt đầu bằng 'nguyen'", "Tạo lúc = 22/09 finds 00:30 Hà Nội"],
          in_scope=["paging ops", "FilterCell", "timezone module", "lib/datetime"]),
     dict(dod_done=True, id="UOW-03", slug="order-shadcn", title="Exam order draft, shadcn consistency, preview dialog",

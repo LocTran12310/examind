@@ -7,7 +7,7 @@
 
 ## UOW-02 — Server-side DataTable (2026-09-22, live stack, in-app browser)
 - /org/users: typed "dang" in the Họ tên filter → after the debounce the URL became `?full_name=dang` and the table showed the 4 "Đặng …" students (accent-insensitive, server-side).
-- Light mode at 1400 px: navy toolbar bar, filter row under the headers, "Hiển thị 1–4 trên 4 kết quả" footer — the layout of the back-office reference.
+- Light mode at 1400 px: navy toolbar bar, filter row under the headers, "Hiển thị 1–4 trên 4 kết quả" footer — the target back-office layout.
 - Perf (dev Postgres, 369 360 users in a throwaway org, `users.list_users`, warm; data deleted afterwards):
 
 | Query | Total | Time |

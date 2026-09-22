@@ -23,7 +23,7 @@ def test_approve_refuses_blocking_then_answer_edit_and_approve(client, db):
     doc = kho(client, db)
     q1 = client.get(f"/api/review/documents/{doc}/queue").json()[0]
     r = client.post(f"/api/review/questions/{q1['id']}/action", json={"action": "approve"})
-    assert r.status_code == 409 and r.json()["error"]["code"] == "has_blocking_issues"
+    assert r.status_code == 409 and r.json()["code"] == "has_blocking_issues"
     opts = [{"label": l, "content": c} for l, c in zip("ABCD", ["1", "2", "3", "4"])]
     r = client.patch(f"/api/questions/{q1['id']}", json={"type": "mcq", "options": opts, "stem": "Giá trị của $2^1$?", "answer": {"key": "B"}})
     assert r.status_code == 200, r.text

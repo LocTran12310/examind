@@ -28,7 +28,7 @@ uow:
     verifies:
       - AC-01
   - id: UOW-02
-    title: 'back-office filter operators and business time zone'
+    title: 'Filter operators and business time zone'
     status: todo
     risk: medium
     depends_on: []

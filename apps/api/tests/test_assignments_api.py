@@ -22,13 +22,13 @@ def test_window_and_attempt_limits(client, db):
     later = assign(client, exam["id"], klass["id"], open_delta=3600, close_delta=7200)
     s = login(client, "trungtama", "hs01")
     r = s.post(f"/api/assignments/{later['id']}/start")
-    assert r.status_code == 409 and r.json()["error"]["code"] == "not_open"
+    assert r.status_code == 409 and r.json()["code"] == "not_open"
     assert s.get("/api/me/assignments").json()[0]["state"] == "upcoming"
     now_a = assign(client, exam["id"], klass["id"])
     att = s.post(f"/api/assignments/{now_a['id']}/start").json()["attempt_id"]
     s.post(f"/api/attempts/{att}/submit")
     r = s.post(f"/api/assignments/{now_a['id']}/start")
-    assert r.status_code == 409 and r.json()["error"]["code"] == "no_attempts_left"
+    assert r.status_code == 409 and r.json()["code"] == "no_attempts_left"
 
 
 def test_validation_and_permissions(client, db):

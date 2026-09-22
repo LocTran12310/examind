@@ -1,0 +1,67 @@
+# Dependency rules (architecture-refactor ADR-05). Run: uv run lint-imports
+# A new module under app/modules/ is added to the layers contract below.
+[importlinter]
+root_package = app
+include_external_packages = True
+
+[importlinter:contract:module-layers]
+name = Module layers: interface > infrastructure > application > domain
+type = layers
+layers =
+    (interface)
+    (infrastructure)
+    (application)
+    (domain)
+containers =
+    app.shared
+    app.modules.taxonomy
+
+[importlinter:contract:pure-domain]
+name = Domain code imports no framework, ORM, web or storage library
+type = forbidden
+source_modules =
+    app.shared.domain
+    app.modules.*.domain
+forbidden_modules =
+    sqlalchemy
+    fastapi
+    pydantic
+    pydantic_settings
+    boto3
+    starlette
+    app.shared.application
+    app.shared.infrastructure
+    app.shared.interface
+    app.core
+    app.models
+    app.services
+    app.routers
+
+[importlinter:contract:pure-application]
+name = Application code depends on ports, not on frameworks or adapters
+type = forbidden
+source_modules =
+    app.shared.application
+    app.modules.*.application
+forbidden_modules =
+    sqlalchemy
+    fastapi
+    pydantic
+    boto3
+    starlette
+    app.shared.infrastructure
+    app.shared.interface
+    app.core
+    app.models
+    app.services
+    app.routers
+
+[importlinter:contract:shared-kernel]
+name = The shared kernel never imports a module or the old layout's routers/services
+type = forbidden
+source_modules =
+    app.shared
+forbidden_modules =
+    app.modules
+    app.services
+    app.routers

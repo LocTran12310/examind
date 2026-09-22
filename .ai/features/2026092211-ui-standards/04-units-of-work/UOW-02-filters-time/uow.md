@@ -1,7 +1,7 @@
 ---
 id: UOW-02
 slug: filters-time
-title: back-office filter operators and business time zone
+title: Filter operators and business time zone
 demoable: true
 duration: 2d
 depends_on: []
@@ -12,7 +12,7 @@ status: todo
 rollback: revert the merge commit; migrations have downgrade()
 ---
 
-# UOW-02 — back-office filter operators and business time zone
+# UOW-02 — Filter operators and business time zone
 
 ## Demo script
 1. Người dùng: Họ tên + Bắt đầu bằng 'nguyen'

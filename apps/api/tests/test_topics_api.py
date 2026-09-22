@@ -54,7 +54,7 @@ def test_move_into_own_descendant_refused(client, db):
 def test_delete_guard_and_merge(client, db):
     _, t = setup(client, db)
     r = client.delete(f"/api/topics/{t['Nguyên hàm']['id']}")
-    assert r.status_code == 409 and r.json()["error"]["code"] == "topic_has_children"
+    assert r.status_code == 409 and r.json()["code"] == "topic_has_children"
     leaf = client.post("/api/topics", json={"name": "Tạm", "parent_id": t["Tích phân"]["id"]}).json()
     assert client.delete(f"/api/topics/{leaf['id']}").status_code == 204
     r = client.post(f"/api/topics/{t['Nguyên hàm']['id']}/merge", json={"target_id": t["Tích phân"]["id"]})

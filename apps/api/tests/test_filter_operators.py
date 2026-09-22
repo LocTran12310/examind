@@ -1,4 +1,4 @@
-"""Column filter operators (the reference convention) and business-day bounds (ui-standards AC-02, AC-05)."""
+"""Column filter operators (symbol convention) and business-day bounds (ui-standards AC-02, AC-05)."""
 from datetime import UTC, date, datetime
 
 from sqlalchemy import update

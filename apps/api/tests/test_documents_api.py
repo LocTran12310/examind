@@ -72,11 +72,11 @@ def test_validation(client, db):
     teacher_with_taxonomy(client, db)
     ole = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1" + b"0" * 100
     r = upload(client, "old.doc", ole)
-    assert r.status_code == 422 and ".docx" in r.json()["error"]["message"]
+    assert r.status_code == 422 and ".docx" in r.json()["message"]
     r = upload(client, "x.exe", b"MZ" + b"0" * 100)
-    assert r.status_code == 422 and r.json()["error"]["code"] == "unsupported_file"
+    assert r.status_code == 422 and r.json()["code"] == "unsupported_file"
     r = upload(client, "x.docx", sample("de-kho.docx"), {"grade": 13})
-    assert r.status_code == 422 and "grade" in r.json()["error"]["fields"]
+    assert r.status_code == 422 and "grade" in r.json()["details"]["fields"]
 
 
 def test_reparse_keeps_approved_and_replaces_drafts(client, db):

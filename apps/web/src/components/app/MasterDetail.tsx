@@ -12,7 +12,7 @@ function storage() {
 }
 
 /**
- * Table on top, "Chi tiết" below, with a draggable divider (back-office layout). The split is remembered
+ * Table on top, "Chi tiết" below, with a draggable divider. The split is remembered
  * per screen (`id`). Without a detail the table takes the whole height.
  */
 export function MasterDetail({ id, master, detail }: { id: string; master: React.ReactNode; detail?: React.ReactNode | null }) {

@@ -31,7 +31,12 @@ def test_login_sets_httponly_cookies_and_me(client, db):
 def test_generic_error_body_identical(client, db):
     make_user(db, make_org(db))
     db.commit()
-    bodies = {login(client, *args).text for args in [("nope", "hs01", PASSWORD), ("trungtama", "x", PASSWORD), ("trungtama", "hs01", "bad")]}
+    def body(r):  # the request id differs per request by design; everything else must be identical
+        j = r.json()
+        j["details"].pop("requestId")
+        return repr(j)
+
+    bodies = {body(login(client, *args)) for args in [("nope", "hs01", PASSWORD), ("trungtama", "x", PASSWORD), ("trungtama", "hs01", "bad")]}
     assert len(bodies) == 1
     assert "Sai tổ chức, tên đăng nhập hoặc mật khẩu" in bodies.pop()
 
@@ -47,7 +52,7 @@ def test_suspended_org_and_lockout(client, db):
     make_user(db, org, "hs02")
     db.commit()
     r = login(client, user="hs02")
-    assert r.status_code == 403 and r.json()["error"]["code"] == "org_suspended"
+    assert r.status_code == 403 and r.json()["code"] == "org_suspended"
 
 
 def test_refresh_and_logout(client, db):

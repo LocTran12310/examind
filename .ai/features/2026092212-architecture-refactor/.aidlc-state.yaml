@@ -1,0 +1,74 @@
+# Managed by scripts/aidlc.py — do not edit by hand.
+# Editing this file to skip a gate defeats the point of having one.
+feature: architecture-refactor
+slug: 2026092212-architecture-refactor
+profile: none
+created: 2026-09-22T19:25:31
+ruleset: 5
+current_gate: G3
+history:
+  - gate: G0
+    action: passed
+    at: 2026-09-22T19:26:27
+    by: Loc Tran
+    evidence: architecture map verified by Loc Tran (blanket pre-approval in chat, 2026-09-21 — confirm at final review); 00-intent.md complete
+  - gate: G1
+    action: passed
+    at: 2026-09-22T19:26:27
+    by: Loc Tran
+    evidence: 8 assumptions, none blocking-and-pending; 8 acceptance criteria defined
+  - gate: G2
+    action: passed
+    at: 2026-09-22T19:28:01
+    by: Loc Tran
+    evidence: 7 ADR(s) recorded
+  - gate: G3
+    action: passed
+    at: 2026-09-22T19:29:28
+    by: Loc Tran
+    evidence: graph valid - 7 UoW, 31 tickets, no cycles
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-22T19:30:41
+    by: Loc Tran
+    ticket: T-01-01
+  - gate: G4
+    action: evidence
+    at: 2026-09-22T19:30:51
+    by: Loc Tran
+    ticket: T-01-01
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-22T19:30:51
+    by: Loc Tran
+    ticket: T-01-01
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-22T19:38:11
+    by: Loc Tran
+    ticket: T-01-02
+  - gate: G4
+    action: evidence
+    at: 2026-09-22T19:38:20
+    by: Loc Tran
+    ticket: T-01-02
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-22T19:38:20
+    by: Loc Tran
+    ticket: T-01-02
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-22T19:43:01
+    by: Loc Tran
+    ticket: T-01-03
+  - gate: G4
+    action: evidence
+    at: 2026-09-22T19:43:12
+    by: Loc Tran
+    ticket: T-01-03
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-22T19:43:12
+    by: Loc Tran
+    ticket: T-01-03

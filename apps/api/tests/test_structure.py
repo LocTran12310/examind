@@ -48,7 +48,7 @@ def test_level_and_grade_crud_with_guards(client, db):
     assert levels["thcs"]["grade_count"] == 4 and levels["thpt"]["grade_count"] == 3
     # overlapping ranges and bad ranges are refused
     r = client.post("/api/school-levels", json={"code": "th", "name": "Tiểu học", "grade_from": 5, "grade_to": 6})
-    assert r.status_code == 422 and "trùng" in r.json()["error"]["message"]
+    assert r.status_code == 422 and "trùng" in r.json()["message"]
     th = client.post("/api/school-levels", json={"code": "TH", "name": "Tiểu học", "grade_from": 1, "grade_to": 5}).json()
     assert th["code"] == "th"
     g1 = client.post("/api/grades", json={"level": 1, "school_level_id": th["id"]}).json()
@@ -56,11 +56,11 @@ def test_level_and_grade_crud_with_guards(client, db):
     assert client.post("/api/grades", json={"level": 7, "school_level_id": th["id"]}).status_code == 422  # outside 1–5
     assert client.post("/api/grades", json={"level": 1, "school_level_id": th["id"]}).status_code == 409  # duplicate
     r = client.delete(f"/api/school-levels/{th['id']}")
-    assert r.status_code == 409 and r.json()["error"]["message"] == "Cấp học còn 1 khối"
+    assert r.status_code == 409 and r.json()["message"] == "Cấp học còn 1 khối"
     klass = client.post("/api/classes", json={"name": "1A", "grade_id": g1["id"]}).json()
     assert (klass["grade"], klass["grade_id"]) == (1, g1["id"])
     r = client.delete(f"/api/grades/{g1['id']}")
-    assert r.status_code == 409 and r.json()["error"]["message"] == "Khối còn 1 lớp"
+    assert r.status_code == 409 and r.json()["message"] == "Khối còn 1 lớp"
     assert client.get("/api/grades", params={"school_level_id": th["id"]}).json()["items"][0]["class_count"] == 1
     # renumbering a grade keeps the class cache in step
     client.patch(f"/api/grades/{g1['id']}", json={"level": 2})

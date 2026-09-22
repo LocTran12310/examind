@@ -81,3 +81,13 @@ def org_scope(request: Request, user: User = Depends(current_user), db: Session 
 
 
 STAFF = ("org_admin", "teacher")
+
+
+def actor_from_request(request: Request, db: Session):
+    """The Actor of an authenticated request (same checks as `current_user` + `org_scope`)."""
+    from app.shared.application.actor import Actor
+
+    user, org_id, role = _principal(request, db)
+    if user.must_change_password and request.url.path not in PASSWORD_CHANGE_ALLOWED:
+        raise AppError("password_change_required", "Bạn cần đổi mật khẩu trước khi tiếp tục", 403)
+    return Actor(user_id=user.id, org_id=org_id, role=role, is_super=user.role == "super_admin")

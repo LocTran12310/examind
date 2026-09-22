@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-/** The back-office-style action bar above a table (navy in light mode, like the sidebar). */
+/** The navy action bar above a table (navy in light mode, like the sidebar). */
 export function Toolbar({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <div role="toolbar" aria-label="Thao tác" className={cn("toolbar-bar flex flex-wrap items-center gap-0.5 rounded-t-lg px-2 py-1.5", className)}>

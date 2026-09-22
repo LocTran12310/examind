@@ -135,7 +135,7 @@
   font-size: 1.05em;
 }
 
-/* The back-office-style action bar above tables */
+/* The navy action bar above tables */
 @utility toolbar-bar {
   background: var(--sidebar);
   color: var(--sidebar-foreground);

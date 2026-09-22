@@ -1,4 +1,4 @@
-"""Business time zone (ui-standards A-04, mirrors the reference `business-timezone.util`).
+"""Business time zone (ui-standards A-04, one fixed zone).
 
 Timestamps are stored as `timestamptz` and sent as ISO UTC (`…Z`); a *day* (filters, school years,
 terms) is a calendar day in `settings.business_tz` (Asia/Ho_Chi_Minh), whatever the server's TZ.

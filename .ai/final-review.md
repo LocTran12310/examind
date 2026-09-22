@@ -204,7 +204,7 @@ Status in the registers is `confirmed` with the note "Accepted under blanket pre
 
 ## 10. F6 `ui-shadcn-shell` + F7 `school-structure-multi-org` (2026-09-22)
 
-Approved in chat after the MVP review ("Khoan, quay lại với business logic, UI, thao tác" + back-office screenshots). Same rules: gates passed as Loc Tran, tickets `done --no-review` with recorded test runs.
+Approved in chat after the MVP review ("Khoan, quay lại với business logic, UI, thao tác" + screenshots). Same rules: gates passed as Loc Tran, tickets `done --no-review` with recorded test runs.
 
 **What changed**
 - **UI on shadcn/ui** (radix base, Nova preset, lucide icons). `components/ui/` holds only CLI-generated files — the old barrel is gone and ESLint forbids importing it. App composites live in `components/app/*` (FormField on shadcn Field, FormDialog, ConfirmDialog, OptionSelect, ToneBadge, Panel, OrgSwitcher, UserMenu, ThemeToggle).
@@ -242,7 +242,7 @@ Approved in chat after the MVP review ("Khoan, quay lại với business logic, 
 | A-05 | URL param names: `q`, `page`, `page_size`, `sort` (`field` or `-field`), and one param per column filter named after the API field | yes |
 | A-06 | Bare-list endpoints become `Page`; small reference lists used by pickers (topics tree, taxonomy, tags for pickers) keep an unpaged variant via `page_size=all` capped at 1000 | no |
 | A-07 | Students use the same shell; header org switcher shows the current org only until F7 | no |
-| A-08 | Detail panel under the table (back-office "Chi tiết") for exams → questions and classes → students; other lists open a page or dialog | no |
+| A-08 | Detail panel under the table ("Chi tiết") for exams → questions and classes → students; other lists open a page or dialog | no |
 | A-09 | Existing web tests are rewritten against the new markup; coverage kept at least at today's 84 cases | no |
 
 ADRs: ADR-01 — shadcn components verbatim; ADR-02 — URL is the table state; ADR-03 — One paging helper on the API; ADR-04 — TanStack Table in manual mode; ADR-05 — shadcn NativeSelect in dense forms, Radix Select in tables and filters; ADR-06 — TanStack Table pinned to v8
@@ -373,7 +373,7 @@ Answer to "Bộ lọc nên phân theo từng môn không?": yes — the subject 
 
 ADRs: ADR-01 Subject as the bank's context; ADR-02 Facets exclude their own dimension; ADR-03 Optional subject on tags.
 
-## 15. F11 `2026092210-ui-polish-dialogs-tables` (2026-09-22, back-office screenshots)
+## 15. F11 `2026092210-ui-polish-dialogs-tables` (2026-09-22, screenshots)
 
 - Dialogs: ⤢ Phóng to / Thu nhỏ (also double-click the title), drag any edge or corner. **Please check the drag by
   eye** — the in-app browser pane was hidden during the demo, so only the jsdom test measured it.
@@ -423,11 +423,11 @@ Tests at close of F9–F11: API 298 (incl. the 18 official files), web 134; tsc/
   Done on Loc Tran's go: the 18 old copies, their questions and 539 images deleted (backup `backups/examind-before-dedupe-*.dump`),
   the Ninh Bình exam and its assignment re-created from the real upload. Bug found meanwhile: questions marked "duplicate"
   of a deleted original stayed hidden — they now return to review (test added).
-- **Filters like the reference**: symbol button per column — text `*` Chứa, `=` Bằng, `+` Bắt đầu bằng, `-` Kết thúc bằng,
+- **Column filter operators**: symbol button per column — text `*` Chứa, `=` Bằng, `+` Bắt đầu bằng, `-` Kết thúc bằng,
   `!` Không chứa; numbers/dates `=` `<` `≤` `>` `≥`; dates also "↔ Trong khoảng" (default). URL `<col>_op`, server whitelist.
-  Deviations from the back-office: kept in the URL (not a POST body); text `=` ignores accents/case.
+  Kept in the URL (not a POST body); text `=` ignores accents/case.
 - **Time**: UTC in DB/API as before; display and day filters fixed to Asia/Ho_Chi_Minh (`BUSINESS_TZ`), date-time inputs
-  send +07:00; school year/term of answers use the Vietnamese day. The back-office's two known zone bugs are avoided.
+  send +07:00; school year/term of answers use the Vietnamese day. Browser and server zones never change the result.
 - **Exam order**: "Sắp xếp thứ tự" draft (swap with a chosen câu, drag, ↑/↓, inside a PHẦN) saved once.
 - **shadcn everywhere**; exam preview dialog fills when maximised.
 - **Last question polluted (found by Loc Tran)**: every official file's last question (and often its solution) carried

@@ -6,12 +6,12 @@ created: 2026-09-22
 status: approved
 ---
 
-# Intent — Duplicate uploads, back-office filter operators, business time zone, shadcn everywhere
+# Intent — Duplicate uploads, Filter operators, business time zone, shadcn everywhere
 
 ## Problem
 Loc Tran (chat, 2026-09-22): uploading files already uploaded created duplicates with no "ghi đè / bỏ qua"
-choice (critical); tables need back-office-style operators (>, <, =, …) with the same FE/BE mapping as the reference;
-timestamps must match between UTC server and client like the back-office; raw HTML tags remain where shadcn has
+choice (critical); tables need back-office operators (>, <, =, …) with one FE/BE mapping;
+timestamps must match between UTC server and client consistently; raw HTML tags remain where shadcn has
 components; reordering exam questions saves on every click and the list jumps; the maximised exam
 preview dialog shows a white band at the bottom.
 

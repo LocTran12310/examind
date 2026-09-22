@@ -32,7 +32,7 @@ describe("DataTable", () => {
     router.replace.mockClear();
   });
 
-  it("operators per column like the back-office: text * = + - !, dates = < ≤ > ≥ or a range (ui-standards AC-02)", async () => {
+  it("operators per column text * = + - !, dates = < ≤ > ≥ or a range (ui-standards AC-02)", async () => {
     const fetch = serve();
     const u = userEvent.setup();
     const withDate: ColumnDef<Row, unknown>[] = [...cols, { id: "created_at", header: "Tạo lúc", meta: { filter: { kind: "date" } } }];

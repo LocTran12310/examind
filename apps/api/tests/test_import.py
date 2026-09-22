@@ -48,7 +48,7 @@ def test_bad_rows_reported_and_nothing_created(client, db):
     assert "Tên đăng nhập đã tồn tại" in errors[9]
     before = client.get("/api/users").json()["total"]
     r = client.post("/api/users/import/commit", json={"rows": body["rows"]})
-    assert r.status_code == 422 and r.json()["error"]["code"] == "import_invalid"
+    assert r.status_code == 422 and r.json()["code"] == "import_invalid"
     assert client.get("/api/users").json()["total"] == before
 
 

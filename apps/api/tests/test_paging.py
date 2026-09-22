@@ -65,7 +65,7 @@ def test_sort_and_bad_sort(client, db):
     names = _names(client.get("/api/users", params={"sort": "-username", "role": "student"}))
     assert names == ["Phạm Văn Bửu", "Lê Hoàng", "Nguyễn Thị Ánh", "Bùi Văn Châu"]
     r = client.get("/api/users", params={"sort": "password_hash"})
-    assert r.status_code == 422 and r.json()["error"]["code"] == "bad_sort"
+    assert r.status_code == 422 and r.json()["code"] == "bad_sort"
 
 
 def test_unknown_params_are_ignored_and_tenancy_kept(client, db):
@@ -97,9 +97,9 @@ def test_former_bare_lists_are_paged(client, db):
     login_as(client, db, "org_admin")
     for name in ["Đổi biến số", "Từng phần", "Casio"]:
         client.post("/api/tags", json={"group": "method", "name": name})
-    tags = client.get("/api/tags", params={"name": "doi bien"}).json()
-    assert [t["name"] for t in tags["items"]] == ["Đổi biến số"] and tags["total"] == 1
-    assert client.get("/api/tags", params={"page_size": 2}).json()["total"] == 3
+    tags = client.post("/api/tags/search", json={"filters": {"name": {"value": "doi bien"}}}).json()
+    assert [t["name"] for t in tags["data"]] == ["Đổi biến số"] and tags["total"] == 1
+    assert client.post("/api/tags/search", json={"limit": 2}).json()["total"] == 3
     for title in ["Kiểm tra 15 phút", "Đề thi thử THPT"]:
         client.post("/api/exams", json={"title": title})
     exams = client.get("/api/exams", params={"title": "thpt"}).json()

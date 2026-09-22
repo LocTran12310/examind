@@ -13,7 +13,7 @@
 | UoW | Title | Risk | Effort | Elapsed | Depends on | Status |
 |-----|-------|------|--------|---------|-----------|--------|
 | UOW-01 | Duplicate uploads: check, skip, re-parse, replace, keep both | high | 6h | 6h | — | todo |
-| UOW-02 | back-office filter operators and business time zone | medium | 6h | 3h | — | todo |
+| UOW-02 | Filter operators and business time zone | medium | 6h | 3h | — | todo |
 | UOW-03 | Exam order draft, shadcn consistency, preview dialog | low | 7h | 4h | — | todo |
 
 Effort is total person-hours. Elapsed is the longest dependency chain inside the
@@ -27,7 +27,7 @@ graph LR
     T_01_01["✓ T-01-01<br/>API check + on_duplicate/replace_id"]
     T_01_02["✓ T-01-02<br/>Upload form: hash, check, per-file choice"]
   end
-  subgraph UOW_02["UOW-02 · back-office filter operators and business time zone"]
+  subgraph UOW_02["UOW-02 · Filter operators and business time zone"]
     T_02_01["✓ T-02-01<br/>Server operators + business day bounds"]
     T_02_02["✓ T-02-02<br/>FilterCell operator menu + lib/datetime"]
   end

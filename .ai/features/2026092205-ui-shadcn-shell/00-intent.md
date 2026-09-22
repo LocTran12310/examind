@@ -11,7 +11,7 @@ status: approved
 ## Problem
 The web app uses hand-written primitives (`components/ui/index.tsx`), has no dark mode, and each
 list page renders its own `<table>`: only the question bank paginates, other lists load up to 200
-rows and filter in the page. Teachers and centers expect the back-office-style screens they already use:
+rows and filter in the page. Teachers and centers expect the dense back-office screens they already use:
 a left menu, a header with the organisation and user on the right, and tables with a search row
 under the column headers and pagination.
 

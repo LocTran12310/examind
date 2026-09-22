@@ -6,10 +6,10 @@ created: 2026-09-22
 status: approved
 ---
 
-# Intent — Dialogs, tables, navigation and small screens like the back-office
+# Intent — Dialogs, tables, navigation and small screens for dense screens
 
 ## Problem
-Loc Tran (chat, 2026-09-22, with back-office screenshots of "Thêm mới phiếu nhập kho"):
+Loc Tran (chat, 2026-09-22, with reference screenshots):
 - dialogs cannot be maximised or resized from their edges;
 - tables need visible column borders and alternating row backgrounds (sticky header and filter row stay);
 - going to a detail page from page 2 and pressing "←" returns to page 1;

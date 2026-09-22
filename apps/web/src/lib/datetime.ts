@@ -1,6 +1,5 @@
 /**
- * Dates and times, one convention for the whole app (ui-standards ADR-02, mirrors the reference
- * `packages/ui/src/lib/date-time-format.ts`): the API stores and sends UTC (`…Z`); everything shown
+ * Dates and times, one convention for the whole app (ui-standards ADR-02): the API stores and sends UTC (`…Z`); everything shown
  * or typed is on the business calendar, Asia/Ho_Chi_Minh (+07:00, no daylight saving), whatever the
  * browser's own zone. Date filters send plain `YYYY-MM-DD`; the server expands them to UTC bounds.
  */

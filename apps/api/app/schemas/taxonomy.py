@@ -65,25 +65,6 @@ class TopicMerge(BaseModel):
     target_id: uuid.UUID
 
 
-class TagOut(BaseModel):
-    id: uuid.UUID
-    group: str
-    name: str
-    subject_id: uuid.UUID | None = None
-
-
-class TagIn(BaseModel):
-    group: str = "custom"
-    name: str = Field(min_length=1, max_length=100)
-    subject_id: uuid.UUID | None = None
-
-
-class TagUpdate(BaseModel):
-    group: str | None = None
-    name: str | None = Field(default=None, max_length=100)
-    subject_id: uuid.UUID | None = None  # sent as null = make it shared
-
-
 def topic_out(t, child_count=0) -> TopicOut:
     return TopicOut(id=t.id, subject_id=t.subject_id, parent_id=t.parent_id, name=t.name, level_kind=t.level_kind,
                     grade=t.grade, path=t.path, depth=t.path.count(".") + 1, sort=t.sort, child_count=child_count)

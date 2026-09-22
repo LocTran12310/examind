@@ -45,7 +45,7 @@ export function DebouncedInput({
   );
 }
 
-/** Operators of the header filters — the the reference symbols and labels (ui-standards ADR-01). */
+/** Operators of the header filters — fixed symbols and labels (ui-standards ADR-01). */
 export const TEXT_OPS = [
   { value: "*", label: "Chứa" },
   { value: "=", label: "Bằng" },

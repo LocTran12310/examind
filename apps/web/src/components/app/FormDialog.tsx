@@ -24,7 +24,7 @@ const HANDLES: { name: string; x: -1 | 0 | 1; y: -1 | 0 | 1; className: string }
 ];
 
 /** shadcn Dialog with the header every form dialog uses, plus "Phóng to" (or double-click the title)
- *  and resizing from any edge or corner, like the back-office dialogs (ui-polish A-01). */
+ *  and resizing from any edge or corner (ui-polish A-01). */
 export function FormDialog({
   open,
   onOpenChange,

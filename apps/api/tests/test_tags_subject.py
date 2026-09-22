@@ -23,10 +23,10 @@ def test_tags_of_a_subject_plus_shared(client, db):
     src = client.post("/api/tags", json={"group": "source", "name": "Sở GD&ĐT Ninh Bình", "subject_id": str(toan.id)}).json()
     assert t1["subject_id"] == str(toan.id) and t2["subject_id"] is None
     assert src["subject_id"] is None  # nguồn đề stays shared
-    names = lambda **p: {t["name"] for t in client.get("/api/tags", params={"page_size": "all", **p}).json()["items"]}  # noqa: E731
+    names = lambda **p: {t["name"] for t in client.post("/api/tags/search", json={"limit": 1000, **p}).json()["data"]}  # noqa: E731
     assert names(subject_id=str(toan.id)) == {"Đổi biến", "Có hình vẽ", "Sở GD&ĐT Ninh Bình"}
     assert names(subject_id=str(ly.id)) == {"Có hình vẽ", "Sở GD&ĐT Ninh Bình"}
-    assert names(subject_id=str(toan.id), include_shared="false") == {"Đổi biến"}
+    assert names(subject_id=str(toan.id), include_shared=False) == {"Đổi biến"}
     assert names(subject_id="shared") == {"Có hình vẽ", "Sở GD&ĐT Ninh Bình"}
     # move to another subject, then make it shared
     assert client.patch(f"/api/tags/{t1['id']}", json={"subject_id": str(ly.id)}).json()["subject_id"] == str(ly.id)

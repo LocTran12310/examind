@@ -30,9 +30,9 @@ def test_duplicate_and_invalid_code(client, db):
     login_as(client, db)
     assert create(client).status_code == 201
     r = create(client, "TRUNGTAMA")
-    assert r.status_code == 409 and "code" in r.json()["error"]["fields"]
+    assert r.status_code == 409 and "code" in r.json()["details"]["fields"]
     r = create(client, "trung tam!")
-    assert r.status_code == 422 and "code" in r.json()["error"]["fields"]
+    assert r.status_code == 422 and "code" in r.json()["details"]["fields"]
     assert db.scalar(select(func.count()).select_from(Organization)) == 2  # system + trungtama
 
 
@@ -55,7 +55,7 @@ def test_suspend_activate_delete(client, db):
     assert client.post(f"/api/admin/orgs/{org.id}/suspend").json()["status"] == "suspended"
     other = client.__class__(client.app)
     r = other.post("/api/auth/login", json={"org_code": "ttx", "username": "hs01", "password": PASSWORD})
-    assert r.status_code == 403 and r.json()["error"]["message"] == "Tổ chức đang bị khóa"
+    assert r.status_code == 403 and r.json()["message"] == "Tổ chức đang bị khóa"
     client.post(f"/api/admin/orgs/{org.id}/activate")
     assert other.post("/api/auth/login", json={"org_code": "ttx", "username": "hs01", "password": PASSWORD}).status_code == 200
     assert client.delete(f"/api/admin/orgs/{org.id}").status_code == 204

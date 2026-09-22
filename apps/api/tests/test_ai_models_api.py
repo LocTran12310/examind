@@ -68,4 +68,4 @@ def test_missing_encryption_key(client, db, monkeypatch):
     monkeypatch.setattr(get_settings(), "app_encryption_key", "")
     login_as(client, db, "org_admin")
     r = client.post("/api/ai-models", json={**OLLAMA, "api_key": "x"})
-    assert r.status_code == 500 and r.json()["error"]["code"] == "encryption_unavailable"
+    assert r.status_code == 500 and r.json()["code"] == "encryption_unavailable"

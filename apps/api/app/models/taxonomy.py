@@ -8,7 +8,6 @@ from sqlalchemy.types import UserDefinedType
 from app.core.db import Base, IdMixin, TimestampMixin
 
 LEVEL_KINDS = ("strand", "topic", "subtopic", "type")
-TAG_GROUPS = ("method", "skill", "source", "custom")
 MAX_TOPIC_DEPTH = 5
 
 
@@ -86,11 +85,6 @@ class Topic(IdMixin, TimestampMixin, Base):
     sort: Mapped[int] = mapped_column(Integer, default=0)
 
 
-class Tag(IdMixin, TimestampMixin, Base):
-    __tablename__ = "tags"
-
-    organization_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("organizations.id"), index=True)
-    group: Mapped[str] = mapped_column(String(16))
-    name: Mapped[str] = mapped_column(String(100))
-    # None = shared by every subject (nguồn đề, "Có hình vẽ"…) — subject-scoped-bank ADR-03
-    subject_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("subjects.id", ondelete="SET NULL"), index=True)
+# moved to the taxonomy module (architecture-refactor ADR-01); re-exported for the old layout
+from app.modules.taxonomy.domain.entities import TAG_GROUPS, Tag  # noqa: E402,F401
+from app.modules.taxonomy.infrastructure import orm as _taxonomy_orm  # noqa: E402,F401

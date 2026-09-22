@@ -4,7 +4,7 @@ A list endpoint declares its columns once — which can be searched with `q`, fi
 parameter of the same name, and sorted — and `paginate` turns the request's `q`, column filters,
 `sort` and `page`/`page_size` into SQL. The browser never filters rows itself (ADR-02).
 
-Filter kinds (ui-standards ADR-01: operators as in the reference, sent as `<col>_op`):
+Filter kinds (ui-standards ADR-01: operators sent as `<col>_op`):
 - text    `?full_name=bui[&full_name_op=*]`  accent/case-insensitive; ops `*` contains (default),
           `=` equals, `+` starts with, `-` ends with, `!` does not contain
 - exact   `?role=student`             equality; comma list = IN (`?status=active,suspended`)
@@ -16,16 +16,15 @@ Filter kinds (ui-standards ADR-01: operators as in the reference, sent as `<col>
 - day     date columns (no time): same params, compared as calendar dates.
 """
 from dataclasses import dataclass
-from datetime import date, datetime, time, timedelta
+from datetime import date
 import uuid
 
 from fastapi import Query, Request
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import ColumnElement, Select
 
 from app.core.errors import AppError
-from app.core.timezone import day_end_exclusive, day_start
 
 MAX_ALL = 1000
 PAGE_SIZE_DEFAULT = 20
@@ -60,13 +59,8 @@ def list_params(request: Request, q: str = "", sort: str = "", page: int = Query
     return ListParams(q=q.strip(), sort=sort.strip(), page=page, page_size=size, filters=filters)
 
 
-def _unaccent(expr):
-    return func.f_unaccent(expr)
-
-
-def _contains(expr, value: str):
-    needle = value.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-    return _unaccent(expr).like(func.f_unaccent("%" + needle + "%"))
+from app.shared.application.search import COMPARE_OPS, TEXT_OPS  # noqa: E402
+from app.shared.infrastructure.sql_search import compare_clause as _compare, contains as _contains, day_clause, text_clause as _text  # noqa: E402,F401
 
 
 def _bad(field: str, message: str) -> AppError:
@@ -87,40 +81,8 @@ def _number(field: str, value: str) -> float:
         raise _bad(field, "Giá trị số không hợp lệ")
 
 
-TEXT_OPS = ("*", "=", "+", "-", "!")
-COMPARE_OPS = ("=", "<", "<=", ">", ">=")
-
-
-def _like(value: str) -> str:
-    return value.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-
-
-def _text(e, value: str, op: str):
-    folded = _unaccent(e)
-    needle = _like(value)
-    if op == "=":
-        return func.lower(folded) == func.lower(func.f_unaccent(value.strip()))
-    if op == "+":
-        return folded.ilike(func.f_unaccent(needle + "%"))
-    if op == "-":
-        return folded.ilike(func.f_unaccent("%" + needle))
-    if op == "!":
-        return or_(e.is_(None), ~folded.ilike(func.f_unaccent("%" + needle + "%")))
-    return folded.ilike(func.f_unaccent("%" + needle + "%"))
-
-
-def _compare(e, v, op: str):
-    return {"=": e == v, "<": e < v, "<=": e <= v, ">": e > v, ">=": e >= v}[op]
-
-
 def _day(e, d: date, op: str, suffix: str, timestamp: bool):
-    """A business day against a timestamp (UTC bounds) or a date column."""
-    lo, hi = (day_start(d), day_end_exclusive(d)) if timestamp else (d, d + timedelta(days=1))
-    if suffix == "_from":
-        return e >= lo
-    if suffix == "_to":
-        return e < hi
-    return {"=": and_(e >= lo, e < hi), "<": e < lo, "<=": e < hi, ">": e >= hi, ">=": e >= lo}[op]
+    return day_clause(e, d, op, suffix.lstrip("_"), timestamp)
 
 
 def _filter_clauses(cols: dict[str, Col], filters: dict[str, str]) -> list:
