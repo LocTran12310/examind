@@ -14,7 +14,7 @@
 | AC-08 | T-02-03 | UOW-02 | done |
 | AC-09 | T-03-01, T-03-02 | UOW-03 | open |
 | AC-10 | T-03-01, T-03-02 | UOW-03 | open |
-| AC-11 | T-03-01 | UOW-03 | open |
+| AC-11 | T-03-01 | UOW-03 | done |
 | AC-12 | T-04-01 | UOW-04 | open |
 | AC-13 | T-04-02, T-04-03 | UOW-04 | open |
 | AC-14 | T-04-02, T-04-03 | UOW-04 | open |

@@ -3,7 +3,7 @@
 # Ticket graph — 2026092207-school-years
 
 - Units of Work: **4**
-- Tickets: **11** (6 done)
+- Tickets: **11** (7 done)
 - Total effort: **4.5d**
 - Critical path: **1.8d** across 4 tickets
 - Theoretical minimum duration with unlimited parallelism: **1.8d**
@@ -35,7 +35,7 @@ graph LR
     T_02_03["✓ T-02-03<br/>Student record API + Hồ sơ học sinh page"]
   end
   subgraph UOW_03["UOW-03 · Chuyển năm học wizard"]
-    T_03_01["T-03-01<br/>Rollover service: preview + idempotent commit"]
+    T_03_01["✓ T-03-01<br/>Rollover service: preview + idempotent commit"]
     T_03_02["T-03-02<br/>Chuyển năm học wizard page"]
   end
   subgraph UOW_04["UOW-04 · Đợt kiểm tra picker; org ↔ user assignment from both admin screens"]
@@ -90,7 +90,7 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-02-01 | UOW-02 | data | feature | 3h | T-01-01 | AC-05 | done |
 | T-02-02 | UOW-02 | api | feature | 3h | T-02-01 | AC-06, AC-07 | done |
 | T-02-03 | UOW-02 | web | feature | 3h | T-02-01 | AC-08 | done |
-| T-03-01 | UOW-03 | domain | feature | 4h | T-02-01, T-01-02 | AC-09, AC-10, AC-11 | todo |
+| T-03-01 | UOW-03 | domain | feature | 4h | T-02-01, T-01-02 | AC-09, AC-10, AC-11 | done |
 | T-03-02 | UOW-03 | web | feature | 4h | T-03-01, T-01-03 | AC-09, AC-10 | todo |
 | T-04-01 | UOW-04 | web | feature | 2h | T-01-01 | AC-12 | todo |
 | T-04-02 | UOW-04 | api | feature | 3h | T-01-02 | AC-13, AC-14, AC-15 | todo |

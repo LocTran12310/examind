@@ -8,7 +8,9 @@ from app.deps import OrgScope
 from app.routers.users import staff_scope
 from app.schemas.common import Page
 from app.schemas.school_years import YearIn, YearOut, YearUpdate, year_out
-from app.services import school_years
+from pydantic import BaseModel
+
+from app.services import rollover, school_years
 from app.services.paging import ListParams, list_params
 
 router = APIRouter(prefix="/school-years", tags=["school-years"])
@@ -59,3 +61,35 @@ def reopen(year_id: uuid.UUID, scope: OrgScope = Depends(staff_scope), db: Sessi
 def delete_year(year_id: uuid.UUID, scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
     school_years.delete_year(db, scope, year_id)
     return Response(status_code=204)
+
+
+class PreviewIn(BaseModel):
+    target_code: str | None = None
+
+
+class RolloverStudent(BaseModel):
+    user_id: uuid.UUID
+    action: str
+
+
+class RolloverClass(BaseModel):
+    source_class_id: uuid.UUID
+    target_name: str | None = None
+    students: list[RolloverStudent] = []
+
+
+class CommitIn(BaseModel):
+    target_code: str
+    classes: list[RolloverClass]
+    activate_target: bool = False
+
+
+@router.post("/{year_id}/rollover/preview")
+def rollover_preview(year_id: uuid.UUID, body: PreviewIn, scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
+    """Proposed class mapping (10A1 → 11A1, top grade → tốt nghiệp) with a default action per student."""
+    return rollover.preview(db, scope, year_id, body.target_code)
+
+
+@router.post("/{year_id}/rollover/commit")
+def rollover_commit(year_id: uuid.UUID, body: CommitIn, scope: OrgScope = Depends(staff_scope), db: Session = Depends(get_db)):
+    return rollover.commit(db, scope, year_id, body.target_code, [c.model_dump() for c in body.classes], body.activate_target)
