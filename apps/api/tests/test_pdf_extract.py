@@ -1,8 +1,8 @@
 import json
 import os
 
-from app.ingestion.pdf import extract_pdf
-from app.ingestion.splitter import split
+from app.modules.ingestion.infrastructure.adapters.pdf import extract_pdf
+from app.modules.ingestion.domain.services.splitter import split
 
 EXAMS = os.path.join(os.path.dirname(__file__), "..", "..", "..", "samples", "exams")
 
@@ -54,6 +54,6 @@ def test_scanned_page_without_ocr_warns():
 
 
 def test_combining_arrow_becomes_latex():
-    from app.ingestion.pdf import _normalise
+    from app.modules.ingestion.infrastructure.adapters.pdf import _normalise
 
     assert _normalise("vectơ pháp tuyến n⃗ = (1; 1) và AB⃗") == "vectơ pháp tuyến $\\vec{n}$ = (1; 1) và $\\vec{AB}$"

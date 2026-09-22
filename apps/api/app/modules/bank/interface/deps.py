@@ -17,6 +17,7 @@ from app.modules.bank.application.commands.delete_question import DeleteQuestion
 from app.modules.bank.application.commands.review_question import ReviewQuestionHandler
 from app.modules.bank.application.commands.update_question import UpdateQuestionHandler
 from app.modules.bank.application.queries.demo_question import DemoQuestionHandler
+from app.modules.bank.application.queries.document_questions import DocumentQuestionsHandler
 from app.modules.bank.application.queries.get_question import GetQuestionHandler
 from app.modules.bank.application.queries.get_review_document import GetReviewDocumentHandler
 from app.modules.bank.application.queries.question_facets import QuestionFacetsHandler
@@ -27,7 +28,9 @@ from app.modules.bank.application.queries.search_review_documents import SearchR
 from app.modules.bank.domain.ports import StaffDirectory, Taxonomy
 from app.modules.bank.infrastructure.adapters.sql import SqlAnswerStats, SqlReviewDocuments, SqlReviewSettings
 from app.modules.bank.infrastructure.read_models import SqlQuestionReader, SqlReviewReader
-from app.modules.bank.infrastructure.repositories import SqlDuplicateFinder, SqlQuestionRepository, SqlQuestionUsage, SqlReviewLog
+from app.modules.bank.infrastructure.repositories import (
+    SqlDocumentQuestions, SqlDuplicateFinder, SqlQuestionRepository, SqlQuestionUsage, SqlReviewLog,
+)
 from app.shared.infrastructure.db import get_db
 from app.shared.infrastructure.sql_unit_of_work import SqlUnitOfWork
 
@@ -75,7 +78,7 @@ def _staff_directory(db: Session) -> StaffDirectory:
 def bank_api(db: Session) -> BankApi:
     """The bank for another context or the old layout, on the caller's session."""
     return BankApi(SqlQuestionRepository(db), SqlQuestionReader(db), _RegisteredTaxonomy(db), SqlDuplicateFinder(db),
-                   SqlAnswerStats(db), SqlReviewLog(db), SqlUnitOfWork(db))
+                   SqlAnswerStats(db), SqlReviewLog(db), SqlUnitOfWork(db), SqlDocumentQuestions(db))
 
 
 # ------------------------------------------------------------------ questions
@@ -149,3 +152,7 @@ def audit_keys(db: Session = Depends(get_db)) -> AuditKeysHandler:
 
 def search_flagged(db: Session = Depends(get_db)) -> SearchFlaggedHandler:
     return SearchFlaggedHandler(SqlReviewReader(db), SqlQuestionReader(db))
+
+
+def document_questions(db: Session = Depends(get_db)) -> DocumentQuestionsHandler:
+    return DocumentQuestionsHandler(SqlReviewDocuments(db), SqlDocumentQuestions(db), SqlQuestionReader(db))

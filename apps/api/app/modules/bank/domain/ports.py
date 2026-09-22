@@ -105,3 +105,27 @@ class DuplicateFinder(Protocol):
         """Usable questions of the org of the same type from another document whose search text looks alike:
         (id, similarity, search_text), most similar first."""
         ...
+
+
+class DocumentQuestions(Protocol):
+    """The questions parsed from one source document, handled as a set (ingestion: re-parse, delete, meta edits)."""
+
+    def in_order(self, document_id: uuid.UUID) -> list[Question]:
+        """PHẦN then Câu order (questions without a part first)."""
+        ...
+
+    def remove(self, document_id: uuid.UUID, keep_statuses: tuple[str, ...], keep_used: bool) -> None:
+        """Delete all but the kept statuses (and, with keep_used, those an exam uses); their duplicates go back to review."""
+        ...
+
+    def positions(self, document_id: uuid.UUID) -> set[tuple[str | None, int | None]]: ...
+
+    def add_all(self, questions: list[Question], tag_id: uuid.UUID | None) -> None: ...
+
+    def nearest_topic(self, q: Question) -> tuple[uuid.UUID, float] | None:
+        """(primary topic, similarity) of the most similar approved question of the org (pg_trgm)."""
+        ...
+
+    def add_topic(self, question_id: uuid.UUID, topic_id: uuid.UUID, is_primary: bool, source: str, score: float | None) -> None: ...
+
+    def swap_tag(self, question_ids: list[uuid.UUID], old_tag_id: uuid.UUID | None, new_tag_id: uuid.UUID | None) -> None: ...

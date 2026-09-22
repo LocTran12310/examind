@@ -1,6 +1,7 @@
 """Postgres job queue (ADR-01): enqueue, claim with SKIP LOCKED, finish, retry, stale recovery."""
 from collections.abc import Callable
-from datetime import timedelta
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 import traceback
 import uuid
 
@@ -8,7 +9,30 @@ from sqlalchemy import select, text, update
 from sqlalchemy.orm import Session
 
 from app.core.security import now
-from app.models import Job
+from app.shared.domain.ids import new_id
+from app.shared.infrastructure.db import mapper_registry
+from app.shared.infrastructure.schema.jobs import jobs
+
+
+@dataclass(eq=False)
+class Job:
+    """A row of the queue (mapped onto shared.infrastructure.schema.jobs)."""
+    kind: str
+    payload: dict = field(default_factory=dict)
+    status: str = "queued"  # queued | running | done | failed
+    attempts: int = 0
+    max_attempts: int = 3
+    run_after: datetime | None = None
+    locked_at: datetime | None = None
+    locked_by: str | None = None
+    error: str | None = None
+    finished_at: datetime | None = None
+    id: uuid.UUID = field(default_factory=new_id)
+    created_at: datetime | None = None
+
+
+if not any(m.class_ is Job for m in mapper_registry.mappers):
+    mapper_registry.map_imperatively(Job, jobs)
 
 STALE_AFTER = timedelta(minutes=15)
 HANDLERS: dict[str, Callable[[Session, dict], None]] = {}

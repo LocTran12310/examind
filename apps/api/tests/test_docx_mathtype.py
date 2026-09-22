@@ -3,7 +3,8 @@ import io
 import zipfile
 from pathlib import Path
 
-from app.ingestion.docx import extract_docx, inline_mathtype
+from app.modules.ingestion.domain.services.docx_ast import inline_mathtype
+from app.modules.ingestion.infrastructure.adapters.pandoc import extract_docx
 
 FIX = Path(__file__).parent / "fixtures" / "mtef"
 W = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office"'

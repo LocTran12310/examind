@@ -3,8 +3,9 @@ from types import SimpleNamespace
 
 from sqlalchemy import select
 
-from app.ingestion.header import apply, detect
-from app.ingestion.lines import Line
+from app.modules.ingestion.domain.services.header import apply, detect
+from app.modules.ingestion.infrastructure.adapters.taxonomy import SqlTaxonomyLookup
+from app.modules.ingestion.domain.services.lines import Line
 from app.models import Question, Subject
 from tests.test_documents_api import run_jobs, sample, teacher_with_taxonomy, upload
 
@@ -37,7 +38,7 @@ def test_apply_fills_only_empty_fields(client, db):
     t = teacher_with_taxonomy(client, db)
     math = db.scalar(select(Subject).where(Subject.organization_id == t.organization_id, Subject.code == "toan"))
     doc = SimpleNamespace(organization_id=t.organization_id, meta={"exam_kind": "Ôn tập"})
-    apply(db, doc, [Line(x) for x in NGUYEN_KHUYEN])
+    apply(doc, [Line(x) for x in NGUYEN_KHUYEN], SqlTaxonomyLookup(db).subjects(t.organization_id))
     assert doc.meta["subject_id"] == str(math.id) and doc.meta["grade"] == 12
     assert doc.meta["exam_kind"] == "Ôn tập"  # the uploader's choice wins
     assert doc.meta["source_name"] == "Trường THCS-THPT Nguyễn Khuyến" and doc.meta["school_year"] == "2024-2025"

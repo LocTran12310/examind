@@ -23,7 +23,7 @@ def upload(client, name, data, meta=None, config=None):
 
 
 def run_jobs():
-    import app.ingestion.jobs  # noqa: F401
+    import app.worker.handlers  # noqa: F401
     while queue.run_one(dbmod.session_factory(), "test"):
         pass
 
@@ -56,7 +56,7 @@ def test_upload_parse_and_list(client, db):
     assert q1["number"] == 1 and q1["grade"] == 10 and q1["semester_code"] == "hk1" and q1["exam_kind"] == "Giữa kỳ"
     assert q1["subject_id"] == str(math.id) and q1["status"] in ("auto_approved", "needs_review")
     assert [t["name"] for t in q1["tags"]] == ["THPT Chu Văn An"]
-    assert client.get("/api/documents").json()["total"] == 1
+    assert client.post("/api/documents/search", json={}).json()["total"] == 1
     got = client.get(f"/api/documents/{doc['id']}/file")
     assert got.status_code == 200 and got.content == sample("de-mau-toan10.docx")
 

@@ -6,7 +6,7 @@ from cryptography.fernet import Fernet
 from sqlalchemy import select
 
 from app.core.config import get_settings
-from app.ingestion import llm
+from app.modules.ingestion.infrastructure.adapters import llm
 from app.models import Question
 from tests.test_documents_api import run_jobs, sample, teacher_with_taxonomy, upload
 
@@ -133,8 +133,8 @@ def test_vision_ocr_engine(client, db, monkeypatch):
 
 
 def test_normalises_small_model_drift():
-    from app.ingestion.ai_split import _from_json
-    from app.ingestion.splitter import ParsedQuestion
+    from app.modules.ingestion.domain.services.ai_parse import _from_json
+    from app.modules.ingestion.domain.services.splitter import ParsedQuestion
 
     raw = {"type": "multiple_choice", "stem": "Giá trị của $2^{1}$?", "answer": "2",
            "options": [{"label": "1", "content": "1"}, {"label": "2", "content": "2"}, {"label": "3", "content": "3"}, {"label": "4", "content": "4"}]}
@@ -143,8 +143,8 @@ def test_normalises_small_model_drift():
 
 
 def test_mcq_key_variants_from_7b_models():
-    from app.ingestion.ai_split import _from_json
-    from app.ingestion.splitter import ParsedQuestion
+    from app.modules.ingestion.domain.services.ai_parse import _from_json
+    from app.modules.ingestion.domain.services.splitter import ParsedQuestion
 
     opts = [{"label": l, "content": c, "is_true": l == "B"} for l, c in zip("ABCD", ["3", "4", "5", "8"])]
     for ans in ({"b": True}, {"key": "B"}, "Chọn B", "B. 4", "b", None):

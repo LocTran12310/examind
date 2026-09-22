@@ -1,5 +1,5 @@
-from app.ingestion.lines import Line
-from app.ingestion.splitter import split
+from app.modules.ingestion.domain.services.lines import Line
+from app.modules.ingestion.domain.services.splitter import split
 
 
 def L(text: str) -> list[Line]:

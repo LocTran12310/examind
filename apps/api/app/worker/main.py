@@ -19,7 +19,7 @@ stop = threading.Event()
 
 
 def load_handlers() -> None:
-    import app.ingestion.jobs  # noqa: F401  (registers ingest_document)
+    import app.worker.handlers  # noqa: F401  (registers ingest_document)
 
 
 def loop(worker_id: str) -> None:

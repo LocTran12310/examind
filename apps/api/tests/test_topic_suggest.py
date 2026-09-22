@@ -7,7 +7,7 @@ from cryptography.fernet import Fernet
 from sqlalchemy import select
 
 from app.core.config import get_settings
-from app.ingestion import llm
+from app.modules.ingestion.infrastructure.adapters import llm
 from app.models import Topic
 from tests.test_documents_api import EXAMS, run_jobs, sample, teacher_with_taxonomy, upload
 
@@ -109,7 +109,7 @@ def test_ai_tagger_drops_an_unknown_name(client, db, monkeypatch):
 
 
 def test_ai_may_only_refine_a_weak_keyword_topic(client, db):
-    from app.ingestion.topic_suggest import _may_replace
+    from app.modules.ingestion.domain.services.topic_rules import _may_replace
 
     t = teacher_with_taxonomy(client, db)
     by = {x.name: x for x in db.scalars(select(Topic).where(Topic.organization_id == t.organization_id))}
@@ -121,7 +121,7 @@ def test_ai_may_only_refine_a_weak_keyword_topic(client, db):
 
 
 def test_unicode_set_symbols_are_cues(client, db):
-    from app.ingestion.topic_suggest import keyword_scores
+    from app.modules.ingestion.domain.services.topic_rules import keyword_scores
 
     t = teacher_with_taxonomy(client, db)
     topics = db.scalars(select(Topic).where(Topic.organization_id == t.organization_id)).all()

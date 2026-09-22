@@ -11,6 +11,9 @@ class FakeUow:
     def flush(self):
         pass
 
+    def rollback(self):
+        self.rollbacks = getattr(self, "rollbacks", 0) + 1
+
 
 class FakeAudit:
     def __init__(self):

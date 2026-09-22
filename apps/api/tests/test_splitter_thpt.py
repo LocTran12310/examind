@@ -3,8 +3,8 @@
 Line streams are cut down from the 18 reference files: an exam part, then "HƯỚNG DẪN GIẢI" that
 copies every question with its answer highlighted, answer tables under each PHẦN, verdicts in words.
 """
-from app.ingestion.lines import Line
-from app.ingestion.splitter import short_value_of, split
+from app.modules.ingestion.domain.services.lines import Line
+from app.modules.ingestion.domain.services.splitter import short_value_of, split
 
 
 def L(text: str) -> list[Line]:

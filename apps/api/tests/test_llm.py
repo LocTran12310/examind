@@ -5,7 +5,7 @@ import pytest
 from cryptography.fernet import Fernet
 
 from app.core.config import get_settings
-from app.ingestion import llm
+from app.modules.ingestion.infrastructure.adapters import llm
 from app.models import AiModel
 from tests.factories import login_as
 
@@ -45,7 +45,7 @@ def stub(monkeypatch):
 
 
 def model(provider, base, key=None, name="m"):
-    from app.core import crypto
+    from app.modules.ingestion.infrastructure.adapters import crypto
 
     return AiModel(name=name, provider=provider, model="x", base_url=base, api_key_enc=crypto.encrypt(key) if key else None, capabilities=["text"])
 

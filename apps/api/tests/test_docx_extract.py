@@ -2,8 +2,8 @@ import os
 import re
 
 from app.core.images import Canvas
-from app.ingestion.docx import extract_docx
-from app.ingestion.splitter import split
+from app.modules.ingestion.infrastructure.adapters.pandoc import extract_docx
+from app.modules.ingestion.domain.services.splitter import split
 
 EXAMS = os.path.join(os.path.dirname(__file__), "..", "..", "..", "samples", "exams")
 

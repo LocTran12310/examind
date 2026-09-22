@@ -1,4 +1,5 @@
-"""Triage moved to the bank module (architecture-refactor UOW-04); the ingestion hook and the legacy-draft pass stay here."""
+"""Triage moved to the bank module (architecture-refactor UOW-04); the legacy-draft pass stays here (ingestion calls the
+bank API since UOW-05)."""
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -9,12 +10,6 @@ from app.modules.bank.interface.deps import bank_api
 
 def triage_questions(db: Session, questions: list[Question], threshold: float, seed: str = "") -> dict:
     return vars(bank_api(db).triage(list(questions), threshold, seed))
-
-
-def triage_hook(db, doc, rows, ctx) -> None:
-    threshold = float((doc.processing_config or {}).get("threshold", 0.85))
-    counts = triage_questions(db, [q for _, q in rows], threshold, seed=str(doc.id))
-    ctx.step("triage", **counts)
 
 
 def triage_legacy_drafts(db: Session) -> int:

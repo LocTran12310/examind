@@ -84,3 +84,52 @@
   397 (396 from the 18 documents + the demo question), usable 377; `POST /review/documents/search` 18 documents, 396 questions;
   Toán 356 → + one topic subtree 43 → + a source tag 2 (e.g. "Hoán vị, chỉnh hợp, tổ hợp", tag of Trường THPT Thuận Thành); facets for the three filters types {mcq 1, short_answer 1};
   queue of a document 1, flagged 0; `GET /questions` 405.
+
+## UOW-05 documents and ingestion (2026-09-22)
+- API module `ingestion` (4 layers). Pure rules moved unchanged to `domain/services/`: `mtef`, `splitter`, `lines`, `header`
+  (`apply(doc, lines, subjects)` no longer queries), `docx_ast` (the Pandoc AST walker and MathType token swap), `ocr_text` (Tesseract TSV),
+  `ai_parse` (prompts, JSON schema, model drift, `parse_json`), `topic_rules` (cues, name-over-index, refine-only), `documents` (kinds, meta,
+  names, duplicate identity), `processing` (upload > org > system config), `ai_models` (registry checks). I/O behind ports
+  (`domain/ports.py`) in `infrastructure/adapters/`: `pandoc` (DocxReader), `pdf` (pdfplumber reader, pdfium page renderer), `tesseract`
+  (Scanner), `vector_images` (LibreOffice), `llm` (httpx ChatModels), `crypto` (Fernet KeyCipher, was `core/crypto.py`), `storage` (S3),
+  `settings` (organizations.settings), `taxonomy` (Core reads + the taxonomy API for source tags), `bank` (the bank API).
+  The pipeline is `application/commands/ingest_document.py` (extract → header → split → AI stage → persist → triage → topic suggestion, same
+  order, same two commits, same step log) with the stages as application services (`stages/extract|ai_split|topic_suggest`); the stage
+  registries (`EXTRACTORS`, `POST_SPLIT`, `POST_PERSIST`, `ocr.PROVIDERS`) are gone, the handler calls them explicitly.
+- Cross-module calls through `application/api.py` only, wired in `main.py` and in the worker (`app/worker/handlers.py`): the bank API gained
+  `remove_document_questions`, `kept_positions`, `add_parsed`, `triage_ids`, `nearest_topic`, `suggest_topic`, `follow_document`,
+  `document_questions`; the taxonomy API gained `source_tag`; `POST /documents/{id}/exam` calls the exam service (assessment, not moved yet)
+  through `ExamServiceDrafts` registered by `main.py`. `GET /documents/{id}/questions` is served by the bank router (the bank owns questions).
+  The question quality rules moved to `shared/domain/question_quality.py` and `same_short_answer` to `shared/domain/answers.py` (both used
+  by ingestion's splitter and by bank / assessment; old paths re-export). Jobs: `shared/infrastructure/schema/jobs.py` + `sql_jobs.SqlJobQueue`
+  (enqueue in the command's transaction); the worker keeps its queue (SKIP LOCKED claim, retries, stale recovery), `Job` is a dataclass
+  mapped on that table; each job type calls an application command (`IngestDocument`, `MarkIngestFailed`).
+  `schema/ingestion.py` holds the only Table objects of `source_documents`, `assets`, `ai_models`; `app/models/{document,asset,ai_model,job}.py`,
+  `services/{documents,assets}.py`, `schemas/documents.py`, `core/images.py` (sniff → `shared/domain/images.py`) are re-export shims;
+  `app/ingestion/`, `routers/{documents,assets,ai_models,org_settings}.py`, `services/{ai_models,ingestion_settings}.py`, `schemas/ai_models.py`
+  removed. `lint-imports` 4 contracts kept with `app.modules.ingestion` added; `test_architecture.py` green.
+- Endpoints moved to search (old GETs answer 405): `GET /documents` → `POST /documents/search` (filters filename, source_name · status, mime ·
+  question_count · created_at; `q` over filename and source), `GET /ai-models` → `POST /ai-models/search` (name, model · provider · enabled,
+  is_free). Every other documents / assets / AI models / `org/settings/ingestion` path and JSON body unchanged.
+- Flaky `test_triage.py::test_pdf_copy_of_docx_is_marked_duplicate`: the duplicate-candidate query (bank `SqlDuplicateFinder`) now breaks
+  similarity ties by the same part/number, then created_at, then id (a strictly more similar candidate still wins). 5 runs in a row passed.
+- API suite 368 passed (+1 skipped: official set needs EXAMIN_DIR; 351 before the new tests); new `tests/unit/test_ingestion_handlers.py`
+  (15 handler tests on in-memory ports: upload / duplicates / replace / busy, re-parse, meta + source tag, delete, the pipeline incl. header
+  detection, kept positions and a teacher-facing failure, crash hook, document image store, AI model key encryption and rights, processing
+  defaults) and `tests/test_ingestion_search.py` (typed filters, sort, paging, bad_filter / bad_sort, old GETs 405).
+- Golden, official set (EXAMIN_DIR, `tests/test_golden_official.py`): 18 documents → 396/396 questions, 393 with answers (393/393 right),
+  386/386 solutions, 0 pictures lost. Live (`scripts/golden_live.py`, EXAMIN_DIR mode, on_duplicate=replace through the worker): 18 documents
+  parsed, 396/396 found, 386 solutions, 7,887 formulas, 31 vector figures, 23.1 s of pipeline time.
+- Web: documents list (polls every 2 s while a document is queued/processing), document detail, UploadForm (browser SHA-256,
+  `POST /documents/check`, per-file skip / replace / keep both), DocumentMetaFields, ProcessingConfig, parsed question cards, AI models page and
+  ingestion settings page on `document.service` / `ai-model.service` / `ingestion-settings.service` → `use-query-document` /
+  `use-query-ai-model` / `use-query-ingestion-settings` → page hooks → page components; routes one line; `components/documents/*` and
+  `components/ai/*` removed. Web 154 tests, tsc and eslint clean.
+- Live (`docker compose up -d --build api worker web`, http://localhost:8088, trungtama/admin): `POST /documents/search` total 18 (all parsed);
+  `GET /documents` 405; `POST /documents/check` with the SHA-256 of `07. TRƯỜNG THCS -THPT NGUYỄN KHUYẾN…docx` → `same_file` (22 questions);
+  `POST /ai-models/search` total 2; `GET /ai-models` 405; `GET /org/settings/ingestion` 200; worker heartbeat fresh, the 18 re-parse jobs
+  claimed and `done`. After the re-parse the 18 documents report 331 new questions: 65 questions used in exams survive a re-parse and are
+  not recounted (unchanged rule, A-14); the bank still holds 396 questions of the 18 documents.
+- Demo script: (1) re-uploading the 18 files is reported as duplicates (`/documents/check` → `same_file`; upload `skip` returns the
+  existing document, `replace` re-parses it — the live golden run above); (2) golden numbers above; (3) exam from a document over HTTP in
+  `test_exam_from_document.py` (draft in PHẦN / Câu order, 422 before approval, kept across a re-parse) — not repeated on the live data.

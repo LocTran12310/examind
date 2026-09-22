@@ -12,3 +12,6 @@ class SqlUnitOfWork:
 
     def flush(self) -> None:
         self.session.flush()
+
+    def rollback(self) -> None:
+        self.session.rollback()

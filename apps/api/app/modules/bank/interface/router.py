@@ -12,6 +12,7 @@ from app.modules.bank.application.commands.delete_question import DeleteQuestion
 from app.modules.bank.application.commands.review_question import ReviewQuestion, ReviewQuestionHandler
 from app.modules.bank.application.commands.update_question import UpdateQuestion, UpdateQuestionHandler
 from app.modules.bank.application.queries.demo_question import DemoQuestionHandler
+from app.modules.bank.application.queries.document_questions import DocumentQuestionsHandler, DocumentQuestionsQuery
 from app.modules.bank.application.queries.get_question import GetQuestion, GetQuestionHandler
 from app.modules.bank.application.queries.get_review_document import GetReviewDocument, GetReviewDocumentHandler
 from app.modules.bank.application.queries.question_facets import QuestionFacets, QuestionFacetsHandler
@@ -140,3 +141,13 @@ def key_audit(actor: Actor = Depends(staff_actor), handle: AuditKeysHandler = De
 def flagged(body: SearchBody, actor: Actor = Depends(staff_actor), handle: SearchFlaggedHandler = Depends(deps.search_flagged)):
     """Filters: stem (text) · updated_at (date)."""
     return _page(handle(actor, SearchFlagged(body.to_request())), parsed_out)
+
+
+# ------------------------------------------------------------------ questions of a source document
+
+
+@router.get("/documents/{doc_id}/questions", response_model=list[ParsedQuestionOut])
+def document_questions(doc_id: uuid.UUID, actor: Actor = Depends(staff_actor),
+                       handle: DocumentQuestionsHandler = Depends(deps.document_questions)):
+    """Every question parsed from the document (PHẦN then Câu), with topics and tags."""
+    return [parsed_out(v) for v in handle(actor, DocumentQuestionsQuery(doc_id))]

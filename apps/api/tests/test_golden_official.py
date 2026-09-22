@@ -10,9 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from app.ingestion.assets import document_store
-from app.ingestion.docx import extract_docx
-from app.ingestion.splitter import split
+from app.modules.ingestion.infrastructure.image_store import document_store
+from app.modules.ingestion.infrastructure.adapters.pandoc import extract_docx
+from app.modules.ingestion.domain.services.splitter import split
 from app.services.scoring import same_short_answer
 from tests.factories import make_org
 

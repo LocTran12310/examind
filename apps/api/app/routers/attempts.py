@@ -9,7 +9,7 @@ from app.core.db import get_db
 from app.core.security import now
 from app.deps import OrgScope, org_scope
 from app.models import Assignment, AttemptAnswer, User
-from app.routers.documents import parsed_many
+from app.routers.presenters import parsed_many
 from app.schemas.questions import question_out
 from app.services import attempts, scoring
 

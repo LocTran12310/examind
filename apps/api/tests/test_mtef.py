@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from app.ingestion import mtef
+from app.modules.ingestion.domain.services import mtef
 
 FIX = Path(__file__).parent / "fixtures" / "mtef"
 EXPECTED = json.loads((FIX / "expected.json").read_text(encoding="utf-8"))

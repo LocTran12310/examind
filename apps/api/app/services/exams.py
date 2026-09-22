@@ -295,3 +295,16 @@ def question_in_use(db: Session, qid) -> bool:
 
 if question_in_use not in bank.IN_USE_CHECKS:
     bank.IN_USE_CHECKS.append(question_in_use)
+
+
+class ExamServiceDrafts:
+    """ExamDrafts of the ingestion module over this service (wired by the composition root until exams move)."""
+
+    def __init__(self, db: Session):
+        self.db = db
+
+    def from_document(self, actor, document_id, title: str | None) -> dict:
+        from app.models import User
+
+        user = self.db.get(User, actor.user_id)
+        return from_document(self.db, OrgScope(org_id=actor.org_id, user=user, role=actor.role, is_super=actor.is_super), document_id, title)

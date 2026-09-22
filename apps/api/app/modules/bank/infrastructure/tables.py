@@ -19,3 +19,5 @@ attempt_answers = table(
     "attempt_answers",
     column("attempt_id", UUID(as_uuid=True)), column("question_id", UUID(as_uuid=True)), column("response", JSONB), column("points"),
 )
+
+exam_questions = table("exam_questions", column("question_id", UUID(as_uuid=True)))

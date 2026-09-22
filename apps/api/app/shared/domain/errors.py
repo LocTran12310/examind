@@ -44,3 +44,8 @@ class Unauthenticated(DomainError):
 class Throttled(DomainError):
     """Too many attempts: try again later."""
     code = "throttled"
+
+
+class Misconfigured(DomainError):
+    """The server lacks a setting the operation needs (not the caller's fault)."""
+    code = "misconfigured"

@@ -1,10 +1,11 @@
 import uuid
 
-from sqlalchemy import delete, insert, select, text, update
+from sqlalchemy import delete, exists, insert, select, text, update
 from sqlalchemy.orm import Session
 
 from app.modules.bank.domain.entities import USABLE, Question, ReviewEvent
 from app.modules.bank.infrastructure import orm  # noqa: F401  (mapping)
+from app.modules.bank.infrastructure.tables import exam_questions
 from app.shared.infrastructure.schema.bank import question_tags, question_topics, questions, review_events
 
 qc = questions.c
@@ -106,10 +107,62 @@ class SqlDuplicateFinder:
             select id, similarity(search_text, :t) as s, search_text from questions
              where organization_id = :o and status = any(:usable) and type = :type and id <> :id
                and (cast(:doc as uuid) is null or source_document_id is distinct from cast(:doc as uuid)) and search_text % :t
-             order by s desc limit :n"""),
+             order by s desc,
+                      -- equal similarity (the same text twice in a file): the question at the same place wins, then the oldest
+                      (number is distinct from cast(:number as integer) or part is distinct from cast(:part as varchar)),
+                      created_at, id
+             limit :n"""),
             {"t": q.search_text, "o": q.organization_id, "usable": list(USABLE), "type": q.type, "id": q.id,
-             "doc": q.source_document_id, "n": limit}).all()
+             "doc": q.source_document_id, "number": q.number, "part": q.part, "n": limit}).all()
         return [(r.id, r.s, r.search_text) for r in rows]
+
+
+class SqlDocumentQuestions:
+    def __init__(self, session: Session):
+        self.session = session
+
+    def in_order(self, document_id: uuid.UUID) -> list[Question]:
+        return list(self.session.scalars(select(Question).where(qc.source_document_id == document_id)
+                                         .order_by(qc.part.nulls_first(), qc.number)))
+
+    def remove(self, document_id: uuid.UUID, keep_statuses: tuple[str, ...], keep_used: bool) -> None:
+        gone = [qc.source_document_id == document_id, qc.status.notin_(keep_statuses)]
+        if keep_used:
+            gone.append(~exists(select(exam_questions.c.question_id).where(exam_questions.c.question_id == qc.id)))
+        self.session.flush()
+        release_duplicates_of(self.session, select(qc.id).where(*gone))
+        self.session.execute(delete(Question).where(*gone))
+
+    def positions(self, document_id: uuid.UUID) -> set[tuple[str | None, int | None]]:
+        return {(q.part, q.number) for q in self.session.scalars(select(Question).where(qc.source_document_id == document_id))}
+
+    def add_all(self, qs: list[Question], tag_id: uuid.UUID | None) -> None:
+        self.session.add_all(qs)
+        self.session.flush()
+        if tag_id and qs:
+            self.session.execute(insert(question_tags), [{"question_id": q.id, "tag_id": tag_id} for q in qs])
+        self.session.flush()
+
+    def nearest_topic(self, q: Question) -> tuple[uuid.UUID, float] | None:
+        if not q.search_text:
+            return None
+        row = self.session.execute(text("""
+            select qt.topic_id, similarity(o.search_text, :t) as s
+              from questions o join question_topics qt on qt.question_id = o.id and qt.is_primary
+             where o.organization_id = :org and o.status = 'approved' and o.id <> :id and o.search_text % :t
+             order by s desc limit 1"""), {"t": q.search_text, "org": q.organization_id, "id": q.id}).first()
+        return (row[0], float(row[1])) if row else None
+
+    def add_topic(self, question_id: uuid.UUID, topic_id: uuid.UUID, is_primary: bool, source: str, score: float | None) -> None:
+        self.session.execute(insert(question_topics).values(question_id=question_id, topic_id=topic_id, is_primary=is_primary,
+                                                            source=source, score=score))
+
+    def swap_tag(self, question_ids: list[uuid.UUID], old_tag_id: uuid.UUID | None, new_tag_id: uuid.UUID | None) -> None:
+        self.session.flush()
+        if old_tag_id and question_ids:
+            self.session.execute(delete(question_tags).where(question_tags.c.tag_id == old_tag_id, question_tags.c.question_id.in_(question_ids)))
+        if new_tag_id and question_ids:
+            self.session.execute(insert(question_tags), [{"question_id": qid, "tag_id": new_tag_id} for qid in question_ids])
 
 
 # Other contexts register what still uses a question (fn(session, question_id) -> bool), e.g. exams.

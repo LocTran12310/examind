@@ -28,6 +28,10 @@ class SqlTagRepository:
             return {}
         return dict(self.session.execute(select(tags.c.id, tags.c.group).where(tags.c.id.in_(tag_ids), tags.c.organization_id == org_id)).all())
 
+    def find(self, org_id: uuid.UUID, group: str, name: str) -> Tag | None:
+        return self.session.scalar(select(Tag).where(tags.c.organization_id == org_id, tags.c.group == group,
+                                                     func.lower(tags.c.name) == name.lower()))
+
     def add(self, tag: Tag) -> None:
         self.session.add(tag)
         self.session.flush()
