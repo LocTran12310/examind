@@ -7,4 +7,4 @@ def all_routers():
     return routers
 
 
-ROUTER_MODULES: list[str] = ["auth", "admin_orgs", "users", "classes", "taxonomy", "topics", "tags", "assets", "questions", "documents", "ai_models", "org_settings", "review", "exams", "assignments", "attempts", "stats", "adaptive", "structure", "me", "school_years", "audit"]
+ROUTER_MODULES: list[str] = ["auth", "admin_orgs", "users", "classes", "taxonomy", "topics", "tags", "assets", "questions", "documents", "ai_models", "org_settings", "review", "exams", "assignments", "attempts", "stats", "adaptive", "structure", "me", "school_years", "audit", "students"]

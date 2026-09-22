@@ -8,6 +8,7 @@ import { TopicStatsTree } from "@/components/reports/TopicStatsTree";
 import { Panel } from "@/components/app/Panel";
 import { PageHeader } from "@/components/app/PageHeader";
 import { OptionSelect } from "@/components/app/OptionSelect";
+import { useYear } from "@/components/app/YearContext";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { qs, useApi } from "@/lib/hooks";
 import type { GroupStat, SchoolClass, TopicStat, Page } from "@/lib/types";
@@ -24,23 +25,28 @@ export default function ReportsPage() {
   const [tab, setTab] = useState<(typeof TABS)[number][0]>("topics");
   const [classId, setClassId] = useState("");
   const [level, setLevel] = useState("1");
-  const { data: classesPage } = useApi<Page<SchoolClass>>("/classes?page_size=all");
+  const [term, setTerm] = useState("");
+  const { year } = useYear();
+  // whole year by default; picking a class narrows to that class (its own year) — school-years ADR-02
+  const { data: classesPage } = useApi<Page<SchoolClass>>(`/classes?page_size=all${year ? `&school_year_id=${year.id}` : ""}`);
   const classes = classesPage?.items;
-  const filters = qs({ class_id: classId });
+  const scopeParams = { class_id: classId, school_year_id: classId ? undefined : year?.id, term_code: term };
+  const filters = qs(scopeParams);
   const { data: topics } = useApi<TopicStat[]>(tab === "topics" ? `/stats/topics${filters}` : null);
-  const { data: groups } = useApi<GroupStat[]>(["tag", "type", "difficulty"].includes(tab) ? `/stats/groups${qs({ by: tab, class_id: classId })}` : null);
-  const { data: heat } = useApi<HeatmapData>(tab === "heatmap" && classId ? `/stats/heatmap${qs({ class_id: classId, level })}` : null);
+  const { data: groups } = useApi<GroupStat[]>(["tag", "type", "difficulty"].includes(tab) ? `/stats/groups${qs({ by: tab, ...scopeParams })}` : null);
+  const { data: heat } = useApi<HeatmapData>(tab === "heatmap" && classId ? `/stats/heatmap${qs({ class_id: classId, level, term_code: term })}` : null);
 
   return (
     <>
-      <PageHeader title="Kết quả theo chuyên đề" description="Tỉ lệ đúng cộng dồn từ các nhánh con lên cấp trên" />
+      <PageHeader title="Kết quả theo chuyên đề" description={`Tỉ lệ đúng cộng dồn từ các nhánh con lên cấp trên${year ? " · " + year.name : ""}`} />
       <div className="mb-4 flex flex-wrap items-center gap-2">
+        <OptionSelect aria-label="Học kỳ" className="w-36" value={term} onValueChange={setTerm} emptyLabel="Cả năm" options={[{ value: "hk1", label: "Học kỳ 1" }, { value: "hk2", label: "Học kỳ 2" }]} />
         <OptionSelect
           aria-label="Lớp"
           className="w-56"
           value={classId}
           onValueChange={setClassId}
-          emptyLabel="Toàn trung tâm"
+          emptyLabel="Cả trung tâm"
           options={[...(classes ?? [])]
             .sort((a, b) => (a.grade ?? 99) - (b.grade ?? 99) || a.name.localeCompare(b.name, "vi"))
             .map((c) => ({ value: c.id, label: `${c.name} (${c.school_year})`, group: c.grade ? `Khối ${c.grade}` : "Chưa xếp khối" }))}

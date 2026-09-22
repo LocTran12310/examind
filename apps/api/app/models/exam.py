@@ -116,3 +116,7 @@ class AnswerFact(IdMixin, TimestampMixin, Base):
     points: Mapped[float] = mapped_column(Float)
     max_points: Mapped[float] = mapped_column(Float)
     correct_ratio: Mapped[float] = mapped_column(Float)  # points / max_points (0..1)
+    # snapshot at grading time so reports do not follow students to later classes (school-years ADR-02)
+    school_year_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("school_years.id"), index=True)
+    term_code: Mapped[str | None] = mapped_column(String(8))
+    class_ids: Mapped[list[uuid.UUID]] = mapped_column(ARRAY(UUID(as_uuid=True)), default=list, server_default="{}")

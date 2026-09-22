@@ -128,15 +128,34 @@ def _primary_path(db: Session, qid) -> str | None:
                      .where(QuestionTopic.question_id == qid, QuestionTopic.is_primary.is_(True)))
 
 
+def snapshot(db: Session, org_id, student_id, when) -> tuple:
+    """(school_year_id, term_code, class_ids) of a student at `when` — written on every fact (school-years ADR-02)."""
+    from app.models import ClassMember, SchoolClass
+    from app.services.school_years import active_year, term_for_date, year_for_date
+
+    y = year_for_date(db, org_id, when) or active_year(db, org_id)
+    if y is None:
+        return None, None, []
+    ids = list(db.scalars(select(ClassMember.class_id).join(SchoolClass, SchoolClass.id == ClassMember.class_id)
+                          .where(ClassMember.user_id == student_id, SchoolClass.school_year_id == y.id,
+                                 SchoolClass.organization_id == org_id)))
+    return y.id, term_for_date(y, when), ids
+
+
 def _fact(db: Session, att: Attempt, q: Question, ans: AttemptAnswer) -> None:
     db.execute(delete(AnswerFact).where(AnswerFact.attempt_id == att.id, AnswerFact.question_id == q.id))
     if ans.points is None or not ans.max_points:
         return
+    cache = db.info.setdefault("fact_snapshots", {})
+    if att.id not in cache:  # one lookup per attempt, not per question
+        cache[att.id] = snapshot(db, att.organization_id, att.student_id, att.submitted_at or now())
+    year_id, term, class_ids = cache[att.id]
     db.add(AnswerFact(organization_id=att.organization_id, attempt_id=att.id, assignment_id=att.assignment_id, exam_id=att.exam_id,
                       student_id=att.student_id, question_id=q.id, topic_path=_primary_path(db, q.id),
                       tag_ids=list(db.scalars(select(QuestionTag.tag_id).where(QuestionTag.question_id == q.id))),
                       qtype=q.type, difficulty=q.difficulty, points=ans.points, max_points=ans.max_points,
-                      correct_ratio=round(ans.points / ans.max_points, 4), created_at=now()))
+                      correct_ratio=round(ans.points / ans.max_points, 4), created_at=now(),
+                      school_year_id=year_id, term_code=term, class_ids=class_ids))
     db.flush()
     from app.services import mastery
 

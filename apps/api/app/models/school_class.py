@@ -1,6 +1,7 @@
+from datetime import datetime
 import uuid
 
-from sqlalchemy import ForeignKey, SmallInteger, String, UniqueConstraint
+from sqlalchemy import DateTime, ForeignKey, SmallInteger, String, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -24,3 +25,7 @@ class ClassMember(Base):
 
     class_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("classes.id", ondelete="CASCADE"), primary_key=True)
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True, index=True)
+    # enrollment (school-years A-05): active | promoted | retained | transferred | graduated
+    status: Mapped[str] = mapped_column(String(16), default="active", server_default="active")
+    joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    left_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

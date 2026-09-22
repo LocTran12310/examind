@@ -146,7 +146,7 @@ ticket:
     layer: data
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on:
       - T-01-01
     blocks:
@@ -165,7 +165,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on:
       - T-02-01
     blocks: []
@@ -182,7 +182,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on:
       - T-02-01
     blocks: []
@@ -192,6 +192,7 @@ ticket:
       - apps/api/app/routers/students.py   # new
       - apps/api/app/services/record.py   # new
       - apps/web/src/app/(app)/org/students/[id]/page.tsx   # new
+      - apps/web/src/components/students/StudentRecord.tsx   # new
   - id: T-03-01
     uow: UOW-03
     title: 'Rollover service: preview + idempotent commit'

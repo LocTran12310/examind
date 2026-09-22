@@ -12,7 +12,8 @@ from app.services import assignments as assignment_service
 from app.services.scoring import scaled
 
 
-def _where(scope: OrgScope, alias: str, class_id=None, student_id=None, assignment_id=None, date_from=None, date_to=None):
+def _where(scope: OrgScope, alias: str, class_id=None, student_id=None, assignment_id=None, date_from=None, date_to=None,
+           school_year_id=None, term_code=None):
     """SQL fragment + params restricting answer_facts; students only ever see their own facts."""
     parts, params = [f"{alias}.organization_id = :org"], {"org": scope.org_id}
     if scope.role == "student":
@@ -22,9 +23,15 @@ def _where(scope: OrgScope, alias: str, class_id=None, student_id=None, assignme
     if student_id:
         parts.append(f"{alias}.student_id = :student")
         params["student"] = uuid.UUID(str(student_id))
-    if class_id:
-        parts.append(f"{alias}.student_id in (select user_id from class_members where class_id = :klass)")
+    if class_id:  # the class the student was in when answering, not the current one (school-years ADR-02)
+        parts.append(f"cast(:klass as uuid) = any({alias}.class_ids)")
         params["klass"] = uuid.UUID(str(class_id))
+    if school_year_id:
+        parts.append(f"{alias}.school_year_id = :year")
+        params["year"] = uuid.UUID(str(school_year_id))
+    if term_code:
+        parts.append(f"{alias}.term_code = :term")
+        params["term"] = term_code
     if assignment_id:
         parts.append(f"{alias}.assignment_id = :assignment")
         params["assignment"] = uuid.UUID(str(assignment_id))
@@ -79,11 +86,11 @@ def groups(db: Session, scope: OrgScope, by: str, **filters) -> list[dict]:
                     "ratio": round(r["p"] / r["m"], 4) if r["m"] else None} for r in rows), key=lambda x: (x["ratio"] is None, x["ratio"]))
 
 
-def heatmap(db: Session, scope: OrgScope, class_id, level: int = 1, subject_id=None) -> dict:
+def heatmap(db: Session, scope: OrgScope, class_id, level: int = 1, subject_id=None, term_code=None) -> dict:
     if scope.role not in ("org_admin", "teacher"):
         raise forbidden()
     level = max(1, min(4, int(level)))
-    where, params = _where(scope, "f", class_id=class_id)
+    where, params = _where(scope, "f", class_id=class_id, term_code=term_code)
     params["lvl"] = level
     subject = ""
     if subject_id:

@@ -3,7 +3,7 @@
 # Ticket graph — 2026092207-school-years
 
 - Units of Work: **4**
-- Tickets: **11** (3 done)
+- Tickets: **11** (6 done)
 - Total effort: **4.5d**
 - Critical path: **1.8d** across 4 tickets
 - Theoretical minimum duration with unlimited parallelism: **1.8d**
@@ -30,9 +30,9 @@ graph LR
     T_01_03["✓ T-01-03<br/>YearSwitcher + YearProvider, Năm học page, HistoryPanel; classes/structure/class form by year"]
   end
   subgraph UOW_02["UOW-02 · Answers remember year, term and classes; reports by year/term; student record"]
-    T_02_01["T-02-01<br/>Migration 0015: class_members status/dates, answer_facts year/term/class_ids + backfill; snapshot at grading"]
-    T_02_02["T-02-02<br/>Stats by class snapshot, year and term; reports page filters"]
-    T_02_03["T-02-03<br/>Student record API + Hồ sơ học sinh page"]
+    T_02_01["✓ T-02-01<br/>Migration 0015: class_members status/dates, answer_facts year/term/class_ids + backfill; snapshot at grading"]
+    T_02_02["✓ T-02-02<br/>Stats by class snapshot, year and term; reports page filters"]
+    T_02_03["✓ T-02-03<br/>Student record API + Hồ sơ học sinh page"]
   end
   subgraph UOW_03["UOW-03 · Chuyển năm học wizard"]
     T_03_01["T-03-01<br/>Rollover service: preview + idempotent commit"]
@@ -87,9 +87,9 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-01-01 | UOW-01 | data | feature | 2h | — | AC-02 | done |
 | T-01-02 | UOW-01 | api | feature | 4h | T-01-01 | AC-01, AC-04, AC-16 | done |
 | T-01-03 | UOW-01 | web | feature | 4h | T-01-02 | AC-03, AC-04 | done |
-| T-02-01 | UOW-02 | data | feature | 3h | T-01-01 | AC-05 | todo |
-| T-02-02 | UOW-02 | api | feature | 3h | T-02-01 | AC-06, AC-07 | todo |
-| T-02-03 | UOW-02 | web | feature | 3h | T-02-01 | AC-08 | todo |
+| T-02-01 | UOW-02 | data | feature | 3h | T-01-01 | AC-05 | done |
+| T-02-02 | UOW-02 | api | feature | 3h | T-02-01 | AC-06, AC-07 | done |
+| T-02-03 | UOW-02 | web | feature | 3h | T-02-01 | AC-08 | done |
 | T-03-01 | UOW-03 | domain | feature | 4h | T-02-01, T-01-02 | AC-09, AC-10, AC-11 | todo |
 | T-03-02 | UOW-03 | web | feature | 4h | T-03-01, T-01-03 | AC-09, AC-10 | todo |
 | T-04-01 | UOW-04 | web | feature | 2h | T-01-01 | AC-12 | todo |

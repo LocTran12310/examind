@@ -56,7 +56,7 @@ t(id="T-02-02", uow="UOW-02", title="Stats by class snapshot, year and term; rep
   context="", done_when=["Moved student counted per year", "Term filter"])
 t(id="T-02-03", uow="UOW-02", title="Student record API + Hồ sơ học sinh page",
   layer="web", estimate="3h", depends_on=["T-02-01"], verifies=["AC-08"], tests=[f"{API}/tests/test_year_history.py", f"{WEB}/src/__tests__/student-record.test.tsx"],
-  touches=[f"{API}/app/routers/students.py", f"{API}/app/services/record.py", f"{WEB}/src/app/(app)/org/students/[id]/page.tsx"],
+  touches=[f"{API}/app/routers/students.py", f"{API}/app/services/record.py", f"{WEB}/src/app/(app)/org/students/[id]/page.tsx", f"{WEB}/src/components/students/StudentRecord.tsx"],
   context="Links from users list and class members.", done_when=["Years timeline", "Per-year topic results"])
 t(id="T-03-01", uow="UOW-03", title="Rollover service: preview + idempotent commit",
   layer="domain", estimate="4h", depends_on=["T-02-01", "T-01-02"], verifies=["AC-09", "AC-10", "AC-11"], tests=[f"{API}/tests/test_rollover.py"],

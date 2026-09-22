@@ -48,7 +48,13 @@ export default function UsersPage() {
         header: "Họ tên",
         cell: ({ row }) => (
           <span className="inline-flex items-center gap-2">
-            {row.original.full_name}
+            {row.original.role === "student" ? (
+              <Link href={`/org/students/${row.original.id}`} className="text-primary hover:underline">
+                {row.original.full_name}
+              </Link>
+            ) : (
+              row.original.full_name
+            )}
             {row.original.is_home === false && <ToneBadge tone="blue">Từ {row.original.home_org_code}</ToneBadge>}
           </span>
         ),
