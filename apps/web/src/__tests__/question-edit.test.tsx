@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { formValueOf, payloadOf, QuestionForm } from "@/components/common/QuestionForm/QuestionForm";
 import { QuestionDetailPage } from "@/components/page-components/QuestionDetail/QuestionDetailPage";
-import type { ParsedQuestion } from "@/interfaces/question.interface";
+import type { ParsedQuestion, QuestionStats } from "@/interfaces/question.interface";
 import type { Tag } from "@/interfaces/tag.interface";
 import type { Taxonomy } from "@/interfaces/taxonomy.interface";
 import type { Topic } from "@/interfaces/topic.interface";
@@ -14,6 +14,8 @@ vi.mock("next/navigation", async () => (await import("./router-mock")).routerMoc
 const taxonomy: Taxonomy = { subjects: [{ id: "s", code: "toan", name: "Toán" }], grades: [{ id: "g", level: 10, name: "Lớp 10" }], semesters: [] };
 const topics: Topic[] = [{ id: "t1", subject_id: "s", parent_id: null, name: "Vectơ", level_kind: "topic", grade: 10, path: "a", depth: 1, sort: 0, child_count: 0 }];
 const tags: Tag[] = [{ id: "g1", group: "method", name: "đổi biến" }];
+const thin: QuestionStats = { observations: 4, enough_data: false, correct_ratio: null, first_attempt_ratio: null,
+  discrimination: null, median_seconds: null, options: [] };
 
 describe("question form", () => {
   it("creates a new MCQ with topic, tag, difficulty and a preview", async () => {
@@ -83,6 +85,7 @@ describe("question detail page", () => {
     const fetch = mockFetch(
       (url, init) => (url === "/api/questions/q" && init?.method === "GET" ? { body: saved } : undefined),
       (url, init) => (url === "/api/questions/q" && init?.method === "PATCH" ? { body: (saved = { ...q, stem: "Đề mới" }) } : undefined),
+      route("GET", "/api/questions/q/stats", thin),
       route("GET", "/api/taxonomy", taxonomy),
       route("GET", "/api/topics?subject_id=s", topics),
       route("POST", "/api/tags/search", searchPage(tags)),
@@ -96,5 +99,45 @@ describe("question detail page", () => {
     const call = fetch.mock.calls.find(([url, init]) => url === "/api/questions/q" && (init as RequestInit | undefined)?.method === "PATCH");
     expect(JSON.parse(String((call?.[1] as RequestInit).body))).toMatchObject({ stem: "Đề mới", answer: { key: "D" }, subject_id: "s", primary_topic_id: "t1", topic_ids: ["t1"] });
     expect(await screen.findByText("Đề mới")).toBeInTheDocument();
+  });
+});
+
+describe("question statistics (learning-telemetry AC-03)", () => {
+  const q = { id: "q", number: 3, type: "mcq", stem: "Đề", options: "ABCD".split("").map((l) => ({ label: l, content: l })),
+    answer: { key: "B" }, solution: "", difficulty: "vd", grade: 10, status: "approved", subject_id: "s",
+    topics: [{ id: "t1", name: "Vectơ", is_primary: true, source: "manual", score: 1 }], tags: [] } as unknown as ParsedQuestion;
+
+  const detail = (stats: QuestionStats) =>
+    mockFetch(
+      route("GET", "/api/questions/q/stats", stats),
+      route("GET", "/api/questions/q", q),
+      route("GET", "/api/taxonomy", taxonomy),
+      route("GET", "/api/topics?subject_id=s", topics),
+      route("POST", "/api/tags/search", searchPage(tags)),
+    );
+
+  it("shows the numbers with their observation count and the option distribution, key marked", async () => {
+    detail({ observations: 12, enough_data: true, correct_ratio: 0.667, first_attempt_ratio: 0.5, discrimination: 0.4,
+      median_seconds: 75, options: [{ label: "A", chosen: 4, ratio: 0.333, is_key: false }, { label: "B", chosen: 8, ratio: 0.667, is_key: true }] });
+    render(<QuestionDetailPage id="q" />);
+    const panel = await screen.findByTestId("question-stats");
+    expect(panel).toHaveTextContent("Tỉ lệ đúng");
+    expect(panel).toHaveTextContent("67%");
+    expect(panel).toHaveTextContent("Đúng ngay lần đầu");
+    expect(panel).toHaveTextContent("50%");
+    expect(panel).toHaveTextContent("+0.40");
+    expect(panel).toHaveTextContent("1 phút 15 giây");
+    expect(within(panel).getAllByText(/lượt/).map((e) => e.textContent)).toContain("12 lượt");
+    const options = within(panel).getByTestId("option-stats");
+    expect(within(options).getAllByRole("listitem").map((li) => li.textContent)).toEqual(["A33%4 lượt", "B✓ đáp án67%8 lượt"]);
+  });
+
+  it("says chưa đủ dữ liệu below ten answers and shows no number", async () => {
+    detail(thin);
+    render(<QuestionDetailPage id="q" />);
+    const panel = await screen.findByTestId("question-stats");
+    expect(panel).toHaveTextContent("Chưa đủ dữ liệu — cần ít nhất 10 lượt trả lời (hiện có 4).");
+    expect(within(panel).queryByTestId("option-stats")).toBeNull();
+    expect(panel).not.toHaveTextContent("Tỉ lệ đúng");
   });
 });

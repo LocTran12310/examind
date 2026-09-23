@@ -1,4 +1,5 @@
-"""Bank handlers against in-memory ports: writing, bulk, review, answer keys, key audit, triage (ADR-02)."""
+"""Bank handlers against in-memory ports: writing, bulk, review, answer keys, key audit, triage, item statistics (ADR-02)."""
+from dataclasses import replace
 import uuid
 
 import pytest
@@ -14,7 +15,8 @@ from app.modules.bank.application.commands.review_question import ReviewQuestion
 from app.modules.bank.application.commands.triage_questions import TriageQuestions, TriageQuestionsHandler
 from app.modules.bank.application.commands.update_question import UpdateQuestion, UpdateQuestionHandler
 from app.modules.bank.application.common import resolve_filters
-from app.modules.bank.application.dto import BankFilters, question_view
+from app.modules.bank.application.dto import BankFilters, ItemStats, OptionStat, question_view
+from app.modules.bank.application.queries.question_stats import QuestionStats, QuestionStatsHandler
 from app.modules.bank.application.queries.review_queue import ReviewQueue, ReviewQueueHandler
 from app.modules.bank.domain.entities import Question
 from app.shared.application.actor import Actor
@@ -325,3 +327,36 @@ def test_filters_resolve_topics_and_group_tags():
         resolve_filters(FakeTaxonomy(), ORG, BankFilters(topic_ids=(uuid.uuid4(),)))
     with pytest.raises(Invalid):
         resolve_filters(FakeTaxonomy(), uuid.uuid4(), BankFilters(tag_ids=(TAG_A,)))
+
+
+# ------------------------------------------------------------------ item statistics (learning-telemetry ADR-03)
+
+MEASURED = ItemStats(observations=12, correct_ratio=0.5, first_attempt_ratio=0.4, discrimination=0.3, median_seconds=42,
+                     options=[OptionStat(label="A", chosen=6, ratio=0.5, is_key=True)])
+
+
+class FakeItemStats:
+    """Measures whatever it is told to; `enough_data` is the handler's decision, never the reader's."""
+
+    def __init__(self, measured: ItemStats):
+        self.measured = measured
+
+    def stats(self, org_id, q):
+        return self.measured
+
+
+def test_item_statistics_are_reported_only_with_enough_observations(ports):
+    qs = ports[0]
+    q = parsed(qs, type="mcq", stem="Câu đủ dữ liệu", answer={"key": "A"}, status="approved")
+    assert QuestionStatsHandler(qs, FakeItemStats(MEASURED))(TEACHER, QuestionStats(q.id)) == replace(MEASURED, enough_data=True)
+    thin = QuestionStatsHandler(qs, FakeItemStats(ItemStats(observations=9, correct_ratio=1.0, median_seconds=5)))(
+        TEACHER, QuestionStats(q.id))
+    assert thin == ItemStats(observations=9)  # nothing but the count below the minimum
+
+
+def test_item_statistics_of_another_organisation_are_not_found(ports):
+    qs = ports[0]
+    q = parsed(qs, type="mcq", stem="Câu của trung tâm khác", answer={"key": "A"})
+    other = Actor(user_id=uuid.uuid4(), org_id=uuid.uuid4(), role="teacher")
+    with pytest.raises(NotFound):
+        QuestionStatsHandler(qs, FakeItemStats(MEASURED))(other, QuestionStats(q.id))

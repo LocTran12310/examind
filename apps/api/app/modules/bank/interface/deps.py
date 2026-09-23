@@ -21,13 +21,14 @@ from app.modules.bank.application.queries.document_questions import DocumentQues
 from app.modules.bank.application.queries.get_question import GetQuestionHandler
 from app.modules.bank.application.queries.get_review_document import GetReviewDocumentHandler
 from app.modules.bank.application.queries.question_facets import QuestionFacetsHandler
+from app.modules.bank.application.queries.question_stats import QuestionStatsHandler
 from app.modules.bank.application.queries.review_queue import ReviewQueueHandler
 from app.modules.bank.application.queries.search_flagged import SearchFlaggedHandler
 from app.modules.bank.application.queries.search_questions import SearchQuestionsHandler
 from app.modules.bank.application.queries.search_review_documents import SearchReviewDocumentsHandler
 from app.modules.bank.domain.ports import StaffDirectory, Taxonomy
-from app.modules.bank.infrastructure.adapters.sql import SqlAnswerStats, SqlReviewDocuments, SqlReviewSettings
-from app.modules.bank.infrastructure.read_models import SqlQuestionReader, SqlReviewReader
+from app.modules.bank.infrastructure.adapters.sql import SqlReviewDocuments, SqlReviewSettings
+from app.modules.bank.infrastructure.read_models import SqlItemStatsReader, SqlQuestionReader, SqlReviewReader
 from app.modules.bank.infrastructure.repositories import (
     SqlDocumentQuestions,
     SqlDuplicateFinder,
@@ -82,7 +83,7 @@ def _staff_directory(db: Session) -> StaffDirectory:
 def bank_api(db: Session) -> BankApi:
     """The bank for another context, the worker or the bootstrap, on the caller's session."""
     return BankApi(SqlQuestionRepository(db), SqlQuestionReader(db), _RegisteredTaxonomy(db), SqlDuplicateFinder(db),
-                   SqlAnswerStats(db), SqlReviewLog(db), SqlUnitOfWork(db), SqlDocumentQuestions(db))
+                   SqlItemStatsReader(db), SqlReviewLog(db), SqlUnitOfWork(db), SqlDocumentQuestions(db))
 
 
 # ------------------------------------------------------------------ questions
@@ -97,6 +98,10 @@ def question_facets(db: Session = Depends(get_db)) -> QuestionFacetsHandler:
 
 def get_question(db: Session = Depends(get_db)) -> GetQuestionHandler:
     return GetQuestionHandler(SqlQuestionRepository(db), SqlQuestionReader(db))
+
+
+def question_stats(db: Session = Depends(get_db)) -> QuestionStatsHandler:
+    return QuestionStatsHandler(SqlQuestionRepository(db), SqlItemStatsReader(db))
 
 
 def demo_question(db: Session = Depends(get_db)) -> DemoQuestionHandler:
@@ -151,7 +156,7 @@ def approve_confident(db: Session = Depends(get_db)) -> ApproveConfidentHandler:
 
 
 def audit_keys(db: Session = Depends(get_db)) -> AuditKeysHandler:
-    return AuditKeysHandler(SqlQuestionRepository(db), SqlAnswerStats(db), SqlReviewLog(db), SqlUnitOfWork(db))
+    return AuditKeysHandler(SqlQuestionRepository(db), SqlItemStatsReader(db), SqlReviewLog(db), SqlUnitOfWork(db))
 
 
 def search_flagged(db: Session = Depends(get_db)) -> SearchFlaggedHandler:

@@ -88,6 +88,7 @@ export const QUESTION_KEYS = {
   SEARCH: (body: unknown) => ["questions", "search", body] as const,
   FACETS: (body: unknown) => ["questions", "facets", body] as const,
   DETAIL: (id: string) => ["questions", "detail", id] as const,
+  STATS: (id: string) => ["questions", "stats", id] as const,
   DEMO: ["questions", "demo"] as const,
 };
 

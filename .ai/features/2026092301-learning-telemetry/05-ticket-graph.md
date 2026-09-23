@@ -3,7 +3,7 @@
 # Ticket graph — 2026092301-learning-telemetry
 
 - Units of Work: **3**
-- Tickets: **9** (2 done)
+- Tickets: **9** (5 done)
 - Total effort: **3.8d**
 - Critical path: **1.5d** across 3 tickets
 - Theoretical minimum duration with unlimited parallelism: **1.5d**
@@ -28,9 +28,9 @@ graph LR
     T_01_02["✓ T-01-02<br/>Runner reports seconds per question"]
   end
   subgraph UOW_02["UOW-02 · Item statistics per question, searchable"]
-    T_02_01["T-02-01<br/>Item statistics read model and question detail"]
-    T_02_02["T-02-02<br/>Search and sort the bank by observed difficulty"]
-    T_02_03["T-02-03<br/>Question detail shows the statistics"]
+    T_02_01["✓ T-02-01<br/>Item statistics read model and question detail"]
+    T_02_02["✓ T-02-02<br/>Search and sort the bank by observed difficulty"]
+    T_02_03["✓ T-02-03<br/>Question detail shows the statistics"]
   end
   subgraph UOW_03["UOW-03 · One weak-topic rule, decay, recompute and a weekly snapshot"]
     T_03_01["T-03-01<br/>One weak-topic rule and decay"]
@@ -82,9 +82,9 @@ adding people to tickets off this path will not make the feature ship sooner.
 |----|-----|-------|------|-----|-----------|----------|--------|
 | T-01-01 | UOW-01 | api | feature | 4h | — | AC-01, AC-02 | done |
 | T-01-02 | UOW-01 | web | feature | 3h | T-01-01 | AC-01 | done |
-| T-02-01 | UOW-02 | api | feature | 4h | T-01-01 | AC-03 | todo |
-| T-02-02 | UOW-02 | api | feature | 3h | T-02-01 | AC-04 | todo |
-| T-02-03 | UOW-02 | web | feature | 3h | T-02-01 | AC-03 | todo |
+| T-02-01 | UOW-02 | api | feature | 4h | T-01-01 | AC-03 | done |
+| T-02-02 | UOW-02 | api | feature | 3h | T-02-01 | AC-04 | done |
+| T-02-03 | UOW-02 | web | feature | 3h | T-02-01 | AC-03 | done |
 | T-03-01 | UOW-03 | api | feature | 4h | T-01-01 | AC-05, AC-06 | todo |
 | T-03-02 | UOW-03 | api | feature | 3h | T-03-01 | AC-06 | todo |
 | T-03-03 | UOW-03 | api | feature | 4h | T-03-01 | AC-07 | todo |

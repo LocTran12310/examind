@@ -2,9 +2,10 @@
 from collections import Counter
 
 from app.modules.bank.domain.entities import Question
+from app.modules.bank.domain.services.item_stats import MIN_OBSERVATIONS
 
 FLAG = "Nghi sai đáp án"
-MIN_ANSWERS = 10
+MIN_ANSWERS = MIN_OBSERVATIONS  # the audit doubts a key on the same evidence item statistics need (ADR-03)
 TOP_SHARE = 0.6
 LOW_CORRECT, LOW_CORRECT_MIN = 0.15, 20
 RECHECK_AFTER = 10  # new answers needed before re-flagging a question a teacher confirmed

@@ -34,3 +34,59 @@ nobody answered. The same rule is exercised for the expiry sweep and for essay r
   `::test_an_abandoned_attempt_leaves_no_facts_and_no_mastery`;
   `tests/unit/test_assessment_handlers.py` — timing clamp, unanswered question, swept attempt, first attempt;
   `exam-runner.test.tsx` — the saved body carries the seconds and they add up when a question is revisited.
+
+## UOW-02 — Item statistics per question, searchable (2026-09-23, live stack)
+
+No migration: everything is read from `answer_facts` (joined to `attempts` for the score ranking) and from
+`attempt_answers.response` for the option counts — one read model, `SqlItemStatsReader`, in `modules/bank`.
+
+### The data I made
+The live centre had 5 answer facts, so I created two exams of three multiple-choice questions and took **24 attempts**
+of my own (`buivanchau` plus three students I created, `hsthongke1..3`; `max_attempts` 5). Nothing existing was
+touched or deleted; the org now holds 77 facts. Four attempts of each ability (all right / only the first question /
+none, with two lucky guesses), so the strongest and the weakest third of the attempts differ by design.
+
+### AC-03 — the numbers on the question detail (http://localhost:8088/org/bank/<id>)
+`GET /questions/398b4b80/stats` and the panel "Thống kê từ bài làm" agree:
+
+| | |
+| --- | --- |
+| Tỉ lệ đúng | **67 %** (12 lượt) |
+| Đúng ngay lần đầu | **75 %** (12 lượt) |
+| Độ phân biệt | **+1.00** (12 lượt) |
+| Thời gian trung vị | **25 giây** (12 lượt) |
+| Phương án đã chọn | A ✓ đáp án 67 % (8 lượt) · B 17 % (2) · C 17 % (2) · D 0 % (0) |
+
+Two more questions of the same exam read 33 % / +1.00 / 18 giây and 50 % / +0.50 / 15 giây; the seconds come from
+the runner's own measure of UOW-01 (a save that reports more than the attempt window is still clamped — the first
+batch of twelve attempts, answered in under a second, honestly reports a median of 0).
+
+A question with two answers (`808d6e3a`) shows **"Chưa đủ dữ liệu — cần ít nhất 10 lượt trả lời (hiện có 2)."** and
+no number at all; the endpoint answers `{"observations": 2, "enough_data": false, …}` with every metric null and no
+options. Checked on desktop (dark) and at 375 px (light): under `sm` the bars drop out so the labels stay readable.
+Another organisation's question is 404 `not_found`.
+
+### AC-04 — the bank searched by what was observed
+`POST /questions/search` gained `stats_observations` and `stats_correct_ratio` (number: `= < <= > >=`, `from`/`to`),
+filterable and sortable, aggregated in one grouped sub-select joined only when a request names one of them:
+- `stats_observations >= 10` → **6** questions (the six I answered), `>= 10` and `stats_correct_ratio <= 0.4` → **2**
+- sorted by `stats_correct_ratio` ascending: the two hardest first, the easiest last; a question nobody answered
+  counts as 0 observations and keeps its place in the list
+- `{"operator": "+"}` on a number column → 422 `bad_filter`, an unknown `stats_*` field → 422 `bad_filter`,
+  an unknown sort field → 422 `bad_sort`
+
+### The key audit moved onto the same read model
+`SqlAnswerStats` is gone: `mcq_answers` now lives on `SqlItemStatsReader` and shares the score-ratio expression with
+the discrimination ranking, and `key_audit.MIN_ANSWERS` is the `MIN_OBSERVATIONS` of the new domain rule. The
+flagging rule itself is unchanged; `POST /review/key-audit` on the live stack answers `{"flagged": []}` as before and
+`tests/test_key_audit.py` is untouched and green.
+
+### Checks
+- `make lint-api` (ruff + 4 import contracts), `./scripts/verify.sh apps/api/tests`: **425 passed, 1 skipped**
+  (415 before), 89 of them handler tests on fake ports.
+- `cd apps/web && pnpm typecheck`, `pnpm lint`, `pnpm test`: **174 passed** in 49 files (172 before).
+- New tests: `tests/test_item_stats.py` — the threshold at nine and ten answers, a question nobody answered,
+  first-attempt share and a median that ignores missing seconds, discrimination +1 and −1 on a constructed set,
+  option counts with the key marked, another organisation's question, the two search columns and their 422s;
+  `tests/unit/test_bank_handlers.py` — the handler blanks every number below the minimum and 404s across orgs;
+  `question-edit.test.tsx` — the panel's numbers with their counts and the option distribution, and "Chưa đủ dữ liệu".

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { QuestionFormValue } from "@/components/common/QuestionForm/QuestionForm";
 import { payloadOf } from "@/components/common/QuestionForm/QuestionForm";
-import { useQuestionQuery, useUpdateQuestionMutation } from "@/hooks/react-query/use-query-question";
+import { useQuestionQuery, useQuestionStatsQuery, useUpdateQuestionMutation } from "@/hooks/react-query/use-query-question";
 import { useTagOptionsQuery } from "@/hooks/react-query/use-query-tag";
 import { useTaxonomyQuery } from "@/hooks/react-query/use-query-taxonomy";
 import { useTopicsQuery } from "@/hooks/react-query/use-query-topic";
@@ -9,6 +9,7 @@ import { useTopicsQuery } from "@/hooks/react-query/use-query-topic";
 /** One question of the bank: read it, or edit it in the full form. */
 export function useQuestionDetailPage(id: string) {
   const { data: question } = useQuestionQuery(id);
+  const { data: stats } = useQuestionStatsQuery(id);
   const { data: taxonomy } = useTaxonomyQuery();
   // a question with a subject only offers that subject's topics and tags (subject-scoped-bank, ui-polish A-04)
   const sid = question?.subject_id ?? null;
@@ -18,6 +19,7 @@ export function useQuestionDetailPage(id: string) {
   const [editing, setEditing] = useState(false);
   return {
     question,
+    stats,
     taxonomy,
     topics,
     tags,

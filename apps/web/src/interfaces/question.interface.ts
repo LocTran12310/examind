@@ -54,6 +54,26 @@ export interface ParsedQuestion extends Question {
   flag_evidence?: FlagEvidence | null;
 }
 
+/** One option of a multiple-choice question and how many of the graded answers chose it. */
+export interface QuestionOptionStat {
+  label: string;
+  chosen: number;
+  ratio: number;
+  is_key: boolean;
+}
+
+/** GET /questions/{id}/stats — what the graded answers say about a question (learning-telemetry ADR-03).
+ *  Under ten answers `enough_data` is false and every number is null. */
+export interface QuestionStats {
+  observations: number;
+  enough_data: boolean;
+  correct_ratio: number | null;
+  first_attempt_ratio: number | null;
+  discrimination: number | null;
+  median_seconds: number | null;
+  options: QuestionOptionStat[];
+}
+
 /** POST /questions/facets — counts per value; each facet ignores its own filter (subject-scoped-bank ADR-02). */
 export interface BankFacets {
   subjects: Record<string, number>; // subject id or "none"

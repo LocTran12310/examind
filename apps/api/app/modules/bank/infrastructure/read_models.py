@@ -1,4 +1,5 @@
-"""Bank search, facets and review lists (SQL of subject-scoped-bank and question-review, on the search contract)."""
+"""Bank search, facets, review lists and item statistics (SQL of subject-scoped-bank, question-review and
+learning-telemetry, on the search contract)."""
 import uuid
 
 from sqlalchemy import and_, case, exists, func, or_, select
@@ -6,6 +7,8 @@ from sqlalchemy.orm import Session
 
 from app.modules.bank.application.dto import (
     DocumentRow,
+    ItemStats,
+    OptionStat,
     QuestionView,
     ResolvedFilters,
     ReviewDocumentView,
@@ -16,7 +19,7 @@ from app.modules.bank.application.dto import (
 from app.modules.bank.domain.entities import STATUS_KEYS, USABLE, Question
 from app.modules.bank.domain.services.search_text import query as normalise_query
 from app.modules.bank.infrastructure import orm  # noqa: F401  (mapping)
-from app.modules.bank.infrastructure.tables import source_documents
+from app.modules.bank.infrastructure.tables import answer_facts, attempt_answers, attempts, source_documents
 from app.shared.application.search import Page, SearchRequest
 from app.shared.infrastructure.schema.bank import question_tags, question_topics, questions
 from app.shared.infrastructure.schema.identity import users
@@ -24,7 +27,10 @@ from app.shared.infrastructure.schema.taxonomy import tags, topics
 from app.shared.infrastructure.sql_search import Col, order_by, search, where_clauses
 
 qc, qt, qg, d = questions.c, question_topics.c, question_tags.c, source_documents.c
+af, att, ans = answer_facts.c, attempts.c, attempt_answers.c
 YEAR = d.metadata["school_year"].astext
+# the item statistics the bank can be searched by (learning-telemetry AC-04); joined only when a request names one
+STATS_FIELDS = ("stats_observations", "stats_correct_ratio")
 
 QUESTION_COLS = {
     "stem": Col(qc.stem, sortable=False),
@@ -78,6 +84,25 @@ def _filtered(org_id: uuid.UUID, rf: ResolvedFilters, drop: tuple[str, ...] = ()
     return stmt, needle
 
 
+def _stats_sub(org_id: uuid.UUID):
+    """Observations and mean correct ratio per question in one grouped pass over the facts (never a query per row)."""
+    return (select(af.question_id.label("question_id"), func.count().label("observations"),
+                   func.avg(af.correct_ratio).label("correct_ratio"))
+            .where(af.organization_id == org_id).group_by(af.question_id).subquery("item_stats"))
+
+
+def _with_stats(stmt, org_id: uuid.UUID, req: SearchRequest):
+    """The statement and the columns to read it by: the aggregate is joined only when the request filters or sorts
+    on one of the statistics."""
+    if not (set(req.filters) & set(STATS_FIELDS) or any(k.field in STATS_FIELDS for k in req.sort)):
+        return stmt, QUESTION_COLS
+    s = _stats_sub(org_id)
+    cols = {**QUESTION_COLS,
+            "stats_observations": Col(func.coalesce(s.c.observations, 0), "number"),
+            "stats_correct_ratio": Col(s.c.correct_ratio, "number")}
+    return stmt.outerjoin(s, s.c.question_id == qc.id), cols
+
+
 def question_views(session: Session, qs: list[Question], groups: dict | None = None) -> list[QuestionView]:
     """Questions with their topics (primary first) and tags."""
     qids = [q.id for q in qs]
@@ -102,17 +127,18 @@ class SqlQuestionReader:
 
     def _where(self, org_id: uuid.UUID, req: SearchRequest, rf: ResolvedFilters, drop: tuple[str, ...] = (), base=None):
         stmt, needle = _filtered(org_id, rf, drop, base)
-        for c in where_clauses(QUESTION_COLS, req.filters):
+        stmt, cols = _with_stats(stmt, org_id, req)
+        for c in where_clauses(cols, req.filters):
             stmt = stmt.where(c)
-        return stmt, needle
+        return stmt, needle, cols
 
     def search(self, org_id: uuid.UUID, req: SearchRequest, rf: ResolvedFilters) -> Page[QuestionView]:
-        stmt, needle = self._where(org_id, req, rf, base=select(Question))
+        stmt, needle, cols = self._where(org_id, req, rf, base=select(Question))
         default = [qc.created_at.desc(), qc.number]
         if needle:
             default = [func.similarity(qc.search_text, needle).desc()] + default
         total = self.session.scalar(select(func.count()).select_from(stmt.subquery())) or 0
-        stmt = stmt.order_by(*order_by(QUESTION_COLS, req, default)).offset(req.offset).limit(req.limit)
+        stmt = stmt.order_by(*order_by(cols, req, default)).offset(req.offset).limit(req.limit)
         return Page(self.views(list(self.session.scalars(stmt))), total, req.page, req.limit)
 
     def ids(self, org_id: uuid.UUID, rf: ResolvedFilters) -> list[uuid.UUID]:
@@ -175,6 +201,76 @@ class SqlQuestionReader:
         if subject_id and subject_id != "none":
             stmt = stmt.where(node.c.subject_id == subject_id)
         out["topics"] = {str(t): n for t, n in db.execute(stmt).all()}
+        return out
+
+
+# ------------------------------------------------------------------ item statistics (learning-telemetry ADR-03)
+
+BANDS = 3  # discrimination compares the strongest third of the attempts with the weakest
+
+
+def _score_ratio():
+    """What the attempt scored, 0..1 (no maximum: 0) — the ranking the discrimination and the key audit share."""
+    return case((att.max_score > 0, func.coalesce(att.score, 0) / att.max_score), else_=0.0)
+
+
+def _rounded(value) -> float | None:
+    return None if value is None else round(float(value), 3)
+
+
+class SqlItemStatsReader:
+    """What the graded answers say about a question, aggregated in SQL: the question detail, and the answers the key
+    audit judges (the same facts, the same score ranking)."""
+
+    def __init__(self, session: Session):
+        self.session = session
+
+    def stats(self, org_id: uuid.UUID, q: Question) -> ItemStats:
+        band = func.ntile(BANDS).over(order_by=(_score_ratio().desc(), af.attempt_id))
+        facts = (select(af.correct_ratio.label("correct"), af.first_attempt.label("first"), af.seconds_spent.label("seconds"),
+                        band.label("band"))
+                 .select_from(answer_facts).join(attempts, att.id == af.attempt_id)
+                 .where(af.organization_id == org_id, af.question_id == q.id)).subquery()
+        f = facts.c
+        r = self.session.execute(select(
+            func.count().label("observations"),
+            func.avg(f.correct).label("correct_ratio"),
+            func.avg(case((f.first.is_(True), f.correct))).label("first_attempt_ratio"),
+            func.avg(case((f.band == 1, f.correct))).label("top"),
+            func.avg(case((f.band == BANDS, f.correct))).label("bottom"),
+            func.percentile_cont(0.5).within_group(f.seconds).label("median_seconds"),
+        )).one()
+        top, bottom = _rounded(r.top), _rounded(r.bottom)
+        return ItemStats(
+            observations=r.observations, correct_ratio=_rounded(r.correct_ratio), first_attempt_ratio=_rounded(r.first_attempt_ratio),
+            discrimination=None if top is None or bottom is None else round(top - bottom, 3),
+            median_seconds=None if r.median_seconds is None else round(r.median_seconds),
+            options=self._options(org_id, q, r.observations) if q.type == "mcq" else [],
+        )
+
+    def _options(self, org_id: uuid.UUID, q: Question, observations: int) -> list[OptionStat]:
+        """How many of those answers chose each option: the responses are stored in the question's own labels."""
+        label = ans.response["key"].astext
+        chosen = dict(self.session.execute(
+            select(label, func.count()).select_from(answer_facts)
+            .join(attempt_answers, and_(ans.attempt_id == af.attempt_id, ans.question_id == af.question_id))
+            .where(af.organization_id == org_id, af.question_id == q.id).group_by(label)).all())
+        key = (q.answer or {}).get("key")
+        return [OptionStat(label=o["label"], chosen=chosen.get(o["label"], 0),
+                           ratio=round(chosen.get(o["label"], 0) / observations, 3) if observations else 0.0,
+                           is_key=o["label"] == key)
+                for o in q.options or []]
+
+    def mcq_answers(self, org_id: uuid.UUID | None) -> dict[uuid.UUID, list[tuple[dict | None, float]]]:
+        """{question_id: [(response, the attempt's score ratio)]} of the usable MCQs — what the key audit weighs."""
+        stmt = (select(ans.question_id, ans.response, _score_ratio()).select_from(attempt_answers)
+                .join(attempts, att.id == ans.attempt_id).join(questions, qc.id == ans.question_id)
+                .where(att.status == "submitted", qc.type == "mcq", qc.status.in_(USABLE), ans.points.is_not(None)))
+        if org_id:
+            stmt = stmt.where(qc.organization_id == org_id)
+        out: dict = {}
+        for qid, response, ratio in self.session.execute(stmt):
+            out.setdefault(qid, []).append((response, float(ratio)))
         return out
 
 

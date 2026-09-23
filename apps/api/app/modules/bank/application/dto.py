@@ -94,6 +94,28 @@ def student_view(q) -> QuestionView:
 
 
 @dataclass(frozen=True)
+class OptionStat:
+    """One multiple-choice option and how many of the graded answers chose it."""
+    label: str
+    chosen: int
+    ratio: float
+    is_key: bool
+
+
+@dataclass(frozen=True)
+class ItemStats:
+    """What the graded answers say about a question (learning-telemetry ADR-03). `enough_data` is false — and every
+    number None — while the question has fewer than the minimum observations."""
+    observations: int
+    enough_data: bool = False
+    correct_ratio: float | None = None
+    first_attempt_ratio: float | None = None
+    discrimination: float | None = None  # mean correct of the strongest third of the attempts minus the weakest third
+    median_seconds: int | None = None
+    options: list[OptionStat] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
 class DocumentRow:
     id: uuid.UUID
     filename: str

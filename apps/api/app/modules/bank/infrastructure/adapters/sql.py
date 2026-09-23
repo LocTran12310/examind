@@ -1,13 +1,11 @@
 """SQL adapters over other contexts' tables the review workflow reads or updates in the same transaction:
-source documents (assignment), the org's ingestion threshold, submitted MCQ answers (key audit)."""
+source documents (assignment) and the org's ingestion threshold."""
 import uuid
 
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
-from app.modules.bank.domain.entities import USABLE
-from app.modules.bank.infrastructure.tables import attempt_answers, attempts, source_documents
-from app.shared.infrastructure.schema.bank import questions
+from app.modules.bank.infrastructure.tables import source_documents
 from app.shared.infrastructure.schema.identity import organizations
 
 DEFAULT_THRESHOLD = 0.85
@@ -47,20 +45,3 @@ class SqlReviewSettings:
         self.session.execute(update(organizations).where(organizations.c.id == org_id).values(settings=settings)
                              .execution_options(synchronize_session=False))
         self.session.expire_all()  # a loaded Organization must see the new settings
-
-
-class SqlAnswerStats:
-    def __init__(self, session: Session):
-        self.session = session
-
-    def mcq_answers(self, org_id: uuid.UUID | None) -> dict[uuid.UUID, list[tuple[dict | None, float]]]:
-        a, t, q = attempt_answers.c, attempts.c, questions.c
-        stmt = (select(a.question_id, a.response, t.score, t.max_score).select_from(attempt_answers)
-                .join(attempts, t.id == a.attempt_id).join(questions, q.id == a.question_id)
-                .where(t.status == "submitted", q.type == "mcq", q.status.in_(USABLE), a.points.is_not(None)))
-        if org_id:
-            stmt = stmt.where(q.organization_id == org_id)
-        out: dict = {}
-        for qid, response, score, max_score in self.session.execute(stmt):
-            out.setdefault(qid, []).append((response, (score or 0) / max_score if max_score else 0))
-        return out

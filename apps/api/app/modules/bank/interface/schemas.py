@@ -4,7 +4,7 @@ import uuid
 
 from pydantic import BaseModel
 
-from app.modules.bank.application.dto import BankFilters, QuestionView, ReviewDocumentView
+from app.modules.bank.application.dto import BankFilters, ItemStats, QuestionView, ReviewDocumentView
 from app.shared.domain.errors import Invalid
 from app.shared.interface.search_schemas import SearchBody
 
@@ -151,6 +151,28 @@ class QuestionSearchBody(SearchBody):
                            exam_kind=self.exam_kind or None, type=self.type or None, difficulty=self.difficulty or None,
                            status=self.status, topic_ids=topics, tag_ids=tuple(dict.fromkeys(self.tag_ids)),
                            document_id=self.document_id, school_year=self.school_year or None)
+
+
+class OptionStatOut(BaseModel):
+    label: str
+    chosen: int
+    ratio: float
+    is_key: bool
+
+
+class QuestionStatsOut(BaseModel):
+    """Item statistics of one question; every number is null while `enough_data` is false (ADR-03)."""
+    observations: int
+    enough_data: bool
+    correct_ratio: float | None
+    first_attempt_ratio: float | None
+    discrimination: float | None
+    median_seconds: int | None
+    options: list[OptionStatOut] = []
+
+
+def question_stats_out(s: ItemStats) -> QuestionStatsOut:
+    return QuestionStatsOut(**{**vars(s), "options": [OptionStatOut(**vars(o)) for o in s.options]})
 
 
 class FacetsOut(BaseModel):

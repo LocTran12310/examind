@@ -1,8 +1,8 @@
-"""Read ports of the bank (search, facets, review lists) and the question presenter."""
+"""Read ports of the bank (search, facets, review lists, item statistics) and the question presenter."""
 from typing import Protocol
 import uuid
 
-from app.modules.bank.application.dto import QuestionView, ResolvedFilters, ReviewDocumentView
+from app.modules.bank.application.dto import ItemStats, QuestionView, ResolvedFilters, ReviewDocumentView
 from app.modules.bank.domain.entities import Question
 from app.shared.application.search import Page, SearchRequest
 
@@ -31,6 +31,15 @@ class QuestionReader(QuestionViews, Protocol):
         ...
 
     def demo(self, org_id: uuid.UUID) -> Question | None: ...
+
+
+class ItemStatsReader(Protocol):
+    """The graded answers of one question, aggregated (never row by row): the same read model the search columns and
+    the key audit are built on."""
+
+    def stats(self, org_id: uuid.UUID, q: Question) -> ItemStats:
+        """Measured as they are — `enough_data` stays false here; the handler decides what may be shown."""
+        ...
 
 
 class ReviewReader(Protocol):

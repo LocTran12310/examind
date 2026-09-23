@@ -16,6 +16,7 @@ from app.modules.bank.application.queries.document_questions import DocumentQues
 from app.modules.bank.application.queries.get_question import GetQuestion, GetQuestionHandler
 from app.modules.bank.application.queries.get_review_document import GetReviewDocument, GetReviewDocumentHandler
 from app.modules.bank.application.queries.question_facets import QuestionFacets, QuestionFacetsHandler
+from app.modules.bank.application.queries.question_stats import QuestionStats, QuestionStatsHandler
 from app.modules.bank.application.queries.review_queue import ReviewQueue, ReviewQueueHandler
 from app.modules.bank.application.queries.search_flagged import SearchFlagged, SearchFlaggedHandler
 from app.modules.bank.application.queries.search_questions import SearchQuestions, SearchQuestionsHandler
@@ -36,10 +37,12 @@ from app.modules.bank.interface.schemas import (
     QuestionOut,
     QuestionPatch,
     QuestionSearchBody,
+    QuestionStatsOut,
     ReviewDocumentOut,
     ReviewDocumentSearchBody,
     parsed_out,
     question_out,
+    question_stats_out,
     review_document_out,
 )
 from app.shared.application.actor import Actor
@@ -59,8 +62,9 @@ def _page(page, out) -> PageOut:
 @router.post("/questions/search", response_model=PageOut[ParsedQuestionOut])
 def search_questions(body: QuestionSearchBody, actor: Actor = Depends(staff_actor),
                      handle: SearchQuestionsHandler = Depends(deps.search_questions)):
-    """Bank filters at the top of the body; filters: stem (text) · created_at, updated_at (date) · number, grade (number);
-    sort also by difficulty, type, confidence. Relevance first when `q` is given, then newest."""
+    """Bank filters at the top of the body; filters: stem (text) · created_at, updated_at (date) · number, grade,
+    stats_observations, stats_correct_ratio (number); sort also by difficulty, type, confidence.
+    Relevance first when `q` is given, then newest."""
     return _page(handle(actor, SearchQuestions(body.to_request(), body.to_filters())), parsed_out)
 
 
@@ -99,6 +103,14 @@ def get_question(question_id: uuid.UUID, actor: Actor = Depends(current_actor), 
     """Students get the question without answer or solution."""
     v = handle(actor, GetQuestion(question_id))
     return question_out(v) if actor.role == "student" else parsed_out(v)
+
+
+@router.get("/questions/{question_id}/stats", response_model=QuestionStatsOut)
+def question_stats(question_id: uuid.UUID, actor: Actor = Depends(staff_actor), handle: QuestionStatsHandler = Depends(deps.question_stats)):
+    """What the graded answers say about the question: share correct, share correct at the first attempt, discrimination
+    between the strongest and weakest third, median seconds and, for an MCQ, how many chose each option.
+    Under 10 answers only `observations` is returned and `enough_data` is false."""
+    return question_stats_out(handle(actor, QuestionStats(question_id)))
 
 
 @router.patch("/questions/{question_id}", response_model=ParsedQuestionOut)

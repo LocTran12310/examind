@@ -6,6 +6,7 @@ import { Panel } from "@/components/common/Panel/Panel";
 import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import { formValueOf, QuestionForm } from "@/components/common/QuestionForm/QuestionForm";
 import { QuestionView } from "@/components/common/QuestionView/QuestionView";
+import { QuestionStats } from "@/components/page-components/QuestionDetail/QuestionStats/QuestionStats";
 import { Button } from "@/components/ui/button";
 import { DIFFICULTY_LABEL, STATUS_LABEL } from "@/constants/question.constant";
 import { useQuestionDetailPage } from "@/hooks/page-hooks/question-detail/use-question-detail-page";
@@ -40,10 +41,13 @@ export function QuestionDetailPage({ id }: { id: string }) {
           onSubmit={p.save}
         />
       ) : (
-        <Panel className="max-w-3xl">
-          <QuestionView question={q} mode="review" solutionOpen />
-          {q.tags.length > 0 && <p className="mt-4 text-sm text-muted-foreground">{q.tags.map((t) => `#${t.name}`).join(" ")}</p>}
-        </Panel>
+        <div className="grid gap-4">
+          <Panel className="max-w-3xl">
+            <QuestionView question={q} mode="review" solutionOpen />
+            {q.tags.length > 0 && <p className="mt-4 text-sm text-muted-foreground">{q.tags.map((t) => `#${t.name}`).join(" ")}</p>}
+          </Panel>
+          {p.stats && <QuestionStats stats={p.stats} />}
+        </div>
       )}
     </>
   );

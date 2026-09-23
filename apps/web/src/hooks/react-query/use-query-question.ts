@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient, type UseMutationResult, type UseQueryResult } from "@tanstack/react-query";
 import { QUESTION_KEYS, REVIEW_KEYS } from "@/constants/react-query-key.constant";
 import type { BulkQuestionsBody, QuestionBody, QuestionSearchBody, UpdateQuestionBody } from "@/dtos/question.dto";
-import type { BankFacets, BulkResult, ParsedQuestion, Question } from "@/interfaces/question.interface";
+import type { BankFacets, BulkResult, ParsedQuestion, Question, QuestionStats } from "@/interfaces/question.interface";
 import type { RowsQueryOptions, SearchPage } from "@/interfaces/search-page.interface";
 import { invalidate } from "@/lib/common/query-client";
 import { questionService } from "@/services/question.service";
@@ -26,6 +26,11 @@ export function useQuestionFacetsQuery(body: QuestionSearchBody, enabled = true)
 
 export function useQuestionQuery(id: string): UseQueryResult<ParsedQuestion, Error> {
   return useQuery<ParsedQuestion, Error>({ queryKey: QUESTION_KEYS.DETAIL(id), queryFn: () => questionService.get(id) });
+}
+
+/** Item statistics of one question; the panel shows "chưa đủ dữ liệu" until there are enough answers. */
+export function useQuestionStatsQuery(id: string): UseQueryResult<QuestionStats, Error> {
+  return useQuery<QuestionStats, Error>({ queryKey: QUESTION_KEYS.STATS(id), queryFn: () => questionService.stats(id), enabled: Boolean(id) });
 }
 
 export function useQuestionDemoQuery(): UseQueryResult<Question, Error> {

@@ -1,6 +1,7 @@
-"""Columns of other contexts' tables the bank reads (SQLAlchemy Core, ADR-01): source documents (ingestion) and
-submitted answers (assessment). Lightweight tables: they are not part of the metadata."""
-from sqlalchemy import column, table
+"""Columns of other contexts' tables the bank reads (SQLAlchemy Core, ADR-01): source documents (ingestion),
+submitted answers and the graded facts item statistics are computed from (assessment). Lightweight tables: they are
+not part of the metadata."""
+from sqlalchemy import Boolean, Float, Integer, column, table
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 
 source_documents = table(
@@ -18,6 +19,13 @@ attempts = table(
 attempt_answers = table(
     "attempt_answers",
     column("attempt_id", UUID(as_uuid=True)), column("question_id", UUID(as_uuid=True)), column("response", JSONB), column("points"),
+)
+
+# one graded answer; an unanswered question leaves none (learning-telemetry ADR-02)
+answer_facts = table(
+    "answer_facts",
+    column("organization_id", UUID(as_uuid=True)), column("attempt_id", UUID(as_uuid=True)), column("question_id", UUID(as_uuid=True)),
+    column("correct_ratio", Float), column("seconds_spent", Integer), column("first_attempt", Boolean),
 )
 
 exam_questions = table("exam_questions", column("question_id", UUID(as_uuid=True)))
