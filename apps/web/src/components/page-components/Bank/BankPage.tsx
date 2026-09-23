@@ -1,7 +1,8 @@
 "use client";
 
-import { Plus, RefreshCw } from "lucide-react";
+import { History, Plus, RefreshCw } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 import { EmptyState } from "@/components/common/EmptyState/EmptyState";
 import { ListLayout } from "@/components/common/ListLayout/ListLayout";
 import { PageHeader } from "@/components/common/PageHeader/PageHeader";
@@ -10,6 +11,7 @@ import { Toolbar, ToolbarButton, ToolbarSeparator } from "@/components/common/Da
 import { BankFilters } from "@/components/page-components/Bank/BankFilters/BankFilters";
 import { BulkActions } from "@/components/page-components/Bank/BulkBar/BulkBar";
 import { QuestionRow } from "@/components/page-components/Bank/QuestionRow/QuestionRow";
+import { RecentChanges } from "@/components/page-components/Bank/RecentChanges/RecentChanges";
 import { SubjectTabs } from "@/components/page-components/Bank/SubjectTabs/SubjectTabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -19,6 +21,7 @@ import { cn } from "@/lib/utils";
 
 export function BankPage() {
   const p = useBankPage();
+  const [history, setHistory] = useState(false);
   return (
     <ListLayout header={<PageHeader title="Ngân hàng câu hỏi" description={p.total !== undefined ? `${p.total.toLocaleString("vi-VN")} câu` : undefined} />}>
       <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border bg-card">
@@ -34,8 +37,13 @@ export function BankPage() {
           <ToolbarButton onClick={p.reload}>
             <RefreshCw className={cn(p.loading && "animate-spin")} /> Nạp
           </ToolbarButton>
+          {/* beside the bulk bar, because that is what it takes back: the mistake is looked for where it was made */}
+          <ToolbarButton onClick={() => setHistory(true)}>
+            <History /> Thay đổi gần đây
+          </ToolbarButton>
           {p.selected.size > 0 && <span className="ml-auto pr-2 text-xs opacity-80">Đã chọn {p.selected.size}</span>}
         </Toolbar>
+        <RecentChanges open={history} onOpenChange={setHistory} />
         <div className="min-h-0 flex-1 overflow-auto">
           {p.taxonomy && (
             <div className="border-b px-3 pt-3">

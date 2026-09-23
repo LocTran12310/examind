@@ -109,6 +109,34 @@ export interface BankFacets {
 
 export interface BulkResult {
   updated: number;
+  /** the batch this edit was recorded under — what "Hoàn tác" takes back (bulk-safety AC-01) */
+  batch_id?: string | null;
+}
+
+/** Answer of `POST /questions/bulk/undo`: `batch_id` is the restore's own batch, not the one it took back,
+ *  so the history shows the undo as a change of its own (bulk-safety AC-04). */
+export interface UndoResult {
+  restored: number;
+  batch_id: string;
+}
+
+/** Why a batch can no longer be taken back (bulk-safety AC-05); the API writes the sentence itself. */
+export type UndoBlockReason = "no_batch" | "is_undo" | "already_undone" | "expired";
+
+/** One change of the bank as "Thay đổi gần đây" lists it (`POST /question-events/search`): the whole request,
+ *  not one line per question. `fields` are snapshot field names, `action` the verb the batch is named by. */
+export interface QuestionEvent {
+  batch_id: string | null;
+  created_at: string;
+  user_id: string | null;
+  actor_name: string | null;
+  action: string;
+  fields: string[];
+  questions: number;
+  undoable: boolean;
+  reason: UndoBlockReason | null;
+  /** why it cannot be taken back, in the words the API already chose — never a second wording here */
+  message: string | null;
 }
 
 /** Why `POST /questions/bulk/topics` left a pair alone (pickers-builder ADR-02). */

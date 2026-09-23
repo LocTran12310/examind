@@ -55,3 +55,8 @@ export interface BulkQuestionsBody {
 export interface BulkTopicsBody {
   pairs: { question_id: string; topic_id: string }[];
 }
+
+/** `POST /questions/bulk/undo`: every question of that batch goes back to what it was (bulk-safety AC-01). */
+export interface UndoBatchBody {
+  batch_id: string;
+}

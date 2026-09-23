@@ -1,15 +1,16 @@
 import { useMutation, useQuery, useQueryClient, type UseMutationResult, type UseQueryResult } from "@tanstack/react-query";
 import { NO_SUBJECT } from "@/constants/question.constant";
-import { QUESTION_KEYS, REVIEW_KEYS } from "@/constants/react-query-key.constant";
+import { QUESTION_EVENT_KEYS, QUESTION_KEYS, REVIEW_KEYS } from "@/constants/react-query-key.constant";
 import type { BulkQuestionsBody, BulkTopicsBody, QuestionBody, QuestionSearchBody, UpdateQuestionBody } from "@/dtos/question.dto";
-import type { BankFacets, BulkResult, BulkTopicsResult, ParsedQuestion, Question, QuestionStats, TopicSuggestion } from "@/interfaces/question.interface";
+import type { SearchBody } from "@/dtos/search.dto";
+import type { BankFacets, BulkResult, BulkTopicsResult, ParsedQuestion, Question, QuestionEvent, QuestionStats, TopicSuggestion, UndoResult } from "@/interfaces/question.interface";
 import type { RowsQueryOptions, SearchPage } from "@/interfaces/search-page.interface";
 import { invalidate } from "@/lib/common/query-client";
 import { questionService } from "@/services/question.service";
 import { useSearchQuery } from "./use-search-query";
 
-// the review screens show questions too
-const TOUCHED = [QUESTION_KEYS.ALL, REVIEW_KEYS.ALL] as const;
+// the review screens show questions too, and every change of a question is a row of "Thay đổi gần đây"
+const TOUCHED = [QUESTION_KEYS.ALL, REVIEW_KEYS.ALL, QUESTION_EVENT_KEYS.ALL] as const;
 
 // `POST /questions/suggest-topics` takes at most 50 ids (topic-coverage contract)
 const SUGGEST_BATCH = 50;
@@ -98,6 +99,21 @@ export function useBulkUpdateQuestionsMutation(): UseMutationResult<BulkResult, 
   const qc = useQueryClient();
   return useMutation<BulkResult, Error, BulkQuestionsBody>({
     mutationFn: questionService.bulk,
+    onSuccess: () => invalidate(qc, ...TOUCHED),
+  });
+}
+
+/** "Thay đổi gần đây": one row per request that changed the bank, newest first (bulk-safety AC-03). */
+export function useQuestionEventSearchQuery(body: SearchBody, options?: RowsQueryOptions<QuestionEvent>): UseQueryResult<SearchPage<QuestionEvent>, Error> {
+  return useSearchQuery(QUESTION_EVENT_KEYS.SEARCH(body), questionService.searchEvents, body, options);
+}
+
+/** Takes a whole batch back (AC-01). The restore is itself a change, so the history refreshes with the lists:
+ *  the batch just undone turns read-only and the undo appears as its own row — from the server, not from here. */
+export function useUndoBatchMutation(): UseMutationResult<UndoResult, Error, string> {
+  const qc = useQueryClient();
+  return useMutation<UndoResult, Error, string>({
+    mutationFn: (batchId) => questionService.undo({ batch_id: batchId }),
     onSuccess: () => invalidate(qc, ...TOUCHED),
   });
 }

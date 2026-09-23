@@ -1,5 +1,6 @@
-import type { BulkQuestionsBody, BulkTopicsBody, QuestionBody, QuestionSearchBody, SuggestTopicsBody, UpdateQuestionBody } from "@/dtos/question.dto";
-import type { BankFacets, BulkResult, BulkTopicsResult, ParsedQuestion, Question, QuestionStats, TopicSuggestions } from "@/interfaces/question.interface";
+import type { BulkQuestionsBody, BulkTopicsBody, QuestionBody, QuestionSearchBody, SuggestTopicsBody, UndoBatchBody, UpdateQuestionBody } from "@/dtos/question.dto";
+import type { SearchBody } from "@/dtos/search.dto";
+import type { BankFacets, BulkResult, BulkTopicsResult, ParsedQuestion, Question, QuestionEvent, QuestionStats, TopicSuggestions, UndoResult } from "@/interfaces/question.interface";
 import type { SearchPage } from "@/interfaces/search-page.interface";
 import { http } from "@/lib/common/http";
 
@@ -16,6 +17,10 @@ export const questionService = {
   bulk: (body: BulkQuestionsBody) => http<BulkResult>("/questions/bulk", { body }),
   /** One topic per question in one request — a page of the tagging queue at once (at most 200 pairs). */
   bulkTopics: (body: BulkTopicsBody) => http<BulkTopicsResult>("/questions/bulk/topics", { body }),
+  /** Puts every question of a batch back to what it was, all of them or none (bulk-safety AC-01, AC-02). */
+  undo: (body: UndoBatchBody) => http<UndoResult>("/questions/bulk/undo", { body }),
+  /** "Thay đổi gần đây": one row per request that changed the bank, newest first. */
+  searchEvents: (body: SearchBody) => http<SearchPage<QuestionEvent>>("/question-events/search", { body }),
   /** Up to three topic candidates per question, computed on demand; at most 50 ids per request. */
   suggestTopics: (body: SuggestTopicsBody) => http<TopicSuggestions>("/questions/suggest-topics", { body }),
   /** A sample question to check rendering (formulas, images, solution). */

@@ -95,6 +95,12 @@ export const QUESTION_KEYS = {
   DEMO: ["questions", "demo"] as const,
 };
 
+/** "Thay đổi gần đây": every change of the bank lands here, so every bank mutation refreshes it (bulk-safety AC-04). */
+export const QUESTION_EVENT_KEYS = {
+  ALL: ["question-events"] as const,
+  SEARCH: (body: unknown) => ["question-events", "search", body] as const,
+};
+
 export const REVIEW_KEYS = {
   ALL: ["review"] as const,
   DOCUMENTS: (body: unknown) => ["review", "documents", body] as const,

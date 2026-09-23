@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
+import { useUndoBatch } from "@/hooks/page-hooks/bank/use-undo-batch";
 import { useBulkUpdateQuestionsMutation, useDeleteQuestionsMutation, useTopicCountsQuery } from "@/hooks/react-query/use-query-question";
 import type { SubjectTopicConflict } from "@/interfaces/question.interface";
 import { ApiError } from "@/lib/common/http";
@@ -21,11 +22,15 @@ export function useBulkActions({ ids, subjectId, onDone, onClear }: { ids: strin
   const { data: topicCounts } = useTopicCountsQuery(subjectId, picking);
   const bulk = useBulkUpdateQuestionsMutation();
   const removeMany = useDeleteQuestionsMutation();
+  const undo = useUndoBatch();
 
   async function apply(set: Record<string, unknown>, label: string) {
     try {
       const r = await bulk.mutateAsync({ ids, set });
-      toast.success(`${label}: ${r.updated} câu`);
+      // the toast is the only moment the teacher still remembers what was selected, so the way back rides on it
+      // (AC-01). Without a batch id there is nothing to take back and the toast says only what it did; the way
+      // back is then "Thay đổi gần đây", which reads the batches out of the history itself.
+      toast.success(`${label}: ${r.updated} câu`, r.batch_id ? { action: { label: "Hoàn tác", onClick: () => void undo.run(r.batch_id!) } } : undefined);
       onDone?.();
     } catch (e) {
       const conflicts = subjectTopicConflicts(e);

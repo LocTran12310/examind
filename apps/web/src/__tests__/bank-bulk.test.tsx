@@ -1,11 +1,13 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { Toaster } from "sonner";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { BulkActions } from "@/components/page-components/Bank/BulkBar/BulkBar";
+import { QUESTION_EVENT_KEYS, QUESTION_KEYS } from "@/constants/react-query-key.constant";
 import type { ParsedQuestion } from "@/interfaces/question.interface";
 import type { Taxonomy } from "@/interfaces/taxonomy.interface";
 import type { Topic } from "@/interfaces/topic.interface";
-import { mockFetch, renderWithQuery as render, route } from "./helpers";
+import { lastBody, mockFetch, renderWithQuery as render, route, searchPage } from "./helpers";
 
 const topics: Topic[] = [
   { id: "t1", subject_id: "s", parent_id: null, name: "Vectơ", level_kind: "topic", grade: 10, path: "a", depth: 1, sort: 0, child_count: 0 },
@@ -17,6 +19,8 @@ const taxonomy: Taxonomy = {
   semesters: [],
 };
 const facets = { subjects: {}, topics: { t1: 4, t2: 0 }, types: {}, difficulties: {}, grades: {}, periods: {}, school_years: {}, tags: {} };
+/** a page of the bank as the query keys hold it, to check what an undo refreshes */
+const body = { page: 1, limit: 20, subject_id: "s" };
 const onPage = [{ id: "a", number: 7, stem: "Cho hàm số bậc hai" }, { id: "b", number: 7, stem: "Đường tròn tâm I" }] as ParsedQuestion[];
 /** the refusal the API answers when a bulk subject would leave a question in another subject's tree (A-04) */
 const conflictBody = {
@@ -119,6 +123,65 @@ describe("bulk actions", () => {
     expect(panel).toHaveTextContent("chuyên đề Vectơ");
     expect(panel).toHaveTextContent("chuyên đề Đường tròn");
     expect(panel).toHaveTextContent("Không câu nào bị đổi");
+  });
+
+  it("the toast carries Hoàn tác: the batch goes back, and the bank, its facets and the history refresh (AC-01)", async () => {
+    const f = mockFetch(route("POST", "/api/questions/bulk", { updated: 2, batch_id: "batch-1" }), route("POST", "/api/questions/bulk/undo", { restored: 2, batch_id: "batch-2" }));
+    const u = userEvent.setup();
+    const { client } = render(
+      <>
+        <BulkActions ids={["a", "b"]} topics={topics} tags={[]} taxonomy={taxonomy} onDone={() => {}} onClear={() => {}} />
+        <Toaster />
+      </>,
+    );
+    // what the bank has on screen while the toast is up: the page, the tab counts and "Thay đổi gần đây"
+    const seeded = [QUESTION_KEYS.SEARCH(body), QUESTION_KEYS.FACETS(body), QUESTION_EVENT_KEYS.SEARCH(body)];
+    for (const key of seeded) client.setQueryData(key, searchPage([]));
+
+    await u.click(screen.getByRole("button", { name: /Lớp/ }));
+    await u.click(await screen.findByRole("menuitem", { name: "Lớp 11" }));
+    expect(await screen.findByText("Đã đặt Lớp 11: 2 câu")).toBeInTheDocument();
+
+    await u.click(screen.getByRole("button", { name: "Hoàn tác" }));
+    await waitFor(() => expect(lastBody(f, "/questions/bulk/undo")).toEqual({ batch_id: "batch-1" }));
+    // how many questions came back, not just "xong"
+    expect(await screen.findByText("Đã hoàn tác 2 câu")).toBeInTheDocument();
+    for (const key of seeded) expect(client.getQueryState(key)?.isInvalidated).toBe(true);
+  });
+
+  it("an undo the API refuses is read out in its own words, not as a crash (AC-01)", async () => {
+    mockFetch(
+      route("POST", "/api/questions/bulk", { updated: 2, batch_id: "batch-1" }),
+      route("POST", "/api/questions/bulk/undo", { code: "batch_already_undone", message: "Lượt sửa này đã được hoàn tác", details: { requestId: "r1" } }, 409),
+    );
+    const u = userEvent.setup();
+    render(
+      <>
+        <BulkActions ids={["a", "b"]} topics={topics} tags={[]} taxonomy={taxonomy} onDone={() => {}} onClear={() => {}} />
+        <Toaster />
+      </>,
+    );
+    await u.click(screen.getByRole("button", { name: /Lớp/ }));
+    await u.click(await screen.findByRole("menuitem", { name: "Lớp 11" }));
+    await u.click(await screen.findByRole("button", { name: "Hoàn tác" }));
+    expect(await screen.findByText("Lượt sửa này đã được hoàn tác")).toBeInTheDocument();
+  });
+
+  it("an answer with no batch id offers no way back from the toast", async () => {
+    // the batch is what an undo names; an edit that does not say which one it wrote cannot be taken back here,
+    // and the toast promises nothing it cannot do — "Thay đổi gần đây" is still the way in
+    mockFetch(route("POST", "/api/questions/bulk", { updated: 2 }));
+    const u = userEvent.setup();
+    render(
+      <>
+        <BulkActions ids={["a", "b"]} topics={topics} tags={[]} taxonomy={taxonomy} onDone={() => {}} onClear={() => {}} />
+        <Toaster />
+      </>,
+    );
+    await u.click(screen.getByRole("button", { name: /Lớp/ }));
+    await u.click(await screen.findByRole("menuitem", { name: "Lớp 11" }));
+    expect(await screen.findByText("Đã đặt Lớp 11: 2 câu")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Hoàn tác" })).not.toBeInTheDocument();
   });
 
   it("the topic picker counts questions of the subject in hand, asked for when it opens (AC-02, ADR-01)", async () => {

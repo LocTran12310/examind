@@ -1,9 +1,13 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
+import { toast } from "sonner";
 import { afterEach } from "vitest";
 
 afterEach(() => {
   cleanup();
+  // sonner's queue is module state, not React state: a Toaster mounted by the next test would otherwise
+  // show the toasts this one raised, and a "Hoàn tác" from a finished test is a button no query should find
+  toast.dismiss();
   document.body.removeAttribute("style"); // Radix leaves pointer-events:none when a test ends with a menu open
 });
 

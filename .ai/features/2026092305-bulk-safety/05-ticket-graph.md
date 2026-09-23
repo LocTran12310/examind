@@ -3,7 +3,7 @@
 # Ticket graph — 2026092305-bulk-safety
 
 - Units of Work: **4**
-- Tickets: **9** (7 done)
+- Tickets: **9** (9 done)
 - Total effort: **3.4d**
 - Critical path: **1.8d** across 4 tickets
 - Theoretical minimum duration with unlimited parallelism: **1.8d**
@@ -34,8 +34,8 @@ graph LR
     T_02_02["✓ T-02-02<br/>The undo is itself an event, and cannot run twice"]
   end
   subgraph UOW_03["UOW-03 · The bank: undo in the toast, recent changes, and a count on every action"]
-    T_03_01["T-03-01<br/>Hoàn tác in the toast"]
-    T_03_02["T-03-02<br/>Thay đổi gần đây"]
+    T_03_01["✓ T-03-01<br/>Hoàn tác in the toast"]
+    T_03_02["✓ T-03-02<br/>Thay đổi gần đây"]
     T_03_03["✓ T-03-03<br/>Each bulk action names what it will change"]
   end
   subgraph UOW_04["UOW-04 · A way back from every detail page"]
@@ -88,7 +88,7 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-01-03 | UOW-01 | api | feature | 4h | T-01-01, T-01-02 | AC-03, AC-05 | done |
 | T-02-01 | UOW-02 | api | feature | 4h | T-01-01, T-01-02 | AC-01, AC-02 | done |
 | T-02-02 | UOW-02 | api | feature | 3h | T-02-01 | AC-04, AC-05 | done |
-| T-03-01 | UOW-03 | web | feature | 3h | T-02-02 | AC-01 | todo |
-| T-03-02 | UOW-03 | web | feature | 4h | T-01-03, T-02-02 | AC-03, AC-04, AC-05 | todo |
+| T-03-01 | UOW-03 | web | feature | 3h | T-02-02 | AC-01 | done |
+| T-03-02 | UOW-03 | web | feature | 4h | T-01-03, T-02-02 | AC-03, AC-04, AC-05 | done |
 | T-03-03 | UOW-03 | web | feature | 2h | — | AC-06 | done |
 | T-04-01 | UOW-04 | web | feature | 2h | — | AC-07 | done |

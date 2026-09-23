@@ -18,3 +18,36 @@ export const SUGGESTION_SOURCE_LABEL: Record<SuggestionSource, string> = { keywo
 
 /** value of the bank's subject meaning "questions without a subject" */
 export const NO_SUBJECT = "none";
+
+/** What one change of the bank was, in the teacher's words: the `action` naming a batch in "Thay đổi gần đây"
+ *  (bulk-safety AC-03). A batch that wrote several kinds of event is named by the coarsest of them, so "Sửa
+ *  hàng loạt" already covers the chuyên đề and tag it placed on the way. */
+export const REVIEW_ACTION_LABEL: Record<string, string> = {
+  bulk: "Sửa hàng loạt",
+  undo: "Hoàn tác",
+  topic: "Đặt chuyên đề",
+  tag: "Đặt tag",
+  edit: "Sửa câu hỏi",
+  answer: "Sửa đáp án",
+  approve: "Duyệt",
+  reject: "Loại",
+  restore: "Trả lại để xem",
+  skip: "Bỏ qua",
+  triage: "Phân loại tự động",
+  spot_ok: "Kiểm tra mẫu: đạt",
+  spot_fail: "Kiểm tra mẫu: không đạt",
+};
+
+/** What a change moved: the snapshot field names of a review event, as the bank's own screens name them. */
+export const EVENT_FIELD_LABEL: Record<string, string> = {
+  status: "Duyệt",
+  difficulty: "Mức độ",
+  grade: "Lớp",
+  subject_id: "Môn",
+  topics: "Chuyên đề",
+  primary_topic: "Chuyên đề chính",
+  tags: "Tag",
+  answer: "Đáp án",
+  confidence: "Độ tin cậy",
+  issues: "Cảnh báo",
+};
