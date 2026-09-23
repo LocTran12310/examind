@@ -9,6 +9,7 @@ import { TopicPicker } from "@/components/common/TopicPicker/TopicPicker";
 import { FlagPanel } from "@/components/page-components/ReviewDocument/FlagPanel/FlagPanel";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
+import { SPOT_GROUP, SPOT_LABEL } from "@/constants/review.constant";
 import { useReviewQueue } from "@/hooks/page-hooks/review-document/use-review-queue";
 import type { SourceDocument } from "@/interfaces/document.interface";
 import type { ParsedQuestion } from "@/interfaces/question.interface";
@@ -57,7 +58,7 @@ export function ReviewQueue({
           <span className="font-semibold" data-testid="counter">
             {index + 1}/{items.length}
           </span>
-          <ToneBadge tone={q.group === "Kiểm tra ngẫu nhiên" ? "blue" : "amber"}>{q.group}</ToneBadge>
+          <ToneBadge tone={q.group === SPOT_GROUP ? "blue" : "amber"}>{q.group === SPOT_GROUP ? SPOT_LABEL : q.group}</ToneBadge>
           <span className="text-muted-foreground">
             Câu {q.number}
             {q.part ? ` · Phần ${q.part}` : ""}

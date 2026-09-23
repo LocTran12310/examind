@@ -16,6 +16,8 @@ export const reviewRow = (o: Partial<ReviewDocument> = {}): ReviewDocument => ({
   counts: { auto_approved: 3, needs_review: 5, approved: 0, rejected: 0, duplicate: 0, flagged: 0 },
   spot_pending: 1,
   progress: 0.25,
+  review_state: "pending",
+  pending: 6,
   assigned_to: null,
   assigned_name: null,
   ...o,
@@ -32,16 +34,46 @@ const renderPage = (role: "teacher" | "org_admin") =>
 beforeEach(() => setUrl("/org/review"));
 
 describe("review list", () => {
-  it("shows counts, spot checks, progress and the pending link", async () => {
-    mockFetch(route("POST", "/api/review/documents/search", searchPage([reviewRow()])));
+  it("one state per document, with how many questions still wait", async () => {
+    const fetch = mockFetch(route("POST", "/api/review/documents/search", searchPage([reviewRow()])));
     renderPage("teacher");
     const r = await screen.findByTestId("rev-de-kho.docx");
     const row = r.closest("tr")!;
-    expect(row).toHaveTextContent("Tự duyệt 3");
-    expect(row).toHaveTextContent("Cần xem 5");
-    expect(row).toHaveTextContent("Kiểm tra ngẫu nhiên 1");
+    expect(row).toHaveTextContent("Cần xem");
+    expect(row).toHaveTextContent("còn 6 câu");
     expect(row).toHaveTextContent("25%");
+    // the six badges are not in the row any more, they are one click away
+    expect(row).not.toHaveTextContent("Tự duyệt 3");
     expect(screen.getByRole("link", { name: "Duyệt 6 câu" })).toHaveAttribute("href", "/org/review/d1");
+    // and the list opens on the papers that still need work
+    await waitFor(() => expect(lastBody(fetch, "/review/documents/search").filters).toEqual({ review_state: { value: "pending" } }));
+  });
+
+  it("the state filter goes to the server and the URL", async () => {
+    const fetch = mockFetch(route("POST", "/api/review/documents/search", searchPage([reviewRow()])));
+    const u = userEvent.setup();
+    renderPage("teacher");
+    await screen.findByTestId("rev-de-kho.docx");
+    await u.click(screen.getByRole("combobox", { name: "Lọc Trạng thái" }));
+    await u.click(await screen.findByRole("option", { name: "Xong" }));
+    await waitFor(() => expect(lastBody(fetch, "/review/documents/search").filters).toEqual({ review_state: { value: "done" } }));
+    expect(searchOf().get("review_state")).toBe("done");
+  });
+
+  it("the counts stay one click away and the sample explains itself", async () => {
+    mockFetch(route("POST", "/api/review/documents/search", searchPage([reviewRow()])));
+    const u = userEvent.setup();
+    renderPage("teacher");
+    await screen.findByTestId("rev-de-kho.docx");
+    // the sentence that says what the sample is (A-02) is on the screen itself
+    expect(screen.getAllByText(/5% số câu hệ thống tự duyệt/).length).toBeGreaterThan(0);
+    await u.click(screen.getByRole("button", { name: "Chi tiết" }));
+    const popover = await screen.findByRole("dialog");
+    expect(popover).toHaveTextContent("Tự duyệt 3");
+    expect(popover).toHaveTextContent("Cần xem 5");
+    expect(popover).toHaveTextContent("Mẫu kiểm chứng 1");
+    expect(popover).toHaveTextContent("Đã duyệt 0");
+    expect(popover).not.toHaveTextContent("Kiểm tra ngẫu nhiên");
   });
 
   it("'Của tôi' goes to the server and the URL", async () => {

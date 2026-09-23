@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { DataTable } from "@/components/common/DataTable/DataTable";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { SPOT_NOTE } from "@/constants/review.constant";
 import { useReviewPage } from "@/hooks/page-hooks/review/use-review-page";
 import { useReviewDocumentSearchQuery } from "@/hooks/react-query/use-query-review";
 import type { ReviewDocument } from "@/interfaces/review.interface";
@@ -16,7 +17,7 @@ export function ReviewPage() {
       header={
         <PageHeader
           title="Duyệt câu hỏi"
-          description="Chỉ những câu cần mắt người mới vào hàng đợi"
+          description={`Chỉ những câu cần mắt người mới vào hàng đợi. ${SPOT_NOTE}`}
           actions={
             <div className="flex items-center gap-2">
               <Switch id="mine" checked={p.mine} onCheckedChange={p.setMine} />

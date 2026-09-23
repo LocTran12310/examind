@@ -159,3 +159,88 @@ Checked at 1440×900 and 375×812, dark and light. At 375 px the exam screen's t
 content (the questions table's intrinsic width pushed the grid item to 406 px inside a 375 px viewport); the two
 column wrappers now carry `min-w-0`, so the whole strip — including "Tổng phần" — is on screen without a
 sideways scroll. No API call, no endpoint and no stored value changed (A-04).
+
+## UOW-02 — The review list and page a teacher can read
+
+Run on the live stack (`docker compose up -d --build web`, org `trungtama`, user `admin`), 2026-09-23, in a
+real browser at 1440×900 and 390×844. Everything below is read-only except the edit and re-decision of §4,
+which were put back (see §6).
+
+### Checks
+
+| Check | Result |
+| --- | --- |
+| `pnpm typecheck` | clean |
+| `NODE_OPTIONS=--max-old-space-size=6144 pnpm lint` | **No issues found** |
+| `pnpm test` (vitest) | **191 passed** in 51 files (185 before: the list's three state cases replace one, plus four on the document page) |
+| `scripts/close_ticket.sh … T-02-01` / `T-02-02` | exit 0, each with its own verified test run |
+
+### 1. One state per document, filterable from the column (AC-01)
+
+`/org/review` opens on the papers that still need work: the URL carries `?review_state=pending` and the body
+sends `filters: {review_state: {value: "pending"}}` — **15 of the 18 papers**, the three finished ones out of
+the way. The old "Tình trạng" column with up to six badges is one "Trạng thái" column:
+
+| Đề | Trạng thái | Tiến độ | | |
+| --- | --- | ---: | --- | --- |
+| 17. CHUYÊN VINH - NA (Lần 1) | `Cần xem` · còn 1 câu · Chi tiết | 95% | — Chưa giao — | Duyệt 1 câu |
+| 16. SỞ BẮC NINH - KSCL | `Cần xem` · còn 6 câu · Chi tiết | 73% | — Chưa giao — | Duyệt 6 câu |
+| 15. CHUYÊN ĐHKHTN - HCM (Lần 1) | `Cần xem` · còn 12 câu · Chi tiết | 45% | — Chưa giao — | Duyệt 12 câu |
+
+The header filter is an ordinary select: choosing **Xong** writes `review_state=done` to the URL and to the
+body and leaves the three finished papers; the header is sortable on `review_state`. The whole table now fits
+1440 px (1150 px of content in 1150 px of room) — the filename wraps inside its column instead of pushing
+"Người duyệt" and the action link off screen.
+
+### 2. The counts are one click away, and the sample explains itself (AC-02)
+
+"Chi tiết" opens a popover with the six counts the column used to carry —
+`Tự duyệt 10 · Cần xem 11 · Mẫu kiểm chứng 1 · Đã duyệt 1` — and the sentence that names it. The screen itself
+says it under the title, so it is readable without opening anything:
+
+> Chỉ những câu cần mắt người mới vào hàng đợi. Mẫu kiểm chứng là 5% số câu hệ thống tự duyệt, rút ngẫu nhiên
+> để bắt lỗi máy duyệt sai.
+
+"Kiểm tra ngẫu nhiên" is gone from both screens; the queue card calls the same group "Mẫu kiểm chứng" (ADR-03).
+
+### 3. The document page: a state filter over the queue (AC-03, AC-05)
+
+*15. CHUYÊN ĐHKHTN - HCM* opens on **Cần xem** — the keyboard queue, unchanged: counter `1/12`, the group badge,
+the legend `Enter duyệt + câu tiếp · 1–4 chọn đáp án · T chuyên đề · E sửa · X loại · S bỏ qua · J / K câu sau /
+trước · còn 12 câu`. Above it: `Hiển thị câu: Cần xem | Đã duyệt | Đã loại | Trùng | Tất cả`, in the URL as
+`?state=…`, sent as the endpoint's `state`.
+
+**Đã duyệt** lists the **10** questions the sample did not draw, each naming its own state
+(`Câu 2 · Phần 1 · Tự duyệt`) and each saying what its buttons will do:
+`Sửa nội dung câu hỏi` · `Duyệt — chuyển sang Đã duyệt` · `Loại — chuyển sang Đã loại` · `Trả lại — chuyển sang Cần xem`.
+
+### 4. Correct an approved question and take the approval back (AC-04)
+
+On *Câu 2* (`ec2e1d85…`, `auto_approved`), from the Đã duyệt list:
+
+| Step | Result |
+| --- | --- |
+| `Sửa nội dung câu hỏi` | the full `QuestionForm` opens in place, prefilled, with the live preview |
+| stem edited, `Lưu câu hỏi` | `PATCH /questions/{id}` → "Đã lưu câu hỏi." |
+| `Trả lại — chuyển sang Cần xem` | `POST /questions/bulk {set: {status: "needs_review"}}` → "Đã chuyển câu hỏi sang "Cần xem"." |
+
+The counts followed without a reload: the page header went from `Tự duyệt 11 · Cần xem 11 · Đã duyệt 0 · còn 12
+câu` to `Tự duyệt 10 · Cần xem 12 · Đã duyệt 0 · còn 13 câu`, the Đã duyệt list from 10 rows to 9.
+
+### 5. …and the list follows (AC-01, AC-04)
+
+Back on `/org/review`: *15. CHUYÊN ĐHKHTN* read `Cần xem · còn 13 câu · 41% · Duyệt 13 câu` — the state, the
+count and the progress all moved with the decision.
+
+### 6. Put back
+
+The stem was restored byte for byte through `PATCH /questions/{id}` (229 characters, compared equal), and the
+status through `POST /questions/bulk` — the feature's own command. The list compares equal to the reading of
+UOW-01 §1: 18 documents, **15 `pending` / 3 `done`**, pending 12, 6, 3, 2, 2, 1×10, and *15. CHUYÊN ĐHKHTN* back
+at `pending` / 12 / progress 0.45.
+
+Two differences remain on that one question, both invisible in the list and both recorded here rather than
+hidden: its status is `approved` instead of `auto_approved` (the API has no command that writes `auto_approved`
+— ADR-02 gives `bulk` three statuses — and a direct database write was not permitted), so the popover reads
+`Tự duyệt 10 · Đã duyệt 1` where it read `Tự duyệt 11 · Đã duyệt 0`; and `answer_source` is `manual` where the
+21 siblings are `inline`, because saving the form resubmits the answer. Nothing else moved.

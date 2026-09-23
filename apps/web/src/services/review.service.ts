@@ -1,5 +1,5 @@
 import type { SearchBody } from "@/dtos/search.dto";
-import type { AnswerKeyBody, ReviewActionBody, ReviewDocumentSearchBody, UpdateReviewDocumentBody } from "@/dtos/review.dto";
+import type { AnswerKeyBody, DocumentQuestionSearchBody, ReviewActionBody, ReviewDocumentSearchBody, UpdateReviewDocumentBody } from "@/dtos/review.dto";
 import type { ParsedQuestion } from "@/interfaces/question.interface";
 import type { AnswerKeyResult, ApproveConfidentResult, ReviewDocument } from "@/interfaces/review.interface";
 import type { SearchPage } from "@/interfaces/search-page.interface";
@@ -13,6 +13,8 @@ export const reviewService = {
   updateDocument: (id: string, body: UpdateReviewDocumentBody) => http<ReviewDocument>(`/review/documents/${id}`, { method: "PATCH", body }),
   /** The questions of a document that need a human, in review order. */
   queue: (id: string) => http<ParsedQuestion[]>(`/review/documents/${id}/queue`),
+  /** The document's questions by state: pending (default), approved, rejected, duplicate, all. */
+  searchQuestions: (id: string, body: DocumentQuestionSearchBody) => http<SearchPage<ParsedQuestion>>(`/review/documents/${id}/questions/search`, { body }),
   action: (questionId: string, body: ReviewActionBody) => http<ParsedQuestion>(`/review/questions/${questionId}/action`, { body }),
   answerKey: (id: string, body: AnswerKeyBody) => http<AnswerKeyResult>(`/review/documents/${id}/answer-key`, { body }),
   approveConfident: (id: string) => http<ApproveConfidentResult>(`/review/documents/${id}/approve-confident`, { method: "POST" }),

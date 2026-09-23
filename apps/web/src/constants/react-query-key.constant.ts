@@ -99,6 +99,7 @@ export const REVIEW_KEYS = {
   FLAGGED: (body: unknown) => ["review", "flagged", body] as const,
   DOCUMENT: (id: string) => ["review", "document", id] as const,
   QUEUE: (id: string) => ["review", "queue", id] as const,
+  QUESTIONS: (id: string, body: unknown) => ["review", "questions", id, body] as const,
 };
 
 /** Uploaded source documents; parsing creates questions, so their mutations refresh the bank and review too. */

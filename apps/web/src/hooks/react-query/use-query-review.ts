@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient, type UseMutationResult, type UseQueryResult } from "@tanstack/react-query";
 import { QUESTION_KEYS, REVIEW_KEYS } from "@/constants/react-query-key.constant";
-import type { ReviewDocumentSearchBody } from "@/dtos/review.dto";
+import type { DocumentQuestionSearchBody, ReviewDocumentSearchBody } from "@/dtos/review.dto";
 import type { SearchBody } from "@/dtos/search.dto";
 import type { ParsedQuestion } from "@/interfaces/question.interface";
 import type { AnswerKeyResult, ApproveConfidentResult, ReviewAction, ReviewDocument } from "@/interfaces/review.interface";
@@ -26,6 +26,11 @@ export function useReviewDocumentQuery(id: string): UseQueryResult<ReviewDocumen
 
 export function useReviewQueueQuery(id: string): UseQueryResult<ParsedQuestion[], Error> {
   return useQuery<ParsedQuestion[], Error>({ queryKey: REVIEW_KEYS.QUEUE(id), queryFn: () => reviewService.queue(id) });
+}
+
+/** One document's questions in the chosen state; `pending` is what the keyboard queue works on. */
+export function useDocumentQuestionsSearchQuery(id: string, body: DocumentQuestionSearchBody, options?: RowsQueryOptions<ParsedQuestion> & { enabled?: boolean }): UseQueryResult<SearchPage<ParsedQuestion>, Error> {
+  return useSearchQuery(REVIEW_KEYS.QUESTIONS(id, body), (b) => reviewService.searchQuestions(id, b), body, options);
 }
 
 export function useAssignReviewerMutation(): UseMutationResult<ReviewDocument, Error, { id: string; userId: string | null }> {
