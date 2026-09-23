@@ -3,7 +3,7 @@
 # Ticket graph — 2026092304-pickers-builder
 
 - Units of Work: **3**
-- Tickets: **8** (0 done)
+- Tickets: **8** (3 done)
 - Total effort: **3.1d**
 - Critical path: **1.8d** across 4 tickets
 - Theoretical minimum duration with unlimited parallelism: **1.8d**
@@ -24,9 +24,9 @@ slice — the floor on how fast it can finish no matter how many people work on 
 ```mermaid
 graph LR
   subgraph UOW_01["UOW-01 · Bulk by suggestion, subject and grade, and a builder that refuses an empty topic"]
-    T_01_01["T-01-01<br/>POST /questions/bulk/topics"]
-    T_01_02["T-01-02<br/>Subject and grade in the bank's bulk edit"]
-    T_01_03["T-01-03<br/>The blueprint refuses an empty topic"]
+    T_01_01["✓ T-01-01<br/>POST /questions/bulk/topics"]
+    T_01_02["✓ T-01-02<br/>Subject and grade in the bank's bulk edit"]
+    T_01_03["✓ T-01-03<br/>The blueprint refuses an empty topic"]
   end
   subgraph UOW_02["UOW-02 · Pickers that start on the suggestion and count questions"]
     T_02_01["T-02-01<br/>Pickers: start on the suggestion, count questions"]
@@ -78,9 +78,9 @@ adding people to tickets off this path will not make the feature ship sooner.
 
 | ID | UoW | Layer | Type | Est | Depends on | Verifies | Status |
 |----|-----|-------|------|-----|-----------|----------|--------|
-| T-01-01 | UOW-01 | api | feature | 3h | — | AC-03 | todo |
-| T-01-02 | UOW-01 | api | feature | 2h | — | AC-05 | todo |
-| T-01-03 | UOW-01 | api | feature | 3h | — | AC-06 | todo |
+| T-01-01 | UOW-01 | api | feature | 3h | — | AC-03 | done |
+| T-01-02 | UOW-01 | api | feature | 2h | — | AC-05 | done |
+| T-01-03 | UOW-01 | api | feature | 3h | — | AC-06 | done |
 | T-02-01 | UOW-02 | web | feature | 4h | T-01-01 | AC-01, AC-02 | todo |
 | T-02-02 | UOW-02 | web | feature | 4h | T-01-01, T-02-01 | AC-03, AC-04 | todo |
 | T-02-03 | UOW-02 | web | feature | 2h | T-01-02 | AC-05 | todo |

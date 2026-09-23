@@ -16,7 +16,9 @@ adr_count: 3
   (≤200) so a page's worth of different topics is one request; it answers `{updated, skipped}`. The queue sends
   each selected row's top suggestion and reports what had none.
 - **Bank classification**: `POST /questions/bulk` `set` gains `subject_id` and `grade`, validated like the single
-  update; the bank toolbar gains the two actions.
+  update; the bank toolbar gains the two actions. A subject that would leave a question placed in another subject's
+  tree refuses the whole edit and names the conflict (A-04, decided by the owner 2026-09-23): the teacher fixes the
+  topic, the bank never drops a placement on its own.
 - **Builder**: the blueprint row keeps its fields on one line at desktop width and stacks deliberately below it;
   generation refuses a row whose pool is empty, naming the topic (AC-06); "Đổi câu" opens a chooser with the
   bank's own filters, next to the automatic replacement.
@@ -38,8 +40,8 @@ suggestion — a human confirmed it.
 ## Contracts
 | Method & path | Notes |
 | --- | --- |
-| `POST /questions/bulk/topics` | `{pairs: [{question_id, topic_id}]}` (≤200) → `{updated, skipped}` |
-| `POST /questions/bulk` | `set` gains `subject_id`, `grade` |
+| `POST /questions/bulk/topics` | `{pairs: [{question_id, topic_id}]}` (≤200) → `{updated, skipped: [{question_id, topic_id, reason, message}]}`; reasons: `unknown_question`, `other_org`, `unknown_topic`, `no_subject`, `subject_mismatch` |
+| `POST /questions/bulk` | `set` gains `subject_id`, `grade`; refuses `subject_topic_conflict` |
 | `POST /questions/facets` | unchanged; now also drives the pickers' counts |
 | `POST /exams/{id}/blueprint` | refuses a row with an empty pool: 422 `empty_topic` naming the topic |
 
@@ -53,8 +55,9 @@ suggestion — a human confirmed it.
 | Condition | Code | HTTP |
 | --- | --- | --- |
 | More than 200 pairs | `validation_error` | 422 |
-| A pair whose topic is not of the question's subject | `validation_error` | 422 |
-| Blueprint row with an empty pool | `empty_topic` | 422 |
+| A pair whose topic is not of the question's subject | reported in `skipped` (`subject_mismatch`) | 200 |
+| A bulk subject that leaves a topic of another subject | `subject_topic_conflict` | 422 |
+| Blueprint row whose topic holds no usable question | `empty_topic` | 422 |
 
 ## Observability
 Bulk tagging is audited as the existing bulk edit, with the number of pairs.

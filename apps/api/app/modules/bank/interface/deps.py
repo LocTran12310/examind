@@ -11,6 +11,7 @@ from app.modules.bank.application.commands.apply_answer_key import ApplyAnswerKe
 from app.modules.bank.application.commands.approve_confident import ApproveConfidentHandler
 from app.modules.bank.application.commands.assign_reviewer import AssignReviewerHandler
 from app.modules.bank.application.commands.audit_keys import AuditKeysHandler
+from app.modules.bank.application.commands.bulk_set_topics import BulkSetTopicsHandler
 from app.modules.bank.application.commands.bulk_update_questions import BulkUpdateQuestionsHandler
 from app.modules.bank.application.commands.create_question import CreateQuestionHandler
 from app.modules.bank.application.commands.delete_question import DeleteQuestionHandler
@@ -79,11 +80,17 @@ class _RegisteredTaxonomy:
     def topic_labels(self, org_id: uuid.UUID, topic_ids: list[uuid.UUID]) -> dict[uuid.UUID, tuple[str, str]]:
         return self._target().topic_labels(org_id, topic_ids)
 
+    def topic_subjects(self, org_id: uuid.UUID, topic_ids: list[uuid.UUID]) -> dict[uuid.UUID, uuid.UUID]:
+        return self._target().topic_subjects(org_id, topic_ids)
+
     def tag_groups(self, org_id: uuid.UUID, tag_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
         return self._target().tag_groups(org_id, tag_ids)
 
     def subject_exists(self, org_id: uuid.UUID, subject_id: uuid.UUID) -> bool:
         return self._target().subject_exists(org_id, subject_id)
+
+    def grade_levels(self, org_id: uuid.UUID) -> set[int]:
+        return self._target().grade_levels(org_id)
 
 
 def _staff_directory(db: Session) -> StaffDirectory:
@@ -145,6 +152,10 @@ def delete_question(db: Session = Depends(get_db)) -> DeleteQuestionHandler:
 
 def bulk_update_questions(db: Session = Depends(get_db)) -> BulkUpdateQuestionsHandler:
     return BulkUpdateQuestionsHandler(SqlQuestionRepository(db), _RegisteredTaxonomy(db), SqlReviewLog(db), SqlUnitOfWork(db))
+
+
+def bulk_set_topics(db: Session = Depends(get_db)) -> BulkSetTopicsHandler:
+    return BulkSetTopicsHandler(SqlQuestionRepository(db), _RegisteredTaxonomy(db), SqlReviewLog(db), SqlUnitOfWork(db))
 
 
 # ------------------------------------------------------------------ review

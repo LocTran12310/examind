@@ -79,6 +79,13 @@ def check_difficulty(difficulty: str | None) -> str | None:
     return difficulty
 
 
+def check_grade(grade: int | None, levels: set[int]) -> int | None:
+    """A question's grade is one the org teaches (0 / None clears it)."""
+    if grade and grade not in levels:
+        raise Invalid("Lớp không hợp lệ", "grade")
+    return grade
+
+
 def valid_answer(qtype: str, options: list[dict], answer) -> dict | None:
     if answer in (None, {}, ""):
         return None

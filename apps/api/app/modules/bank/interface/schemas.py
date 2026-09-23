@@ -105,6 +105,8 @@ class BulkSet(BaseModel):
     difficulty: str | None = None
     primary_topic_id: uuid.UUID | None = None
     add_tag_ids: list[uuid.UUID] | None = None
+    subject_id: uuid.UUID | None = None
+    grade: int | None = None
 
 
 class BulkIn(BaseModel):
@@ -114,6 +116,27 @@ class BulkIn(BaseModel):
 
 class BulkOut(BaseModel):
     updated: int
+
+
+class TopicPairIn(BaseModel):
+    question_id: uuid.UUID
+    topic_id: uuid.UUID
+
+
+class BulkTopicsIn(BaseModel):
+    pairs: list[TopicPairIn] = []
+
+
+class SkippedPairOut(BaseModel):
+    question_id: uuid.UUID
+    topic_id: uuid.UUID
+    reason: str
+    message: str
+
+
+class BulkTopicsOut(BaseModel):
+    updated: int
+    skipped: list[SkippedPairOut]
 
 
 class ActionIn(BaseModel):

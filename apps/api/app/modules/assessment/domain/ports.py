@@ -152,7 +152,13 @@ class Roster(Protocol):
 
 
 class Subjects(Protocol):
+    """The taxonomy context: the org's subjects, and the topics a blueprint row names."""
+
     def exists(self, org_id: uuid.UUID, subject_id: uuid.UUID) -> bool: ...
+
+    def topic_names(self, org_id: uuid.UUID, topic_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
+        """The name of each topic of the org among `topic_ids` (unknown ones are missing)."""
+        ...
 
 
 class FactListener(Protocol):

@@ -5,7 +5,7 @@ from app.modules.bank.application.common import load_question, record, set_tags,
 from app.modules.bank.application.dto import QuestionView
 from app.modules.bank.application.ports import QuestionViews
 from app.modules.bank.domain.ports import QuestionRepository, ReviewLog, ReviewSettings, Taxonomy
-from app.modules.bank.domain.services.review import edit_content, spot_check_failed_by_edit
+from app.modules.bank.domain.services.review import check_grade, edit_content, spot_check_failed_by_edit
 from app.shared.application.actor import Actor
 from app.shared.application.unit_of_work import UnitOfWork
 from app.shared.domain.clock import utcnow
@@ -48,7 +48,7 @@ class UpdateQuestionHandler:
         if cmd.difficulty is not None:
             q.difficulty = cmd.difficulty or None
         if cmd.grade is not None:
-            q.grade = cmd.grade or None
+            q.grade = check_grade(cmd.grade, self.taxonomy.grade_levels(actor.org_id)) or None
         if cmd.subject_id is not None:
             if not self.taxonomy.subject_exists(actor.org_id, cmd.subject_id):
                 raise Invalid("Môn học không hợp lệ", "subject_id")

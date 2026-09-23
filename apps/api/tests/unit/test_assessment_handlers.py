@@ -239,8 +239,13 @@ class FakeRoster:
 
 
 class FakeSubjects:
+    NAMES = {TOPIC_A: "Đại số", TOPIC_B: "Hình học"}
+
     def exists(self, org_id, subject_id):
         return False
+
+    def topic_names(self, org_id, topic_ids):
+        return {t: self.NAMES[t] for t in topic_ids if t in self.NAMES}
 
 
 class World:
@@ -249,6 +254,7 @@ class World:
     def __init__(self, *refs: QuestionRef, now: datetime = NOW):
         self.clock = Clock(now)
         self.exams, self.bank, self.assignments, self.attempts = FakeExams(), FakeBank(*refs), FakeAssignments(), FakeAttempts(self.clock)
+        self.subjects = FakeSubjects()
         self.facts, self.listener = FakeFacts(self.attempts), FakeListener()
         self.roster = FakeRoster({CLASS: {STUDENT.user_id}}, {STUDENT.user_id, OTHER.user_id})
         self.uow = FakeUow()
@@ -321,7 +327,7 @@ def test_blueprint_is_repeatable_with_a_seed_and_reports_shortfalls():
     def draw():
         w = World()
         w.bank = FakeBank(*qs, topics=topics)
-        r = ApplyBlueprintHandler(w.exams, w.bank, w.uow)(TEACHER, ApplyBlueprint(w.exam.id, [
+        r = ApplyBlueprintHandler(w.exams, w.bank, w.subjects, w.uow)(TEACHER, ApplyBlueprint(w.exam.id, [
             {"topic_id": str(TOPIC_B), "type": "true_false", "count": 3}, {"topic_id": str(TOPIC_A), "type": "mcq", "count": 4}], seed=7))
         return w, r
 
@@ -334,10 +340,26 @@ def test_blueprint_is_repeatable_with_a_seed_and_reports_shortfalls():
     again, _ = draw()
     assert [eq.question_id for eq in again.exams.questions(again.exam.id)] == [eq.question_id for eq in rows]
     with pytest.raises(Invalid):
-        ApplyBlueprintHandler(w.exams, w.bank, w.uow)(TEACHER, ApplyBlueprint(w.exam.id, [{"type": "mcq", "count": 2}]))
+        ApplyBlueprintHandler(w.exams, w.bank, w.subjects, w.uow)(TEACHER, ApplyBlueprint(w.exam.id, [{"type": "mcq", "count": 2}]))
     with pytest.raises(Invalid) as bad:
-        ApplyBlueprintHandler(w.exams, w.bank, w.uow)(TEACHER, ApplyBlueprint(w.exam.id, [{"topic_id": "x", "count": 2}]))
+        ApplyBlueprintHandler(w.exams, w.bank, w.subjects, w.uow)(TEACHER, ApplyBlueprint(w.exam.id, [{"topic_id": "x", "count": 2}]))
     assert bad.value.fields == {"topic_ids": "Chuyên đề không hợp lệ"}
+
+
+def test_blueprint_refuses_a_row_whose_topic_holds_nothing():
+    """A-05: a row on an empty topic is named and refused; a row that can be filled is untouched (AC-06)."""
+    qs = [mcq() for _ in range(2)]
+    w = World()
+    w.bank = FakeBank(*qs, topics={q.id: TOPIC_A for q in qs})
+    handle = ApplyBlueprintHandler(w.exams, w.bank, w.subjects, w.uow)
+    with pytest.raises(Invalid) as e:
+        handle(TEACHER, ApplyBlueprint(w.exam.id, [{"topic_id": str(TOPIC_A), "count": 1}, {"topic_id": str(TOPIC_B), "count": 2}]))
+    assert e.value.code == "empty_topic" and "Hình học" in e.value.message
+    assert e.value.fields["row"] == 1 and e.value.fields["topic_id"] == str(TOPIC_B) and e.value.fields["question_count"] == 0
+    assert w.exams.questions(w.exam.id) == [] and w.uow.commits == 0  # nothing was touched
+    # the topic holds questions but not of that type: still a shortfall, as before
+    r = handle(TEACHER, ApplyBlueprint(w.exam.id, [{"topic_id": str(TOPIC_A), "type": "true_false", "count": 2}]))
+    assert r == {"added": 0, "shortfalls": [{"row": 0, "missing": 2}]}
 
 
 def test_an_exam_somebody_took_is_frozen_and_order_must_match():

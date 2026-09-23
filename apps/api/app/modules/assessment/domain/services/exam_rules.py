@@ -77,6 +77,22 @@ def row_filter(subject_id: uuid.UUID | None, row: dict) -> PoolFilter:
                       tag_id=_uuid(row.get("tag_id"), "Tag không hợp lệ", "tag_ids"))
 
 
+def row_topic(row: dict) -> uuid.UUID | None:
+    return _uuid(row.get("topic_id"), "Chuyên đề không hợp lệ", "topic_ids")
+
+
+def check_topic_pool(index: int, topic_id: uuid.UUID, name: str | None, held: int) -> None:
+    """A row whose topic holds no usable question is refused, naming the topic and what it holds, instead of
+    quietly returning fewer questions than asked (A-05, AC-06). A row short of questions for its own type or
+    difficulty stays a shortfall."""
+    if held:
+        return
+    raise Invalid(f"Dòng {index + 1}: chuyên đề “{name or topic_id}” không có câu hỏi nào dùng được ({held} câu). "
+                  "Chọn chuyên đề khác hoặc bổ sung câu hỏi cho chuyên đề này.",
+                  code="empty_topic", fields={"rows": f"Dòng {index + 1}", "row": index, "topic_id": str(topic_id),
+                                              "topic_name": name or "", "question_count": held})
+
+
 def swap_filter(subject_id: uuid.UUID | None, blueprint: list, row: int | None, qtype: str) -> PoolFilter:
     """A swap draws from the question's blueprint row, or else from the same type in the exam's subject."""
     if row is not None:

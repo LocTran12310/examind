@@ -6,6 +6,7 @@ from app.modules.bank.application.commands.apply_answer_key import ApplyAnswerKe
 from app.modules.bank.application.commands.approve_confident import ApproveConfident, ApproveConfidentHandler
 from app.modules.bank.application.commands.assign_reviewer import AssignReviewer, AssignReviewerHandler
 from app.modules.bank.application.commands.audit_keys import AuditKeys, AuditKeysHandler
+from app.modules.bank.application.commands.bulk_set_topics import BulkSetTopics, BulkSetTopicsHandler
 from app.modules.bank.application.commands.bulk_update_questions import BulkUpdateQuestions, BulkUpdateQuestionsHandler
 from app.modules.bank.application.commands.create_question import CreateQuestion, CreateQuestionHandler
 from app.modules.bank.application.commands.delete_question import DeleteQuestion, DeleteQuestionHandler
@@ -32,6 +33,8 @@ from app.modules.bank.interface.schemas import (
     AssignIn,
     BulkIn,
     BulkOut,
+    BulkTopicsIn,
+    BulkTopicsOut,
     DocumentQuestionSearchBody,
     FacetsOut,
     FlaggedIdsOut,
@@ -43,6 +46,7 @@ from app.modules.bank.interface.schemas import (
     QuestionStatsOut,
     ReviewDocumentOut,
     ReviewDocumentSearchBody,
+    SkippedPairOut,
     SuggestionsOut,
     SuggestTopicsIn,
     TopicSuggestionOut,
@@ -101,7 +105,17 @@ def create_question(body: QuestionCreate, actor: Actor = Depends(staff_actor), h
 @router.post("/questions/bulk", response_model=BulkOut)
 def bulk_questions(body: BulkIn, actor: Actor = Depends(staff_actor), handle: BulkUpdateQuestionsHandler = Depends(deps.bulk_update_questions)):
     s = body.set
-    return BulkOut(updated=handle(actor, BulkUpdateQuestions(body.ids, s.status, s.difficulty, s.primary_topic_id, s.add_tag_ids)))
+    return BulkOut(updated=handle(actor, BulkUpdateQuestions(body.ids, s.status, s.difficulty, s.primary_topic_id, s.add_tag_ids,
+                                                             s.subject_id, s.grade)))
+
+
+@router.post("/questions/bulk/topics", response_model=BulkTopicsOut)
+def bulk_question_topics(body: BulkTopicsIn, actor: Actor = Depends(staff_actor),
+                         handle: BulkSetTopicsHandler = Depends(deps.bulk_set_topics)):
+    """A page of the tagging queue in one request (ADR-02): each pair makes that topic the question's primary one,
+    `source = manual`. The pairs it cannot apply come back in `skipped` with their reason."""
+    r = handle(actor, BulkSetTopics([(p.question_id, p.topic_id) for p in body.pairs]))
+    return BulkTopicsOut(updated=r.updated, skipped=[SkippedPairOut(**vars(s)) for s in r.skipped])
 
 
 @router.delete("/questions/{question_id}", status_code=204)

@@ -24,7 +24,13 @@ class TagRepository(Protocol):
 
 
 class SubjectLookup(Protocol):
+    """The org's reference data other use cases check against: its subjects and the grades it teaches."""
+
     def exists(self, org_id: uuid.UUID, subject_id: uuid.UUID) -> bool: ...
+
+    def grade_levels(self, org_id: uuid.UUID) -> set[int]:
+        """The levels (10, 11…) of the grades the org keeps."""
+        ...
 
 
 class TopicRepository(Protocol):
@@ -36,6 +42,10 @@ class TopicRepository(Protocol):
 
     def labels(self, org_id: uuid.UUID, topic_ids: list[uuid.UUID]) -> dict[uuid.UUID, tuple[str, str]]:
         """(name, ltree path) of each topic of the org among `topic_ids`."""
+        ...
+
+    def subject_ids(self, org_id: uuid.UUID, topic_ids: list[uuid.UUID]) -> dict[uuid.UUID, uuid.UUID]:
+        """The subject each topic of the org among `topic_ids` belongs to."""
         ...
 
     def children(self, topic_id: uuid.UUID) -> list[Topic]:

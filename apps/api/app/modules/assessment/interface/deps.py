@@ -124,7 +124,7 @@ def delete_exam(db: Session = Depends(get_db)) -> DeleteExamHandler:
 
 
 def apply_blueprint(db: Session = Depends(get_db)) -> ApplyBlueprintHandler:
-    return ApplyBlueprintHandler(SqlExamRepository(db), _bank_of(db), SqlUnitOfWork(db))
+    return ApplyBlueprintHandler(SqlExamRepository(db), _bank_of(db), _registered(_subjects, "subjects")(db), SqlUnitOfWork(db))
 
 
 def add_exam_questions(db: Session = Depends(get_db)) -> AddExamQuestionsHandler:

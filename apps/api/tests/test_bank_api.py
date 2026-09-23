@@ -114,3 +114,31 @@ def test_search_10k_under_300ms(client, db):
     t2 = time.perf_counter()
     r = search(client, {"q": "vecto parabol"})
     assert (time.perf_counter() - t2) < 0.3 and (t2 - t) < 0.3, (t2 - t, time.perf_counter() - t2)
+
+
+def test_bulk_sets_subject_and_grade_and_refuses_a_topic_of_another_subject(client, db):
+    """pickers-builder AC-05: the "Chưa phân môn" tab becomes actionable. A-04: a new subject never silently
+    leaves a question in another subject's tree — the whole edit is refused, naming what is in the way."""
+    from app.modules.taxonomy.domain.entities import Subject
+
+    admin, _ = loaded(client, db)
+    org = admin.organization_id
+    toan = db.scalar(select(Subject).where(Subject.organization_id == org, Subject.code == "toan"))
+    ly = db.scalar(select(Subject).where(Subject.organization_id == org, Subject.code == "ly"))
+    unclassified = search(client, {"subject_id": "none", "status": "all", "limit": 3}).json()
+    ids = [q["id"] for q in unclassified["data"]]
+    assert len(ids) == 3 and unclassified["total"] > 3
+    assert client.post("/api/questions/bulk", json={"ids": ids, "set": {"subject_id": str(toan.id), "grade": 11}}).json() == {"updated": 3}
+    one = client.get(f"/api/questions/{ids[0]}").json()
+    assert one["subject_id"] == str(toan.id) and one["grade"] == 11
+    assert search(client, {"subject_id": "none", "status": "all", "limit": 1}).json()["total"] == unclassified["total"] - 3
+    bad = client.post("/api/questions/bulk", json={"ids": ids, "set": {"grade": 13}})
+    assert bad.status_code == 422 and bad.json()["details"]["fields"] == {"grade": "Lớp không hợp lệ"}
+    assert client.post("/api/questions/bulk", json={"ids": ids, "set": {"subject_id": str(uuid.uuid4())}}).status_code == 422
+    topic = client.post("/api/topics", json={"name": "Dao động điều hòa", "subject_id": str(ly.id), "level_kind": "topic"}).json()
+    assert client.patch(f"/api/questions/{ids[0]}", json={"primary_topic_id": topic["id"]}).status_code == 200
+    r = client.post("/api/questions/bulk", json={"ids": ids, "set": {"subject_id": str(toan.id), "grade": 12}})
+    assert r.status_code == 422 and r.json()["code"] == "subject_topic_conflict"
+    assert r.json()["details"]["fields"]["conflicts"] == [{"question_id": ids[0], "topic_id": topic["id"], "topic_name": "Dao động điều hòa"}]
+    assert "Dao động điều hòa" in r.json()["message"]
+    assert client.get(f"/api/questions/{ids[1]}").json()["grade"] == 11  # nothing was applied

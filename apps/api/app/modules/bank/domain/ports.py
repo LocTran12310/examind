@@ -36,6 +36,10 @@ class QuestionRepository(Protocol):
         """Manual placement: the links become exactly `topic_ids` (source manual, score 1)."""
         ...
 
+    def primary_topic_ids(self, question_ids: list[uuid.UUID]) -> dict[uuid.UUID, uuid.UUID]:
+        """The primary topic of each of these questions that has one."""
+        ...
+
     def tag_ids(self, question_id: uuid.UUID) -> set[uuid.UUID]: ...
 
     def replace_tags(self, question_id: uuid.UUID, tag_ids: list[uuid.UUID]) -> None: ...
@@ -63,11 +67,19 @@ class Taxonomy(Protocol):
         """(name, ltree path) of each topic of the org among `topic_ids` (unknown ones are missing)."""
         ...
 
+    def topic_subjects(self, org_id: uuid.UUID, topic_ids: list[uuid.UUID]) -> dict[uuid.UUID, uuid.UUID]:
+        """subject of each topic of the org among `topic_ids` (unknown ones are missing)."""
+        ...
+
     def tag_groups(self, org_id: uuid.UUID, tag_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
         """group of each tag of the org among `tag_ids` (unknown ones are missing)."""
         ...
 
     def subject_exists(self, org_id: uuid.UUID, subject_id: uuid.UUID) -> bool: ...
+
+    def grade_levels(self, org_id: uuid.UUID) -> set[int]:
+        """The levels of the grades the org keeps."""
+        ...
 
 
 class TopicSuggestions(Protocol):

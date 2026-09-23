@@ -174,6 +174,21 @@ class AnswerKeyResult:
 
 
 @dataclass(frozen=True)
+class SkippedPair:
+    """A {question, topic} pair the bulk tagging left alone, and why (pickers-builder ADR-02)."""
+    question_id: uuid.UUID
+    topic_id: uuid.UUID
+    reason: str
+    message: str
+
+
+@dataclass(frozen=True)
+class BulkTopicsResult:
+    updated: int
+    skipped: list[SkippedPair]
+
+
+@dataclass(frozen=True)
 class TriageCounts:
     auto_approved: int = 0
     needs_review: int = 0

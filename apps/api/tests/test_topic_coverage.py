@@ -262,3 +262,35 @@ def test_a_topic_makes_the_question_leave_the_queue(client, db):
     assert client.post("/api/questions/search", json={"has_topic": False}).json()["total"] == 3
     link = db.scalar(select(QuestionTopic).where(QuestionTopic.question_id == q.id))
     assert str(link.topic_id) == topic_id and link.is_primary and link.source == "manual"
+
+
+def test_bulk_topics_places_a_page_in_one_request(client, db):
+    """pickers-builder AC-03 (ADR-02): every selected question takes its own topic in one request, source manual,
+    and the pairs it cannot apply come back named."""
+    x = bank(client, db)
+    t, (q_set, q_int, q_plain, q_count) = x["topics"], x["untagged"]
+    ly = db.scalar(select(Subject).where(Subject.organization_id == x["org"], Subject.code == "ly"))
+    foreign = client.post("/api/topics", json={"name": "Dao động điều hòa", "subject_id": str(ly.id), "level_kind": "topic"})
+    assert foreign.status_code == 201, foreign.text
+    other_org = make_org(db, code="trungtamb", name="Trung tâm B")
+    elsewhere = add_question(db, other_org.id, x["subject"].id, "Câu của đơn vị khác")
+    db.commit()
+    gone = str(uuid.uuid4())
+    pairs = [{"question_id": str(q_set.id), "topic_id": str(t["Tập hợp và các phép toán"].id)},
+             {"question_id": str(q_int.id), "topic_id": str(t["Nguyên hàm"].id)},
+             {"question_id": str(q_count.id), "topic_id": str(t["Quy tắc đếm"].id)},
+             {"question_id": str(q_plain.id), "topic_id": foreign.json()["id"]},
+             {"question_id": str(elsewhere.id), "topic_id": str(t["Nguyên hàm"].id)},
+             {"question_id": gone, "topic_id": str(t["Nguyên hàm"].id)}]
+    r = client.post("/api/questions/bulk/topics", json={"pairs": pairs})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["updated"] == 3
+    assert [(s["question_id"], s["reason"], s["message"]) for s in body["skipped"]] == [
+        (str(q_plain.id), "subject_mismatch", "Chuyên đề không thuộc môn của câu hỏi"),
+        (str(elsewhere.id), "other_org", "Câu hỏi của đơn vị khác"),
+        (gone, "unknown_question", "Không tìm thấy câu hỏi")]
+    link = db.scalar(select(QuestionTopic).where(QuestionTopic.question_id == q_count.id))
+    assert link.topic_id == t["Quy tắc đếm"].id and link.is_primary and link.source == "manual"
+    assert client.post("/api/questions/search", json={"has_topic": False}).json()["total"] == 1  # only the one left untagged
+    assert client.post("/api/questions/bulk/topics", json={"pairs": pairs[:1] * 201}).status_code == 422

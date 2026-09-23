@@ -73,6 +73,14 @@ class SqlQuestionRepository:
             self.session.execute(insert(question_topics), [
                 {"question_id": question_id, "topic_id": t, "is_primary": t == primary_id, "source": "manual", "score": 1.0} for t in topic_ids])
 
+    def primary_topic_ids(self, question_ids: list[uuid.UUID]) -> dict[uuid.UUID, uuid.UUID]:
+        if not question_ids:
+            return {}
+        self.session.flush()
+        return dict(self.session.execute(select(question_topics.c.question_id, question_topics.c.topic_id)
+                                         .where(question_topics.c.question_id.in_(question_ids),
+                                                question_topics.c.is_primary.is_(True))).all())
+
     def tag_ids(self, question_id: uuid.UUID) -> set[uuid.UUID]:
         return set(self.session.scalars(select(question_tags.c.tag_id).where(question_tags.c.question_id == question_id)))
 

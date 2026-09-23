@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.modules.taxonomy.domain.entities import Tag
 from app.modules.taxonomy.domain.topics import Topic
 from app.modules.taxonomy.infrastructure import orm  # noqa: F401  (mapping)
-from app.shared.infrastructure.schema.taxonomy import subjects, tags, topics
+from app.shared.infrastructure.schema.taxonomy import grades, subjects, tags, topics
 
 
 class SqlTagRepository:
@@ -48,6 +48,9 @@ class SqlSubjectLookup:
     def exists(self, org_id: uuid.UUID, subject_id: uuid.UUID) -> bool:
         return self.session.scalar(select(subjects.c.id).where(subjects.c.id == subject_id, subjects.c.organization_id == org_id)) is not None
 
+    def grade_levels(self, org_id: uuid.UUID) -> set[int]:
+        return set(self.session.scalars(select(grades.c.level).where(grades.c.organization_id == org_id)))
+
 
 class SqlTopicRepository:
     """Topics on ltree paths: subtree depth and subtree moves are single SQL statements."""
@@ -70,6 +73,12 @@ class SqlTopicRepository:
         rows = self.session.execute(select(topics.c.id, topics.c.name, topics.c.path)
                                     .where(topics.c.id.in_(topic_ids), topics.c.organization_id == org_id)).all()
         return {r.id: (r.name, r.path) for r in rows}
+
+    def subject_ids(self, org_id: uuid.UUID, topic_ids: list[uuid.UUID]) -> dict[uuid.UUID, uuid.UUID]:
+        if not topic_ids:
+            return {}
+        return dict(self.session.execute(select(topics.c.id, topics.c.subject_id)
+                                         .where(topics.c.id.in_(topic_ids), topics.c.organization_id == org_id)).all())
 
     def children(self, topic_id: uuid.UUID) -> list[Topic]:
         return list(self.session.scalars(select(Topic).where(topics.c.parent_id == topic_id).order_by(topics.c.sort)))

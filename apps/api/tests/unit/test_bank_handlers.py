@@ -8,6 +8,7 @@ from app.modules.bank.application.commands.apply_answer_key import ApplyAnswerKe
 from app.modules.bank.application.commands.approve_confident import ApproveConfident, ApproveConfidentHandler
 from app.modules.bank.application.commands.assign_reviewer import AssignReviewer, AssignReviewerHandler
 from app.modules.bank.application.commands.audit_keys import AuditKeys, AuditKeysHandler
+from app.modules.bank.application.commands.bulk_set_topics import BulkSetTopics, BulkSetTopicsHandler
 from app.modules.bank.application.commands.bulk_update_questions import BulkUpdateQuestions, BulkUpdateQuestionsHandler
 from app.modules.bank.application.commands.create_question import CreateQuestion, CreateQuestionHandler
 from app.modules.bank.application.commands.delete_question import DeleteQuestion, DeleteQuestionHandler
@@ -33,6 +34,8 @@ DOC = uuid.uuid4()
 TEACHER = Actor(user_id=uuid.uuid4(), org_id=ORG, role="teacher")
 ADMIN = Actor(user_id=uuid.uuid4(), org_id=ORG, role="org_admin")
 TOPIC, SUB_TOPIC, TAG_A, TAG_B, SUBJECT = (uuid.uuid4() for _ in range(5))
+OTHER_SUBJECT, OTHER_TOPIC = uuid.uuid4(), uuid.uuid4()   # a second subject and a topic of its tree
+GRADES = {10, 11, 12}
 OPTS = [{"label": l, "content": c} for l, c in zip("ABCD", "1234")]
 
 
@@ -70,6 +73,9 @@ class FakeQuestions:
     def replace_topics(self, question_id, topic_ids, primary_id):
         self.topics[question_id] = (list(topic_ids), primary_id)
 
+    def primary_topic_ids(self, question_ids):
+        return {q: primary for q, (_, primary) in self.topics.items() if q in question_ids and primary is not None}
+
     def tag_ids(self, question_id):
         return set(self.tags.get(question_id, []))
 
@@ -93,11 +99,15 @@ class FakeLog:
 
 class FakeTaxonomy:
     def topic_paths(self, org_id, ids):
-        known = {TOPIC: "t1", SUB_TOPIC: "t1.t2"}
+        known = {TOPIC: "t1", SUB_TOPIC: "t1.t2", OTHER_TOPIC: "t3"}
         return {i: known[i] for i in ids if org_id == ORG and i in known}
 
     def topic_labels(self, org_id, ids):
-        known = {TOPIC: ("Nguyên hàm", "t1"), SUB_TOPIC: ("Tích phân", "t1.t2")}
+        known = {TOPIC: ("Nguyên hàm", "t1"), SUB_TOPIC: ("Tích phân", "t1.t2"), OTHER_TOPIC: ("Dao động", "t3")}
+        return {i: known[i] for i in ids if org_id == ORG and i in known}
+
+    def topic_subjects(self, org_id, ids):
+        known = {TOPIC: SUBJECT, SUB_TOPIC: SUBJECT, OTHER_TOPIC: OTHER_SUBJECT}
         return {i: known[i] for i in ids if org_id == ORG and i in known}
 
     def tag_groups(self, org_id, ids):
@@ -105,7 +115,10 @@ class FakeTaxonomy:
         return {i: known[i] for i in ids if org_id == ORG and i in known}
 
     def subject_exists(self, org_id, subject_id):
-        return org_id == ORG and subject_id == SUBJECT
+        return org_id == ORG and subject_id in (SUBJECT, OTHER_SUBJECT)
+
+    def grade_levels(self, org_id):
+        return set(GRADES) if org_id == ORG else set()
 
 
 class FakeSettings:
@@ -240,6 +253,56 @@ def test_bulk_is_all_or_nothing(ports):
     with pytest.raises(Conflict) as e:
         bulk(TEACHER, BulkUpdateQuestions([broken.id], status="approved"))
     assert e.value.message.startswith("Câu 7 còn lỗi")
+
+
+def test_bulk_sets_subject_and_grade_and_refuses_a_topic_of_another_subject(ports):
+    qs, tax, log, _, _, uow = ports
+    bulk = BulkUpdateQuestionsHandler(qs, tax, log, uow)
+    a = parsed(qs, stem="a", answer={"key": "A"}, status="needs_review")
+    b = parsed(qs, stem="b", answer={"key": "B"}, status="needs_review")
+    assert bulk(TEACHER, BulkUpdateQuestions([a.id, b.id], subject_id=SUBJECT, grade=11)) == 2
+    assert a.subject_id == b.subject_id == SUBJECT and a.grade == b.grade == 11
+    with pytest.raises(Invalid) as e:
+        bulk(TEACHER, BulkUpdateQuestions([a.id], grade=9))
+    assert e.value.fields == {"grade": "Lớp không hợp lệ"}
+    with pytest.raises(Invalid) as e:
+        bulk(TEACHER, BulkUpdateQuestions([a.id], subject_id=uuid.uuid4()))
+    assert e.value.fields == {"subject_id": "Môn học không hợp lệ"}
+    # a question already placed in another subject's tree: nothing is applied and the conflict is named (A-04)
+    qs.topics[b.id] = ([OTHER_TOPIC], OTHER_TOPIC)
+    with pytest.raises(Invalid) as e:
+        bulk(TEACHER, BulkUpdateQuestions([a.id, b.id], subject_id=SUBJECT, grade=12))
+    assert e.value.code == "subject_topic_conflict" and "Dao động" in e.value.message
+    assert e.value.fields["conflicts"] == [{"question_id": str(b.id), "topic_id": str(OTHER_TOPIC), "topic_name": "Dao động"}]
+    assert a.grade == 11  # refused before anything was touched
+    assert bulk(TEACHER, BulkUpdateQuestions([b.id], subject_id=OTHER_SUBJECT)) == 1 and b.subject_id == OTHER_SUBJECT
+    # the topic set in the same request is what the new subject is checked against
+    assert bulk(TEACHER, BulkUpdateQuestions([b.id], subject_id=SUBJECT, primary_topic_id=TOPIC)) == 1
+    assert qs.topics[b.id] == ([TOPIC], TOPIC) and b.subject_id == SUBJECT
+
+
+def test_bulk_topics_applies_each_pair_and_names_what_it_skipped(ports):
+    qs, tax, log, _, _, uow = ports
+    bulk = BulkSetTopicsHandler(qs, tax, log, uow)
+    a = parsed(qs, stem="a", subject_id=SUBJECT)
+    b = parsed(qs, stem="b", subject_id=SUBJECT)
+    homeless = parsed(qs, stem="c")                                   # no subject yet: nothing to check the topic against
+    foreign = Question(organization_id=uuid.uuid4(), stem="d", subject_id=SUBJECT, options=list(OPTS))
+    qs.add(foreign)
+    gone, unknown_topic = uuid.uuid4(), uuid.uuid4()
+    r = bulk(TEACHER, BulkSetTopics([(a.id, TOPIC), (b.id, SUB_TOPIC), (a.id, OTHER_TOPIC), (homeless.id, TOPIC),
+                                     (foreign.id, TOPIC), (gone, TOPIC), (b.id, unknown_topic)]))
+    assert r.updated == 2 and uow.commits == 1
+    assert qs.topics[a.id] == ([TOPIC], TOPIC) and qs.topics[b.id] == ([SUB_TOPIC], SUB_TOPIC)
+    assert [(s.question_id, s.reason) for s in r.skipped] == [
+        (a.id, "subject_mismatch"), (homeless.id, "no_subject"), (foreign.id, "other_org"),
+        (gone, "unknown_question"), (b.id, "unknown_topic")]
+    assert r.skipped[0].message == "Chuyên đề không thuộc môn của câu hỏi"
+    assert log.actions(a.id) == ["topic"] and log.actions()[-1] == "bulk"  # the whole call is audited once, with its size
+    assert log.events[-1][3] == {"pairs": 7, "updated": 2, "skipped": 5}
+    with pytest.raises(Invalid) as e:
+        bulk(TEACHER, BulkSetTopics([(a.id, TOPIC)] * 201))
+    assert e.value.fields == {"pairs": "Tối đa 200 cặp câu hỏi – chuyên đề mỗi lần"}
 
 
 def test_review_actions_spot_checks_and_restore(ports):

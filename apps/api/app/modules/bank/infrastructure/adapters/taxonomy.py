@@ -9,9 +9,13 @@ class _TaxonomyApi(Protocol):
 
     def topic_labels(self, org_id: uuid.UUID, topic_ids: list[uuid.UUID]) -> dict[uuid.UUID, tuple[str, str]]: ...
 
+    def topic_subjects(self, org_id: uuid.UUID, topic_ids: list[uuid.UUID]) -> dict[uuid.UUID, uuid.UUID]: ...
+
     def tag_groups(self, org_id: uuid.UUID, tag_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]: ...
 
     def subject_exists(self, org_id: uuid.UUID, subject_id: uuid.UUID) -> bool: ...
+
+    def grade_levels(self, org_id: uuid.UUID) -> set[int]: ...
 
 
 class TaxonomyAdapter:
@@ -24,8 +28,14 @@ class TaxonomyAdapter:
     def topic_labels(self, org_id: uuid.UUID, topic_ids: list[uuid.UUID]) -> dict[uuid.UUID, tuple[str, str]]:
         return self.taxonomy.topic_labels(org_id, topic_ids)
 
+    def topic_subjects(self, org_id: uuid.UUID, topic_ids: list[uuid.UUID]) -> dict[uuid.UUID, uuid.UUID]:
+        return self.taxonomy.topic_subjects(org_id, topic_ids)
+
     def tag_groups(self, org_id: uuid.UUID, tag_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
         return self.taxonomy.tag_groups(org_id, tag_ids)
 
     def subject_exists(self, org_id: uuid.UUID, subject_id: uuid.UUID) -> bool:
         return self.taxonomy.subject_exists(org_id, subject_id)
+
+    def grade_levels(self, org_id: uuid.UUID) -> set[int]:
+        return self.taxonomy.grade_levels(org_id)

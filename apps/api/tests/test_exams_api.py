@@ -18,7 +18,7 @@ def test_blueprint_draws_distinct_questions_and_reports_shortfalls(client, db):
     _, t = bank_ready(client, db)
     exam = client.post("/api/exams", json={"title": "Kiểm tra 15 phút"}).json()
     rows = [{"topic_id": t["Đại số"], "type": "mcq", "count": 6}, {"topic_id": t["Hình học"], "type": "mcq", "count": 4},
-            {"topic_id": t["Xác suất"], "type": "mcq", "count": 3}]
+            {"topic_id": t["Đại số"], "type": "mcq", "difficulty": "vdc", "count": 3}]
     r = client.post(f"/api/exams/{exam['id']}/blueprint", json={"rows": rows, "seed": 1}).json()
     assert r["added"] == 10 and r["shortfalls"] == [{"row": 2, "missing": 3}]
     e = r["exam"]
@@ -26,6 +26,21 @@ def test_blueprint_draws_distinct_questions_and_reports_shortfalls(client, db):
     assert len(set(ids)) == 10 and e["total_points"] == 2.5
     assert [q["position"] for q in e["questions"]] == list(range(1, 11))
     assert all(q["section"] == "I" and q["answer"] for q in e["questions"])
+
+
+def test_blueprint_refuses_a_row_on_a_topic_with_no_usable_question(client, db):
+    """pickers-builder AC-06 (A-05): the row is named with what its topic holds, and nothing is generated."""
+    _, t = bank_ready(client, db)
+    exam = client.post("/api/exams", json={"title": "Đề ma trận"}).json()
+    rows = [{"topic_id": t["Đại số"], "type": "mcq", "count": 2}, {"topic_id": t["Xác suất"], "count": 3}]
+    r = client.post(f"/api/exams/{exam['id']}/blueprint", json={"rows": rows, "seed": 1})
+    assert r.status_code == 422 and r.json()["code"] == "empty_topic"
+    fields = r.json()["details"]["fields"]
+    assert (fields["row"], fields["topic_id"], fields["topic_name"], fields["question_count"]) == (1, t["Xác suất"], "Xác suất", 0)
+    assert "Xác suất" in r.json()["message"]
+    assert client.post(f"/api/exams/{exam['id']}/questions/search", json={}).json()["total"] == 0
+    kept = client.post(f"/api/exams/{exam['id']}/blueprint", json={"rows": rows[:1], "seed": 1}).json()
+    assert kept["added"] == 2 and kept["shortfalls"] == []
 
 
 def test_manual_edits_points_and_sections(client, db):
