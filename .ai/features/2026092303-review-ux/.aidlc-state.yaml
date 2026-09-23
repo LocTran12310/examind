@@ -1,0 +1,29 @@
+# Managed by scripts/aidlc.py — do not edit by hand.
+# Editing this file to skip a gate defeats the point of having one.
+feature: review-ux
+slug: 2026092303-review-ux
+profile: none
+created: 2026-09-23T17:23:00
+ruleset: 5
+current_gate: G3
+history:
+  - gate: G0
+    action: passed
+    at: 2026-09-23T17:24:05
+    by: Loc Tran
+    evidence: architecture map verified by Loc Tran (blanket pre-approval in chat, 2026-09-22 — confirm at final review); 00-intent.md complete
+  - gate: G1
+    action: passed
+    at: 2026-09-23T17:24:05
+    by: Loc Tran
+    evidence: 5 assumptions, none blocking-and-pending; 6 acceptance criteria defined
+  - gate: G2
+    action: passed
+    at: 2026-09-23T17:24:05
+    by: Loc Tran
+    evidence: 3 ADR(s) recorded
+  - gate: G3
+    action: passed
+    at: 2026-09-23T17:24:31
+    by: Loc Tran
+    evidence: graph valid - 3 UoW, 5 tickets, no cycles
