@@ -61,6 +61,16 @@ def keyword_scores(text: str, topics: list) -> list[tuple[float, object]]:
     return sorted(scored, key=lambda x: -x[0])
 
 
+def keyword_candidates(text: str, topics: list, limit: int = 1) -> list[tuple[object, float]]:
+    """The best keyword matches with their 0..1 score: the pipeline takes the first, the tagging queue up to three."""
+    return [(topic, round(min(0.95, weight / (weight + 1)), 2)) for weight, topic in keyword_scores(text, topics)[:limit]]
+
+
+def cue_text(stem: str, options: list | None) -> str:
+    """What the cues are looked for in: the stem and the options' content."""
+    return stem + "\n" + " ".join(o.get("content", "") for o in options or [])
+
+
 TAG_SYSTEM = """Bạn phân loại câu hỏi vào cây chuyên đề. Với mỗi câu, chọn MỘT chỉ số chuyên đề phù hợp nhất
 (ưu tiên nhánh sâu nhất đúng). Trả về DUY NHẤT JSON
 {"results": [{"number": 1, "index": 12, "name": "tên chuyên đề đúng như ở dòng 12", "confidence": 0.8}]}."""

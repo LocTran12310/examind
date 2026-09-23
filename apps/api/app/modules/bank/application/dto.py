@@ -19,6 +19,7 @@ class BankFilters:
     tag_ids: tuple[uuid.UUID, ...] = ()
     document_id: uuid.UUID | None = None
     school_year: str | None = None
+    has_topic: bool | None = None  # False = no row in question_topics (the tagging queue)
 
 
 @dataclass(frozen=True)
@@ -36,6 +37,16 @@ class TopicRefView:
     is_primary: bool
     source: str
     score: float | None
+
+
+@dataclass(frozen=True)
+class TopicSuggestionView:
+    """A topic the classifier proposes for a question nobody placed (topic-coverage ADR-01); nothing is stored."""
+    topic_id: uuid.UUID
+    name: str
+    path: str
+    score: float
+    source: str  # keyword | similar
 
 
 @dataclass(frozen=True)

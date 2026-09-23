@@ -34,6 +34,10 @@ class TopicRepository(Protocol):
         """The ltree path of each topic of the org among `topic_ids`."""
         ...
 
+    def labels(self, org_id: uuid.UUID, topic_ids: list[uuid.UUID]) -> dict[uuid.UUID, tuple[str, str]]:
+        """(name, ltree path) of each topic of the org among `topic_ids`."""
+        ...
+
     def children(self, topic_id: uuid.UUID) -> list[Topic]:
         """Direct children, by sort."""
         ...

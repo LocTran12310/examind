@@ -12,12 +12,14 @@ from app.modules.bank.application.commands.bulk_update_questions import BulkUpda
 from app.modules.bank.application.commands.create_question import CreateQuestion, CreateQuestionHandler
 from app.modules.bank.application.commands.delete_question import DeleteQuestion, DeleteQuestionHandler
 from app.modules.bank.application.commands.review_question import ReviewQuestion, ReviewQuestionHandler
+from app.modules.bank.application.commands.review_untagged import ReviewUntagged, ReviewUntaggedHandler
 from app.modules.bank.application.commands.triage_questions import TriageQuestions, TriageQuestionsHandler
 from app.modules.bank.application.commands.update_question import UpdateQuestion, UpdateQuestionHandler
 from app.modules.bank.application.common import resolve_filters
 from app.modules.bank.application.dto import BankFilters, ItemStats, OptionStat, question_view
 from app.modules.bank.application.queries.question_stats import QuestionStats, QuestionStatsHandler
 from app.modules.bank.application.queries.review_queue import ReviewQueue, ReviewQueueHandler
+from app.modules.bank.application.queries.suggest_topics import MAX_QUESTIONS, SuggestTopics, SuggestTopicsHandler
 from app.modules.bank.domain.entities import Question
 from app.shared.application.actor import Actor
 from app.shared.domain.errors import Conflict, Forbidden, Invalid, NotFound
@@ -89,6 +91,10 @@ class FakeLog:
 class FakeTaxonomy:
     def topic_paths(self, org_id, ids):
         known = {TOPIC: "t1", SUB_TOPIC: "t1.t2"}
+        return {i: known[i] for i in ids if org_id == ORG and i in known}
+
+    def topic_labels(self, org_id, ids):
+        known = {TOPIC: ("Nguyên hàm", "t1"), SUB_TOPIC: ("Tích phân", "t1.t2")}
         return {i: known[i] for i in ids if org_id == ORG and i in known}
 
     def tag_groups(self, org_id, ids):
@@ -360,3 +366,66 @@ def test_item_statistics_of_another_organisation_are_not_found(ports):
     other = Actor(user_id=uuid.uuid4(), org_id=uuid.uuid4(), role="teacher")
     with pytest.raises(NotFound):
         QuestionStatsHandler(qs, FakeItemStats(MEASURED))(other, QuestionStats(q.id))
+
+
+# -------------------------------------------------------------- the tagging queue (topic-coverage ADR-01, ADR-02)
+
+
+class FakeSuggestions:
+    """The ingestion classifier: whatever it was told to answer, plus what it was asked."""
+
+    def __init__(self, answers=None):
+        self.answers = answers or {}
+        self.asked: list = []
+
+    def suggest_for(self, org_id, subject_id, items):
+        self.asked.append((org_id, subject_id, [i for i, _ in items]))
+        return {qid: self.answers.get(qid, []) for qid, _ in items}
+
+
+def test_suggestions_carry_the_topic_name_path_score_and_source(ports):
+    qs, taxonomy = ports[0], ports[1]
+    q = parsed(qs, type="mcq", stem="Tính nguyên hàm", subject_id=SUBJECT, status="auto_approved")
+    ports_ = FakeSuggestions({q.id: [(TOPIC, 0.8, "keyword"), (SUB_TOPIC, 0.4, "similar")]})
+    got = SuggestTopicsHandler(qs, taxonomy, ports_)(TEACHER, SuggestTopics([q.id]))[q.id]
+    assert [(s.topic_id, s.name, s.path, s.score, s.source) for s in got] == [
+        (TOPIC, "Nguyên hàm", "t1", 0.8, "keyword"), (SUB_TOPIC, "Tích phân", "t1.t2", 0.4, "similar")]
+    # the classifier is asked per subject, with the stem and the options
+    assert ports_.asked == [(ORG, SUBJECT, [q.id])]
+
+
+def test_questions_are_grouped_by_subject_and_a_topic_of_another_org_is_dropped(ports):
+    qs, taxonomy = ports[0], ports[1]
+    a = parsed(qs, type="mcq", stem="Câu Toán", subject_id=SUBJECT)
+    b = parsed(qs, type="mcq", stem="Câu không môn", subject_id=None)
+    suggestions = FakeSuggestions({a.id: [(TOPIC, 0.7, "keyword")], b.id: [(uuid.uuid4(), 0.9, "similar")]})
+    got = SuggestTopicsHandler(qs, taxonomy, suggestions)(TEACHER, SuggestTopics([a.id, b.id]))
+    assert {s for _, s, _ in suggestions.asked} == {None, SUBJECT}  # one call per subject
+    assert [s.name for s in got[a.id]] == ["Nguyên hàm"] and got[b.id] == []
+
+
+def test_more_than_fifty_questions_is_a_validation_error(ports):
+    qs, taxonomy = ports[0], ports[1]
+    with pytest.raises(Invalid):
+        SuggestTopicsHandler(qs, taxonomy, FakeSuggestions())(TEACHER, SuggestTopics([uuid.uuid4() for _ in range(MAX_QUESTIONS + 1)]))
+
+
+def test_a_question_of_another_organisation_is_not_found(ports):
+    qs, taxonomy = ports[0], ports[1]
+    q = Question(organization_id=uuid.uuid4(), type="mcq", stem="Câu của trung tâm khác", options=list(OPTS))
+    qs.add(q)
+    suggestions = FakeSuggestions()
+    with pytest.raises(NotFound):
+        SuggestTopicsHandler(qs, taxonomy, suggestions)(TEACHER, SuggestTopics([q.id]))
+    assert suggestions.asked == []
+
+
+def test_an_unplaced_question_waits_for_review_whatever_its_confidence(ports):
+    qs, uow = ports[0], ports[5]
+    auto = parsed(qs, type="mcq", stem="Câu rõ ràng", status="auto_approved", confidence=0.99, spot_check=True)
+    duplicate = parsed(qs, type="mcq", stem="Câu trùng", status="duplicate", confidence=0.99)
+    already = parsed(qs, type="mcq", stem="Câu chờ duyệt", status="needs_review", confidence=0.2)
+    moved = ReviewUntaggedHandler(qs, uow)(ReviewUntagged([auto.id, duplicate.id, already.id]))
+    assert moved == 1
+    assert auto.status == "needs_review" and duplicate.status == "duplicate" and already.status == "needs_review"
+    assert auto.spot_check is False  # it is no longer a sample of what auto-approval let through

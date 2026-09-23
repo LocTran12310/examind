@@ -200,7 +200,17 @@ class QuestionBank(Protocol):
         """(primary topic, similarity) of the most similar approved question (kNN over search text)."""
         ...
 
+    def nearest_topics(self, org_id: uuid.UUID, subject_id: uuid.UUID | None, question_id: uuid.UUID,
+                       limit: int) -> list[tuple[uuid.UUID, float]]:
+        """(topic, similarity) of the primary topics of the usable questions of that subject whose text looks most
+        like this question's, best first (the tagging queue's kNN)."""
+        ...
+
     def suggest_topic(self, question_id: uuid.UUID, topic_id: uuid.UUID, source: str, score: float) -> None: ...
+
+    def review_untagged(self, question_ids: list[uuid.UUID]) -> int:
+        """topic-coverage ADR-02: questions the suggester could not place wait for a teacher; how many moved."""
+        ...
 
     def follow_document(self, document_id: uuid.UUID, changes: dict, old_tag_id: uuid.UUID | None, new_tag_id: uuid.UUID | None) -> None:
         """The document's meta changed: its questions take the new values; the source tag is swapped when given."""

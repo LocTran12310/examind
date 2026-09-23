@@ -76,6 +76,10 @@ def _filtered(org_id: uuid.UUID, rf: ResolvedFilters, drop: tuple[str, ...] = ()
         # any of the chosen tags of one group, and every group (e.g. nguồn đề AND phương pháp)
         for ids in rf.tag_groups:
             stmt = stmt.where(exists(select(qg.question_id).where(qg.question_id == qc.id, qg.tag_id.in_(ids))))
+    if f.has_topic is not None and "topics" not in drop:
+        # the tagging queue: `false` is "no row in question_topics at all", not "not in these nodes"
+        placed = exists(select(qt.question_id).where(qt.question_id == qc.id))
+        stmt = stmt.where(placed if f.has_topic else ~placed)
     if f.school_year and "school_year" not in drop:
         stmt = stmt.where(exists(select(d.id).where(d.id == qc.source_document_id, YEAR == f.school_year)))
     needle = normalise_query(f.q) if f.q else ""
@@ -203,10 +207,15 @@ class SqlQuestionReader:
         out["topics"] = {str(t): n for t, n in db.execute(stmt).all()}
         # questions nobody tagged with a topic: they answer no report and move no mastery, so the gap is countable
         s = sub("topics")
-        untagged = db.scalar(select(func.count()).select_from(questions).join(s, s.c.id == qc.id)
-                             .where(~exists().where(qt.question_id == qc.id)))
+        no_topic = ~exists().where(qt.question_id == qc.id)
+        untagged = db.scalar(select(func.count()).select_from(questions).join(s, s.c.id == qc.id).where(no_topic))
         if untagged:
             out["topics"]["none"] = untagged
+        # the same gap paper by paper, so a teacher can clear one document at a time (topic-coverage AC-05)
+        s = sub("topics", "document_id")
+        out["untagged_documents"] = {("none" if doc is None else str(doc)): n for doc, n in db.execute(
+            select(qc.source_document_id, func.count()).select_from(questions).join(s, s.c.id == qc.id)
+            .where(no_topic).group_by(qc.source_document_id)).all()}
         return out
 
 

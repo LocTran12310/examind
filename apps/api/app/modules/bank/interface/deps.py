@@ -26,7 +26,8 @@ from app.modules.bank.application.queries.review_queue import ReviewQueueHandler
 from app.modules.bank.application.queries.search_flagged import SearchFlaggedHandler
 from app.modules.bank.application.queries.search_questions import SearchQuestionsHandler
 from app.modules.bank.application.queries.search_review_documents import SearchReviewDocumentsHandler
-from app.modules.bank.domain.ports import StaffDirectory, Taxonomy
+from app.modules.bank.application.queries.suggest_topics import SuggestTopicsHandler
+from app.modules.bank.domain.ports import StaffDirectory, Taxonomy, TopicSuggestions
 from app.modules.bank.infrastructure.adapters.sql import SqlReviewDocuments, SqlReviewSettings
 from app.modules.bank.infrastructure.read_models import SqlItemStatsReader, SqlQuestionReader, SqlReviewReader
 from app.modules.bank.infrastructure.repositories import (
@@ -41,6 +42,7 @@ from app.shared.infrastructure.sql_unit_of_work import SqlUnitOfWork
 
 _taxonomy: Callable[[Session], Taxonomy] | None = None
 _staff: Callable[[Session], StaffDirectory] | None = None
+_suggestions: Callable[[Session], TopicSuggestions] | None = None
 
 
 def register_taxonomy(factory: Callable[[Session], Taxonomy]) -> None:
@@ -51,6 +53,12 @@ def register_taxonomy(factory: Callable[[Session], Taxonomy]) -> None:
 def register_staff_directory(factory: Callable[[Session], StaffDirectory]) -> None:
     global _staff
     _staff = factory
+
+
+def register_topic_suggestions(factory: Callable[[Session], TopicSuggestions]) -> None:
+    """The classifier of the ingestion context (topic-coverage ADR-03)."""
+    global _suggestions
+    _suggestions = factory
 
 
 class _RegisteredTaxonomy:
@@ -67,6 +75,9 @@ class _RegisteredTaxonomy:
     def topic_paths(self, org_id: uuid.UUID, topic_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
         return self._target().topic_paths(org_id, topic_ids)
 
+    def topic_labels(self, org_id: uuid.UUID, topic_ids: list[uuid.UUID]) -> dict[uuid.UUID, tuple[str, str]]:
+        return self._target().topic_labels(org_id, topic_ids)
+
     def tag_groups(self, org_id: uuid.UUID, tag_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
         return self._target().tag_groups(org_id, tag_ids)
 
@@ -78,6 +89,12 @@ def _staff_directory(db: Session) -> StaffDirectory:
     if _staff is None:
         raise RuntimeError("no staff directory registered")
     return _staff(db)
+
+
+def _topic_suggestions(db: Session) -> TopicSuggestions:
+    if _suggestions is None:
+        raise RuntimeError("no topic suggestions registered")
+    return _suggestions(db)
 
 
 def bank_api(db: Session) -> BankApi:
@@ -94,6 +111,10 @@ def search_questions(db: Session = Depends(get_db)) -> SearchQuestionsHandler:
 
 def question_facets(db: Session = Depends(get_db)) -> QuestionFacetsHandler:
     return QuestionFacetsHandler(SqlQuestionReader(db), _RegisteredTaxonomy(db))
+
+
+def suggest_topics(db: Session = Depends(get_db)) -> SuggestTopicsHandler:
+    return SuggestTopicsHandler(SqlQuestionRepository(db), _RegisteredTaxonomy(db), _topic_suggestions(db))
 
 
 def get_question(db: Session = Depends(get_db)) -> GetQuestionHandler:

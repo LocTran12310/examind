@@ -2,6 +2,7 @@
 import uuid
 
 from app.modules.bank.application.commands.audit_keys import AuditKeys, AuditKeysHandler
+from app.modules.bank.application.commands.review_untagged import ReviewUntagged, ReviewUntaggedHandler
 from app.modules.bank.application.commands.triage_legacy_drafts import TriageLegacyDraftsHandler
 from app.modules.bank.application.commands.triage_questions import TriageQuestions, TriageQuestionsHandler
 from app.modules.bank.application.common import resolve_filters
@@ -84,9 +85,19 @@ class BankApi:
         q = self.questions.many(None, [question_id])
         return self.documents.nearest_topic(q[0]) if q else None
 
+    def nearest_topics(self, org_id: uuid.UUID, subject_id: uuid.UUID | None, question_id: uuid.UUID,
+                       limit: int) -> list[tuple[uuid.UUID, float]]:
+        """kNN of the tagging queue (topic-coverage ADR-01): the primary topics of the usable questions of that
+        subject whose text looks most like this one's, best first."""
+        return self.documents.nearest_topics(org_id, subject_id, question_id, limit)
+
     def suggest_topic(self, question_id: uuid.UUID, topic_id: uuid.UUID, source: str, score: float) -> None:
         """The primary topic ingestion suggests (source auto | knn | ai)."""
         self.documents.add_topic(question_id, topic_id, True, source, score)
+
+    def review_untagged(self, question_ids: list[uuid.UUID]) -> int:
+        """Flushed with the caller's transaction (ingestion): questions nobody could place wait for a teacher."""
+        return ReviewUntaggedHandler(self.questions, self.uow)(ReviewUntagged(list(question_ids)))
 
     def follow_document(self, document_id: uuid.UUID, changes: dict, old_tag_id: uuid.UUID | None, new_tag_id: uuid.UUID | None) -> None:
         """The document's meta changed: subject / grade / đợt / loại đề of its questions follow; the source tag is swapped."""

@@ -13,6 +13,10 @@ class TaxonomyApi:
         """{topic_id: ltree path} for the topics of the org among `topic_ids`; unknown or foreign ids are left out."""
         return self.topics.paths(org_id, list(topic_ids))
 
+    def topic_labels(self, org_id: uuid.UUID, topic_ids: list[uuid.UUID]) -> dict[uuid.UUID, tuple[str, str]]:
+        """{topic_id: (name, ltree path)} for the topics of the org among `topic_ids`; unknown or foreign ids are left out."""
+        return self.topics.labels(org_id, list(topic_ids))
+
     def tag_groups(self, org_id: uuid.UUID, tag_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
         """{tag_id: group} for the tags of the org among `tag_ids`; unknown or foreign ids are left out."""
         return self.tags.groups(org_id, list(tag_ids))

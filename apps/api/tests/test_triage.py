@@ -28,12 +28,14 @@ def test_golden_docx_mostly_auto_approved(client, db):
 
 
 def test_messy_doc_goes_to_review(client, db):
+    """Five fail the parse rules; the other three carry no cue the classifier knows, so they wait too
+    (topic-coverage ADR-02 — they used to be auto-approved and invisible)."""
     teacher_with_taxonomy(client, db)
     doc_id = upload(client, "k.docx", sample("de-kho.docx")).json()["document"]["id"]
     run_jobs()
     db.expire_all()
     s = statuses(db, doc_id)
-    assert s.get("needs_review") == 5 and s.get("auto_approved") == 3
+    assert s.get("needs_review") == 8 and s.get("auto_approved") is None
 
 
 def test_pdf_copy_of_docx_is_marked_duplicate(client, db):

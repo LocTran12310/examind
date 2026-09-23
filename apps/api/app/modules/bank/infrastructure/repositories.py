@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import delete, exists, insert, select, text, update
+from sqlalchemy import and_, delete, exists, func, insert, select, text, update
 from sqlalchemy.orm import Session
 
 from app.modules.bank.domain.entities import USABLE, Question, ReviewEvent
@@ -155,6 +155,23 @@ class SqlDocumentQuestions:
              where o.organization_id = :org and o.status = 'approved' and o.id <> :id and o.search_text % :t
              order by s desc limit 1"""), {"t": q.search_text, "org": q.organization_id, "id": q.id}).first()
         return (row[0], float(row[1])) if row else None
+
+    def nearest_topics(self, org_id: uuid.UUID, subject_id: uuid.UUID | None, question_id: uuid.UUID,
+                       limit: int) -> list[tuple[uuid.UUID, float]]:
+        """kNN of the tagging queue: the primary topics of the usable questions of the same subject whose search text
+        looks most like this one's — one row per topic, keeping its best neighbour's similarity."""
+        self.session.flush()
+        mine = select(qc.search_text).where(qc.id == question_id, qc.organization_id == org_id).scalar_subquery()
+        best = func.max(func.similarity(qc.search_text, mine))
+        qt = question_topics.c
+        stmt = (select(qt.topic_id, best).select_from(questions)
+                .join(question_topics, and_(qt.question_id == qc.id, qt.is_primary.is_(True)))
+                .where(qc.organization_id == org_id, qc.id != question_id, qc.status.in_(USABLE),
+                       qc.search_text.op("%")(mine))
+                .group_by(qt.topic_id).order_by(best.desc()).limit(limit))
+        if subject_id is not None:
+            stmt = stmt.where(qc.subject_id == subject_id)
+        return [(r[0], float(r[1])) for r in self.session.execute(stmt)]
 
     def add_topic(self, question_id: uuid.UUID, topic_id: uuid.UUID, is_primary: bool, source: str, score: float | None) -> None:
         self.session.execute(insert(question_topics).values(question_id=question_id, topic_id=topic_id, is_primary=is_primary,

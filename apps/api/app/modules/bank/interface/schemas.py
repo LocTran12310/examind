@@ -120,10 +120,28 @@ class ActionIn(BaseModel):
     action: str
 
 
+class SuggestTopicsIn(BaseModel):
+    question_ids: list[uuid.UUID] = []
+
+
+class TopicSuggestionOut(BaseModel):
+    topic_id: uuid.UUID
+    name: str
+    path: str
+    score: float
+    source: str
+
+
+class SuggestionsOut(BaseModel):
+    suggestions: dict[uuid.UUID, list[TopicSuggestionOut]]
+
+
 class QuestionSearchBody(SearchBody):
     """The bank's filters sit at the top of the body: `subject_id` a subject id or "none" (no subject);
     `topic_id` / `topic_ids` include each node's subtree (OR); `tag_ids` any of one group, every group;
-    `status` "usable" (default), "all" or a status; `school_year` of the source document."""
+    `status` "usable" (default), "all" or a status; `school_year` of the source document;
+    `has_topic` false = the questions nobody placed in the topic tree."""
+    has_topic: bool | None = None
     subject_id: str | None = None
     grade: int | None = None
     semester_code: str | None = None
@@ -150,7 +168,7 @@ class QuestionSearchBody(SearchBody):
         return BankFilters(q=self.q.strip(), subject_id=subject, grade=self.grade, semester_code=self.semester_code or None,
                            exam_kind=self.exam_kind or None, type=self.type or None, difficulty=self.difficulty or None,
                            status=self.status, topic_ids=topics, tag_ids=tuple(dict.fromkeys(self.tag_ids)),
-                           document_id=self.document_id, school_year=self.school_year or None)
+                           document_id=self.document_id, school_year=self.school_year or None, has_topic=self.has_topic)
 
 
 class OptionStatOut(BaseModel):
@@ -184,6 +202,7 @@ class FacetsOut(BaseModel):
     school_years: dict[str, int]
     tags: dict[str, int]
     topics: dict[str, int]
+    untagged_documents: dict[str, int] = {}  # questions with no topic per source document ("none": no document)
 
 
 # ------------------------------------------------------------------ review

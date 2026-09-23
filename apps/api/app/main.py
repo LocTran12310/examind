@@ -19,6 +19,7 @@ from app.modules.assessment.infrastructure.adapters.roster import AcademicRoster
 from app.modules.assessment.infrastructure.adapters.subjects import TaxonomySubjects  # noqa: E402
 from app.modules.assessment.interface import deps as assessment_deps  # noqa: E402
 from app.modules.bank.infrastructure.adapters.staff import IdentityStaffDirectory  # noqa: E402
+from app.modules.bank.infrastructure.adapters.suggestions import IngestionTopicSuggestions  # noqa: E402
 from app.modules.bank.infrastructure.adapters.taxonomy import TaxonomyAdapter  # noqa: E402
 from app.modules.bank.infrastructure.repositories import IN_USE_CHECKS  # noqa: E402
 from app.modules.bank.interface import deps as bank_deps  # noqa: E402
@@ -42,6 +43,8 @@ identity_deps.register_org_seeder(SeedOrgSeeder)
 # the bank checks topics / tags through the taxonomy API and reviewers through the identity API
 bank_deps.register_taxonomy(lambda db: TaxonomyAdapter(taxonomy_api(db)))
 bank_deps.register_staff_directory(lambda db: IdentityStaffDirectory(identity_deps.identity_api(db)))
+# the tagging queue asks the ingestion context's classifier for topic candidates (topic-coverage ADR-03)
+bank_deps.register_topic_suggestions(lambda db: IngestionTopicSuggestions(ingestion_deps.ingestion_api(db)))
 # ingestion stores parsed questions in the bank, source tags in the taxonomy, and drafts exams through assessment;
 # the worker wires the same for its jobs (app/worker/handlers.py)
 ingestion_deps.register_bank(lambda db: BankAdapter(bank_deps.bank_api(db)))

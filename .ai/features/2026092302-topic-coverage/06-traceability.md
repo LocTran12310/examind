@@ -7,7 +7,7 @@
 | AC-01 | T-01-01, T-02-01 | UOW-01, UOW-02 | open |
 | AC-02 | T-01-02, T-02-01 | UOW-01, UOW-02 | open |
 | AC-03 | T-02-02 | UOW-02 | open |
-| AC-04 | T-01-03 | UOW-01 | open |
+| AC-04 | T-01-03 | UOW-01 | done |
 | AC-05 | T-01-01, T-02-02 | UOW-01, UOW-02 | open |
 
 Coverage: **5/5** acceptance criteria.

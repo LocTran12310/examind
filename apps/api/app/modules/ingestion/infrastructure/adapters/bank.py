@@ -15,7 +15,12 @@ class _BankApi(Protocol):
 
     def nearest_topic(self, question_id: uuid.UUID) -> tuple[uuid.UUID, float] | None: ...
 
+    def nearest_topics(self, org_id: uuid.UUID, subject_id: uuid.UUID | None, question_id: uuid.UUID,
+                       limit: int) -> list[tuple[uuid.UUID, float]]: ...
+
     def suggest_topic(self, question_id: uuid.UUID, topic_id: uuid.UUID, source: str, score: float) -> None: ...
+
+    def review_untagged(self, question_ids: list[uuid.UUID]) -> int: ...
 
     def follow_document(self, document_id: uuid.UUID, changes: dict, old_tag_id: uuid.UUID | None, new_tag_id: uuid.UUID | None) -> None: ...
 
@@ -41,8 +46,15 @@ class BankAdapter:
     def nearest_topic(self, question_id: uuid.UUID) -> tuple[uuid.UUID, float] | None:
         return self.bank.nearest_topic(question_id)
 
+    def nearest_topics(self, org_id: uuid.UUID, subject_id: uuid.UUID | None, question_id: uuid.UUID,
+                       limit: int) -> list[tuple[uuid.UUID, float]]:
+        return self.bank.nearest_topics(org_id, subject_id, question_id, limit)
+
     def suggest_topic(self, question_id: uuid.UUID, topic_id: uuid.UUID, source: str, score: float) -> None:
         self.bank.suggest_topic(question_id, topic_id, source, score)
+
+    def review_untagged(self, question_ids: list[uuid.UUID]) -> int:
+        return self.bank.review_untagged(question_ids)
 
     def follow_document(self, document_id: uuid.UUID, changes: dict, old_tag_id: uuid.UUID | None, new_tag_id: uuid.UUID | None) -> None:
         self.bank.follow_document(document_id, changes, old_tag_id, new_tag_id)

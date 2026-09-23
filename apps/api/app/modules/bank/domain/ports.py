@@ -59,11 +59,25 @@ class Taxonomy(Protocol):
         """ltree path of each topic of the org among `topic_ids` (unknown ones are missing)."""
         ...
 
+    def topic_labels(self, org_id: uuid.UUID, topic_ids: list[uuid.UUID]) -> dict[uuid.UUID, tuple[str, str]]:
+        """(name, ltree path) of each topic of the org among `topic_ids` (unknown ones are missing)."""
+        ...
+
     def tag_groups(self, org_id: uuid.UUID, tag_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
         """group of each tag of the org among `tag_ids` (unknown ones are missing)."""
         ...
 
     def subject_exists(self, org_id: uuid.UUID, subject_id: uuid.UUID) -> bool: ...
+
+
+class TopicSuggestions(Protocol):
+    """The ingestion context's classifier, seen from the bank (topic-coverage ADR-03): candidates for questions
+    nobody has placed yet, computed on demand and never stored."""
+
+    def suggest_for(self, org_id: uuid.UUID, subject_id: uuid.UUID | None,
+                    items: list[tuple[uuid.UUID, str]]) -> dict[uuid.UUID, list[tuple[uuid.UUID, float, str]]]:
+        """{question id: [(topic id, score, source)]} — at most three, best first; source `keyword` | `similar`."""
+        ...
 
 
 class StaffDirectory(Protocol):
@@ -128,6 +142,12 @@ class DocumentQuestions(Protocol):
 
     def nearest_topic(self, q: Question) -> tuple[uuid.UUID, float] | None:
         """(primary topic, similarity) of the most similar approved question of the org (pg_trgm)."""
+        ...
+
+    def nearest_topics(self, org_id: uuid.UUID, subject_id: uuid.UUID | None, question_id: uuid.UUID,
+                       limit: int) -> list[tuple[uuid.UUID, float]]:
+        """The primary topics of the usable questions of that subject whose text looks most like this one's:
+        (topic, similarity), best first (topic-coverage ADR-01)."""
         ...
 
     def add_topic(self, question_id: uuid.UUID, topic_id: uuid.UUID, is_primary: bool, source: str, score: float | None) -> None: ...

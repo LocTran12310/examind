@@ -14,11 +14,23 @@ def kho(client, db):
     return doc
 
 
+def mau(client, db):
+    """The paper the classifier handles well: auto-approved questions, and a spot check among them."""
+    setup_admin(client, db)
+    doc = upload(client, "m.docx", sample("de-mau-toan10.docx")).json()["document"]["id"]
+    run_jobs()
+    return doc
+
+
 def test_queue_groups_and_spot_checks_last(client, db):
     doc = kho(client, db)
     q = client.get(f"/api/review/documents/{doc}/queue").json()
-    assert len(q) == 6  # 5 needs_review + 1 spot check
-    assert q[0]["group"] == "không nhận ra phương án" and q[-1]["group"] == "Kiểm tra ngẫu nhiên" and q[-1]["spot_check"]
+    assert len(q) == 8  # 5 fail the parse rules, the other 3 carry no cue (topic-coverage ADR-02)
+    assert q[0]["group"] == "không nhận ra phương án" and not any(x["spot_check"] for x in q)
+    doc = upload(client, "m.docx", sample("de-mau-toan10.docx")).json()["document"]["id"]
+    run_jobs()
+    q = client.get(f"/api/review/documents/{doc}/queue").json()
+    assert q[-1]["group"] == "Kiểm tra ngẫu nhiên" and q[-1]["spot_check"]
 
 
 def test_approve_refuses_blocking_then_answer_edit_and_approve(client, db):
@@ -52,10 +64,10 @@ def test_reject_restore_and_topics_tags(client, db):
 
 def test_spot_check_failures_raise_threshold(client, db):
     admin = setup_admin(client, db)
-    for name in ("de-kho.docx", "de-thpt2025-toan.docx"):
+    for name in ("de-mau-toan10.docx", "de-thpt2025-toan.docx"):
         upload(client, name, sample(name))
     run_jobs()
-    spots = db.scalars(select(Question).where(Question.spot_check.is_(True))).all()
+    spots = db.scalars(select(Question).where(Question.spot_check.is_(True), Question.status == "auto_approved")).all()
     assert len(spots) >= 2
     client.post(f"/api/review/questions/{spots[0].id}/action", json={"action": "reject"})
     org = db.get(Organization, admin.organization_id)
@@ -68,7 +80,7 @@ def test_spot_check_failures_raise_threshold(client, db):
 
 
 def test_spot_ok_is_recorded(client, db):
-    doc = kho(client, db)
+    doc = mau(client, db)
     spot = client.get(f"/api/review/documents/{doc}/queue").json()[-1]
     assert client.post(f"/api/review/questions/{spot['id']}/action", json={"action": "approve"}).json()["status"] == "approved"
     assert db.scalar(select(ReviewEvent.action).where(ReviewEvent.question_id == spot["id"])) == "spot_ok"

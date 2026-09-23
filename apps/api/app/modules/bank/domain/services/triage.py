@@ -14,6 +14,12 @@ def is_duplicate(q: Question, other_text: str, similarity: float) -> bool:
     return similarity >= DUPLICATE_SIMILARITY and re.findall(r"\d+", other_text) == re.findall(r"\d+", q.search_text)
 
 
+def waits_for_a_topic(q: Question) -> bool:
+    """topic-coverage ADR-02: a freshly parsed question nobody could place is worth a look, whatever its parse
+    confidence — it is auto-approval that made the untagged ones invisible. A duplicate keeps its own outcome."""
+    return q.status == "auto_approved"
+
+
 def spot_sample(auto: list[Question], seed: str) -> list[Question]:
     """About 5% of the auto-approved questions (at least one), drawn reproducibly."""
     if not auto:

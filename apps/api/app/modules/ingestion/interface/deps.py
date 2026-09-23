@@ -6,6 +6,7 @@ from collections.abc import Callable
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
+from app.modules.ingestion.application.api import IngestionApi
 from app.modules.ingestion.application.commands.create_exam_from_document import CreateExamFromDocumentHandler
 from app.modules.ingestion.application.commands.delete_ai_model import DeleteAiModelHandler
 from app.modules.ingestion.application.commands.delete_document import DeleteDocumentHandler
@@ -78,6 +79,11 @@ def _taxonomy(db: Session) -> SqlTaxonomyLookup:
 
 def _bank_of(db: Session) -> QuestionBank:
     return _registered(_bank, "question bank")(db)
+
+
+def ingestion_api(db: Session) -> IngestionApi:
+    """Ingestion for another context (the bank's tagging queue asks it for topic candidates), on the caller's session."""
+    return IngestionApi(_taxonomy(db), _bank_of(db))
 
 
 # ------------------------------------------------------------------ worker

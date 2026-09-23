@@ -5,6 +5,7 @@ synonyms; the deepest, best-scoring node wins. A weak or missing keyword match f
 over approved questions, and only what is still weak goes to the tagging model (source `ai`).
 A 7B model mis-picks where the text has cues (golden run 2026-09-22), so it never overrides a strong
 keyword, and over a weak one it may only refine to a descendant of that topic.
+What nothing could place waits for a teacher instead of being auto-approved (topic-coverage ADR-02, A-02).
 """
 from dataclasses import dataclass
 import uuid
@@ -22,7 +23,8 @@ from app.modules.ingestion.domain.services.topic_rules import (
     _label,
     _may_replace,
     _resolve,
-    keyword_scores,
+    cue_text,
+    keyword_candidates,
 )
 
 
@@ -80,11 +82,10 @@ class TopicSuggester:
         return self.taxonomy.topic(near[0]), round(float(near[1]), 2)
 
     def _local_topic(self, q: Stored, topics: list[TopicNode]) -> tuple[TopicNode | None, float, str]:
-        scored = keyword_scores(q.stem + "\n" + " ".join(o.get("content", "") for o in q.options or []), topics)
+        best = keyword_candidates(cue_text(q.stem, q.options), topics)
         topic, score, source = None, 0.0, "auto"
-        if scored:
-            weight, topic = scored[0]
-            score = round(min(0.95, weight / (weight + 1)), 2)
+        if best:
+            topic, score = best[0]
         if score < WEAK_KEYWORD:
             near = self._knn(q)
             if near and near[1] >= score:
@@ -99,14 +100,20 @@ class TopicSuggester:
         weak = [(p, q) for p, q in rows if local[q.id][1] < WEAK_KEYWORD]
         ai = self._ai_choose(doc, weak, topics, run) if weak else {}
         counts = {"auto": 0, "knn": 0, "ai": 0}
+        untagged: list[uuid.UUID] = []
         for _, q in rows:
             topic, score, source = local[q.id]
             if q.id in ai and _may_replace(topic, ai[q.id][0]):
                 topic, score, _ = ai[q.id]
                 source = "ai"
             if topic is None:
+                untagged.append(q.id)
                 continue
             counts[source] += 1
             self.bank.suggest_topic(q.id, topic.id, source, round(score, 2))
         self.bank.flush()
-        run.step("suggest_topics", keyword=counts["auto"], ai=counts["ai"], knn=counts["knn"], none=len(rows) - sum(counts.values()))
+        run.step("suggest_topics", keyword=counts["auto"], ai=counts["ai"], knn=counts["knn"], none=len(untagged))
+        if untagged:
+            # ADR-02: an unplaced question waits for a teacher instead of slipping through as auto-approved (A-02)
+            self.bank.review_untagged(untagged)
+            run.warnings.append(f"{len(untagged)} câu chưa gắn chuyên đề, đã chuyển sang chờ duyệt")

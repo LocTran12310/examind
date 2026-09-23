@@ -7,6 +7,8 @@ import uuid
 class _TaxonomyApi(Protocol):
     def topic_paths(self, org_id: uuid.UUID, topic_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]: ...
 
+    def topic_labels(self, org_id: uuid.UUID, topic_ids: list[uuid.UUID]) -> dict[uuid.UUID, tuple[str, str]]: ...
+
     def tag_groups(self, org_id: uuid.UUID, tag_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]: ...
 
     def subject_exists(self, org_id: uuid.UUID, subject_id: uuid.UUID) -> bool: ...
@@ -18,6 +20,9 @@ class TaxonomyAdapter:
 
     def topic_paths(self, org_id: uuid.UUID, topic_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
         return self.taxonomy.topic_paths(org_id, topic_ids)
+
+    def topic_labels(self, org_id: uuid.UUID, topic_ids: list[uuid.UUID]) -> dict[uuid.UUID, tuple[str, str]]:
+        return self.taxonomy.topic_labels(org_id, topic_ids)
 
     def tag_groups(self, org_id: uuid.UUID, tag_ids: list[uuid.UUID]) -> dict[uuid.UUID, str]:
         return self.taxonomy.tag_groups(org_id, tag_ids)

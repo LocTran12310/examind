@@ -19,10 +19,11 @@ def test_counts_progress_and_assignment(client, db):
     upload(client, "m.docx", sample("de-mau-toan10.docx"))
     run_jobs()
     rows = {r["document"]["filename"]: r for r in client.post("/api/review/documents/search", json={}).json()["data"]}
-    k = rows["k.docx"]
-    assert k["total"] == 8 and k["counts"]["needs_review"] == 5 and k["counts"]["auto_approved"] == 3
-    assert k["spot_pending"] == 1 and 0 < k["progress"] < 1
-    assert rows["m.docx"]["total"] == 40
+    k, m = rows["k.docx"], rows["m.docx"]
+    # nothing in k.docx could be classified, so all eight wait for a teacher (topic-coverage ADR-02)
+    assert k["total"] == 8 and k["counts"]["needs_review"] == 8 and k["counts"]["auto_approved"] == 0
+    assert k["spot_pending"] == 0 and k["progress"] == 0.0
+    assert m["total"] == 40 and m["spot_pending"] == 2 and 0 < m["progress"] < 1
     r = client.patch(f"/api/review/documents/{kho}", json={"assigned_to": str(teacher.id)})
     assert r.status_code == 200 and r.json()["assigned_name"] == teacher.full_name
     t = client.__class__(client.app)

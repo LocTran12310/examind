@@ -21,6 +21,7 @@ from app.modules.bank.application.queries.review_queue import ReviewQueue, Revie
 from app.modules.bank.application.queries.search_flagged import SearchFlagged, SearchFlaggedHandler
 from app.modules.bank.application.queries.search_questions import SearchQuestions, SearchQuestionsHandler
 from app.modules.bank.application.queries.search_review_documents import SearchReviewDocuments, SearchReviewDocumentsHandler
+from app.modules.bank.application.queries.suggest_topics import SuggestTopics, SuggestTopicsHandler
 from app.modules.bank.interface import deps
 from app.modules.bank.interface.schemas import (
     ActionIn,
@@ -40,6 +41,9 @@ from app.modules.bank.interface.schemas import (
     QuestionStatsOut,
     ReviewDocumentOut,
     ReviewDocumentSearchBody,
+    SuggestionsOut,
+    SuggestTopicsIn,
+    TopicSuggestionOut,
     parsed_out,
     question_out,
     question_stats_out,
@@ -74,6 +78,14 @@ def question_facets(body: QuestionSearchBody, actor: Actor = Depends(staff_actor
     """Counts per subject / topic (subtree) / type / difficulty / grade / đợt / năm học / tag for the filter sheet;
     same body as the search, each facet ignores its own filter."""
     return handle(actor, QuestionFacets(body.to_request(), body.to_filters()))
+
+
+@router.post("/questions/suggest-topics", response_model=SuggestionsOut)
+def suggest_topics(body: SuggestTopicsIn, actor: Actor = Depends(staff_actor), handle: SuggestTopicsHandler = Depends(deps.suggest_topics)):
+    """Up to three topic candidates for each question (at most 50), computed on demand from the ingestion rules:
+    keyword cues first, then the topics of the most similar tagged questions of the subject. Nothing is stored."""
+    found = handle(actor, SuggestTopics(body.question_ids))
+    return SuggestionsOut(suggestions={qid: [TopicSuggestionOut(**vars(s)) for s in ss] for qid, ss in found.items()})
 
 
 @router.post("/questions", response_model=ParsedQuestionOut, status_code=201)

@@ -64,6 +64,13 @@ class SqlTopicRepository:
             return {}
         return dict(self.session.execute(select(topics.c.id, topics.c.path).where(topics.c.id.in_(topic_ids), topics.c.organization_id == org_id)).all())
 
+    def labels(self, org_id: uuid.UUID, topic_ids: list[uuid.UUID]) -> dict[uuid.UUID, tuple[str, str]]:
+        if not topic_ids:
+            return {}
+        rows = self.session.execute(select(topics.c.id, topics.c.name, topics.c.path)
+                                    .where(topics.c.id.in_(topic_ids), topics.c.organization_id == org_id)).all()
+        return {r.id: (r.name, r.path) for r in rows}
+
     def children(self, topic_id: uuid.UUID) -> list[Topic]:
         return list(self.session.scalars(select(Topic).where(topics.c.parent_id == topic_id).order_by(topics.c.sort)))
 

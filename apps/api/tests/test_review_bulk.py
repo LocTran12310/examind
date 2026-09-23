@@ -25,10 +25,15 @@ def test_paste_answer_key_and_approve_confident(client, db):
     assert r == {"applied": 5, "approved": 5, "unmatched": [9]}
     db.expire_all()
     assert all(q.status == "approved" and q.answer == {"key": "B"} for q in db.scalars(select(Question).where(Question.number <= 5)))
-    r = client.post(f"/api/review/documents/{doc}/approve-confident").json()
-    assert r["approved"] == 2  # 3 auto-approved minus the spot check
-    left = client.get(f"/api/review/documents/{doc}/queue").json()
-    assert [q["group"] for q in left] == ["Kiểm tra ngẫu nhiên"]
+    assert len(client.get(f"/api/review/documents/{doc}/queue").json()) == 3  # nothing of k.docx is auto-approved (ADR-02)
+    # approve-confident takes the auto-approved questions of a paper the classifier could place, minus its spot checks
+    other = upload(client, "m.docx", sample("de-mau-toan10.docx")).json()["document"]["id"]
+    run_jobs()
+    row = client.get(f"/api/review/documents/{other}").json()
+    r = client.post(f"/api/review/documents/{other}/approve-confident").json()
+    assert r["approved"] == row["counts"]["auto_approved"] - row["spot_pending"] > 0
+    left = client.get(f"/api/review/documents/{other}/queue").json()
+    assert [q["group"] for q in left if q["spot_check"]] == ["Kiểm tra ngẫu nhiên"] * row["spot_pending"]
 
 
 def test_pdf_page_image(client, db):

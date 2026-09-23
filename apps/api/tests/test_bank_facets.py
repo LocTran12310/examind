@@ -95,3 +95,15 @@ def test_questions_without_a_topic_are_counted(client, db):
     db.commit()
     f = client.post("/api/questions/facets", json={"subject_id": str(x["toan"].id)}).json()
     assert f["topics"]["none"] == 1 and f["topics"][str(x["ham_so"].id)] == 3  # the tagged subtrees are unchanged
+
+
+def test_the_untagged_count_is_broken_down_per_document(client, db):
+    """A teacher clears the backlog paper by paper, so the gap is reported per source document (topic-coverage AC-05)."""
+    admin = setup_admin(client, db)
+    x = build(db, admin.organization_id)
+    doc = db.scalar(select(SourceDocument).where(SourceDocument.meta["school_year"].astext == "2024-2025"))
+    db.add(Question(organization_id=admin.organization_id, subject_id=x["toan"].id, type="mcq", stem="s", status="approved",
+                    source_document_id=doc.id))
+    db.commit()
+    f = client.post("/api/questions/facets", json={}).json()
+    assert f["topics"]["none"] == 2 and f["untagged_documents"] == {str(doc.id): 1, "none": 1}
