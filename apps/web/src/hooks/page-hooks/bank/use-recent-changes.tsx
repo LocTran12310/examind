@@ -34,9 +34,7 @@ export function useRecentChanges() {
       {
         id: "undo",
         header: "",
-        // the row is wider than a phone, and the way back must not be the part that scrolls off: it stays
-        // pinned to the right edge, over the columns rather than after them
-        meta: { align: "right", className: "sticky right-0 w-44 bg-inherit shadow-[inset_1px_0_0_var(--border)]" },
+        meta: { align: "right", className: "w-44" },
         cell: ({ row }) => {
           const e = row.original;
           // a row that cannot be taken back keeps its place and says why, in the API's own sentence: the list is

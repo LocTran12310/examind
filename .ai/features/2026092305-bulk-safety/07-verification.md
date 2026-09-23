@@ -51,6 +51,13 @@ undo button on every row of "Thay đổi gần đây", so a bare text assertion 
 had no button at all. Pressing *that* button — same handler, same request as the row's — is covered by
 `apps/web/src/__tests__/bank-bulk.test.tsx`, which walks the edit, the click and the body it sends.
 
+The first run of this spec also caught a layout defect the tests could not: six columns did not fit the sheet,
+so at 1440 px the column holding the undo button — and the sentence saying why a row has none — was clipped off
+the right edge. The sheet is wider now and S4's screenshot shows a whole row. At 390 px the table still scrolls
+sideways to reach that column; pinning it there was tried and reverted, because a 176 px column pinned over a
+390 px row draws on top of the two columns beside it. A phone-sized layout for this list is a separate piece of
+work, and the honest record is that on a phone the way back is a sideways scroll away.
+
 S5 asserts the two sentences the API writes for `already_undone` and `is_undo`. They are there because S3 ran:
 the row the undo took back now reads one, the undo's own row reads the other. Nothing client-side decides this —
 both come back from `POST /question-events/search`, which is the point of AC-04.
