@@ -1,0 +1,4 @@
+{"action": "passed", "at": "2026-09-23T23:35:13", "by": "Loc Tran", "evidence": "architecture map verified by Loc Tran (blanket pre-approval in chat, 2026-09-22 — confirm at final review); 00-intent.md complete", "gate": "G0", "id": "2973934f6521", "ts": "2026-09-23T23:35:13.226072"}
+{"action": "passed", "at": "2026-09-23T23:35:52", "by": "Loc Tran", "evidence": "8 assumptions, none blocking-and-pending; 7 acceptance criteria defined", "gate": "G1", "id": "5196d4988cdc", "ts": "2026-09-23T23:35:52.997314"}
+{"action": "passed", "at": "2026-09-23T23:36:06", "by": "Loc Tran", "evidence": "4 ADR(s) recorded", "gate": "G2", "id": "8647a479eabe", "ts": "2026-09-23T23:36:06.074055"}
+{"action": "passed", "at": "2026-09-23T23:37:16", "by": "Loc Tran", "evidence": "graph valid - 4 UoW, 9 tickets, no cycles", "gate": "G3", "id": "a69c23e2f3a8", "ts": "2026-09-23T23:37:16.163677"}

@@ -1,0 +1,29 @@
+# Managed by scripts/aidlc.py — do not edit by hand.
+# Editing this file to skip a gate defeats the point of having one.
+feature: bulk-safety
+slug: 2026092305-bulk-safety
+profile: none
+created: 2026-09-23T23:34:15
+ruleset: 5
+current_gate: G3
+history:
+  - gate: G0
+    action: passed
+    at: 2026-09-23T23:35:13
+    by: Loc Tran
+    evidence: architecture map verified by Loc Tran (blanket pre-approval in chat, 2026-09-22 — confirm at final review); 00-intent.md complete
+  - gate: G1
+    action: passed
+    at: 2026-09-23T23:35:52
+    by: Loc Tran
+    evidence: 8 assumptions, none blocking-and-pending; 7 acceptance criteria defined
+  - gate: G2
+    action: passed
+    at: 2026-09-23T23:36:06
+    by: Loc Tran
+    evidence: 4 ADR(s) recorded
+  - gate: G3
+    action: passed
+    at: 2026-09-23T23:37:16
+    by: Loc Tran
+    evidence: graph valid - 4 UoW, 9 tickets, no cycles
