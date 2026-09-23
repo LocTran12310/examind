@@ -5,7 +5,7 @@ slug: 2026092303-review-ux
 profile: none
 created: 2026-09-23T17:23:00
 ruleset: 5
-current_gate: G3
+current_gate: G5
 history:
   - gate: G0
     action: passed
@@ -102,3 +102,13 @@ history:
     at: 2026-09-23T18:15:56
     by: Loc Tran
     ticket: T-02-02
+  - gate: G4
+    action: passed
+    at: 2026-09-23T18:35:22
+    by: Loc Tran
+    evidence: every done ticket has a passing verification run; all 5 tickets done, all UoW checklists ticked
+  - gate: G5
+    action: passed
+    at: 2026-09-23T18:35:22
+    by: Loc Tran
+    evidence: assumptions resolved, ADRs settled, graph valid

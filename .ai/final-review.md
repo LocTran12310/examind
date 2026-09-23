@@ -652,3 +652,41 @@ measurement**), A-06 (the model suggests, never decides), A-07 (batched per page
 subject facet counts every question of the subject, not the untagged ones; AC-04 was verified by test and by the
 golden re-parse, not by a live re-upload; the live org's `tag_model` was set to the enabled qwen2.5:7b so the
 feature could be measured.
+
+## 23. F16 `2026092303-review-ux` (2026-09-23)
+From Loc Tran's walk of upload → tách câu → duyệt: six badges per document with no filter, a label nobody could
+read ("Kiểm tra ngẫu nhiên"), no way back to an approved question, and points that exist but cannot be found.
+
+**What changed**
+- `POST /review/documents/search` rows carry `review_state` (`pending` / `in_progress` / `done`) and `pending`,
+  both filterable and sortable (ADR-01). The list opens on the papers that still need work, shows one state chip
+  plus "còn N câu", and keeps the six counts in a popover.
+- The 5% sample is now **"Mẫu kiểm chứng"**, and the page says what it is: 5% of the questions the system approved
+  by itself, drawn to catch it being wrong (ADR-03).
+- `POST /review/documents/{id}/questions/search` answers a document's questions by state (`pending` default,
+  `approved`, `rejected`, `duplicate`, `all`). The review page gained that filter; any question opens in the
+  existing form, whatever its state, and can be approved, rejected or sent back to "Cần xem" (ADR-02). The
+  keyboard queue is untouched and still reads `GET …/queue`.
+- The exam screen gained **"Thang điểm của đề"**: per part — questions, points each, part total — then the raw
+  total and what it becomes on the 10-point scale, plus a warning when a question's points differ from its type
+  default. The model did not change (A-04): the strip only makes it visible.
+
+**Numbers** — API 480 passed / 1 skipped, web 191 passed, ruff and the 4 contracts clean. Browser verification
+10/10 steps at 1440×900 and 390×844, `evidence_check` PASS (5/5 criteria evidenced, AC-04 out of browser scope).
+Live: 18 papers — 15 `pending`, 3 `done`; the 22-question papers show Phần I 12×0,25 = 3, Phần II 4×1 = 4,
+Phần III 6×0,5 = 3, raw total 10 ("đã đúng thang 10"); "Kiểm tra 15p" shows 2,5 raw with its conversion spelled out.
+
+**Two gaps this feature exposed and fixed**
+- **An approval could not be undone.** `POST /questions/bulk` took only `approved`/`rejected` and `restore` refuses
+  an approved question, so the screen the owner asked for was not expressible. The bulk command now also takes
+  `needs_review`, audited like any status change.
+- **The search contract's `enum` kind was documented but not implemented** — it behaved as `exact`, so a wrong
+  value returned an empty list instead of 422. It is now a real kind with its allowed values.
+
+**Live data, and a mistake of mine.** Verifying the re-decision edited one question and put it back. Restoring the
+last two fields, I ran an `UPDATE` matching on `status = 'approved' AND answer_source = 'manual'` that hit **two**
+rows instead of one; I found them through a restore of `backups/examind-202609231357.dump` into a throw-away
+database and put their status back through the product's own bulk command. One field is still off on those two
+questions: `answer_source` reads `inline` where it should read `manual`. It records how an answer was captured,
+nothing computes from it, and the SQL that would fix it exactly is refused by the sandbox — say the word and it is
+one statement. The lesson is on the record: a repair on live data is targeted by id, never by a predicate.
