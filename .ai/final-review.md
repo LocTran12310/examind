@@ -690,3 +690,44 @@ database and put their status back through the product's own bulk command. One f
 questions: `answer_source` reads `inline` where it should read `manual`. It records how an answer was captured,
 nothing computes from it, and the SQL that would fix it exactly is refused by the sandbox — say the word and it is
 one statement. The lesson is on the record: a repair on live data is targeted by id, never by a predicate.
+
+## 24. F17 `2026092304-pickers-builder` (2026-09-23)
+From your second walk: the topic picker did not start where the system had already guessed, the number beside a
+topic counted child topics rather than questions, a page of the tagging queue could only be cleared one row at a
+time, "Chưa phân môn" was a dead end, the matrix row wrapped into an unreadable stack, and "Đổi câu" gave the
+teacher no say in the replacement.
+
+**What changed**
+- **The picker opens on the suggestion.** `TopicPicker` takes `initial`: the branch opens, the row takes the
+  focus and is scrolled to, and nothing is applied until you confirm. The tagging queue passes the row's own top
+  suggestion, the exam matrix passes the row's current topic.
+- **The numbers are questions.** They come from `POST /questions/facets` for the subject in hand (ADR-01), the
+  same source as the bank's own filters, so the two cannot disagree. A topic with none reads 0 and is muted.
+  The matrix row carries the same number and turns red at 0, before anything is generated.
+- **A page of the queue in one request.** `POST /questions/bulk/topics` takes pairs and answers
+  `{updated, skipped[{question_id, topic_id, reason, message}]}`; "Gán theo gợi ý" gives each selected question
+  its own top suggestion and names what it left alone. On the live bank this took the backlog from 102 untagged
+  questions to 40 — 62 tagged in four clicks.
+- **The bank can classify what it holds.** `POST /questions/bulk` now takes `subject_id` and `grade`, so the
+  "Chưa phân môn" tab is actionable. A subject the questions' topics contradict is **refused whole** with 422
+  `subject_topic_conflict` naming each question — your instruction, after you changed the decision mid-flight:
+  no silent deletion of the other subject's topics, the teacher decides.
+- **The builder refuses to lie.** A row on a topic with no usable question is refused with 422 `empty_topic`
+  naming the row, the topic and what it holds, instead of generating fewer questions than asked. The row is one
+  line from `lg` and a deliberate two-column stack below it.
+- **"Đổi câu" is a choice.** Either the system picks as before, or you search the bank yourself; the replacement
+  keeps the question's position and points, and a question already in the exam or of another type is refused.
+
+**Checks.** API 486 passed, 1 skipped; web 203 tests in 51 files; ruff and the four import contracts green.
+Browser verification: 10 steps × 2 viewports, 20/20 green at commit `44b0f19`, every screenshot read.
+
+**One thing to know about the verification.** The two refusal steps passed every assertion and still failed the
+run, because the browser logs a `console.error` for any non-2xx fetch and `console_errors` is one of this
+project's failure signals. As it stood, a feature whose behaviour *is* a refusal could never be verified — only
+the signal could be turned off, for everything. So `verify:` gained one line, `console_ignore`, filtering that
+one status and nothing else; an uncaught exception still fails a step. The steps that rely on it say so.
+
+**Live data.** The refusals were demonstrated on the empty exam `Kiểm tra 15p - Hàm số bậc 2`, never on the three
+papers built from your documents, and both refusals were confirmed to write nothing before the run. The 62
+questions tagged during the UOW-02 walk are real assignments taken from the suggestions; say the word and they
+go back to untagged.
