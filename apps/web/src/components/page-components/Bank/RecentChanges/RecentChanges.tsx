@@ -13,7 +13,7 @@ export function RecentChanges({ open, onOpenChange }: { open: boolean; onOpenCha
   const { columns } = useRecentChanges();
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="gap-0 p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-3xl" data-testid="recent-changes">
+      <SheetContent side="right" className="gap-0 p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-5xl" data-testid="recent-changes">
         <SheetHeader className="border-b">
           <SheetTitle>Thay đổi gần đây</SheetTitle>
           <SheetDescription>Mỗi dòng là một lượt sửa của cả tổ chức. Hoàn tác đưa mọi câu của lượt đó về đúng như trước.</SheetDescription>
