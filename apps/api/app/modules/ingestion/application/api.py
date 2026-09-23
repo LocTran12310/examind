@@ -27,6 +27,19 @@ class Suggestions:
     model_used: bool
 
 
+SOURCE_ORDER = {"keyword": 0, "similar": 1, "ai": 2}
+
+
+def _shortlist(candidates: list[TopicSuggestion]) -> list[TopicSuggestion]:
+    """At most three, rules first; a model candidate keeps the last slot instead of being cut off, because it is
+    the one that may come from a different branch than the neighbours."""
+    rules = [c for c in candidates if c.source != "ai"]
+    ai = [c for c in candidates if c.source == "ai"]
+    if not ai:
+        return rules[:MAX_SUGGESTIONS]
+    return rules[:MAX_SUGGESTIONS - 1] + ai[:1]
+
+
 class IngestionApi:
     def __init__(self, taxonomy: Taxonomy, bank: QuestionBank, settings: OrgSettings | None = None,
                  models: AiModelRepository | None = None, chat: ChatModels | None = None,
@@ -39,15 +52,17 @@ class IngestionApi:
         """Topic candidates for questions of one subject (topic-coverage ADR-01, ADR-04): the pipeline's keyword cues,
         then kNN over the already-tagged questions of the subject, and for whatever is still without a candidate — or
         with a weak one — the org's tagging model, in batches (ADR-04, A-07). The rules keep the lead: a question the
-        cues placed strongly never reaches the model, so an `ai` candidate cannot outrank a strong keyword."""
+        cues placed strongly never reaches the model, so an `ai` candidate cannot outrank a strong keyword, and in the answer a rule candidate always comes first."""
         topics = self.taxonomy.topics(org_id, subject_id) if items else []
         found = {question_id: self._rule_candidates(org_id, subject_id, question_id, text, topics)
                  for question_id, text in items}
         weak = [(qid, text) for qid, text in items if not found[qid] or found[qid][0].score < WEAK_KEYWORD]
         model_used = self._model_pass(org_id, topics, weak, found) if use_model and weak and topics else False
+        # a rule candidate always leads: cues and neighbours are deterministic and checkable, while a read of eight
+        # `ai` candidates by hand found two plainly wrong (2026-09-23), so the model fills gaps instead of leading
         for candidates in found.values():
-            candidates.sort(key=lambda c: -c.score)  # stable: a keyword cue wins a tie with a neighbour or the model
-        return Suggestions({qid: cs[:MAX_SUGGESTIONS] for qid, cs in found.items()}, model_used)
+            candidates.sort(key=lambda c: (SOURCE_ORDER[c.source], -c.score))
+        return Suggestions({qid: _shortlist(cs) for qid, cs in found.items()}, model_used)
 
     def _rule_candidates(self, org_id: uuid.UUID, subject_id: uuid.UUID | None, question_id: uuid.UUID, text: str,
                          topics: list[TopicNode]) -> list[TopicSuggestion]:

@@ -210,19 +210,24 @@ Four of them are a reasonable branch (the word-problems about rates and extrema)
 (*tiếp tuyến* → Đường tiệm cận, *thể tích bể bơi* → Phương trình mặt phẳng), and the model's own confidence does
 not separate the two groups. A teacher rejects a wrong one in a keystroke, which is exactly what A-06 asked for.
 
-### 3. Agreement with what a teacher chose (AC-06)
+### 3. Agreement with the 27 topics assigned from the queue (AC-06)
 
-Measured on the **27** questions a teacher had already placed by hand from the queue (`source = manual`):
+**Correction (2026-09-23, Loc Tran):** these 27 topics were chosen by the agent that built and exercised the queue,
+**not by a teacher**. They are not ground truth — the agent picked them from the same topic tree with the same
+information the suggester has, and it reported correcting one of its own picks. Every number below measures
+agreement with those picks, nothing more; it must not be read as accuracy, and no decision should rest on it
+until a teacher reviews a sample.
 
 | | |
 | --- | --- |
-| Top candidate is the teacher's topic | **6/27 (22%)** |
-| Teacher's topic anywhere in the three | 6/27 (22%) — the top candidate is the only one that ever matches |
+| Top candidate equals the assigned topic | **6/27 (22%)** |
+| Assigned topic anywhere in the three | 6/27 (22%) |
 | Had an `ai` candidate at all | 3/27 (11%) |
-| `ai` top candidate is the teacher's topic | **1/3 (33%)** |
+| `ai` top candidate equals the assigned topic | **1/3 (33%)** |
 
-The sample is small and biased: these 27 are what a teacher went through first, and the model is asked only
-where the cues are already silent.
+What can be said without a teacher: coverage (how many questions get any candidate) is measured honestly, and the
+spot checks of the `ai` candidates above (4 plausible, 2 clearly wrong of 8 read by hand) are the only quality
+signal there is so far.
 
 ### 4. A model problem never blocks the queue (AC-07)
 

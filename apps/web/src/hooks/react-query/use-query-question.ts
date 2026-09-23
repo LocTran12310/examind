@@ -38,14 +38,15 @@ export function useQuestionStatsQuery(id: string): UseQueryResult<QuestionStats,
 
 /** Topic candidates for the questions shown on one page (topic-coverage ADR-01); a page longer than
  *  the endpoint's limit is asked for in batches and the answers merged. Nothing is stored server-side,
- *  so an assignment invalidates these together with the list. */
-export function useTopicSuggestionsQuery(ids: string[]): UseQueryResult<Record<string, TopicSuggestion[]>, Error> {
+ *  so an assignment invalidates these together with the list. The rules answer in ~0.1 s and the model in tens of
+ *  seconds, so the page asks twice: once without the model to fill the row at once, once with it. */
+export function useTopicSuggestionsQuery(ids: string[], useModel = false): UseQueryResult<Record<string, TopicSuggestion[]>, Error> {
   return useQuery<Record<string, TopicSuggestion[]>, Error>({
-    queryKey: QUESTION_KEYS.SUGGESTIONS(ids),
+    queryKey: QUESTION_KEYS.SUGGESTIONS(ids, useModel),
     queryFn: async () => {
       const out: Record<string, TopicSuggestion[]> = {};
       for (let i = 0; i < ids.length; i += SUGGEST_BATCH) {
-        const { suggestions } = await questionService.suggestTopics({ question_ids: ids.slice(i, i + SUGGEST_BATCH) });
+        const { suggestions } = await questionService.suggestTopics({ question_ids: ids.slice(i, i + SUGGEST_BATCH), use_model: useModel });
         Object.assign(out, suggestions);
       }
       return out;

@@ -89,7 +89,7 @@ export const QUESTION_KEYS = {
   FACETS: (body: unknown) => ["questions", "facets", body] as const,
   DETAIL: (id: string) => ["questions", "detail", id] as const,
   STATS: (id: string) => ["questions", "stats", id] as const,
-  SUGGESTIONS: (ids: readonly string[]) => ["questions", "suggestions", ids] as const,
+  SUGGESTIONS: (ids: readonly string[], useModel: boolean) => ["questions", "suggestions", useModel, ids] as const,
   DEMO: ["questions", "demo"] as const,
 };
 

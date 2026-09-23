@@ -51,7 +51,10 @@ export function useTaggingQueue() {
   const { data: documents } = useDocumentSearchQuery(DOCUMENTS);
   const items = list.data?.data ?? NO_ROWS;
   const ids = useMemo(() => items.map((q) => q.id), [items]);
-  const { data: suggestions } = useTopicSuggestionsQuery(ids);
+  // the rules answer at once; the model takes tens of seconds, so it arrives on its own and replaces them
+  const { data: ruleSuggestions } = useTopicSuggestionsQuery(ids);
+  const { data: modelSuggestions, isFetching: modelPending } = useTopicSuggestionsQuery(ids, true);
+  const suggestions = modelSuggestions ?? ruleSuggestions;
   const { mutateAsync: bulk } = useBulkUpdateQuestionsMutation();
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -136,6 +139,8 @@ export function useTaggingQueue() {
     total: list.data?.total,
     loaded: !!list.data,
     loading: list.isFetching,
+    /** the model is still working on this page's suggestions */
+    modelPending: modelPending && !modelSuggestions,
     reload: () => void list.refetch(),
     subjectId,
     documentId,

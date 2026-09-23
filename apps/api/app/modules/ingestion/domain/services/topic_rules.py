@@ -74,9 +74,11 @@ def cue_text(stem: str, options: list | None) -> str:
     return stem + "\n" + " ".join(o.get("content", "") for o in options or [])
 
 
-TAG_SYSTEM = """Bạn phân loại câu hỏi vào cây chuyên đề. Với mỗi câu, chọn MỘT chỉ số chuyên đề phù hợp nhất
-(ưu tiên nhánh sâu nhất đúng). Trả về DUY NHẤT JSON
-{"results": [{"number": 1, "index": 12, "name": "tên chuyên đề đúng như ở dòng 12", "confidence": 0.8}]}."""
+TAG_SYSTEM = """Bạn phân loại câu hỏi vào cây chuyên đề. Với MỖI câu hỏi trong yêu cầu, chọn MỘT chỉ số chuyên đề
+phù hợp nhất (ưu tiên nhánh sâu nhất đúng). Số phần tử trong "results" phải bằng đúng số câu hỏi được hỏi, theo
+đúng thứ tự, không bỏ sót câu nào; câu nào không chắc thì vẫn trả về với confidence thấp. Trả về DUY NHẤT JSON:
+{"results": [{"number": 1, "index": 12, "name": "tên chuyên đề đúng như ở dòng 12", "confidence": 0.8},
+             {"number": 2, "index": 5, "name": "tên chuyên đề đúng như ở dòng 5", "confidence": 0.4}]}."""
 
 
 KNN_MIN_SIMILARITY = 0.35
@@ -95,7 +97,9 @@ def tag_listing(topics: list) -> str:
 def tag_request(listing: str, rows: list[tuple[int, str]]) -> str:
     """The user half of the prompt: the tree, then one batch of questions numbered for the answer to refer to."""
     qs = "\n\n".join(f"Câu {number}: {text[:TAG_TEXT_CHARS]}" for number, text in rows)
-    return f"CHUYÊN ĐỀ:\n{listing}\n\nCÂU HỎI:\n{qs}"
+    numbers = ", ".join(str(number) for number, _ in rows)
+    # small models mirror the example and answer once for a whole batch: name the count and the numbers again
+    return f"CHUYÊN ĐỀ:\n{listing}\n\nTrả về đúng {len(rows)} phần tử, cho các câu: {numbers}.\n\nCÂU HỎI:\n{qs}"
 
 
 def read_tag_reply(text: str, topics: list, keys: dict) -> dict:

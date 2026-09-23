@@ -31,6 +31,7 @@ export function TaggingQueuePage() {
             <ToolbarButton onClick={p.reload}>
               <RefreshCw className={cn(p.loading && "animate-spin")} /> Nạp
             </ToolbarButton>
+            {p.modelPending && <span className="pl-2 text-xs opacity-80">Đang hỏi AI cho các câu chưa có gợi ý…</span>}
             <span className="ml-auto pr-2 text-xs opacity-80">
               <span className="font-mono">1</span> / <span className="font-mono">2</span> / <span className="font-mono">3</span> chọn gợi ý · <span className="font-mono">↑</span> <span className="font-mono">↓</span> chuyển câu
             </span>

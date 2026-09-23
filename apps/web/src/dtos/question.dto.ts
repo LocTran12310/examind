@@ -41,6 +41,8 @@ export type UpdateQuestionBody = Partial<QuestionBody>;
 /** `POST /questions/suggest-topics`: at most 50 questions per request. */
 export interface SuggestTopicsBody {
   question_ids: string[];
+  /** ask the tagging model for what the rules could not place; slow (tens of seconds a page) */
+  use_model?: boolean;
 }
 
 /** `POST /questions/bulk`: the same change on every question. */

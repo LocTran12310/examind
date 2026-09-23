@@ -2,9 +2,9 @@
 
 Read-only against the live stack: page by page, exactly as the queue does, it asks `/questions/suggest-topics`
 twice — once with `use_model: false` (the rules alone) and once with the model — and reports how many questions
-got a candidate either way, where the candidates came from, and how long a page costs. Agreement is measured on
-the questions a teacher has already placed by hand: how often the top candidate, and the top `ai` candidate, is
-the topic the teacher chose.
+got a candidate either way, where the candidates came from, and how long a page costs. Agreement is measured against the questions that already
+carry a topic: how often the top candidate, and the top `ai` candidate, is that topic. That is agreement, not
+accuracy — it only becomes a quality measure once a teacher has reviewed the topics it compares against.
 
     python scripts/suggestion_report.py [--page 20] [--limit 0] [--json report.json]
 
@@ -123,7 +123,7 @@ def main() -> None:
     cov = coverage(c, untagged, args.page)
 
     tagged = [q for q in questions(c, 0, has_topic=True) if (t := primary(q)) and t["source"] == "manual"]
-    print(f"\nĐã được giáo viên gắn: {len(tagged)} câu", flush=True)
+    print(f"\nĐã gắn chuyên đề (chưa ai kiểm chứng): {len(tagged)} câu", flush=True)
     agr = agreement(c, tagged[:args.limit] if args.limit else tagged, args.page) if tagged else {"questions": 0}
 
     total = cov["questions"]
@@ -138,7 +138,7 @@ def main() -> None:
         print(f"   thời gian/trang : {min(secs)}–{max(secs)}s (trung vị {sorted(secs)[len(secs) // 2]}s)")
     if agr["questions"]:
         n = agr["questions"]
-        print(f"\n── Trùng với lựa chọn của giáo viên (trên {n} câu)")
+        print(f"\n── Trùng với chuyên đề đã gắn — KHÔNG phải thước đo đúng/sai (trên {n} câu)")
         print(f"   ứng viên đầu đúng   : {pct(agr['top_match'], n)}")
         print(f"   nằm trong 3 ứng viên: {pct(agr['any_match'], n)}")
         print(f"   có ứng viên AI      : {pct(agr['ai_offered'], n)}")

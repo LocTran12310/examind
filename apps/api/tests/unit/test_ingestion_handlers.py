@@ -504,14 +504,15 @@ def test_a_strong_keyword_candidate_is_never_outranked_by_the_model():
 
 
 def test_a_weak_candidate_is_kept_beside_the_model_and_three_is_still_the_cap():
-    """The rules found neighbours but nothing convincing: the model adds to the list, it does not replace it."""
+    """The rules found neighbours but nothing convincing: the model adds to the list, it does not replace it, and
+    it keeps the last slot rather than being cut off by the three-candidate cap."""
     chat = FakeChat(_reply((1, 2, "Đạo hàm", 0.9)))
     api, taxonomy, bank = _queue(chat)
     weak = uuid.uuid4()
     others = [taxonomy.rows[0], taxonomy.rows[1], taxonomy.rows[3]]  # the model picks the one they do not cover
     bank.near = {weak: [(t.id, s) for t, s in zip(others, (0.5, 0.42, 0.36))]}
     got = api.suggest_for(ORG, SUBJECT, [(weak, BLANK)]).by_question[weak]
-    assert [(c.source, c.score) for c in got] == [("ai", 0.9), ("similar", 0.5), ("similar", 0.42)]
+    assert [(c.source, c.score) for c in got] == [("similar", 0.5), ("similar", 0.42), ("ai", 0.9)]
 
 
 def test_the_model_sees_ten_questions_at_a_time():
