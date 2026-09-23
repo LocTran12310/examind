@@ -46,7 +46,15 @@ class TopicSuggestionView:
     name: str
     path: str
     score: float
-    source: str  # keyword | similar
+    source: str  # keyword | similar | ai
+
+
+@dataclass(frozen=True)
+class SuggestionsView:
+    """What the tagging queue asked for: the candidates per question, and whether the tagging model was reached
+    (topic-coverage AC-07 — a model that is off or slow only costs the `ai` candidates)."""
+    by_question: dict[uuid.UUID, list[TopicSuggestionView]]
+    model_used: bool
 
 
 @dataclass(frozen=True)

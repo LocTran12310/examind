@@ -82,8 +82,9 @@ def _bank_of(db: Session) -> QuestionBank:
 
 
 def ingestion_api(db: Session) -> IngestionApi:
-    """Ingestion for another context (the bank's tagging queue asks it for topic candidates), on the caller's session."""
-    return IngestionApi(_taxonomy(db), _bank_of(db))
+    """Ingestion for another context (the bank's tagging queue asks it for topic candidates), on the caller's session.
+    The model ports come with it: what the rules cannot place goes to the org's tagging model (topic-coverage ADR-04)."""
+    return IngestionApi(_taxonomy(db), _bank_of(db), SqlOrgSettings(db), SqlAiModelRepository(db), HttpChatModels())
 
 
 # ------------------------------------------------------------------ worker

@@ -1,12 +1,15 @@
 """Finding the questions nobody placed in the topic tree and getting candidates for them
-(topic-coverage AC-01, AC-02, AC-04, AC-05)."""
+(topic-coverage AC-01, AC-02, AC-04, AC-05, AC-06, AC-07)."""
+import json
 import uuid
 
+import httpx
 from sqlalchemy import select
 
 from app.modules.bank.domain.entities import Question, QuestionTopic
 from app.modules.bank.domain.services.search_text import for_question
 from app.modules.ingestion.domain.entities import SourceDocument
+from app.modules.ingestion.infrastructure.adapters import llm
 from app.modules.taxonomy.domain.entities import Subject
 from app.modules.taxonomy.domain.topics import Topic
 from tests.factories import make_org, make_user
@@ -53,8 +56,36 @@ def bank(client, db):
     return dict(org=org, subject=subject, topics=topics, docs=docs, placed=placed, untagged=untagged)
 
 
-def suggest(client, ids):
-    return client.post("/api/questions/suggest-topics", json={"question_ids": [str(i) for i in ids]})
+def suggest(client, ids, use_model=True):
+    return client.post("/api/questions/suggest-topics", json={"question_ids": [str(i) for i in ids], "use_model": use_model})
+
+
+def tag_model(client):
+    """Register an Ollama tagging model and make it the org's default — what the queue reads (ADR-04)."""
+    mid = client.post("/api/ai-models", json={"name": "tag", "provider": "ollama", "model": "tag:1", "base_url": "http://t"}).json()["id"]
+    assert client.put("/api/org/settings/ingestion", json={"tag_model": mid}).status_code == 200
+    return mid
+
+
+def tagger(topic_name, asked, body=None):
+    """A tagging model that puts every question it is shown under `topic_name`; `asked` collects the prompts."""
+    def handler(request):
+        user = json.loads(request.content)["messages"][-1]["content"]
+        listing, questions = user.split("CÂU HỎI:")
+        asked.append(questions.strip())
+        if body is not None:
+            return httpx.Response(200, json={"message": {"content": body}})
+        idx = next(int(line.split(".")[0]) for line in listing.splitlines() if line.endswith("› " + topic_name))
+        numbers = [int(x.split(":")[0].replace("Câu ", "")) for x in questions.strip().split("\n\n")]
+        results = [{"number": n, "index": idx, "name": topic_name, "confidence": 0.66} for n in numbers]
+        return httpx.Response(200, json={"message": {"content": json.dumps({"results": results})}})
+    return httpx.MockTransport(handler)
+
+
+def unreachable(exc):
+    def handler(request):
+        raise exc
+    return httpx.MockTransport(handler)
 
 
 # ------------------------------------------------------------------ T-01-01: finding them
@@ -137,16 +168,53 @@ def test_the_batch_is_capped_and_scoped_to_the_org(client, db):
     assert suggest(client, [x["untagged"][0].id, stranger.id]).status_code == 404
 
 
-def test_the_tagging_model_is_never_called(client, db, monkeypatch):
-    """A-05: the queue answers from cues and neighbours only — no model call, whatever the org configured."""
-    from app.modules.ingestion.infrastructure.adapters import llm
+# ------------------------------------------------------------------ T-03-01: what the rules cannot place
 
+
+def test_the_model_places_what_the_rules_could_not(client, db, monkeypatch):
+    """AC-06: a question with no cue and no neighbour gets candidates from the org's tagging model, inside the
+    subject's own tree and marked `ai`; the questions the rules placed never reach the model (A-07)."""
+    asked: list = []
+    monkeypatch.setattr(llm, "TRANSPORT", tagger("Xác suất cổ điển", asked))
+    x = bank(client, db)
+    tag_model(client)
+    got = suggest(client, [q.id for q in x["untagged"]]).json()
+    assert got["model_used"]
+    blank = got["suggestions"][str(x["untagged"][2].id)]
+    assert [(c["name"], c["source"], c["score"]) for c in blank] == [("Xác suất cổ điển", "ai", 0.66)]
+    assert blank[0]["path"] == x["topics"]["Xác suất cổ điển"].path
+    sets = got["suggestions"][str(x["untagged"][0].id)]
+    assert sets[0]["source"] == "keyword" and all(c["source"] != "ai" for c in sets)
+    prompts = " ".join(asked)
+    assert "không có dấu hiệu" in prompts and "\\cap" not in prompts  # only the unplaced question was sent
+
+
+def test_a_model_problem_never_blocks_the_queue(client, db, monkeypatch):
+    """AC-07: erroring, rambling or too slow, the answer still carries what the rules found and says model_used false."""
+    x = bank(client, db)
+    tag_model(client)
+    ids = [q.id for q in x["untagged"]]
+    rules = suggest(client, ids, use_model=False).json()
+    assert rules["model_used"] is False
+    broken = {"lỗi": httpx.MockTransport(lambda r: httpx.Response(500, json={"error": "overloaded"})),
+              "rác": tagger("Xác suất cổ điển", [], body="Xin chào, tôi nghĩ câu này thuộc đại số."),
+              "treo": unreachable(httpx.ConnectTimeout("too slow"))}
+    for what, transport in broken.items():
+        monkeypatch.setattr(llm, "TRANSPORT", transport)
+        got = suggest(client, ids).json()
+        assert got["model_used"] is False, what
+        assert got["suggestions"] == rules["suggestions"], what
+
+
+def test_without_a_tagging_model_the_rules_answer_alone(client, db, monkeypatch):
+    """An org that configured no tagging model never waits for one (and `use_model` costs nothing)."""
     def boom(*a, **kw):
-        raise AssertionError("the tagging model must not be called from the queue")
+        raise AssertionError("no tagging model is configured, so none may be called")
 
     monkeypatch.setattr(llm.HttpChatModels, "chat", boom)
     x = bank(client, db)
-    assert suggest(client, [q.id for q in x["untagged"]]).status_code == 200
+    got = suggest(client, [q.id for q in x["untagged"]]).json()
+    assert got["model_used"] is False and len(got["suggestions"]) == 4
 
 
 # ------------------------------------------------------------------ T-01-03: the backlog stops refilling

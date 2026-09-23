@@ -15,6 +15,11 @@ UOWS = [
          demo=["Duyệt câu hỏi › Chưa gắn chuyên đề: chọn gợi ý bằng phím 1/2/3, số còn lại giảm",
                "Chọn nhiều câu → Gán chuyên đề cho N câu"],
          in_scope=["queue screen", "suggestion chips", "TopicPicker fallback", "bulk apply", "remaining counter"]),
+    dict(id="UOW-03", slug="model-suggestions", title="The model suggests where the rules are silent",
+         requirements=["US-04"], risk="medium",
+         demo=["Câu không có ứng viên nào từ luật → gợi ý gắn nhãn AI, nằm trong cây chuyên đề của môn",
+               "Tắt model hoặc model treo → vẫn trả về gợi ý theo luật, model_used=false"],
+         in_scope=["model pass in suggest_for", "batching", "degrade on failure", "acceptance measured on the backlog"]),
 ]
 T = []
 
@@ -51,4 +56,17 @@ t(id="T-02-02", uow="UOW-02", title="Bulk apply and the live backlog cleared", l
   tests=[f"{S}/__tests__/tagging-queue.test.tsx"],
   touches=[f"{S}/components/page-components/TaggingQueue/BulkTopicBar/BulkTopicBar.tsx"],
   context="", done_when=["One request per bulk apply", "Counter drops", "Backlog worked through on the live stack"])
+t(id="T-03-01", uow="UOW-03", title="Model pass in suggest_for, degrading on failure", layer="api", estimate="4h",
+  depends_on=["T-01-02"], verifies=["AC-06", "AC-07"], assumptions=["A-06", "A-07"],
+  tests=[f"{API}/tests/test_topic_coverage.py", f"{API}/tests/unit/test_bank_handlers.py"],
+  touches=[f"{M}/ingestion/application/api.py", f"{M}/ingestion/domain/services/topic_rules.py",
+           f"{M}/bank/interface/schemas.py", f"{M}/bank/application/queries/suggest_topics.py"],
+  context="ADR-04. Reuse the ingestion stage's prompt and _resolve; never call the model for questions the rules already placed.",
+  done_when=["ai candidates inside the subject tree", "Batched per ~10 questions", "model_used flag", "Failure degrades to rules"])
+t(id="T-03-02", uow="UOW-03", title="Measure it on the real backlog", layer="api", estimate="2h",
+  depends_on=["T-03-01"], verifies=["AC-06"],
+  tests=[f"{API}/tests/test_topic_coverage.py"],
+  touches=[f"{API}/scripts/suggestion_report.py"],
+  context="",
+  done_when=["Coverage and agreement measured over the untagged backlog", "Numbers written into 07-demo-evidence.md"])
 TICKETS = T

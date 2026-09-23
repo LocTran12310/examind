@@ -2,9 +2,9 @@
 
 # Ticket graph — 2026092302-topic-coverage
 
-- Units of Work: **2**
-- Tickets: **5** (3 done)
-- Total effort: **2.1d**
+- Units of Work: **3**
+- Tickets: **7** (7 done)
+- Total effort: **2.9d**
 - Critical path: **1.8d** across 4 tickets
 - Theoretical minimum duration with unlimited parallelism: **1.8d**
 
@@ -14,6 +14,7 @@
 |-----|-------|------|--------|---------|-----------|--------|
 | UOW-01 | Untagged questions are listable, suggestible and no longer silent | medium | 1.2d | 1.2d | — | todo |
 | UOW-02 | The tagging queue clears the backlog | medium | 7h | 7h | — | todo |
+| UOW-03 | The model suggests where the rules are silent | medium | 6h | 6h | — | todo |
 
 Effort is total person-hours. Elapsed is the longest dependency chain inside the
 slice — the floor on how fast it can finish no matter how many people work on it.
@@ -28,13 +29,19 @@ graph LR
     T_01_03["✓ T-01-03<br/>An unclassified question waits for review"]
   end
   subgraph UOW_02["UOW-02 · The tagging queue clears the backlog"]
-    T_02_01["T-02-01<br/>Queue screen with suggestions and keyboard flow"]
-    T_02_02["T-02-02<br/>Bulk apply and the live backlog cleared"]
+    T_02_01["✓ T-02-01<br/>Queue screen with suggestions and keyboard flow"]
+    T_02_02["✓ T-02-02<br/>Bulk apply and the live backlog cleared"]
+  end
+  subgraph UOW_03["UOW-03 · The model suggests where the rules are silent"]
+    T_03_01["✓ T-03-01<br/>Model pass in suggest_for, degrading on failure"]
+    T_03_02["✓ T-03-02<br/>Measure it on the real backlog"]
   end
   T_01_01 --> T_01_02
   T_01_02 --> T_01_03
   T_01_02 --> T_02_01
   T_02_01 --> T_02_02
+  T_01_02 --> T_03_01
+  T_03_01 --> T_03_02
 ```
 
 ## Execution waves
@@ -45,8 +52,8 @@ Tickets in the same wave have no dependency between them and can run in parallel
 |------|---------|-------------------|-------------------------------|
 | W1 | T-01-01 | 1 | 3h |
 | W2 | T-01-02 | 1 | 4h |
-| W3 | T-01-03, T-02-01 | 2 | 4h |
-| W4 | T-02-02 | 1 | 3h |
+| W3 | T-01-03, T-02-01, T-03-01 | 3 | 4h |
+| W4 | T-02-02, T-03-02 | 2 | 3h |
 
 ## Write-conflict hazards
 
@@ -66,5 +73,7 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-01-01 | UOW-01 | api | feature | 3h | — | AC-01, AC-05 | done |
 | T-01-02 | UOW-01 | api | feature | 4h | T-01-01 | AC-02 | done |
 | T-01-03 | UOW-01 | api | feature | 3h | T-01-02 | AC-04 | done |
-| T-02-01 | UOW-02 | web | feature | 4h | T-01-02 | AC-01, AC-02 | todo |
-| T-02-02 | UOW-02 | web | feature | 3h | T-02-01 | AC-03, AC-05 | todo |
+| T-02-01 | UOW-02 | web | feature | 4h | T-01-02 | AC-01, AC-02 | done |
+| T-02-02 | UOW-02 | web | feature | 3h | T-02-01 | AC-03, AC-05 | done |
+| T-03-01 | UOW-03 | api | feature | 4h | T-01-02 | AC-06, AC-07 | done |
+| T-03-02 | UOW-03 | api | feature | 2h | T-03-01 | AC-06 | done |

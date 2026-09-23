@@ -1,6 +1,9 @@
 """Topic suggestion rules (US-06, A-13): keyword cues per node of the tree, how a tagging model's answer is read, and
-when a model may override the keywords."""
+when a model may override the keywords. The prompt and the reading of a reply are shared by the pipeline stage and
+the tagging queue (topic-coverage ADR-04) — one wording, one way of resolving a node."""
 import unicodedata
+
+from app.modules.ingestion.domain.services.ai_parse import parse_json
 
 # Extra cues per seeded topic name (lower-case, accents kept). Names themselves are always cues.
 SYNONYMS: dict[str, list[str]] = {
@@ -78,6 +81,38 @@ TAG_SYSTEM = """Bạn phân loại câu hỏi vào cây chuyên đề. Với m�
 
 KNN_MIN_SIMILARITY = 0.35
 WEAK_KEYWORD = 0.6
+TAG_BATCH = 10        # questions per model call (A-07): what a 7B model still reads whole
+TAG_TEXT_CHARS = 600  # of each question; the cues that place a question sit in its first lines
+AI_DEFAULT_CONFIDENCE = 0.7  # a model that answers without one
+
+
+def tag_listing(topics: list) -> str:
+    """The numbered tree the model chooses from, each node with its ancestors."""
+    by_id = {t.id: t for t in topics}
+    return "\n".join(f"{i}. {_label(t, by_id)}" for i, t in enumerate(topics))
+
+
+def tag_request(listing: str, rows: list[tuple[int, str]]) -> str:
+    """The user half of the prompt: the tree, then one batch of questions numbered for the answer to refer to."""
+    qs = "\n\n".join(f"Câu {number}: {text[:TAG_TEXT_CHARS]}" for number, text in rows)
+    return f"CHUYÊN ĐỀ:\n{listing}\n\nCÂU HỎI:\n{qs}"
+
+
+def read_tag_reply(text: str, topics: list, keys: dict) -> dict:
+    """What the model placed, as {caller key: (topic, confidence)}; raises LlmError on an answer that is not JSON.
+    A small model invents numbers and miscounts the listing, so anything that does not resolve to a node is dropped."""
+    results = parse_json(text).get("results")
+    out: dict = {}
+    for r in results if isinstance(results, list) else []:
+        try:
+            key, idx = keys[int(r["number"])], int(r["index"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        chosen = _resolve(topics, idx, r.get("name"))
+        if chosen is not None:
+            conf = r.get("confidence")
+            out[key] = (chosen, float(conf) if isinstance(conf, (int, float)) else AI_DEFAULT_CONFIDENCE)
+    return out
 
 
 def _resolve(topics: list, idx: int, name):

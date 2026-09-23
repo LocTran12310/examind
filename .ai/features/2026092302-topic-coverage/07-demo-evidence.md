@@ -150,3 +150,104 @@ Số đặc trưng của mẫu số liệu ghép nhóm. Every one was read back 
   page's ids, clicking a suggestion sends the bulk request with that topic and the row leaves the queue, the `1`
   key applies the focused row's first suggestion, `↓` moves the focus, bulk apply sends one request for several
   ids, and the document filter reaches the body while the facets keep counting every paper.
+
+## UOW-03 — The model suggests where the rules are silent
+
+Run on the live stack (`docker compose up -d --build api worker`, org `trungtama`, user `admin`), 2026-09-23.
+The org's tagging model was set to the enabled **qwen2.5:7b** on the host's Ollama — the queue reads
+`organizations.settings.ingestion.tag_model`, which was still `null`. Apart from that setting and a temporary
+disable/enable of the model for the degradation demo, every call below is read-only; no topic was assigned.
+
+### Checks
+
+| Check | Result |
+| --- | --- |
+| `make lint-api` (ruff + lint-imports) | 4 contracts kept, 0 broken |
+| `./scripts/verify.sh apps/api/tests` | **474 passed, 1 skipped** (3:38) — 457 before, +17 new |
+| `EXAMIN_DIR=… ./scripts/verify.sh apps/api/tests/test_golden_official.py` | 18 documents → **396/396 questions, 393 answers, 386 solutions, 0 pictures lost** — unchanged |
+| `scripts/close_ticket.sh … T-03-01 T-03-02` | exit 0, each with its own verified test run |
+
+### 1. How the model pass works (ADR-04)
+
+`suggest_for` keeps the rule candidates first. A question with **no** candidate, or whose best candidate scores
+below `WEAK_KEYWORD = 0.6`, goes to the org's tagging model in batches of ten (`TAG_BATCH`), with the ingestion
+stage's own prompt and `_resolve` — both now live in `domain/services/topic_rules.py`
+(`tag_listing`, `tag_request`, `read_tag_reply`) and are driven by `application/tagging.py::TopicModelPass`,
+which the stage and the queue share so the two cannot drift. Model candidates carry `source: "ai"`, can only be
+a node of that subject's tree (anything else `_resolve` drops), and are capped at three per question together
+with the rule candidates. A question the cues placed strongly is never sent, so an `ai` candidate cannot
+outrank a strong keyword. The call is bounded by `MODEL_TIMEOUT_SECONDS = 60` and every batch is guarded on its
+own: one failing batch loses only its own ten questions.
+
+### 2. Coverage on the real backlog (AC-06)
+
+`apps/api/scripts/suggestion_report.py --page 20`, over the **82** questions still untagged at the time of the run
+(UOW-02's queue had already cleared 20 of the original 102):
+
+| | |
+| --- | --- |
+| At least one candidate, rules alone | **15/82 (18%)** |
+| At least one candidate, rules + model | **23/82 (28%)** |
+| Candidates by source | 17 `similar`, 8 `ai`, 2 `keyword` |
+| Questions sent to the model | 78 of 82 (4 had a strong keyword) |
+| Questions the model actually placed | **8/78 (10%)** |
+| Time for a page of 20 | 8.5 / 9.9 / 10.9 / 11.8 s (median **9.9 s**); the rules alone answer in 0.1 s |
+
+The eight `ai` candidates, verbatim:
+
+| Question | AI candidate | Confidence |
+| --- | --- | --- |
+| *Một loại thuốc được dùng cho một bệnh nhân và nồng độ thuốc trong máu…* | Đạo hàm | 0.8 |
+| *Ông Thanh nuôi cá chim ở một cái ao có diện tích là $50\text{m}^2$…* | Cực trị của hàm số | 0.8 |
+| *Bảng giá cước của một hãng taxi X được mô hình hóa bởi một hàm số…* | Giá trị lớn nhất, nhỏ nhất | 0.8 |
+| *Thả một quả bóng từ độ cao 8 m, mỗi lần quả bóng sẽ nảy lên…* | Giá trị lớn nhất, nhỏ nhất | 0.8 |
+| *Những ngày giáp Tết Nguyên Đán cũng là dịp bước vào vụ Đông Xuân…* | Tính đơn điệu của hàm số | 0.9 |
+| *Thể tích nước của một bể bơi sau $t$ phút bơm tính theo công thức $V(t)$…* | Phương trình mặt phẳng | 0.8 |
+| *Phương trình tiếp tuyến của đồ thị hàm số $y=x^3-3x$ tại điểm…* | Đường tiệm cận | 0.9 |
+| *Một đoàn tàu đứng yên trong sân ga, ngay trước đầu tàu có một cái cây…* | Đường tiệm cận | 0.8 |
+
+Four of them are a reasonable branch (the word-problems about rates and extrema), two are wrong
+(*tiếp tuyến* → Đường tiệm cận, *thể tích bể bơi* → Phương trình mặt phẳng), and the model's own confidence does
+not separate the two groups. A teacher rejects a wrong one in a keystroke, which is exactly what A-06 asked for.
+
+### 3. Agreement with what a teacher chose (AC-06)
+
+Measured on the **27** questions a teacher had already placed by hand from the queue (`source = manual`):
+
+| | |
+| --- | --- |
+| Top candidate is the teacher's topic | **6/27 (22%)** |
+| Teacher's topic anywhere in the three | 6/27 (22%) — the top candidate is the only one that ever matches |
+| Had an `ai` candidate at all | 3/27 (11%) |
+| `ai` top candidate is the teacher's topic | **1/3 (33%)** |
+
+The sample is small and biased: these 27 are what a teacher went through first, and the model is asked only
+where the cues are already silent.
+
+### 4. A model problem never blocks the queue (AC-07)
+
+The same page of 20, with the model disabled (`PATCH /ai-models/{id} {"enabled": false}`, restored afterwards):
+
+| | With the model | Model disabled |
+| --- | --- | --- |
+| HTTP | 200 | 200 |
+| `model_used` | `true` | `false` |
+| Time | 13.5 s | **0.1 s** |
+| Questions with a candidate | 6 (5 rules + 1 `ai`) | 5, the same rule candidates |
+
+`tests/test_topic_coverage.py::test_a_model_problem_never_blocks_the_queue` covers the other three ways it can
+go wrong against a mock transport — HTTP 500, a rambling non-JSON answer and a connect timeout — and each time
+the response is the rules-only answer with `model_used: false`. `use_model: false` skips the model entirely
+(0.1 s), which is what a queue that only wants the cheap answer should send.
+
+### 5. Honestly: what this changes and what it does not
+
+Coverage went from 18% to 28% of the backlog; the remaining 59 questions still need UOW-02's TopicPicker.
+The ceiling is not `_resolve` and not the subject constraint — it is the shared prompt. Measured directly
+against the live model on three batches of ten untagged questions, **qwen2.5:7b returns exactly one result per
+batch** (`{"results": [ … ]}` with a single element, matching the single-element example in `TAG_SYSTEM`);
+the raw reply contains one `number`, so nothing is being dropped on our side. That caps the model pass at about
+one question per ten, which is precisely the 8/78 measured above. Making the prompt ask for one line per
+question is the obvious next step and would lift both the pipeline and the queue — but it changes the ingestion
+classifier, which `00-intent.md` puts out of scope for this feature. It belongs in the final review as the
+first thing to try, alongside A-05's original question of whether the model is worth its 10 s per page at all.

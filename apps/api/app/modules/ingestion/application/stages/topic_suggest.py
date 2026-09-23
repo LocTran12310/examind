@@ -12,17 +12,14 @@ import uuid
 
 from app.modules.ingestion.application.models import usable_model
 from app.modules.ingestion.application.run import IngestRun
+from app.modules.ingestion.application.tagging import TopicModelPass
 from app.modules.ingestion.domain.errors import LlmError
 from app.modules.ingestion.domain.ports import AiModelRepository, ChatModels, QuestionBank, Taxonomy, TopicNode
-from app.modules.ingestion.domain.services.ai_parse import parse_json
 from app.modules.ingestion.domain.services.splitter import ParsedQuestion
 from app.modules.ingestion.domain.services.topic_rules import (
     KNN_MIN_SIMILARITY,
-    TAG_SYSTEM,
     WEAK_KEYWORD,
-    _label,
     _may_replace,
-    _resolve,
     cue_text,
     keyword_candidates,
 )
@@ -51,27 +48,15 @@ class TopicSuggester:
         m = usable_model(self.models, doc.organization_id, tag_model) if tag_model else None
         if m is None or not topics:
             return {}
-        by_id = {t.id: t for t in topics}
-        listing = "\n".join(f"{i}. {_label(t, by_id)}" for i, t in enumerate(topics))
+        model = TopicModelPass(self.chat, m, topics)
         out: dict = {}
-        for start in range(0, len(rows), 10):
-            batch = rows[start:start + 10]
-            qs = "\n\n".join(f"Câu {p.number}: {q.stem[:600]}" for p, q in batch)
+        for batch in model.batches([(q.id, p.number, q.stem) for p, q in rows]):
             try:
-                data = parse_json(self.chat.chat(m, TAG_SYSTEM, f"CHUYÊN ĐỀ:\n{listing}\n\nCÂU HỎI:\n{qs}").text)
+                found = model.ask(batch)
             except LlmError as exc:
                 run.warnings.append(f"Model gắn chuyên đề lỗi: {exc}")
                 return out
-            numbers = {p.number: q for p, q in batch}
-            for r in data.get("results", []) if isinstance(data.get("results"), list) else []:
-                try:
-                    q, idx = numbers[int(r["number"])], int(r["index"])
-                except (KeyError, TypeError, ValueError):
-                    continue
-                chosen = _resolve(topics, idx, r.get("name"))
-                if chosen is not None:
-                    conf = r.get("confidence")
-                    out[q.id] = (chosen, float(conf) if isinstance(conf, (int, float)) else 0.7, m.model)
+            out.update({qid: (topic, conf, m.model) for qid, (topic, conf) in found.items()})
         return out
 
     def _knn(self, q: Stored) -> tuple[TopicNode | None, float] | None:

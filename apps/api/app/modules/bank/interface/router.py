@@ -83,9 +83,12 @@ def question_facets(body: QuestionSearchBody, actor: Actor = Depends(staff_actor
 @router.post("/questions/suggest-topics", response_model=SuggestionsOut)
 def suggest_topics(body: SuggestTopicsIn, actor: Actor = Depends(staff_actor), handle: SuggestTopicsHandler = Depends(deps.suggest_topics)):
     """Up to three topic candidates for each question (at most 50), computed on demand from the ingestion rules:
-    keyword cues first, then the topics of the most similar tagged questions of the subject. Nothing is stored."""
-    found = handle(actor, SuggestTopics(body.question_ids))
-    return SuggestionsOut(suggestions={qid: [TopicSuggestionOut(**vars(s)) for s in ss] for qid, ss in found.items()})
+    keyword cues first, then the topics of the most similar tagged questions of the subject, and for what they cannot
+    place the org's tagging model (`source: "ai"`, `use_model: false` to skip it). Nothing is stored; a model that is
+    off, broken or slow only means `model_used: false` and the rule candidates (topic-coverage AC-07)."""
+    found = handle(actor, SuggestTopics(body.question_ids, body.use_model))
+    return SuggestionsOut(model_used=found.model_used,
+                          suggestions={qid: [TopicSuggestionOut(**vars(s)) for s in ss] for qid, ss in found.by_question.items()})
 
 
 @router.post("/questions", response_model=ParsedQuestionOut, status_code=201)

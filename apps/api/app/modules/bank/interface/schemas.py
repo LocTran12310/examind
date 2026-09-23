@@ -122,6 +122,7 @@ class ActionIn(BaseModel):
 
 class SuggestTopicsIn(BaseModel):
     question_ids: list[uuid.UUID] = []
+    use_model: bool = True  # false asks the rules only (no model call, no waiting)
 
 
 class TopicSuggestionOut(BaseModel):
@@ -129,11 +130,12 @@ class TopicSuggestionOut(BaseModel):
     name: str
     path: str
     score: float
-    source: str
+    source: str  # keyword | similar | ai
 
 
 class SuggestionsOut(BaseModel):
     suggestions: dict[uuid.UUID, list[TopicSuggestionOut]]
+    model_used: bool = False
 
 
 class QuestionSearchBody(SearchBody):

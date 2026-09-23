@@ -74,9 +74,10 @@ class TopicSuggestions(Protocol):
     """The ingestion context's classifier, seen from the bank (topic-coverage ADR-03): candidates for questions
     nobody has placed yet, computed on demand and never stored."""
 
-    def suggest_for(self, org_id: uuid.UUID, subject_id: uuid.UUID | None,
-                    items: list[tuple[uuid.UUID, str]]) -> dict[uuid.UUID, list[tuple[uuid.UUID, float, str]]]:
-        """{question id: [(topic id, score, source)]} — at most three, best first; source `keyword` | `similar`."""
+    def suggest_for(self, org_id: uuid.UUID, subject_id: uuid.UUID | None, items: list[tuple[uuid.UUID, str]],
+                    use_model: bool = True) -> tuple[dict[uuid.UUID, list[tuple[uuid.UUID, float, str]]], bool]:
+        """({question id: [(topic id, score, source)]}, whether the tagging model answered) — at most three
+        candidates, best first; source `keyword` | `similar` | `ai` (topic-coverage ADR-04)."""
         ...
 
 

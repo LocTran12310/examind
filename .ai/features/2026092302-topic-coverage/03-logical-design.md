@@ -1,6 +1,6 @@
 ---
 feature: topic-coverage
-adr_count: 3
+adr_count: 4
 ---
 
 # Logical design
@@ -39,7 +39,7 @@ No schema change. `question_topics` keeps `source` (`manual` when a teacher pick
 | Method & path | Notes |
 | --- | --- |
 | `POST /questions/search` | `has_topic: bool` at the top of the body |
-| `POST /questions/suggest-topics` | `{question_ids: [uuid]}` (≤50) → `{suggestions: {id: [{topic_id, name, path, score, source}]}}` |
+| `POST /questions/suggest-topics` | `{question_ids: [uuid], use_model?: bool = true}` (≤50) → `{suggestions: {id: [{topic_id, name, path, score, source}]}, model_used: bool}`; `source` is `keyword | similar | ai` |
 | `POST /questions/bulk` | unchanged, used with `set.primary_topic_id` |
 | `POST /questions/facets` | already reports `topics["none"]`; gains the same count per document |
 
@@ -80,4 +80,16 @@ the tagging queue is where that work is done.
 **Decision:** `ingestion.application.api.suggest_for(...)` is the only entry point; bank defines a port and an
 adapter wired at the composition root, as it already does for taxonomy and identity.
 **Consequences:** The dependency rules stay green; the classifier keeps one home.
+**Status:** accepted
+
+### ADR-04 — The model suggests where the rules are silent
+**Context:** On the real backlog the rules produced candidates for 14 of 102 questions — those questions are by
+definition the ones the cues failed on, so A-05 ("no model in the queue") was refuted by measurement.
+**Decision:** `suggest_for` keeps the rule candidates first and, for questions with none or with a best score
+below `WEAK_KEYWORD`, asks the organisation's enabled tagging model in batches (the ingestion stage's prompt and
+`_resolve` are reused, not re-written). Model candidates carry `source: "ai"`, are constrained to the subject's
+topic tree, and never outrank a strong keyword candidate. A disabled, missing, failing or slow model degrades to
+the rule candidates and sets `model_used: false`.
+**Consequences:** The queue becomes usable for the 88 questions the rules cannot place; latency is a batched model
+call per page; the acceptance rate of `ai` candidates is what tells us whether to automate any of it later.
 **Status:** accepted

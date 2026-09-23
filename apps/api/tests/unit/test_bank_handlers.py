@@ -374,34 +374,46 @@ def test_item_statistics_of_another_organisation_are_not_found(ports):
 class FakeSuggestions:
     """The ingestion classifier: whatever it was told to answer, plus what it was asked."""
 
-    def __init__(self, answers=None):
+    def __init__(self, answers=None, model_used=False):
         self.answers = answers or {}
+        self.model_used = model_used
         self.asked: list = []
 
-    def suggest_for(self, org_id, subject_id, items):
-        self.asked.append((org_id, subject_id, [i for i, _ in items]))
-        return {qid: self.answers.get(qid, []) for qid, _ in items}
+    def suggest_for(self, org_id, subject_id, items, use_model=True):
+        self.asked.append((org_id, subject_id, [i for i, _ in items], use_model))
+        return {qid: self.answers.get(qid, []) for qid, _ in items}, self.model_used and use_model
 
 
 def test_suggestions_carry_the_topic_name_path_score_and_source(ports):
     qs, taxonomy = ports[0], ports[1]
     q = parsed(qs, type="mcq", stem="Tính nguyên hàm", subject_id=SUBJECT, status="auto_approved")
-    ports_ = FakeSuggestions({q.id: [(TOPIC, 0.8, "keyword"), (SUB_TOPIC, 0.4, "similar")]})
-    got = SuggestTopicsHandler(qs, taxonomy, ports_)(TEACHER, SuggestTopics([q.id]))[q.id]
-    assert [(s.topic_id, s.name, s.path, s.score, s.source) for s in got] == [
-        (TOPIC, "Nguyên hàm", "t1", 0.8, "keyword"), (SUB_TOPIC, "Tích phân", "t1.t2", 0.4, "similar")]
-    # the classifier is asked per subject, with the stem and the options
-    assert ports_.asked == [(ORG, SUBJECT, [q.id])]
+    ports_ = FakeSuggestions({q.id: [(TOPIC, 0.8, "keyword"), (SUB_TOPIC, 0.4, "ai")]}, model_used=True)
+    found = SuggestTopicsHandler(qs, taxonomy, ports_)(TEACHER, SuggestTopics([q.id]))
+    assert [(s.topic_id, s.name, s.path, s.score, s.source) for s in found.by_question[q.id]] == [
+        (TOPIC, "Nguyên hàm", "t1", 0.8, "keyword"), (SUB_TOPIC, "Tích phân", "t1.t2", 0.4, "ai")]
+    # the classifier is asked per subject, with the stem and the options, and says whether the model answered
+    assert ports_.asked == [(ORG, SUBJECT, [q.id], True)] and found.model_used
+
+
+def test_the_queue_can_ask_for_the_rules_alone(ports):
+    """AC-07 seen from the bank: no model call, and the answer says the model was not used."""
+    qs, taxonomy = ports[0], ports[1]
+    q = parsed(qs, type="mcq", stem="Tính nguyên hàm", subject_id=SUBJECT)
+    suggestions = FakeSuggestions({q.id: [(TOPIC, 0.8, "keyword")]}, model_used=True)
+    found = SuggestTopicsHandler(qs, taxonomy, suggestions)(TEACHER, SuggestTopics([q.id], use_model=False))
+    assert not found.model_used and suggestions.asked == [(ORG, SUBJECT, [q.id], False)]
+    assert [s.source for s in found.by_question[q.id]] == ["keyword"]
 
 
 def test_questions_are_grouped_by_subject_and_a_topic_of_another_org_is_dropped(ports):
     qs, taxonomy = ports[0], ports[1]
     a = parsed(qs, type="mcq", stem="Câu Toán", subject_id=SUBJECT)
     b = parsed(qs, type="mcq", stem="Câu không môn", subject_id=None)
-    suggestions = FakeSuggestions({a.id: [(TOPIC, 0.7, "keyword")], b.id: [(uuid.uuid4(), 0.9, "similar")]})
-    got = SuggestTopicsHandler(qs, taxonomy, suggestions)(TEACHER, SuggestTopics([a.id, b.id]))
-    assert {s for _, s, _ in suggestions.asked} == {None, SUBJECT}  # one call per subject
-    assert [s.name for s in got[a.id]] == ["Nguyên hàm"] and got[b.id] == []
+    suggestions = FakeSuggestions({a.id: [(TOPIC, 0.7, "keyword")], b.id: [(uuid.uuid4(), 0.9, "ai")]})
+    found = SuggestTopicsHandler(qs, taxonomy, suggestions)(TEACHER, SuggestTopics([a.id, b.id]))
+    assert {s for _, s, _, _ in suggestions.asked} == {None, SUBJECT}  # one call per subject
+    assert [s.name for s in found.by_question[a.id]] == ["Nguyên hàm"] and found.by_question[b.id] == []
+    assert not found.model_used
 
 
 def test_more_than_fifty_questions_is_a_validation_error(ports):

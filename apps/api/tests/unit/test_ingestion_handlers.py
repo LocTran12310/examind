@@ -1,10 +1,12 @@
 """Ingestion handlers against in-memory ports: upload and duplicates, re-parse, meta, delete, the pipeline, AI models and
 processing defaults (ADR-02)."""
 import hashlib
+import json
 import uuid
 
 import pytest
 
+from app.modules.ingestion.application.api import MODEL_TIMEOUT_SECONDS, IngestionApi
 from app.modules.ingestion.application.commands.delete_document import DeleteDocument, DeleteDocumentHandler
 from app.modules.ingestion.application.commands.ingest_document import IngestDocument, IngestDocumentHandler, MarkIngestFailed, MarkIngestFailedHandler
 from app.modules.ingestion.application.commands.reparse_document import ReparseDocument, ReparseDocumentHandler
@@ -19,8 +21,8 @@ from app.modules.ingestion.application.stages.ai_split import AiSplitter
 from app.modules.ingestion.application.stages.extract import Extractor
 from app.modules.ingestion.application.stages.topic_suggest import TopicSuggester
 from app.modules.ingestion.domain.entities import AiModel, SourceDocument
-from app.modules.ingestion.domain.errors import DocxError
-from app.modules.ingestion.domain.ports import TopicNode
+from app.modules.ingestion.domain.errors import DocxError, LlmError
+from app.modules.ingestion.domain.ports import ChatResult, TopicNode
 from app.modules.ingestion.domain.services.documents import UnsupportedFile
 from app.modules.ingestion.domain.services.lines import Line
 from app.shared.application.actor import Actor
@@ -127,6 +129,7 @@ class FakeBank:
     def __init__(self):
         self.removed, self.added, self.topics, self.followed = [], [], [], []
         self.kept: set = set()
+        self.near: dict = {}  # question id -> [(topic id, similarity)] for the tagging queue's kNN
 
     def remove_document_questions(self, document_id, keep_statuses, keep_used):
         self.removed.append((document_id, keep_statuses, keep_used))
@@ -144,6 +147,9 @@ class FakeBank:
 
     def nearest_topic(self, question_id):
         return None
+
+    def nearest_topics(self, org_id, subject_id, question_id, limit):
+        return self.near.get(question_id, [])[:limit]
 
     def suggest_topic(self, question_id, topic_id, source, score):
         self.topics.append((question_id, topic_id, source))
@@ -413,3 +419,161 @@ def test_processing_defaults_need_usable_models():
     assert "vision_model" in e.value.fields
     cfg = handle(ADMIN, SaveIngestionSettings({"split_mode": "rule_ai", "split_models": [str(text_only.id)], "threshold": 7, "ocr": "x"}))
     assert cfg["threshold"] == 1.0 and cfg["ocr"] == "auto" and settings.stored == cfg
+
+
+# ------------------------------------------------------------------ the tagging queue's model pass (ADR-04)
+
+TAG_TREE = [("Mệnh đề", "menh_de"), ("Xác suất cổ điển", "xac_suat"), ("Đạo hàm", "dao_ham"), ("Tích phân", "tich_phan")]
+
+
+class QueueTaxonomy:
+    """All the tagging queue asks of the taxonomy: the topics of one subject."""
+
+    def __init__(self):
+        self.rows = [TopicNode(uuid.uuid4(), name, f"toan.{code}", None) for name, code in TAG_TREE]
+
+    def topics(self, org_id, subject_id):
+        return self.rows
+
+
+class FakeChat:
+    """The tagging model: one scripted reply per call (an Exception is raised instead), and what it was asked."""
+
+    def __init__(self, *replies):
+        self.replies, self.calls = list(replies), []
+
+    def chat(self, m, system, user, images=None, json_mode=True, timeout=None, schema=None):
+        self.calls.append({"model": m, "user": user, "timeout": timeout})
+        reply = self.replies.pop(0) if self.replies else '{"results": []}'
+        if isinstance(reply, Exception):
+            raise reply
+        return ChatResult(text=reply, latency_ms=1, model=m.model)
+
+    def discover(self, base_url):
+        return []
+
+
+def _reply(*picked) -> str:
+    """The shape a tagging model answers in: (question number, index in the listing, name, confidence)."""
+    return json.dumps({"results": [{"number": n, "index": i, "name": name, "confidence": c} for n, i, name, c in picked]})
+
+
+def _queue(chat=None, *, stored=None, model=None, near=None):
+    """The ingestion API as the bank's tagging queue gets it, with the org's tagging model configured."""
+    tag = model if model is not None else AiModel(name="Qwen", provider="ollama", model="q7", organization_id=ORG)
+    taxonomy, bank = QueueTaxonomy(), FakeBank()
+    bank.near = near or {}
+    stored = {"tag_model": str(tag.id)} if stored is None else stored
+    api = IngestionApi(taxonomy, bank, FakeSettings(stored), FakeModels(tag), chat or FakeChat())
+    return api, taxonomy, bank
+
+
+STRONG = "Phủ định của mệnh đề nào sau đây là mệnh đề đúng?"  # two keyword cues: a strong candidate
+BLANK = "Cho hình vẽ bên, tính giá trị được hỏi"              # no cue, no neighbour
+
+
+def test_the_model_is_asked_only_about_what_the_rules_could_not_place():
+    chat = FakeChat(_reply((1, 2, "Đạo hàm", 0.8)))
+    api, taxonomy, _ = _queue(chat)
+    strong, blank = uuid.uuid4(), uuid.uuid4()
+    got = api.suggest_for(ORG, SUBJECT, [(strong, STRONG), (blank, BLANK)])
+    assert got.model_used and len(chat.calls) == 1
+    asked = chat.calls[0]["user"]
+    assert BLANK in asked and STRONG not in asked  # the placed question never costs a token
+    assert [(c.source, c.score) for c in got.by_question[strong]] == [("keyword", 0.81)]
+    assert [(c.topic_id, c.source, c.score) for c in got.by_question[blank]] == [(taxonomy.rows[2].id, "ai", 0.8)]
+
+
+def test_a_model_candidate_must_resolve_to_a_topic_of_the_subject():
+    """A 7B model miscounts a long listing and invents names: only what resolves to a node of the tree is kept."""
+    chat = FakeChat(_reply((1, 99, "Chuyên đề không có thật", 0.9), (2, 1, "Xác suất cổ điển", 0.6)))
+    api, taxonomy, _ = _queue(chat)
+    invented, real = uuid.uuid4(), uuid.uuid4()
+    got = api.suggest_for(ORG, SUBJECT, [(invented, BLANK), (real, BLANK)])
+    assert got.by_question[invented] == []
+    assert [(c.topic_id, c.source) for c in got.by_question[real]] == [(taxonomy.rows[1].id, "ai")]
+
+
+def test_a_strong_keyword_candidate_is_never_outranked_by_the_model():
+    chat = FakeChat(_reply((1, 1, "Xác suất cổ điển", 0.95)))
+    api, taxonomy, _ = _queue(chat)
+    strong = uuid.uuid4()
+    got = api.suggest_for(ORG, SUBJECT, [(strong, STRONG)])
+    assert not got.model_used and chat.calls == []
+    assert [(c.topic_id, c.source) for c in got.by_question[strong]] == [(taxonomy.rows[0].id, "keyword")]
+
+
+def test_a_weak_candidate_is_kept_beside_the_model_and_three_is_still_the_cap():
+    """The rules found neighbours but nothing convincing: the model adds to the list, it does not replace it."""
+    chat = FakeChat(_reply((1, 2, "Đạo hàm", 0.9)))
+    api, taxonomy, bank = _queue(chat)
+    weak = uuid.uuid4()
+    others = [taxonomy.rows[0], taxonomy.rows[1], taxonomy.rows[3]]  # the model picks the one they do not cover
+    bank.near = {weak: [(t.id, s) for t, s in zip(others, (0.5, 0.42, 0.36))]}
+    got = api.suggest_for(ORG, SUBJECT, [(weak, BLANK)]).by_question[weak]
+    assert [(c.source, c.score) for c in got] == [("ai", 0.9), ("similar", 0.5), ("similar", 0.42)]
+
+
+def test_the_model_sees_ten_questions_at_a_time():
+    chat = FakeChat(*[_reply() for _ in range(3)])
+    api, _, _ = _queue(chat)
+    items = [(uuid.uuid4(), BLANK) for _ in range(23)]
+    api.suggest_for(ORG, SUBJECT, items)
+    assert [call["user"].count("Câu ") for call in chat.calls] == [10, 10, 3]
+
+
+def test_a_failing_model_degrades_to_the_rules():
+    chat = FakeChat(LlmError("Không kết nối được model: ConnectError"))
+    api, taxonomy, _ = _queue(chat)
+    strong, blank = uuid.uuid4(), uuid.uuid4()
+    got = api.suggest_for(ORG, SUBJECT, [(strong, STRONG), (blank, BLANK)])
+    assert not got.model_used and got.by_question[blank] == []
+    assert [c.topic_id for c in got.by_question[strong]] == [taxonomy.rows[0].id]
+
+
+def test_a_slow_model_is_bounded_and_degrades_to_the_rules():
+    chat = FakeChat(LlmError("Model không phản hồi kịp (timeout)"))
+    api, _, _ = _queue(chat)
+    blank = uuid.uuid4()
+    got = api.suggest_for(ORG, SUBJECT, [(blank, BLANK)])
+    assert chat.calls[0]["timeout"] == MODEL_TIMEOUT_SECONDS  # the queue never waits as long as a job may
+    assert not got.model_used and got.by_question[blank] == []
+
+
+def test_a_garbage_answer_degrades_to_the_rules():
+    api, _, _ = _queue(FakeChat("Chào bạn, tôi nghĩ câu này thuộc về đại số."))
+    blank = uuid.uuid4()
+    got = api.suggest_for(ORG, SUBJECT, [(blank, BLANK)])
+    assert not got.model_used and got.by_question[blank] == []
+
+
+def test_one_bad_batch_does_not_lose_the_others():
+    chat = FakeChat(LlmError("HTTP 500: overloaded"), _reply((11, 2, "Đạo hàm", 0.8)))
+    api, taxonomy, _ = _queue(chat)
+    items = [(uuid.uuid4(), BLANK) for _ in range(11)]
+    got = api.suggest_for(ORG, SUBJECT, items)
+    assert got.model_used and len(chat.calls) == 2
+    assert [c.topic_id for c in got.by_question[items[10][0]]] == [taxonomy.rows[2].id]
+    assert all(got.by_question[qid] == [] for qid, _ in items[:10])
+
+
+@pytest.mark.parametrize("stored, model", [
+    ({}, None),                                                                                      # none configured
+    (None, AiModel(name="off", provider="ollama", model="q7", organization_id=ORG, enabled=False)),  # disabled
+    (None, AiModel(name="foreign", provider="ollama", model="q7", organization_id=uuid.uuid4())),    # another org's
+    ({"tag_model": "not-a-uuid"}, None),                                                             # unusable id
+])
+def test_a_model_that_is_absent_disabled_or_foreign_is_simply_not_used(stored, model):
+    chat = FakeChat(_reply((1, 2, "Đạo hàm", 0.9)))
+    api, _, _ = _queue(chat, stored=stored, model=model)
+    blank = uuid.uuid4()
+    got = api.suggest_for(ORG, SUBJECT, [(blank, BLANK)])
+    assert not got.model_used and chat.calls == [] and got.by_question[blank] == []
+
+
+def test_the_caller_can_ask_the_rules_alone():
+    chat = FakeChat(_reply((1, 2, "Đạo hàm", 0.9)))
+    api, _, _ = _queue(chat)
+    blank = uuid.uuid4()
+    got = api.suggest_for(ORG, SUBJECT, [(blank, BLANK)], use_model=False)
+    assert not got.model_used and chat.calls == [] and got.by_question[blank] == []

@@ -1,7 +1,7 @@
 ---
 feature: topic-coverage
-stories: 3
-acceptance_criteria: 5
+stories: 4
+acceptance_criteria: 7
 ---
 
 # Requirements
@@ -48,4 +48,21 @@ Then they are needs_review with the reason "chưa gắn chuyên đề", never au
 Given the bank of a subject
 When I look at the tagging queue or the bank facets
 Then I see how many questions have no topic and how many of them are from each document
+```
+
+## US-04 — Suggestions for what the rules cannot place
+**Priority:** must
+
+**AC-06** — The model fills the gap
+```gherkin
+Given a question with no candidate from the cues or from similar questions
+When the queue asks for suggestions and the organisation has an enabled text model
+Then up to three candidates come back marked "AI", inside the question's subject tree, and a teacher still has to confirm one
+```
+
+**AC-07** — A model problem never blocks the work
+```gherkin
+Given the model is disabled, unreachable or slow
+When suggestions are requested
+Then the answer still arrives with whatever the rules found, the response says the model was not used, and nothing in the queue breaks
 ```
