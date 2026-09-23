@@ -1,5 +1,9 @@
 export type QuestionType = "mcq" | "true_false" | "short_answer" | "essay";
 
+/** Which rule proposed a topic: a keyword cue, a neighbour already tagged, or the tagging model
+ *  (topic-coverage A-01, ADR-04). */
+export type SuggestionSource = "keyword" | "similar" | "ai";
+
 export type QuestionStatus = "draft" | "auto_approved" | "needs_review" | "approved" | "rejected" | "duplicate" | "flagged";
 
 export interface QuestionOption {
@@ -74,6 +78,21 @@ export interface QuestionStats {
   options: QuestionOptionStat[];
 }
 
+/** One candidate of `POST /questions/suggest-topics` (topic-coverage ADR-01): computed per request,
+ *  never stored, at most three per question. `path` is the chain the API wrote it as. */
+export interface TopicSuggestion {
+  topic_id: string;
+  name: string;
+  path: string;
+  score: number;
+  source: SuggestionSource;
+}
+
+/** Answer of `POST /questions/suggest-topics`: candidates per question id. */
+export interface TopicSuggestions {
+  suggestions: Record<string, TopicSuggestion[]>;
+}
+
 /** POST /questions/facets — counts per value; each facet ignores its own filter (subject-scoped-bank ADR-02). */
 export interface BankFacets {
   subjects: Record<string, number>; // subject id or "none"
@@ -84,6 +103,8 @@ export interface BankFacets {
   periods: Record<string, number>; // "hk1|Giữa kỳ"
   school_years: Record<string, number>;
   tags: Record<string, number>;
+  /** questions with no topic per source document id (topic-coverage AC-05) */
+  untagged_documents?: Record<string, number>;
 }
 
 export interface BulkResult {

@@ -10,6 +10,7 @@ import {
   GraduationCap,
   Library,
   ListChecks,
+  ListTodo,
   type LucideIcon,
   Network,
   School,
@@ -41,6 +42,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/org/documents", label: "Đề đã tải lên", roles: STAFF, icon: FileUp },
       { href: "/org/review", label: "Duyệt câu hỏi", roles: STAFF, icon: ListChecks },
+      { href: "/org/review/untagged", label: "Chưa gắn chuyên đề", roles: STAFF, icon: ListTodo },
       { href: "/org/bank", label: "Ngân hàng câu hỏi", roles: STAFF, icon: Library },
       { href: "/org/exams", label: "Đề thi & giao bài", roles: STAFF, icon: FileStack },
     ],

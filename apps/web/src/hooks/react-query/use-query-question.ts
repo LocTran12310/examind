@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient, type UseMutationResult, type UseQueryResult } from "@tanstack/react-query";
 import { QUESTION_KEYS, REVIEW_KEYS } from "@/constants/react-query-key.constant";
 import type { BulkQuestionsBody, QuestionBody, QuestionSearchBody, UpdateQuestionBody } from "@/dtos/question.dto";
-import type { BankFacets, BulkResult, ParsedQuestion, Question, QuestionStats } from "@/interfaces/question.interface";
+import type { BankFacets, BulkResult, ParsedQuestion, Question, QuestionStats, TopicSuggestion } from "@/interfaces/question.interface";
 import type { RowsQueryOptions, SearchPage } from "@/interfaces/search-page.interface";
 import { invalidate } from "@/lib/common/query-client";
 import { questionService } from "@/services/question.service";
@@ -9,6 +9,9 @@ import { useSearchQuery } from "./use-search-query";
 
 // the review screens show questions too
 const TOUCHED = [QUESTION_KEYS.ALL, REVIEW_KEYS.ALL] as const;
+
+// `POST /questions/suggest-topics` takes at most 50 ids (topic-coverage contract)
+const SUGGEST_BATCH = 50;
 
 export function useQuestionSearchQuery(
   body: QuestionSearchBody,
@@ -31,6 +34,24 @@ export function useQuestionQuery(id: string): UseQueryResult<ParsedQuestion, Err
 /** Item statistics of one question; the panel shows "chưa đủ dữ liệu" until there are enough answers. */
 export function useQuestionStatsQuery(id: string): UseQueryResult<QuestionStats, Error> {
   return useQuery<QuestionStats, Error>({ queryKey: QUESTION_KEYS.STATS(id), queryFn: () => questionService.stats(id), enabled: Boolean(id) });
+}
+
+/** Topic candidates for the questions shown on one page (topic-coverage ADR-01); a page longer than
+ *  the endpoint's limit is asked for in batches and the answers merged. Nothing is stored server-side,
+ *  so an assignment invalidates these together with the list. */
+export function useTopicSuggestionsQuery(ids: string[]): UseQueryResult<Record<string, TopicSuggestion[]>, Error> {
+  return useQuery<Record<string, TopicSuggestion[]>, Error>({
+    queryKey: QUESTION_KEYS.SUGGESTIONS(ids),
+    queryFn: async () => {
+      const out: Record<string, TopicSuggestion[]> = {};
+      for (let i = 0; i < ids.length; i += SUGGEST_BATCH) {
+        const { suggestions } = await questionService.suggestTopics({ question_ids: ids.slice(i, i + SUGGEST_BATCH) });
+        Object.assign(out, suggestions);
+      }
+      return out;
+    },
+    enabled: ids.length > 0,
+  });
 }
 
 export function useQuestionDemoQuery(): UseQueryResult<Question, Error> {

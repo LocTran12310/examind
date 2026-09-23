@@ -3,6 +3,8 @@ import type { QuestionOption, QuestionType } from "@/interfaces/question.interfa
 
 /** Body of `POST /questions/search` and `/questions/facets`: the common search body plus the bank parameters. */
 export interface QuestionSearchBody extends SearchBody {
+  /** false = only questions with no topic (the tagging queue, topic-coverage AC-01) */
+  has_topic?: boolean;
   /** subject id or "none" */
   subject_id?: string;
   grade?: number;
@@ -35,6 +37,11 @@ export interface QuestionBody {
 }
 
 export type UpdateQuestionBody = Partial<QuestionBody>;
+
+/** `POST /questions/suggest-topics`: at most 50 questions per request. */
+export interface SuggestTopicsBody {
+  question_ids: string[];
+}
 
 /** `POST /questions/bulk`: the same change on every question. */
 export interface BulkQuestionsBody {

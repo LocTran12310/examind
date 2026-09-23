@@ -89,3 +89,64 @@ triage gave them (`test_a_tagged_question_keeps_its_triage_outcome` on `de-mau-t
 Four existing tests encoded the old behaviour for `de-kho.docx` (3 of its 8 questions were auto-approved, one of
 them a spot check) and were updated on purpose — see the report of the change. The golden numbers did not move and
 the golden expectations were not touched.
+
+## UOW-02 — The tagging queue clears the backlog
+
+Run on the live stack (`docker compose up -d --build web`, org `trungtama`, user `admin`, http://localhost:8088),
+2026-09-23, on the real bank — the topics assigned below are a real change and were meant.
+
+`Duyệt câu hỏi › Chưa gắn chuyên đề` (`/org/review/untagged`, new nav item under "Đề & câu hỏi"). The body of the
+list is `{has_topic: false, page, limit, sort: [{created_at, desc}], status: "all", subject_id?, document_id?}` —
+`status: "all"` because a question the classifier could not place is `needs_review` since UOW-01 and would fall out
+of the default `usable` filter.
+
+### AC-01 — the queue
+109 câu on opening, newest first, each row with its stem through the bank's renderer (KaTeX and the parsed images),
+the subject, the source document and the upload date. `Mọi môn` / `Mọi đề` filter it; picking
+*20. Sở GD & ĐT Hà Tĩnh* narrowed the list to **6 câu** and put `document_id` in the URL, matching the `(6)` the
+document list shows beside that paper. A question carries no date of its own in the API, so the row shows the
+date of its source document.
+
+### AC-02 — suggestions
+Suggestions are fetched per page in one `POST /questions/suggest-topics` for the ids on screen (batched at 50, the
+endpoint's limit) and shown as buttons: full topic path · score · `Từ khóa` / `Tương tự`. `1`/`2`/`3` apply the
+first three suggestions of the focused row, `↑`/`↓` move the focus; the row leaves the queue and the counter drops.
+
+### AC-03 — bulk apply
+Multi-select → "Gán chuyên đề cho N câu" → TopicPicker → one `POST /questions/bulk` for the whole selection
+(verified in the network log: one request per apply, never one per question). Applied in 3, 4, 3, 2, 2, 2 and 2 câu
+batches; the counter and the list came back from the server each time (108 → 105 → 101 → 98 → 96 → 94 → 92 → 90,
+the last 8 câu one by one from the row's own picker).
+The bulk button is disabled when the selection spans several subjects — a topic belongs to one subject and the API
+would answer 422.
+
+### AC-05 — coverage
+The header counts what is left; the `Đề gốc` list carries the untagged count per paper from
+`facets.untagged_documents` (5, 6, 7, 10, … over the 18 papers, plus one question with no document). No count is
+shown beside a subject: the subjects facet drops the topic dimension, so it would report every question of the
+subject (375) instead of the untagged ones.
+
+### The backlog worked for real
+**27 câu tagged**, `109 → 82` remaining. **1** of them was accepted from the top suggestion (`768944f8`, the Zika
+question → **Đạo hàm**, 0.43 `similar`, applied with the `1` key); the other **26** were picked by hand in the
+TopicPicker. Of the 5 rows I met that had a suggestion at all, I rejected 4: the kNN neighbour puts every
+exponential/logarithmic equation and inequality on **Logarit** (the right branch, the wrong node — they belong to
+*Phương trình mũ và logarit* / *Bất phương trình mũ và logarit*) and it also fired **Logarit** on
+*$\cot x = 1$*, which is a different chapter altogether. Across the whole backlog only **15 of 109** questions had
+any candidate. That is the acceptance measurement A-05 asked for, and it is what UOW-03 (ADR-04) answers.
+
+Topics assigned: Các phép toán vectơ (4), Giá trị lớn nhất, nhỏ nhất (5), Đọc đồ thị hàm số (3), Đạo hàm (3),
+Phương trình mũ và logarit (2), Bất phương trình mũ và logarit (2), Đường tiệm cận, Quy tắc đếm, Tích phân,
+Ứng dụng tích phân tính diện tích, Cực trị của hàm số, Thể tích khối lăng trụ, Phương trình lượng giác cơ bản,
+Số đặc trưng của mẫu số liệu ghép nhóm. Every one was read back from `GET /questions/{id}` with
+`is_primary: true` and `source: "manual"` (ADR-01). One of them landed on *Số đặc trưng của mẫu số liệu
+**không** ghép nhóm* because that node matched the same search text first; it was corrected to the grouped one.
+
+### Checks
+- `cd apps/web && pnpm typecheck`, `pnpm lint`, `pnpm test`: **180 passed** in 50 files (6 new).
+- `scripts/close_ticket.sh … T-02-01 T-02-02`: exit 0, each with its own verified run of
+  `apps/web/src/__tests__/tagging-queue.test.tsx`.
+- New tests: the list renders from a body carrying `has_topic: false` first, suggestions are requested for the
+  page's ids, clicking a suggestion sends the bulk request with that topic and the row leaves the queue, the `1`
+  key applies the focused row's first suggestion, `↓` moves the focus, bulk apply sends one request for several
+  ids, and the document filter reaches the body while the facets keep counting every paper.
