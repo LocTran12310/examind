@@ -37,10 +37,27 @@ const conflictBody = {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("bulk actions", () => {
-  it("disabled without selection", () => {
+  it("disabled without selection, and no count to read", () => {
     render(<BulkActions ids={[]} topics={topics} tags={[]} onDone={() => {}} onClear={() => {}} />);
     expect(screen.getByRole("button", { name: /Mức độ/ })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Xóa" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Duyệt" })).toBeDisabled();
+  });
+
+  it("every action says how many questions it will change (AC-06)", async () => {
+    mockFetch(route("POST", "/api/questions/facets", facets));
+    const u = userEvent.setup();
+    render(<BulkActions ids={["a", "b", "c"]} topics={topics} subjectId="s" tags={[{ id: "g1", group: "method", name: "đổi biến" }]} taxonomy={taxonomy} onDone={() => {}} onClear={() => {}} />);
+    // the count rides on the button itself, not only on "Đã chọn" at the other end of the toolbar
+    for (const label of ["Mức độ", "Môn", "Lớp", "Chuyên đề", "Thêm tag", "Duyệt", "Loại", "Xóa"]) {
+      expect(screen.getByRole("button", { name: `${label} 3 câu` })).toBeEnabled();
+    }
+    // and the menu that opens repeats what it is about to change
+    await u.click(screen.getByRole("button", { name: "Mức độ 3 câu" }));
+    expect(await screen.findByText("Đặt mức độ cho 3 câu")).toBeInTheDocument();
+    await u.keyboard("{Escape}");
+    await u.click(screen.getByRole("button", { name: "Chuyên đề 3 câu" }));
+    expect(await screen.findByRole("heading", { name: "Đặt chuyên đề cho 3 câu" })).toBeInTheDocument();
   });
 
   it("sets difficulty and topic for the selection", async () => {
@@ -50,7 +67,7 @@ describe("bulk actions", () => {
     render(<BulkActions ids={["a", "b"]} topics={topics} tags={[]} onDone={onDone} onClear={() => {}} />);
     await u.click(screen.getByRole("button", { name: /Mức độ/ }));
     await u.click(await screen.findByRole("menuitem", { name: "Vận dụng" }));
-    await u.click(screen.getByRole("button", { name: "Chuyên đề" }));
+    await u.click(screen.getByRole("button", { name: "Chuyên đề 2 câu" }));
     await u.click(within(await screen.findByRole("tree", { name: "Cây chuyên đề" })).getByText("Vectơ"));
     await waitFor(() => expect(f).toHaveBeenCalledTimes(2));
     expect(JSON.parse(String(f.mock.calls[0][1]?.body))).toEqual({ ids: ["a", "b"], set: { difficulty: "vd" } });
@@ -63,7 +80,7 @@ describe("bulk actions", () => {
     const onClear = vi.fn();
     const u = userEvent.setup();
     render(<BulkActions ids={["a", "b"]} topics={topics} tags={[]} onDone={() => {}} onClear={onClear} />);
-    await u.click(screen.getByRole("button", { name: "Xóa" }));
+    await u.click(screen.getByRole("button", { name: "Xóa 2 câu" }));
     expect(f).not.toHaveBeenCalled();
     await u.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Xóa" }));
     await waitFor(() => expect(onClear).toHaveBeenCalled());
@@ -109,7 +126,7 @@ describe("bulk actions", () => {
     const u = userEvent.setup();
     render(<BulkActions ids={["a", "b"]} topics={topics} subjectId="s" tags={[]} taxonomy={taxonomy} onDone={() => {}} onClear={() => {}} />);
     expect(f).not.toHaveBeenCalled(); // nothing is asked for until a picker needs it
-    await u.click(screen.getByRole("button", { name: "Chuyên đề" }));
+    await u.click(screen.getByRole("button", { name: "Chuyên đề 2 câu" }));
     const tree = await screen.findByRole("tree", { name: "Cây chuyên đề" });
     await waitFor(() => expect(within(tree).getAllByRole("treeitem").map((x) => x.textContent)).toEqual(["Vectơ4", "Đường tròn0"]));
     expect(JSON.parse(String(f.mock.calls[0][1]?.body))).toMatchObject({ subject_id: "s" });

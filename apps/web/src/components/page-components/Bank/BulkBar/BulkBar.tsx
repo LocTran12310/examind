@@ -8,13 +8,26 @@ import { FormDialog } from "@/components/common/FormDialog/FormDialog";
 import { Markdown } from "@/components/common/Markdown/Markdown";
 import { ToolbarButton } from "@/components/common/DataTable/Toolbar";
 import { TopicPicker } from "@/components/common/TopicPicker/TopicPicker";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { DIFFICULTY_LABEL } from "@/constants/question.constant";
 import { useBulkActions } from "@/hooks/page-hooks/bank/use-bulk-actions";
 import type { ParsedQuestion } from "@/interfaces/question.interface";
 import type { Tag } from "@/interfaces/tag.interface";
 import type { Taxonomy } from "@/interfaces/taxonomy.interface";
 import type { Topic } from "@/interfaces/topic.interface";
+
+/** How many questions the action will change, worn by the action itself, so a click is never about a
+ *  selection the teacher has stopped watching (bulk-safety AC-06). The count stays a badge and the unit is
+ *  read out rather than drawn: at 390px the toolbar already wraps. */
+function Count({ n }: { n: number }) {
+  if (!n) return null;
+  return (
+    <span className="rounded-sm bg-sidebar-foreground/15 px-1 text-xs tabular-nums">
+      <span aria-hidden>{n}</span>
+      <span className="sr-only">{n} câu</span>
+    </span>
+  );
+}
 
 /** Bulk actions for the selected questions, rendered inside the table toolbar. "Môn" and "Lớp" make the
  *  "Chưa phân môn" tab actionable (AC-05); a subject the topics contradict is refused whole and the
@@ -43,16 +56,18 @@ export function BulkActions({
   const b = useBulkActions({ ids, subjectId, onDone, onClear });
   const subjects = taxonomy?.subjects ?? [];
   const grades = taxonomy?.grades ?? [];
+  const n = ids.length;
   const questionOf = (questionId: string) => questions?.find((x) => x.id === questionId);
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <ToolbarButton disabled={b.none}>
-            <Gauge /> Mức độ <ChevronDown />
+            <Gauge /> Mức độ <Count n={n} /> <ChevronDown />
           </ToolbarButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
+          <DropdownMenuLabel>Đặt mức độ cho {n} câu</DropdownMenuLabel>
           {Object.entries(DIFFICULTY_LABEL).map(([k, v]) => (
             <DropdownMenuItem key={k} onSelect={() => void b.apply({ difficulty: k }, `Đã đặt mức độ ${v}`)}>
               {v}
@@ -63,10 +78,11 @@ export function BulkActions({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <ToolbarButton disabled={b.none || !subjects.length}>
-            <BookOpen /> Môn <ChevronDown />
+            <BookOpen /> Môn <Count n={n} /> <ChevronDown />
           </ToolbarButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="max-h-72 overflow-y-auto">
+          <DropdownMenuLabel>Đổi môn cho {n} câu</DropdownMenuLabel>
           {subjects.map((s) => (
             <DropdownMenuItem key={s.id} onSelect={() => void b.apply({ subject_id: s.id }, `Đã đặt môn ${s.name}`)}>
               {s.name}
@@ -77,10 +93,11 @@ export function BulkActions({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <ToolbarButton disabled={b.none || !grades.length}>
-            <GraduationCap /> Lớp <ChevronDown />
+            <GraduationCap /> Lớp <Count n={n} /> <ChevronDown />
           </ToolbarButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="max-h-72 overflow-y-auto">
+          <DropdownMenuLabel>Đặt lớp cho {n} câu</DropdownMenuLabel>
           {grades.map((g) => (
             <DropdownMenuItem key={g.id} onSelect={() => void b.apply({ grade: g.level }, `Đã đặt ${g.name}`)}>
               {g.name}
@@ -89,15 +106,16 @@ export function BulkActions({
         </DropdownMenuContent>
       </DropdownMenu>
       <ToolbarButton disabled={b.none} onClick={() => b.setPicking(true)}>
-        <Network /> Chuyên đề
+        <Network /> Chuyên đề <Count n={n} />
       </ToolbarButton>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <ToolbarButton disabled={b.none || !tags.length}>
-            <TagIcon /> Thêm tag <ChevronDown />
+            <TagIcon /> Thêm tag <Count n={n} /> <ChevronDown />
           </ToolbarButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="max-h-72 overflow-y-auto">
+          <DropdownMenuLabel>Thêm tag cho {n} câu</DropdownMenuLabel>
           {tags.map((t) => (
             <DropdownMenuItem key={t.id} onSelect={() => void b.apply({ add_tag_ids: [t.id] }, `Đã thêm tag ${t.name}`)}>
               {t.name}
@@ -106,19 +124,19 @@ export function BulkActions({
         </DropdownMenuContent>
       </DropdownMenu>
       <ToolbarButton disabled={b.none} onClick={() => void b.apply({ status: "approved" }, "Đã duyệt")}>
-        <Check /> Duyệt
+        <Check /> Duyệt <Count n={n} />
       </ToolbarButton>
       <ToolbarButton disabled={b.none} onClick={() => void b.apply({ status: "rejected" }, "Đã loại")}>
-        <X /> Loại
+        <X /> Loại <Count n={n} />
       </ToolbarButton>
       <ToolbarButton disabled={b.none} onClick={() => b.setConfirming(true)}>
-        <Trash2 /> Xóa
+        <Trash2 /> Xóa <Count n={n} />
       </ToolbarButton>
       <ConfirmDialog
         open={b.confirming}
         onOpenChange={b.setConfirming}
         destructive
-        title={`Xóa vĩnh viễn ${ids.length} câu hỏi?`}
+        title={`Xóa vĩnh viễn ${n} câu hỏi?`}
         description="Câu đang dùng trong đề thi sẽ không bị xóa."
         confirmLabel="Xóa"
         onConfirm={async () => {
@@ -126,7 +144,7 @@ export function BulkActions({
           await b.remove();
         }}
       />
-      <FormDialog open={b.picking} title="Đặt chuyên đề cho các câu đã chọn" onOpenChange={b.setPicking}>
+      <FormDialog open={b.picking} title={`Đặt chuyên đề cho ${n} câu`} onOpenChange={b.setPicking}>
         <TopicPicker
           topics={topics}
           counts={b.topicCounts}

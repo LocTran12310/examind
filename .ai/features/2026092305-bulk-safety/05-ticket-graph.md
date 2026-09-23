@@ -3,7 +3,7 @@
 # Ticket graph — 2026092305-bulk-safety
 
 - Units of Work: **4**
-- Tickets: **9** (1 done)
+- Tickets: **9** (3 done)
 - Total effort: **3.4d**
 - Critical path: **1.8d** across 4 tickets
 - Theoretical minimum duration with unlimited parallelism: **1.8d**
@@ -25,7 +25,7 @@ slice — the floor on how fast it can finish no matter how many people work on 
 ```mermaid
 graph LR
   subgraph UOW_01["UOW-01 · A history worth restoring: a wider snapshot and a batch id"]
-    T_01_01["T-01-01<br/>Widen what a review event records"]
+    T_01_01["✓ T-01-01<br/>Widen what a review event records"]
     T_01_02["T-01-02<br/>batch_id on review_events"]
     T_01_03["T-01-03<br/>POST /question-events/search — one row per batch"]
   end
@@ -36,7 +36,7 @@ graph LR
   subgraph UOW_03["UOW-03 · The bank: undo in the toast, recent changes, and a count on every action"]
     T_03_01["T-03-01<br/>Hoàn tác in the toast"]
     T_03_02["T-03-02<br/>Thay đổi gần đây"]
-    T_03_03["T-03-03<br/>Each bulk action names what it will change"]
+    T_03_03["✓ T-03-03<br/>Each bulk action names what it will change"]
   end
   subgraph UOW_04["UOW-04 · A way back from every detail page"]
     T_04_01["✓ T-04-01<br/>Back links on the four detail pages"]
@@ -83,12 +83,12 @@ adding people to tickets off this path will not make the feature ship sooner.
 
 | ID | UoW | Layer | Type | Est | Depends on | Verifies | Status |
 |----|-----|-------|------|-----|-----------|----------|--------|
-| T-01-01 | UOW-01 | domain | feature | 3h | — | AC-01 | in_progress |
+| T-01-01 | UOW-01 | domain | feature | 3h | — | AC-01 | done |
 | T-01-02 | UOW-01 | data | feature | 2h | — | AC-03 | todo |
 | T-01-03 | UOW-01 | api | feature | 4h | T-01-01, T-01-02 | AC-03, AC-05 | todo |
 | T-02-01 | UOW-02 | api | feature | 4h | T-01-01, T-01-02 | AC-01, AC-02 | todo |
 | T-02-02 | UOW-02 | api | feature | 3h | T-02-01 | AC-04, AC-05 | todo |
 | T-03-01 | UOW-03 | web | feature | 3h | T-02-02 | AC-01 | todo |
 | T-03-02 | UOW-03 | web | feature | 4h | T-01-03, T-02-02 | AC-03, AC-04, AC-05 | todo |
-| T-03-03 | UOW-03 | web | feature | 2h | — | AC-06 | todo |
+| T-03-03 | UOW-03 | web | feature | 2h | — | AC-06 | done |
 | T-04-01 | UOW-04 | web | feature | 2h | — | AC-07 | done |

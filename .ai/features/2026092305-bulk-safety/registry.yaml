@@ -73,7 +73,7 @@ ticket:
     layer: domain
     type: feature
     estimate_hours: 3
-    status: in_progress
+    status: done
     depends_on: []
     blocks:
       - T-01-03
@@ -200,7 +200,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 2
-    status: todo
+    status: done
     depends_on: []
     blocks: []
     verifies:
