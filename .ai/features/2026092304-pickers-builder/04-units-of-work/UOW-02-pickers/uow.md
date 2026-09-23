@@ -36,4 +36,10 @@ rollback: revert the merge commit; migrations have downgrade()
 ## Definition of done
 - [x] All of AC-01, AC-02, AC-03, AC-04, AC-05 pass
 - [x] Demo script executed end to end
-- [ ] Demoed and accepted at gate G4
+- [x] Demoed and accepted at gate G4
+
+## Verification evidence
+- [x] `make verify f=.ai/features/2026092304-pickers-builder` green on local, the only required environment
+- [x] Evidence exists for every AC in `verifies`, at both viewports (S2, S3, S6, S7, S8)
+- [x] `08-evidence.md` regenerated and its commit sha matches HEAD
+- [x] Every screenshot read: each one shows the claim its step makes, on the page the step names

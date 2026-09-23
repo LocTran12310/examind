@@ -65,6 +65,13 @@ what S1's `90 câu` says: that topic has five child topics, so a picker that wen
 would read 5 there and fail the step. S5's last assertion is the exam's own empty state — a refusal that had
 quietly generated something anyway would replace it with a list of questions.
 
+S6 catches the queue in its zero case, and the screenshot says so: the 40 questions still without a topic are
+the ones the rules could not place, so with all 20 rows of the page selected the bar reads
+"Gán theo gợi ý (0)" beside "20 câu chưa có gợi ý" while the model is still being asked. That is the claim the
+step makes — the number is how many of the selected rows have a suggestion, not how many are selected — and it
+is worth more as evidence than a run against a page where the two happened to agree. What the button does with
+a non-zero count is in "## Not verified here".
+
 S5 and S8 are the two steps that rely on `console_ignore` in `.ai/aidlc.yaml`: both make a request the server
 is supposed to refuse, and the browser logs a `console.error` for any non-2xx fetch, so the run's
 `console_errors` signal fired on a step that had passed every assertion. The filter names that one status and
