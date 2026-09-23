@@ -561,3 +561,47 @@ Not a planned feature: repo hygiene asked for in chat after F13 ("chuẩn hoá 1
 
 Checks after the change: ruff clean, `lint-imports` 4 contracts kept, API 409 passed / 1 skipped, web 171 passed,
 tsc clean.
+
+## 21. F14 `2026092301-learning-telemetry` (2026-09-23)
+Opened after the product-direction note (`.ai/product-direction.md`): the bank is finished, the learner side was
+one float per topic and three of its rules were wrong. This feature collects the evidence and repairs the rules;
+the screens that draw it are the next feature.
+
+**What changed**
+- **Answers carry their evidence** (UOW-01, ADR-01): `attempt_answers` gains `first_seen_at`, `answered_at`,
+  `seconds_spent`, `save_count`; `answer_facts` gains `seconds_spent`, `answered_at`, `first_attempt`. The runner
+  measures the seconds a question is on screen (switching question, hidden tab and submit close the interval) and
+  sends them with each save; the server accumulates and clamps to the attempt window. Migration `0017`.
+- **An unanswered question leaves no fact** (ADR-02). It still scores 0 in the exam result, but it no longer moves
+  mastery or item statistics, for a student submit, the expiry sweep and essay re-grading alike. This removes the
+  worst defect found in the audit: abandoning a practice attempt used to lower the student's mastery.
+- **Item statistics per question** (UOW-02, ADR-03): share correct, share correct at first attempt, discrimination
+  (top third minus bottom third of attempts by score), median seconds and, for multiple choice, how many chose each
+  option. Below 10 observations the answer is "chưa đủ dữ liệu" and no numbers are shown. `GET /questions/{id}/stats`,
+  plus `stats_observations` and `stats_correct_ratio` as filter/sort columns of `POST /questions/search` (joined only
+  when asked for). The key audit now feeds from the same read model instead of computing its own ratios.
+- **One weak-topic rule, decay, recompute, weekly snapshot** (UOW-03, ADR-04): weak = mastery < 0.6 **and** at least
+  5 answers, used by the planner, the API and the UI; thinner topics are reported as "chưa đủ dữ liệu" and are kept
+  out of practice plans. Mastery decays toward 0.5 with a 60-day half-life, computed on read from `last_at`.
+  `POST /analytics/mastery/rebuild` (org admin) replays the facts. `student_topic_week` plus a worker job and a
+  backfill give a trend before any screen draws it (`GET /me/mastery/weekly`, `/students/{id}/mastery/weekly`).
+  Migration `0018`. `POST /questions/facets` now reports how many questions have no topic (102 of 377 live) — the
+  gap that silently caps mastery.
+
+**Numbers** — API 440 passed / 1 skipped (409 before), web 174 passed, ruff and the 4 import contracts clean,
+`alembic check` clean. Live: timing accumulated 30 → 52 s and clamped to the window; a 22-question attempt with 2
+answers wrote 2 facts; a question with 12 observations showed 67 % correct, 75 % at first attempt, discrimination
++1.00, median 25 s; rebuild replayed 77 facts for 4 students twice with identical results (max delta 2e-05 against
+the pre-feature values, the one-time shift decay causes); the weekly job wrote 23 rows for the week of 2026-09-21.
+
+**Assumptions to confirm (A-01..A-07)**: client-reported timing clamped server-side; unanswered ≠ evidence; weak =
+< 0.6 with ≥ 5 answers; 60-day half-life toward 0.5; item statistics from 10 observations; weekly snapshot on
+Mondays in business time; rebuild replays one organisation in one transaction.
+
+**Deviations recorded in `07-demo-evidence.md`**: the save route stayed `PUT /attempts/{id}/answers/{qid}`; the web
+folder is `QuestionDetail/`, not `BankDetail/`; `is_key` added to the option breakdown; the running week's snapshot
+is clamped to now rather than projecting decay; `TopicStatsTree.weakest()` still ranks answer ratios, not mastery,
+and was left alone; T-01-02's ticket tests were repointed at the runner test so the recorded evidence is honest.
+
+**Live data touched, on purpose**: to make a question cross the 10-observation threshold, 2 exams, 3 student
+accounts and 24 attempts were created in `trungtama`. Nothing was deleted. Say if you want them cleaned up.

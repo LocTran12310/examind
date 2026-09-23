@@ -5,7 +5,7 @@ slug: 2026092301-learning-telemetry
 profile: none
 created: 2026-09-23T10:43:40
 ruleset: 5
-current_gate: G3
+current_gate: G5
 history:
   - gate: G0
     action: passed
@@ -162,3 +162,13 @@ history:
     at: 2026-09-23T12:02:19
     by: Loc Tran
     ticket: T-03-04
+  - gate: G4
+    action: passed
+    at: 2026-09-23T12:09:39
+    by: Loc Tran
+    evidence: every done ticket has a passing verification run; all 9 tickets done, all UoW checklists ticked
+  - gate: G5
+    action: passed
+    at: 2026-09-23T12:09:39
+    by: Loc Tran
+    evidence: assumptions resolved, ADRs settled, graph valid
