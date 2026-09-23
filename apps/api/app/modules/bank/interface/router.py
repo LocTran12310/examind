@@ -18,6 +18,7 @@ from app.modules.bank.application.queries.get_review_document import GetReviewDo
 from app.modules.bank.application.queries.question_facets import QuestionFacets, QuestionFacetsHandler
 from app.modules.bank.application.queries.question_stats import QuestionStats, QuestionStatsHandler
 from app.modules.bank.application.queries.review_queue import ReviewQueue, ReviewQueueHandler
+from app.modules.bank.application.queries.search_document_questions import SearchDocumentQuestions, SearchDocumentQuestionsHandler
 from app.modules.bank.application.queries.search_flagged import SearchFlagged, SearchFlaggedHandler
 from app.modules.bank.application.queries.search_questions import SearchQuestions, SearchQuestionsHandler
 from app.modules.bank.application.queries.search_review_documents import SearchReviewDocuments, SearchReviewDocumentsHandler
@@ -31,6 +32,7 @@ from app.modules.bank.interface.schemas import (
     AssignIn,
     BulkIn,
     BulkOut,
+    DocumentQuestionSearchBody,
     FacetsOut,
     FlaggedIdsOut,
     ParsedQuestionOut,
@@ -141,7 +143,10 @@ def patch_question(question_id: uuid.UUID, body: QuestionPatch, actor: Actor = D
 @router.post("/review/documents/search", response_model=PageOut[ReviewDocumentOut])
 def review_documents(body: ReviewDocumentSearchBody, actor: Actor = Depends(staff_actor),
                      handle: SearchReviewDocumentsHandler = Depends(deps.search_review_documents)):
-    """Filters: filename, source_name (text) · assigned_to (uuid) · created_at (date); sort also by total, needs_review."""
+    """Filters: filename, source_name (text) · assigned_to (uuid) · created_at (date) · pending (number) ·
+    review_state (enum: pending | in_progress | done); sort also by review_state, pending, total, needs_review.
+    `review_state` says whether a document still needs work, `pending` how many questions wait; `counts` and
+    `spot_pending` keep the breakdown."""
     return _page(handle(actor, SearchReviewDocuments(body.to_request(), body.mine)), review_document_out)
 
 
@@ -158,6 +163,15 @@ def assign(doc_id: uuid.UUID, body: AssignIn, actor: Actor = Depends(staff_actor
 @router.get("/review/documents/{doc_id}/queue", response_model=list[ParsedQuestionOut])
 def review_queue(doc_id: uuid.UUID, actor: Actor = Depends(staff_actor), handle: ReviewQueueHandler = Depends(deps.review_queue)):
     return [parsed_out(v) for v in handle(actor, ReviewQueue(doc_id))]
+
+
+@router.post("/review/documents/{doc_id}/questions/search", response_model=PageOut[ParsedQuestionOut])
+def document_questions_search(doc_id: uuid.UUID, body: DocumentQuestionSearchBody, actor: Actor = Depends(staff_actor),
+                              handle: SearchDocumentQuestionsHandler = Depends(deps.search_document_questions)):
+    """The document's questions in PHẦN then Câu order, narrowed by `state`: pending (default) · approved ·
+    rejected · duplicate · all. Filters: stem (text) · number (number) · created_at, updated_at (date) ·
+    status (enum). A question that still waits carries its queue `group`."""
+    return _page(handle(actor, SearchDocumentQuestions(doc_id, body.to_request(), body.state)), parsed_out)
 
 
 @router.post("/review/questions/{qid}/action", response_model=ParsedQuestionOut)

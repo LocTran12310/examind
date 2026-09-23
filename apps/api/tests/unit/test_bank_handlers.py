@@ -19,9 +19,12 @@ from app.modules.bank.application.common import resolve_filters
 from app.modules.bank.application.dto import BankFilters, ItemStats, OptionStat, question_view
 from app.modules.bank.application.queries.question_stats import QuestionStats, QuestionStatsHandler
 from app.modules.bank.application.queries.review_queue import ReviewQueue, ReviewQueueHandler
+from app.modules.bank.application.queries.search_document_questions import SearchDocumentQuestions, SearchDocumentQuestionsHandler
 from app.modules.bank.application.queries.suggest_topics import MAX_QUESTIONS, SuggestTopics, SuggestTopicsHandler
-from app.modules.bank.domain.entities import Question
+from app.modules.bank.domain.entities import STATUS_KEYS, Question
+from app.modules.bank.domain.services.review import pending_count, review_state, waits_for_review
 from app.shared.application.actor import Actor
+from app.shared.application.search import Page, SearchRequest
 from app.shared.domain.errors import Conflict, Forbidden, Invalid, NotFound
 from tests.unit.fakes import FakeUow
 
@@ -132,6 +135,25 @@ class FakeDocuments:
         self.assigned[document_id] = user_id
 
 
+class FakeReviewReader:
+    """The review read model in memory: one document's questions by state, PHẦN then Câu, paged."""
+
+    KEEP = {"pending": waits_for_review,
+            "approved": lambda q: q.status in ("approved", "auto_approved") and not waits_for_review(q),
+            "rejected": lambda q: q.status == "rejected",
+            "duplicate": lambda q: q.status == "duplicate"}
+
+    def __init__(self, questions: FakeQuestions):
+        self.questions = questions
+
+    def document_questions(self, org_id, document_id, state, req):
+        keep = self.KEEP.get(state)
+        rows = sorted((q for q in self.questions.rows.values()
+                       if q.organization_id == org_id and q.source_document_id == document_id and (keep is None or keep(q))),
+                      key=lambda q: (q.part or "", q.number or 0))
+        return Page(rows[req.offset:req.offset + req.limit], len(rows), req.page, req.limit)
+
+
 @pytest.fixture
 def ports():
     return FakeQuestions(), FakeTaxonomy(), FakeLog(), FakeSettings(), FakeViews(), FakeUow()
@@ -208,6 +230,8 @@ def test_bulk_is_all_or_nothing(ports):
     assert bulk(TEACHER, BulkUpdateQuestions([a.id, b.id], status="approved", difficulty="vd", add_tag_ids=[TAG_A])) == 2
     assert a.status == b.status == "approved" and "OCR" not in a.issues and a.difficulty == "vd"
     assert set(qs.tags[b.id]) == {TAG_A, TAG_B}
+    # a decision taken back is the same command (review-ux ADR-02): the question goes back on the desk
+    assert bulk(TEACHER, BulkUpdateQuestions([a.id], status="needs_review")) == 1 and a.status == "needs_review"
     with pytest.raises(NotFound):
         bulk(TEACHER, BulkUpdateQuestions([a.id, uuid.uuid4()], difficulty="nb"))
     with pytest.raises(Invalid):
@@ -250,6 +274,45 @@ def test_queue_groups_problems_first_and_spot_checks_last(ports):
     assert [v.group for v in queue] == ["thiếu đáp án", "OCR", "Kiểm tra ngẫu nhiên"]
     with pytest.raises(NotFound):
         ReviewQueueHandler(qs, FakeDocuments(), views)(TEACHER, ReviewQueue(uuid.uuid4()))
+
+
+def test_document_questions_by_state(ports):
+    qs, _, _, _, views, _ = ports
+    parsed(qs, stem="a", status="needs_review", issues=["thiếu đáp án"], number=1)
+    parsed(qs, stem="b", answer={"key": "A"}, status="auto_approved", spot_check=True, number=2)
+    parsed(qs, stem="c", answer={"key": "A"}, status="auto_approved", number=3)
+    parsed(qs, stem="d", answer={"key": "A"}, status="approved", number=4)
+    parsed(qs, stem="e", status="rejected", number=5)
+    handle = SearchDocumentQuestionsHandler(FakeDocuments(), FakeReviewReader(qs), views)
+
+    def numbers(state="pending", **kw):
+        return [v.number for v in handle(TEACHER, SearchDocumentQuestions(DOC, SearchRequest(**kw), state)).data]
+
+    # what still waits is the default, and it says why; the check sample that nobody looked at belongs to it
+    page = handle(TEACHER, SearchDocumentQuestions(DOC, SearchRequest()))
+    assert [v.number for v in page.data] == [1, 2] and page.total == 2
+    assert [v.group for v in page.data] == ["thiếu đáp án", "Kiểm tra ngẫu nhiên"]
+    assert numbers("approved") == [3, 4] and numbers("rejected") == [5] and numbers("duplicate") == []
+    assert numbers("all") == [1, 2, 3, 4, 5] and numbers("all", page=2, limit=2) == [3, 4]
+    assert all(v.group is None for v in handle(TEACHER, SearchDocumentQuestions(DOC, SearchRequest(), "approved")).data)
+    with pytest.raises(Invalid) as e:
+        handle(TEACHER, SearchDocumentQuestions(DOC, SearchRequest(), "nope"))
+    assert e.value.code == "bad_filter"
+    with pytest.raises(NotFound):
+        handle(TEACHER, SearchDocumentQuestions(uuid.uuid4(), SearchRequest()))
+
+
+def test_review_state_is_derived_from_the_counts():
+    zero = dict.fromkeys(STATUS_KEYS, 0)
+    assert review_state(0, zero, 0) == "done"  # a document without questions has nothing left to do
+    assert review_state(3, {**zero, "needs_review": 1, "approved": 2}, 0) == "pending"
+    assert review_state(3, {**zero, "flagged": 1, "approved": 2}, 0) == "pending"
+    # the part of the check sample nobody looked at still waits, even though the machine approved it
+    sampled = {**zero, "auto_approved": 3}
+    assert pending_count(sampled, 1) == 1 and review_state(3, sampled, 1) == "pending"
+    assert pending_count(sampled, 0) == 0 and review_state(3, sampled, 0) == "done"
+    assert review_state(3, {**zero, "approved": 1, "rejected": 1, "duplicate": 1}, 0) == "done"
+    assert review_state(3, {**zero, "approved": 2}, 0) == "in_progress"  # one question nobody triaged yet
 
 
 def test_answer_key_and_approve_confident(ports):

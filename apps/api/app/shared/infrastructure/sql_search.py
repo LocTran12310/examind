@@ -17,15 +17,16 @@ from app.shared.application.search import COMPARE_OPS, TEXT_OPS, Filter, SearchR
 from app.shared.domain.errors import Invalid
 from app.shared.infrastructure.timezone import day_end_exclusive, day_start
 
-KINDS = ("text", "exact", "uuid", "bool", "number", "date", "day")
+KINDS = ("text", "exact", "uuid", "bool", "number", "date", "day", "enum")
 
 
 @dataclass
 class Col:
     expr: ColumnElement
-    kind: str = "text"  # text | exact | uuid | bool | number | date (timestamp) | day (date column)
+    kind: str = "text"  # text | exact | uuid | bool | number | date (timestamp) | day (date column) | enum
     sortable: bool = True
     filterable: bool = True
+    values: tuple[str, ...] = ()  # enum: the values it accepts; anything else is a bad_filter
 
 
 def bad_filter(field: str, message: str) -> Invalid:
@@ -108,10 +109,15 @@ def filter_clause(name: str, col: Col, f: Filter):
         if op not in TEXT_OPS:
             raise bad_filter(name, "Kiểu lọc không hợp lệ")
         return text_clause(e, str(f.value), op)
-    if kind in ("exact", "uuid"):
+    if kind in ("exact", "uuid", "enum"):
         parts = _values(f.value)
         if not parts:
             return None
+        if kind == "enum":
+            unknown = [str(p) for p in parts if str(p) not in col.values]
+            if unknown:
+                raise bad_filter(name, "Giá trị không hợp lệ: " + ", ".join(unknown))
+            parts = [str(p) for p in parts]
         if kind == "uuid":
             try:
                 parts = [p if isinstance(p, uuid.UUID) else uuid.UUID(str(p)) for p in parts]

@@ -1,5 +1,6 @@
 """Review rules over a question's status (question-review ADR-03): queue groups, approval, rejection, restore,
-content edits and the spot-check feedback that makes auto-approval stricter (A-07)."""
+content edits, the spot-check feedback that makes auto-approval stricter (A-07), and the one state a document is
+read by (review-ux ADR-01)."""
 from datetime import datetime
 import uuid
 
@@ -14,6 +15,35 @@ SPOT_GROUP = "Kiểm tra ngẫu nhiên"
 FLAGGED_GROUP = "Nghi sai đáp án"
 SPOT_WINDOW, SPOT_FAILS, THRESHOLD_STEP, THRESHOLD_MAX = 20, 2, 0.05, 0.95
 OPTION_KEYS = ("label", "content", "is_true")
+WAITING = ("needs_review", "flagged")  # statuses that put a question back on a teacher's desk
+REVIEW_STATES = ("pending", "in_progress", "done")
+QUESTION_STATES = ("pending", "approved", "rejected", "duplicate", "all")
+
+
+def waits_for_review(q: Question) -> bool:
+    """Still on a teacher's desk: sent back, flagged, or drawn for the check sample and not looked at yet."""
+    return q.status in WAITING or q.is_spot_pending
+
+
+def pending_count(counts: dict[str, int], spot_pending: int) -> int:
+    """How many questions of a document still wait for a human (ADR-01): the same rule as `waits_for_review`,
+    counted per status."""
+    return counts["needs_review"] + counts["flagged"] + spot_pending
+
+
+def review_state(total: int, counts: dict[str, int], spot_pending: int) -> str:
+    """The one state a document is read by (ADR-01): work left, nothing undecided, or decided but not finished."""
+    if pending_count(counts, spot_pending) > 0:
+        return "pending"
+    decided = counts["approved"] + counts["rejected"] + counts["duplicate"] + counts["auto_approved"] - spot_pending
+    return "done" if decided >= total else "in_progress"
+
+
+def check_question_state(state: str) -> str:
+    """The state a teacher filters a document's questions by (ADR-02); `all` is no filter."""
+    if state not in QUESTION_STATES:
+        raise Invalid("Trạng thái không hợp lệ", "state", code="bad_filter")
+    return state
 
 
 def group_of(q: Question) -> str:

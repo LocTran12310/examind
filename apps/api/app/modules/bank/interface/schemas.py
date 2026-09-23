@@ -101,7 +101,7 @@ class QuestionPatch(BaseModel):
 
 
 class BulkSet(BaseModel):
-    status: str | None = None  # approved | rejected
+    status: str | None = None  # approved | rejected | needs_review (a decision taken back)
     difficulty: str | None = None
     primary_topic_id: uuid.UUID | None = None
     add_tag_ids: list[uuid.UUID] | None = None
@@ -227,10 +227,14 @@ class SourceDocumentOut(BaseModel):
 
 
 class ReviewDocumentOut(BaseModel):
+    """`review_state` (pending | in_progress | done) and `pending` are what the list shows; `counts` and
+    `spot_pending` keep the breakdown behind them (review-ux ADR-01)."""
     document: SourceDocumentOut
     total: int
     counts: dict[str, int]
     spot_pending: int
+    pending: int
+    review_state: str
     progress: float
     assigned_to: uuid.UUID | None
     assigned_name: str | None
@@ -243,6 +247,12 @@ def review_document_out(v: ReviewDocumentView) -> ReviewDocumentOut:
 class ReviewDocumentSearchBody(SearchBody):
     """`mine`: only the documents given to the caller."""
     mine: bool = False
+
+
+class DocumentQuestionSearchBody(SearchBody):
+    """`state`: which questions of the document to read — "pending" (default, what still waits), "approved",
+    "rejected", "duplicate" or "all"."""
+    state: str = "pending"
 
 
 class AssignIn(BaseModel):

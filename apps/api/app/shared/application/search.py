@@ -3,7 +3,7 @@
 A filter is read by the kind of the column it targets:
 - text                  `{operator: * = + - !, value}`   (`*` contains is the default)
 - number / date / day   `{operator: = < <= > >=, value}` or a range `{from, to}` (inclusive)
-- enum / uuid / bool    `{value}`; a list means "any of"
+- enum / uuid / bool    `{value}`; a list means "any of" (an enum refuses a value it does not declare)
 """
 from dataclasses import dataclass, field
 from typing import Any, Generic, TypeVar

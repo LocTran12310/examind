@@ -23,6 +23,7 @@ from app.modules.bank.application.queries.get_review_document import GetReviewDo
 from app.modules.bank.application.queries.question_facets import QuestionFacetsHandler
 from app.modules.bank.application.queries.question_stats import QuestionStatsHandler
 from app.modules.bank.application.queries.review_queue import ReviewQueueHandler
+from app.modules.bank.application.queries.search_document_questions import SearchDocumentQuestionsHandler
 from app.modules.bank.application.queries.search_flagged import SearchFlaggedHandler
 from app.modules.bank.application.queries.search_questions import SearchQuestionsHandler
 from app.modules.bank.application.queries.search_review_documents import SearchReviewDocumentsHandler
@@ -162,6 +163,10 @@ def assign_reviewer(db: Session = Depends(get_db)) -> AssignReviewerHandler:
 
 def review_queue(db: Session = Depends(get_db)) -> ReviewQueueHandler:
     return ReviewQueueHandler(SqlQuestionRepository(db), SqlReviewDocuments(db), SqlQuestionReader(db))
+
+
+def search_document_questions(db: Session = Depends(get_db)) -> SearchDocumentQuestionsHandler:
+    return SearchDocumentQuestionsHandler(SqlReviewDocuments(db), SqlReviewReader(db), SqlQuestionReader(db))
 
 
 def review_question(db: Session = Depends(get_db)) -> ReviewQuestionHandler:

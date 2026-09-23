@@ -10,20 +10,21 @@ from app.shared.application.unit_of_work import UnitOfWork
 from app.shared.domain.clock import utcnow
 from app.shared.domain.errors import Conflict, Invalid, NotFound
 
-BULK_STATUSES = ("approved", "rejected")
+BULK_STATUSES = ("approved", "rejected", "needs_review")
 
 
 @dataclass(frozen=True)
 class BulkUpdateQuestions:
     ids: list[uuid.UUID]
-    status: str | None = None  # approved | rejected
+    status: str | None = None  # approved | rejected | needs_review (a decision taken back)
     difficulty: str | None = None
     primary_topic_id: uuid.UUID | None = None
     add_tag_ids: list[uuid.UUID] | None = None
 
 
 class BulkUpdateQuestionsHandler:
-    """The bank's bulk bar: approve / reject, difficulty, primary topic, add tags — all or nothing."""
+    """The bank's bulk bar: approve / reject / send back for review, difficulty, primary topic, add tags — all or
+    nothing. Sending back is how a decision is taken back (review-ux ADR-02): the same command, no undo stack."""
 
     def __init__(self, questions: QuestionRepository, taxonomy: Taxonomy, log: ReviewLog, uow: UnitOfWork):
         self.questions, self.taxonomy, self.log, self.uow = questions, taxonomy, log, uow
@@ -33,7 +34,7 @@ class BulkUpdateQuestionsHandler:
         if len(qs) != len(set(cmd.ids)):
             raise NotFound("Một số câu hỏi không tồn tại")
         if cmd.status and cmd.status not in BULK_STATUSES:
-            raise Invalid("Chỉ có thể duyệt hoặc loại hàng loạt", "status")
+            raise Invalid("Chỉ có thể duyệt, loại hoặc trả lại để xem hàng loạt", "status")
         check_difficulty(cmd.difficulty)
         now = utcnow()
         for q in qs:
@@ -52,6 +53,8 @@ class BulkUpdateQuestionsHandler:
                 q.mark_reviewed(actor.user_id, now)
             elif cmd.status == "rejected":
                 q.status, q.spot_check = "rejected", False
+            elif cmd.status == "needs_review":  # a decision taken back: the question goes back on a teacher's desk
+                q.status, q.spot_check = "needs_review", False
             record(self.log, actor, q, "bulk", before, q.snapshot())
         self.uow.commit()
         return len(qs)

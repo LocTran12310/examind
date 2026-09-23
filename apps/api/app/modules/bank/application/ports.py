@@ -44,11 +44,17 @@ class ItemStatsReader(Protocol):
 
 class ReviewReader(Protocol):
     def search_documents(self, org_id: uuid.UUID, req: SearchRequest, assigned_to: uuid.UUID | None = None) -> Page[ReviewDocumentView]:
-        """Parsed documents with their review counts. Filters: filename, source_name (text) · assigned_to (uuid) ·
-        created_at (date); sort also by total, needs_review."""
+        """Parsed documents with their review state and counts. Filters: filename, source_name (text) ·
+        assigned_to (uuid) · created_at (date) · pending (number) · review_state (enum); sort also by total,
+        needs_review."""
         ...
 
     def document(self, org_id: uuid.UUID, document_id: uuid.UUID) -> ReviewDocumentView | None: ...
+
+    def document_questions(self, org_id: uuid.UUID, document_id: uuid.UUID, state: str, req: SearchRequest) -> Page[Question]:
+        """The document's questions in PHẦN then Câu order, narrowed to one review state (`all` is every question).
+        Filters: stem (text) · number (number) · created_at, updated_at (date) · status (enum)."""
+        ...
 
     def flagged(self, org_id: uuid.UUID, req: SearchRequest) -> Page[Question]:
         """Questions whose key the audit suspects. Filters: stem (text) · updated_at (date)."""

@@ -16,7 +16,8 @@ from app.modules.bank.application.dto import (
     TopicRefView,
     question_view,
 )
-from app.modules.bank.domain.entities import STATUS_KEYS, USABLE, Question
+from app.modules.bank.domain.entities import STATUS_KEYS, STATUSES, USABLE, Question
+from app.modules.bank.domain.services.review import REVIEW_STATES, WAITING, pending_count, review_state
 from app.modules.bank.domain.services.search_text import query as normalise_query
 from app.modules.bank.infrastructure import orm  # noqa: F401  (mapping)
 from app.modules.bank.infrastructure.tables import answer_facts, attempt_answers, attempts, source_documents
@@ -292,25 +293,53 @@ class SqlItemStatsReader:
 # ------------------------------------------------------------------ review lists
 
 _TOTAL = func.count(qc.id)
-REVIEW_DOC_COLS = {
-    "filename": Col(d.filename),
-    "source_name": Col(d.metadata["source_name"].astext),
-    "assigned_to": Col(d.assigned_to, "uuid"),
-    "created_at": Col(d.created_at, "date"),
-    "total": Col(_TOTAL, filterable=False),
-    "needs_review": Col(func.count(case((qc.status == "needs_review", 1))), filterable=False),
-}
 FLAGGED_COLS = {"stem": Col(qc.stem), "updated_at": Col(qc.updated_at, "date")}
+# what still waits for a human, in SQL: the `waits_for_review` rule of the domain, question by question
+_WAITING = or_(qc.status.in_(WAITING), and_(qc.spot_check.is_(True), qc.status == "auto_approved"))
+_STATE_CLAUSES = {
+    "pending": _WAITING,
+    "approved": and_(qc.status.in_(("approved", "auto_approved")), ~_WAITING),
+    "rejected": qc.status == "rejected",
+    "duplicate": qc.status == "duplicate",
+}
+DOC_QUESTION_COLS = {
+    "stem": Col(qc.stem, sortable=False),
+    "number": Col(qc.number, "number"),
+    "created_at": Col(qc.created_at, "date"),
+    "updated_at": Col(qc.updated_at, "date"),
+    "status": Col(qc.status, "enum", values=STATUSES),
+}
 
 
-def _counts_stmt(org_id: uuid.UUID):
+def _counts(org_id: uuid.UUID):
+    """One row per parsed document with its review counts. A subquery, so the counts the state is derived from are
+    ordinary columns the search contract can filter and sort by (ADR-01)."""
     cols = [func.count(case((qc.status == s, 1))).label(s) for s in STATUS_KEYS]
     spot = func.count(case((and_(qc.spot_check.is_(True), qc.status == "auto_approved"), 1))).label("spot_pending")
     return (select(source_documents, _TOTAL.label("total"), *cols, spot)
             .select_from(source_documents)
             .outerjoin(questions, qc.source_document_id == d.id)
             .where(d.organization_id == org_id, d.status == "parsed")
-            .group_by(d.id))
+            .group_by(d.id)).subquery("review_documents")
+
+
+def _review_doc_cols(s) -> dict[str, Col]:
+    """The review list's columns over `_counts`: `pending` and `review_state` mirror the domain rules of the same
+    name so a filter and a row say the same thing; the breakdown stays in the row."""
+    c = s.c
+    pending = c.needs_review + c.flagged + c.spot_pending
+    decided = c.approved + c.rejected + c.duplicate + c.auto_approved - c.spot_pending
+    return {
+        "filename": Col(c.filename),
+        "source_name": Col(c.metadata["source_name"].astext),
+        "assigned_to": Col(c.assigned_to, "uuid"),
+        "created_at": Col(c.created_at, "date"),
+        "total": Col(c.total, filterable=False),
+        "needs_review": Col(c.needs_review, filterable=False),
+        "pending": Col(pending, "number"),
+        "review_state": Col(case((pending > 0, "pending"), (decided >= c.total, "done"), else_="in_progress"),
+                            "enum", values=REVIEW_STATES),
+    }
 
 
 class SqlReviewReader:
@@ -318,16 +347,28 @@ class SqlReviewReader:
         self.session = session
 
     def search_documents(self, org_id: uuid.UUID, req: SearchRequest, assigned_to: uuid.UUID | None = None) -> Page[ReviewDocumentView]:
-        stmt = _counts_stmt(org_id)
+        s = _counts(org_id)
+        stmt = select(s)
         if assigned_to is not None:
-            stmt = stmt.where(d.assigned_to == assigned_to)
-        rows, total = search(self.session, stmt, req, REVIEW_DOC_COLS, text=[d.filename, d.metadata["source_name"].astext],
-                             default_sort=[d.created_at.desc(), d.id], scalars=False)
+            stmt = stmt.where(s.c.assigned_to == assigned_to)
+        rows, total = search(self.session, stmt, req, _review_doc_cols(s),
+                             text=[s.c.filename, s.c.metadata["source_name"].astext],
+                             default_sort=[s.c.created_at.desc(), s.c.id], scalars=False)
         return Page(self._out(rows), total, req.page, req.limit)
 
     def document(self, org_id: uuid.UUID, document_id: uuid.UUID) -> ReviewDocumentView | None:
-        rows = self._out(self.session.execute(_counts_stmt(org_id).where(d.id == document_id)).all())
+        s = _counts(org_id)
+        rows = self._out(self.session.execute(select(s).where(s.c.id == document_id)).all())
         return rows[0] if rows else None
+
+    def document_questions(self, org_id: uuid.UUID, document_id: uuid.UUID, state: str, req: SearchRequest) -> Page[Question]:
+        stmt = select(Question).where(qc.organization_id == org_id, qc.source_document_id == document_id)
+        clause = _STATE_CLAUSES.get(state)
+        if clause is not None:
+            stmt = stmt.where(clause)
+        rows, total = search(self.session, stmt, req, DOC_QUESTION_COLS, text=[qc.stem],
+                             default_sort=[qc.part.nulls_first(), qc.number.nulls_last(), qc.id])
+        return Page(list(rows), total, req.page, req.limit)
 
     def flagged(self, org_id: uuid.UUID, req: SearchRequest) -> Page[Question]:
         stmt = select(Question).where(qc.organization_id == org_id, qc.status == "flagged")
@@ -345,6 +386,8 @@ class SqlReviewReader:
                               processing_config=r.processing_config or {}, page_count=r.page_count, question_count=r.question_count,
                               log=r.log or [], created_at=r.created_at, finished_at=r.finished_at)
             out.append(ReviewDocumentView(document=doc, total=r.total, counts=counts, spot_pending=r.spot_pending,
+                                          pending=pending_count(counts, r.spot_pending),
+                                          review_state=review_state(r.total, counts, r.spot_pending),
                                           progress=round(done / r.total, 2) if r.total else 1.0,
                                           assigned_to=r.assigned_to, assigned_name=names.get(r.assigned_to)))
         return out

@@ -153,10 +153,14 @@ class DocumentRow:
 
 @dataclass(frozen=True)
 class ReviewDocumentView:
+    """A parsed document as the review list reads it: one state, how many questions still wait, and the breakdown
+    behind them (review-ux ADR-01)."""
     document: DocumentRow
     total: int
     counts: dict[str, int]
     spot_pending: int
+    pending: int
+    review_state: str  # pending | in_progress | done
     progress: float
     assigned_to: uuid.UUID | None
     assigned_name: str | None
