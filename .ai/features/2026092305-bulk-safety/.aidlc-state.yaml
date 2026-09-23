@@ -5,7 +5,7 @@ slug: 2026092305-bulk-safety
 profile: none
 created: 2026-09-23T23:34:15
 ruleset: 5
-current_gate: G3
+current_gate: G5
 history:
   - gate: G0
     action: passed
@@ -162,3 +162,13 @@ history:
     at: 2026-09-24T00:54:49
     by: Loc Tran
     ticket: T-03-02
+  - gate: G4
+    action: passed
+    at: 2026-09-24T01:30:23
+    by: Loc Tran
+    evidence: every done ticket has a passing verification run; all 9 tickets done, all UoW checklists ticked
+  - gate: G5
+    action: passed
+    at: 2026-09-24T01:30:31
+    by: Loc Tran
+    evidence: assumptions resolved, ADRs settled, graph valid
