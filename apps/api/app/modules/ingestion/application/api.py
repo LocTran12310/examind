@@ -51,8 +51,8 @@ class IngestionApi:
                     use_model: bool = True) -> Suggestions:
         """Topic candidates for questions of one subject (topic-coverage ADR-01, ADR-04): the pipeline's keyword cues,
         then kNN over the already-tagged questions of the subject, and for whatever is still without a candidate — or
-        with a weak one — the org's tagging model, in batches (ADR-04, A-07). The rules keep the lead: a question the
-        cues placed strongly never reaches the model, so an `ai` candidate cannot outrank a strong keyword, and in the answer a rule candidate always comes first."""
+        with a weak one — the org's tagging model, in batches (ADR-04, A-07). The rules keep the lead: a question
+        the cues placed strongly never reaches the model, and in the answer a rule candidate always comes first."""
         topics = self.taxonomy.topics(org_id, subject_id) if items else []
         found = {question_id: self._rule_candidates(org_id, subject_id, question_id, text, topics)
                  for question_id, text in items}
