@@ -118,6 +118,16 @@ class BulkOut(BaseModel):
     updated: int
 
 
+class UndoIn(BaseModel):
+    batch_id: uuid.UUID
+
+
+class UndoOut(BaseModel):
+    """`batch_id` is the restore's own batch, not the one it took back — the history shows it as the undo (A-04)."""
+    restored: int
+    batch_id: uuid.UUID
+
+
 class TopicPairIn(BaseModel):
     question_id: uuid.UUID
     topic_id: uuid.UUID

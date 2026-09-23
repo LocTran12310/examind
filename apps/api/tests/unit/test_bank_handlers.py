@@ -16,6 +16,7 @@ from app.modules.bank.application.commands.delete_question import DeleteQuestion
 from app.modules.bank.application.commands.review_question import ReviewQuestion, ReviewQuestionHandler
 from app.modules.bank.application.commands.review_untagged import ReviewUntagged, ReviewUntaggedHandler
 from app.modules.bank.application.commands.triage_questions import TriageQuestions, TriageQuestionsHandler
+from app.modules.bank.application.commands.undo_batch import UndoBatch, UndoBatchHandler
 from app.modules.bank.application.commands.update_question import UpdateQuestion, UpdateQuestionHandler
 from app.modules.bank.application.common import resolve_filters
 from app.modules.bank.application.dto import BankFilters, ItemStats, OptionStat, question_view
@@ -24,8 +25,17 @@ from app.modules.bank.application.queries.review_queue import ReviewQueue, Revie
 from app.modules.bank.application.queries.search_document_questions import SearchDocumentQuestions, SearchDocumentQuestionsHandler
 from app.modules.bank.application.queries.search_question_events import SearchQuestionEvents, SearchQuestionEventsHandler
 from app.modules.bank.application.queries.suggest_topics import MAX_QUESTIONS, SuggestTopics, SuggestTopicsHandler
-from app.modules.bank.domain.entities import STATUS_KEYS, Question
-from app.modules.bank.domain.services.history import BLOCKED, batch_action, changed_fields, undo_block
+from app.modules.bank.domain.entities import STATUS_KEYS, Question, ReviewEvent
+from app.modules.bank.domain.services.history import (
+    BLOCKED,
+    UNDO_WINDOW,
+    UNDONE_BATCH,
+    batch_action,
+    changed_fields,
+    lost_question,
+    restore_targets,
+    undo_block,
+)
 from app.modules.bank.domain.services.review import pending_count, review_state, waits_for_review
 from app.shared.application.actor import Actor
 from app.shared.application.search import Page, SearchRequest
@@ -92,9 +102,17 @@ class FakeQuestions:
 class FakeLog:
     def __init__(self):
         self.events: list = []
+        self.at = datetime.now(UTC)  # when the recorded events happened; an undo reads it back to check the window
 
     def record(self, org_id, user_id, question_id, action, before, after, batch_id=None):
         self.events.append((question_id, action, before, after, batch_id))
+
+    def batch(self, org_id, batch_id):
+        return [ReviewEvent(organization_id=org_id, question_id=e[0], action=e[1], before=e[2], after=e[3], batch_id=e[4],
+                            created_at=self.at) for e in self.events if e[4] == batch_id]
+
+    def undone_by(self, org_id, batch_id):
+        return next((e[4] for e in self.events if e[1] == "undo" and (e[3] or {}).get(UNDONE_BATCH) == str(batch_id)), None)
 
     def recent_spot_actions(self, org_id, limit):
         return [e[1] for e in reversed(self.events) if e[1] in ("spot_ok", "spot_fail")][:limit]
@@ -313,6 +331,133 @@ def test_recent_changes_are_read_within_the_callers_organisation():
     req = SearchRequest(page=2, limit=5)
     assert SearchQuestionEventsHandler(events)(TEACHER, SearchQuestionEvents(req)).total == 0
     assert events.asked == [(ORG, req)]
+
+
+def test_undo_puts_a_whole_batch_back_through_the_aggregate(ports):
+    """AC-01: every field the bar moved goes back — status, mức độ, lớp, môn, the placement and the tags — and the
+    restore is itself an event, under a new batch naming the one it took back (A-04)."""
+    qs, tax, log, _, _, uow = ports
+    bulk, undo = BulkUpdateQuestionsHandler(qs, tax, log, uow), UndoBatchHandler(qs, tax, log, uow)
+    a = parsed(qs, stem="a", answer={"key": "A"}, status="needs_review", difficulty="nb", grade=10, subject_id=SUBJECT)
+    b = parsed(qs, stem="b", answer={"key": "B"}, status="needs_review", difficulty="th", grade=11, subject_id=SUBJECT)
+    qs.topics[a.id], qs.tags[a.id] = ([SUB_TOPIC], SUB_TOPIC), [TAG_B]
+    qs.topics[b.id], qs.tags[b.id] = ([TOPIC], TOPIC), []
+    assert bulk(TEACHER, BulkUpdateQuestions([a.id, b.id], status="approved", difficulty="vdc", grade=12,
+                                             primary_topic_id=TOPIC, add_tag_ids=[TAG_A])) == 2
+    batch = next(iter(log.batches(a.id)))
+    r = undo(TEACHER, UndoBatch(batch))
+    assert (r.restored, r.batch_id != batch, uow.commits) == (2, True, 2)
+    assert (a.status, a.difficulty, a.grade, a.subject_id) == ("needs_review", "nb", 10, SUBJECT)
+    assert qs.topics[a.id] == ([SUB_TOPIC], SUB_TOPIC) and qs.tags[a.id] == [TAG_B]
+    assert (b.status, b.difficulty, b.grade) == ("needs_review", "th", 11)
+    assert qs.topics[b.id] == ([TOPIC], TOPIC) and qs.tags[b.id] == []
+    written = [e for e in log.events if e[4] == r.batch_id]
+    assert {e[1] for e in written} == {"undo", "topic", "tag"}  # the placement and the tags go back the way an edit sets them
+    assert all(e[3][UNDONE_BATCH] == str(batch) for e in written if e[1] == "undo")
+    assert written[-1][0] is None and written[-1][3]["questions"] == 2  # the batch says what it took back, whatever it restored
+
+
+def test_a_batch_merges_its_partial_snapshots_earliest_value_first():
+    """A-02: an event records only its own fields, so the state to restore is the union of the batch's `before`s;
+    where two of them name the same field, the value to keep is the one the request found, not one it wrote."""
+    q, other = uuid.uuid4(), uuid.uuid4()
+
+    def ev(question_id, action, before, after):
+        return ReviewEvent(organization_id=ORG, question_id=question_id, action=action, before=before, after=after)
+
+    placed = ev(q, "topic", {"topics": [str(TOPIC)], "primary_topic": str(TOPIC)},
+                {"topics": [str(SUB_TOPIC)], "primary_topic": str(SUB_TOPIC)})
+    targets = restore_targets([placed,
+                               ev(q, "tag", {"tags": [str(TAG_B)]}, {"tags": [str(TAG_A)]}),
+                               ev(q, "bulk", {"status": "needs_review", "difficulty": "nb"}, {"status": "approved", "difficulty": "vdc"}),
+                               ev(None, "bulk", None, {"pairs": 2, "updated": 2}),  # a batch's summary line is about no question
+                               ev(other, "topic", {"topics": [], "primary_topic": None}, {"topics": [str(TOPIC)], "primary_topic": str(TOPIC)})])
+    assert set(targets) == {q, other}
+    assert targets[q] == {"status": "needs_review", "difficulty": "nb", "topics": [str(TOPIC)], "primary_topic": str(TOPIC),
+                          "tags": [str(TAG_B)]}
+    assert targets[other] == {"topics": [], "primary_topic": None}  # "was nowhere" is a state to restore, not a missing key
+    # one question placed twice in the same request: the second event's before is what the first wrote, and the events
+    # of one request share a timestamp — so the answer is the value no event produced, whichever order they arrive in
+    twice = [placed, ev(q, "topic", {"topics": [str(SUB_TOPIC)], "primary_topic": str(SUB_TOPIC)},
+                        {"topics": [str(OTHER_TOPIC)], "primary_topic": str(OTHER_TOPIC)})]
+    assert restore_targets(twice)[q]["primary_topic"] == str(TOPIC)
+    assert restore_targets(list(reversed(twice)))[q]["primary_topic"] == str(TOPIC)
+
+
+def test_undo_refuses_the_whole_batch_when_a_question_is_gone(ports):
+    """AC-02: a question that no longer exists stops the lot, and the refusal names it."""
+    qs, tax, log, _, _, uow = ports
+    bulk, undo = BulkUpdateQuestionsHandler(qs, tax, log, uow), UndoBatchHandler(qs, tax, log, uow)
+    a = parsed(qs, stem="a", answer={"key": "A"}, difficulty="nb")
+    b = parsed(qs, stem="b", answer={"key": "B"}, difficulty="nb")
+    assert bulk(TEACHER, BulkUpdateQuestions([a.id, b.id], difficulty="vdc")) == 2
+    batch = next(iter(log.batches(a.id)))
+    qs.remove(b)
+    with pytest.raises(Invalid) as e:
+        undo(TEACHER, UndoBatch(batch))
+    assert e.value.code == "questions_gone" and e.value.fields["question_ids"] == [str(b.id)]
+    assert a.difficulty == "vdc" and uow.commits == 1  # the one that is still there was not restored either
+    with pytest.raises(NotFound) as e:
+        undo(TEACHER, UndoBatch(uuid.uuid4()))
+    assert e.value.code == "batch_not_found"
+    # deleting a question empties the question of the events it left behind, so the batch is one short: it is
+    # refused all the same, and the refusal has no id to give because the history no longer holds one
+    orphaned = uuid.uuid4()
+    log.record(ORG, TEACHER.user_id, None, "bulk", {"difficulty": "nb"}, {"difficulty": "vdc"}, orphaned)
+    log.record(ORG, TEACHER.user_id, a.id, "bulk", {"difficulty": "nb"}, {"difficulty": "vdc"}, orphaned)
+    with pytest.raises(Invalid) as e:
+        undo(TEACHER, UndoBatch(orphaned))
+    assert e.value.code == "questions_gone" and e.value.fields["question_ids"] == [] and "đã bị xóa" in e.value.message
+    # a batch's own summary line is about no question and is not one of those: it says a count and a document
+    assert not lost_question(ReviewEvent(organization_id=ORG, action="bulk", before={"status": "auto_approved"},
+                                         after={"status": "approved", "count": 3, "document": str(DOC)}))
+
+
+def test_undo_runs_the_guards_an_edit_runs(ports):
+    """ADR-04: the restore goes through the same checks, so it can refuse — a subject that would leave the question
+    in another subject's tree, or a grade the organisation no longer teaches."""
+    qs, tax, log, _, _, uow = ports
+    undo = UndoBatchHandler(qs, tax, log, uow)
+    a = parsed(qs, stem="a", answer={"key": "A"}, subject_id=OTHER_SUBJECT, grade=11)
+    qs.topics[a.id] = ([OTHER_TOPIC], OTHER_TOPIC)
+    subject_batch, grade_batch = uuid.uuid4(), uuid.uuid4()
+    log.record(ORG, TEACHER.user_id, a.id, "bulk", {"subject_id": str(SUBJECT)}, {"subject_id": str(OTHER_SUBJECT)}, subject_batch)
+    log.record(ORG, TEACHER.user_id, a.id, "bulk", {"grade": 9}, {"grade": 11}, grade_batch)
+    with pytest.raises(Invalid) as e:
+        undo(TEACHER, UndoBatch(subject_batch))
+    assert e.value.code == "subject_topic_conflict" and "Dao động" in e.value.message
+    with pytest.raises(Invalid) as e:
+        undo(TEACHER, UndoBatch(grade_batch))
+    assert e.value.fields == {"grade": "Lớp không hợp lệ"}
+    assert (a.subject_id, a.grade, uow.commits) == (OTHER_SUBJECT, 11, 0)
+
+
+def test_a_batch_is_taken_back_once_and_not_after_the_window(ports):
+    """AC-04 / AC-05: a second undo is refused and names the one that already ran, an undo is not itself undone, and
+    a batch past the window is refused with its age."""
+    qs, tax, log, _, _, uow = ports
+    bulk, undo = BulkUpdateQuestionsHandler(qs, tax, log, uow), UndoBatchHandler(qs, tax, log, uow)
+    a = parsed(qs, stem="a", answer={"key": "A"}, difficulty="nb")
+    assert bulk(TEACHER, BulkUpdateQuestions([a.id], difficulty="vdc")) == 1
+    batch = next(iter(log.batches(a.id)))
+    first = undo(TEACHER, UndoBatch(batch))
+    assert a.difficulty == "nb"
+    # the batch moved neither the placement nor the tags, so the restore leaves the links alone — rewriting them
+    # would turn a classifier's suggestion into a teacher's own placement; its only events are the undo itself
+    assert {e[1] for e in log.events if e[4] == first.batch_id} == {"undo"}
+    with pytest.raises(Conflict) as e:
+        undo(TEACHER, UndoBatch(batch))
+    assert e.value.code == "batch_already_undone" and e.value.fields == {"undone_by": str(first.batch_id)}
+    with pytest.raises(Conflict) as e:
+        undo(TEACHER, UndoBatch(first.batch_id))
+    assert e.value.code == "batch_is_undo"
+    log.at = datetime.now(UTC) - UNDO_WINDOW - timedelta(days=1)
+    old = uuid.uuid4()
+    log.record(ORG, TEACHER.user_id, a.id, "bulk", {"difficulty": "th"}, {"difficulty": "nb"}, old)
+    with pytest.raises(Invalid) as e:
+        undo(TEACHER, UndoBatch(old))
+    assert e.value.code == "batch_expired" and e.value.fields["age_days"] == UNDO_WINDOW.days + 1
+    assert a.difficulty == "nb"
 
 
 def test_bulk_sets_subject_and_grade_and_refuses_a_topic_of_another_subject(ports):

@@ -4,6 +4,7 @@ from sqlalchemy import and_, delete, exists, func, insert, select, text, update
 from sqlalchemy.orm import Session
 
 from app.modules.bank.domain.entities import USABLE, Question, ReviewEvent
+from app.modules.bank.domain.services.history import UNDONE_BATCH
 from app.modules.bank.infrastructure import orm  # noqa: F401  (mapping)
 from app.modules.bank.infrastructure.tables import exam_questions
 from app.shared.infrastructure.schema.bank import question_tags, question_topics, questions, review_events
@@ -106,6 +107,16 @@ class SqlReviewLog:
                before: dict | None, after: dict | None, batch_id: uuid.UUID | None = None) -> None:
         self.session.add(ReviewEvent(organization_id=org_id, question_id=question_id, user_id=user_id, action=action,
                                      before=before, after=after, batch_id=batch_id))
+
+    def batch(self, org_id: uuid.UUID, batch_id: uuid.UUID) -> list[ReviewEvent]:
+        e = review_events.c
+        return list(self.session.scalars(select(ReviewEvent).where(e.organization_id == org_id, e.batch_id == batch_id)
+                                         .order_by(e.created_at, e.id)))
+
+    def undone_by(self, org_id: uuid.UUID, batch_id: uuid.UUID) -> uuid.UUID | None:
+        e = review_events.c
+        return self.session.scalar(select(e.batch_id).where(e.organization_id == org_id, e.action == "undo",
+                                                            e.after[UNDONE_BATCH].astext == str(batch_id)))
 
     def recent_spot_actions(self, org_id: uuid.UUID, limit: int) -> list[str]:
         self.session.flush()

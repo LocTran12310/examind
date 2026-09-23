@@ -11,6 +11,7 @@ from app.modules.bank.application.commands.bulk_update_questions import BulkUpda
 from app.modules.bank.application.commands.create_question import CreateQuestion, CreateQuestionHandler
 from app.modules.bank.application.commands.delete_question import DeleteQuestion, DeleteQuestionHandler
 from app.modules.bank.application.commands.review_question import ReviewQuestion, ReviewQuestionHandler
+from app.modules.bank.application.commands.undo_batch import UndoBatch, UndoBatchHandler
 from app.modules.bank.application.commands.update_question import UpdateQuestion, UpdateQuestionHandler
 from app.modules.bank.application.queries.demo_question import DemoQuestionHandler
 from app.modules.bank.application.queries.document_questions import DocumentQuestionsHandler, DocumentQuestionsQuery
@@ -52,6 +53,8 @@ from app.modules.bank.interface.schemas import (
     SuggestionsOut,
     SuggestTopicsIn,
     TopicSuggestionOut,
+    UndoIn,
+    UndoOut,
     parsed_out,
     question_event_out,
     question_out,
@@ -119,6 +122,17 @@ def bulk_question_topics(body: BulkTopicsIn, actor: Actor = Depends(staff_actor)
     `source = manual`. The pairs it cannot apply come back in `skipped` with their reason."""
     r = handle(actor, BulkSetTopics([(p.question_id, p.topic_id) for p in body.pairs]))
     return BulkTopicsOut(updated=r.updated, skipped=[SkippedPairOut(**vars(s)) for s in r.skipped])
+
+
+@router.post("/questions/bulk/undo", response_model=UndoOut)
+def undo_bulk(body: UndoIn, actor: Actor = Depends(staff_actor), handle: UndoBatchHandler = Depends(deps.undo_batch)):
+    """"Hoàn tác" (bulk-safety AC-01): the questions of that batch go back to what they were before it ran, through
+    the same guards an edit goes through — all of them or none (AC-02). The restore is itself a change in the
+    history, under the `batch_id` it answers with, and cannot be run twice: `batch_not_found` 404,
+    `batch_expired` 422 past the seven days (ADR-02), `batch_already_undone` 409, `batch_is_undo` 409,
+    `questions_gone` 422 when a question is no longer there, `subject_topic_conflict` 422 as an edit refuses it."""
+    r = handle(actor, UndoBatch(body.batch_id))
+    return UndoOut(restored=r.restored, batch_id=r.batch_id)
 
 
 @router.delete("/questions/{question_id}", status_code=204)

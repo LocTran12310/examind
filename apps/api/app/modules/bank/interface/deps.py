@@ -16,6 +16,7 @@ from app.modules.bank.application.commands.bulk_update_questions import BulkUpda
 from app.modules.bank.application.commands.create_question import CreateQuestionHandler
 from app.modules.bank.application.commands.delete_question import DeleteQuestionHandler
 from app.modules.bank.application.commands.review_question import ReviewQuestionHandler
+from app.modules.bank.application.commands.undo_batch import UndoBatchHandler
 from app.modules.bank.application.commands.update_question import UpdateQuestionHandler
 from app.modules.bank.application.queries.demo_question import DemoQuestionHandler
 from app.modules.bank.application.queries.document_questions import DocumentQuestionsHandler
@@ -157,6 +158,10 @@ def bulk_update_questions(db: Session = Depends(get_db)) -> BulkUpdateQuestionsH
 
 def bulk_set_topics(db: Session = Depends(get_db)) -> BulkSetTopicsHandler:
     return BulkSetTopicsHandler(SqlQuestionRepository(db), _RegisteredTaxonomy(db), SqlReviewLog(db), SqlUnitOfWork(db))
+
+
+def undo_batch(db: Session = Depends(get_db)) -> UndoBatchHandler:
+    return UndoBatchHandler(SqlQuestionRepository(db), _RegisteredTaxonomy(db), SqlReviewLog(db), SqlUnitOfWork(db))
 
 
 def search_question_events(db: Session = Depends(get_db)) -> SearchQuestionEventsHandler:

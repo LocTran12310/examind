@@ -160,6 +160,81 @@ def test_recent_changes_read_one_row_per_batch_and_say_why_one_cannot_be_undone(
     assert student.post("/api/question-events/search", json={}).status_code == 403
 
 
+def test_undo_puts_a_bulk_edit_back_and_only_once(client, db):
+    """AC-01, AC-02, AC-04, AC-05 end to end: the batch the bulk bar wrote goes back as one unit and as one new row
+    of the history, a second undo is refused, an undo is not itself undone, an aged batch is read-only, and a batch
+    that lost a question is refused whole."""
+    admin, _ = loaded(client, db)
+    was = {x["id"]: x for x in search(client, {"limit": 3}).json()["data"]}
+    ids = list(was)
+    topic = db.scalar(select(Topic).where(Topic.organization_id == admin.organization_id, Topic.name == "Vectơ"))
+    tag = client.post("/api/tags", json={"group": "source", "name": "Đề 2022"}).json()
+    edit = {"status": "rejected", "difficulty": "vdc", "primary_topic_id": str(topic.id), "add_tag_ids": [tag["id"]]}
+    assert client.post("/api/questions/bulk", json={"ids": ids, "set": edit}).json() == {"updated": 3}
+    row = client.post("/api/question-events/search", json={"limit": 1}).json()["data"][0]
+    assert row["questions"] == 3 and row["undoable"] is True
+
+    r = client.post("/api/questions/bulk/undo", json={"batch_id": row["batch_id"]})
+    assert r.status_code == 200, r.text
+    assert r.json()["restored"] == 3 and r.json()["batch_id"] != row["batch_id"]
+    for qid, before in was.items():
+        now = client.get(f"/api/questions/{qid}").json()
+        assert (now["status"], now["difficulty"], now["grade"], now["subject_id"]) == \
+               (before["status"], before["difficulty"], before["grade"], before["subject_id"])
+        assert [t["id"] for t in now["topics"]] == [t["id"] for t in before["topics"]]
+        assert [t["id"] for t in now["tags"]] == [t["id"] for t in before["tags"]]
+
+    # the undo is a row of its own, the batch it took back says so, and neither offers undo again (AC-04)
+    rows = client.post("/api/question-events/search", json={"limit": 10}).json()["data"]
+    undone, original = rows[0], next(x for x in rows if x["batch_id"] == row["batch_id"])
+    assert undone["action"] == "undo" and undone["questions"] == 3 and undone["batch_id"] == r.json()["batch_id"]
+    assert undone["undoable"] is False and undone["reason"] == "is_undo"
+    assert original["undoable"] is False and original["reason"] == "already_undone"
+    again = client.post("/api/questions/bulk/undo", json={"batch_id": row["batch_id"]})
+    assert again.status_code == 409 and again.json()["code"] == "batch_already_undone"
+    assert again.json()["details"]["fields"]["undone_by"] == undone["batch_id"]
+    twice = client.post("/api/questions/bulk/undo", json={"batch_id": undone["batch_id"]})
+    assert twice.status_code == 409 and twice.json()["code"] == "batch_is_undo"
+    assert client.post("/api/questions/bulk/undo", json={"batch_id": str(uuid.uuid4())}).status_code == 404
+
+    # a batch that moved neither the placement nor the tags leaves the links alone: the topic the pipeline placed
+    # stays the pipeline's, with its score, instead of coming back as a teacher's own placement
+    placed = next(x for x in search(client, {"limit": 20}).json()["data"] if x["topics"] and x["id"] not in ids)
+    assert client.post("/api/questions/bulk", json={"ids": [placed["id"]], "set": {"difficulty": "nb"}}).json() == {"updated": 1}
+    solo = client.post("/api/question-events/search", json={"limit": 1}).json()["data"][0]["batch_id"]
+    assert client.post("/api/questions/bulk/undo", json={"batch_id": solo}).json()["restored"] == 1
+    assert client.get(f"/api/questions/{placed['id']}").json()["topics"] == placed["topics"]
+
+    # past the window it is still readable and no longer undoable (AC-05)
+    assert client.post("/api/questions/bulk", json={"ids": ids[:1], "set": {"difficulty": "th"}}).json() == {"updated": 1}
+    aged = client.post("/api/question-events/search", json={"limit": 1}).json()["data"][0]["batch_id"]
+    db.execute(text("update review_events set created_at = now() - interval '8 days' where batch_id = :b"), {"b": aged})
+    db.commit()
+    expired = client.post("/api/questions/bulk/undo", json={"batch_id": aged})
+    assert expired.status_code == 422 and expired.json()["code"] == "batch_expired"
+    assert expired.json()["details"]["fields"]["age_days"] == 8 and "7 ngày" in expired.json()["message"]
+    assert client.get(f"/api/questions/{ids[0]}").json()["difficulty"] == "th"
+
+    # a question the batch touched is deleted: the whole batch is refused, nothing else is put back (AC-02)
+    assert client.post("/api/questions/bulk", json={"ids": ids, "set": {"difficulty": "nb"}}).json() == {"updated": 3}
+    last = client.post("/api/question-events/search", json={"limit": 1}).json()["data"][0]["batch_id"]
+    assert client.delete(f"/api/questions/{ids[2]}").status_code == 204
+    gone = client.post("/api/questions/bulk/undo", json={"batch_id": last})
+    assert gone.status_code == 422 and gone.json()["code"] == "questions_gone", gone.text
+    assert client.get(f"/api/questions/{ids[0]}").json()["difficulty"] == "nb"
+
+    # org-scoped and staff-only, like the rest of the bank
+    other = client.__class__(client.app)
+    make_user(db, make_org(db, "orgd"), "gvd", role="teacher")
+    student = client.__class__(client.app)
+    make_user(db, admin.organization, "hs3", role="student")
+    db.commit()
+    other.post("/api/auth/login", json={"org_code": "orgd", "username": "gvd", "password": "Secret123!"})
+    student.post("/api/auth/login", json={"org_code": "trungtama", "username": "hs3", "password": "Secret123!"})
+    assert other.post("/api/questions/bulk/undo", json={"batch_id": last}).status_code == 404
+    assert student.post("/api/questions/bulk/undo", json={"batch_id": last}).status_code == 403
+
+
 def test_permissions_and_isolation(client, db):
     admin, _ = loaded(client, db)
     student = client.__class__(client.app)

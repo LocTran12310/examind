@@ -1,7 +1,7 @@
 from typing import Protocol
 import uuid
 
-from app.modules.bank.domain.entities import Question
+from app.modules.bank.domain.entities import Question, ReviewEvent
 
 
 class QuestionRepository(Protocol):
@@ -56,6 +56,15 @@ class ReviewLog(Protocol):
     def record(self, org_id: uuid.UUID, user_id: uuid.UUID | None, question_id: uuid.UUID | None, action: str,
                before: dict | None, after: dict | None, batch_id: uuid.UUID | None = None) -> None:
         """`batch_id` groups the events of one request; a command passes the same id to every event it writes."""
+        ...
+
+    def batch(self, org_id: uuid.UUID, batch_id: uuid.UUID) -> list[ReviewEvent]:
+        """Every event that request wrote in this organisation, oldest first — what an undo reads to rebuild the
+        state its questions were in. Empty when the organisation has no such batch."""
+        ...
+
+    def undone_by(self, org_id: uuid.UUID, batch_id: uuid.UUID) -> uuid.UUID | None:
+        """The batch of the `undo` that already took this one back (A-04), or None while none has."""
         ...
 
     def recent_spot_actions(self, org_id: uuid.UUID, limit: int) -> list[str]:

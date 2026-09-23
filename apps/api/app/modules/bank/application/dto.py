@@ -205,6 +205,14 @@ class EventBatchView:
 
 
 @dataclass(frozen=True)
+class UndoResult:
+    """What "Hoàn tác" put back: how many questions, and the batch the restore itself was recorded under — the toast
+    names the count, and the new batch is what the history shows as the undo (A-04)."""
+    restored: int
+    batch_id: uuid.UUID
+
+
+@dataclass(frozen=True)
 class TriageCounts:
     auto_approved: int = 0
     needs_review: int = 0
