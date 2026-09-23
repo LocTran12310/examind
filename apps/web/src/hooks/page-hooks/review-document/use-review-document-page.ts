@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { payloadOf, type QuestionFormValue } from "@/components/common/QuestionForm/QuestionForm";
 import { STATUS_LABEL } from "@/constants/question.constant";
 import { useTableQuery } from "@/hooks/common/use-table-query";
-import { useBulkUpdateQuestionsMutation, useUpdateQuestionMutation } from "@/hooks/react-query/use-query-question";
+import { useBulkUpdateQuestionsMutation, useTopicCountsQuery, useUpdateQuestionMutation } from "@/hooks/react-query/use-query-question";
 import { useApproveConfidentMutation, useDocumentQuestionsSearchQuery, useReviewDocumentQuery, useReviewQueueQuery } from "@/hooks/react-query/use-query-review";
 import { useTagOptionsQuery } from "@/hooks/react-query/use-query-tag";
 import { useTaxonomyQuery } from "@/hooks/react-query/use-query-taxonomy";
@@ -24,6 +24,7 @@ export function useReviewDocumentPage(id: string) {
   const subjectId = info.data?.document.meta.subject_id ?? null;
   const { data: topics } = useTopicsQuery(subjectId, !!info.data);
   const { data: taxonomy } = useTaxonomyQuery();
+  const { data: topicCounts } = useTopicCountsQuery(subjectId);
   const { data: tags } = useTagOptionsQuery(subjectId ?? "shared", !!info.data);
   const approve = useApproveConfidentMutation(id);
   const { mutateAsync: redecideQuestions } = useBulkUpdateQuestionsMutation();
@@ -52,6 +53,7 @@ export function useReviewDocumentPage(id: string) {
     info: data,
     queue: queue.data,
     topics,
+    topicCounts,
     taxonomy,
     tags,
     state,

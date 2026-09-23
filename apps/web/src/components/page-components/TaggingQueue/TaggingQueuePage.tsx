@@ -26,7 +26,7 @@ export function TaggingQueuePage() {
       <>
         <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border bg-card">
           <Toolbar className="shrink-0">
-            <BulkTopicBar count={p.selected.size} mixed={p.mixedSubjects} onPick={() => p.setPicking(BULK)} onClear={p.clearSelection} />
+            <BulkTopicBar count={p.selected.size} suggestable={p.suggestable} mixed={p.mixedSubjects} onApplySuggestions={p.applySuggestions} onPick={() => p.setPicking(BULK)} onClear={p.clearSelection} />
             <ToolbarSeparator />
             <ToolbarButton onClick={p.reload}>
               <RefreshCw className={cn(p.loading && "animate-spin")} /> Nạp
@@ -54,6 +54,8 @@ export function TaggingQueuePage() {
               onValueChange={(v) => p.setFilter("document_id", v)}
               options={p.documentOptions}
               emptyLabel="Mọi đề"
+              onEndReached={p.loadMoreDocuments}
+              loadingMore={p.loadingDocuments}
             />
             {p.rows.length > 0 && (
               <Label className="ml-auto font-normal text-muted-foreground">
@@ -97,7 +99,7 @@ export function TaggingQueuePage() {
           </div>
         </div>
         <FormDialog open={!!p.picking} title={p.pickerTitle} onOpenChange={(o) => !o && p.setPicking(null)}>
-          <TopicPicker topics={p.pickerTopics} onPick={p.pickTopic} onClose={() => p.setPicking(null)} />
+          <TopicPicker topics={p.pickerTopics} counts={p.pickerCounts} initial={p.pickerInitial} onPick={p.pickTopic} onClose={() => p.setPicking(null)} />
         </FormDialog>
       </>
     </ListLayout>

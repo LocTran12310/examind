@@ -110,3 +110,27 @@ export interface BankFacets {
 export interface BulkResult {
   updated: number;
 }
+
+/** Why `POST /questions/bulk/topics` left a pair alone (pickers-builder ADR-02). */
+export type BulkTopicSkipReason = "unknown_question" | "other_org" | "unknown_topic" | "no_subject" | "subject_mismatch";
+
+export interface BulkTopicSkip {
+  question_id: string;
+  topic_id: string;
+  reason: BulkTopicSkipReason;
+  message: string;
+}
+
+/** Answer of `POST /questions/bulk/topics`: what took its topic and what did not. */
+export interface BulkTopicsResult {
+  updated: number;
+  skipped: BulkTopicSkip[];
+}
+
+/** One question a bulk subject cannot move: its topic belongs to another subject
+ *  (422 `subject_topic_conflict`, `details.fields.conflicts`; pickers-builder A-04). */
+export interface SubjectTopicConflict {
+  question_id: string;
+  topic_id: string;
+  topic_name: string;
+}

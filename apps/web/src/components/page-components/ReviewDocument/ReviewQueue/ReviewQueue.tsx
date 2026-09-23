@@ -33,12 +33,15 @@ export function ReviewQueue({
   doc,
   initial,
   topics,
+  topicCounts,
   renderEditor,
   onChange,
 }: {
   doc: Pick<SourceDocument, "id" | "mime">;
   initial: ParsedQuestion[];
   topics: Topic[];
+  /** questions per topic of the document's subject — the number the picker shows (ADR-01) */
+  topicCounts?: Record<string, number>;
   renderEditor?: EditorSlot;
   onChange?: () => void;
 }) {
@@ -127,7 +130,8 @@ export function ReviewQueue({
         </aside>
       )}
       <FormDialog open={r.picking} title="Chọn chuyên đề (T)" onOpenChange={(o) => !o && r.setPicking(false)}>
-        <TopicPicker topics={topics} onPick={r.pickTopic} onClose={() => r.setPicking(false)} />
+        {/* the topic already on the card is where the suggestion points: the tree opens there, applying nothing (A-01) */}
+        <TopicPicker topics={topics} counts={topicCounts} initial={primary?.id ?? null} onPick={r.pickTopic} onClose={() => r.setPicking(false)} />
       </FormDialog>
     </div>
   );

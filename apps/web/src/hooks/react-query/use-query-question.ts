@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient, type UseMutationResult, type UseQueryResult } from "@tanstack/react-query";
+import { NO_SUBJECT } from "@/constants/question.constant";
 import { QUESTION_KEYS, REVIEW_KEYS } from "@/constants/react-query-key.constant";
-import type { BulkQuestionsBody, QuestionBody, QuestionSearchBody, UpdateQuestionBody } from "@/dtos/question.dto";
-import type { BankFacets, BulkResult, ParsedQuestion, Question, QuestionStats, TopicSuggestion } from "@/interfaces/question.interface";
+import type { BulkQuestionsBody, BulkTopicsBody, QuestionBody, QuestionSearchBody, UpdateQuestionBody } from "@/dtos/question.dto";
+import type { BankFacets, BulkResult, BulkTopicsResult, ParsedQuestion, Question, QuestionStats, TopicSuggestion } from "@/interfaces/question.interface";
 import type { RowsQueryOptions, SearchPage } from "@/interfaces/search-page.interface";
 import { invalidate } from "@/lib/common/query-client";
 import { questionService } from "@/services/question.service";
@@ -25,6 +26,18 @@ export function useQuestionFacetsQuery(body: QuestionSearchBody, enabled = true)
   const { sort, ...rest } = body; // facets ignore ordering
   const facetsBody: QuestionSearchBody = { ...rest, page: 1 };
   return useQuery<BankFacets, Error>({ queryKey: QUESTION_KEYS.FACETS(facetsBody), queryFn: () => questionService.facets(facetsBody), enabled });
+}
+
+/** How many usable questions each topic's subtree holds in one subject — the number a picker writes beside a
+ *  topic (pickers-builder ADR-01, AC-02). Without a subject there is no honest number, so nothing is asked for
+ *  and the picker shows none. Same source as the bank's filters, so the two never disagree. */
+export function useTopicCountsQuery(subjectId: string | null | undefined, enabled = true): UseQueryResult<Record<string, number>, Error> {
+  const on = enabled && Boolean(subjectId) && subjectId !== NO_SUBJECT;
+  return useQuery<Record<string, number>, Error>({
+    queryKey: QUESTION_KEYS.TOPIC_COUNTS(subjectId ?? ""),
+    queryFn: async () => (await questionService.facets({ subject_id: subjectId!, page: 1, limit: 1 })).topics,
+    enabled: on,
+  });
 }
 
 export function useQuestionQuery(id: string): UseQueryResult<ParsedQuestion, Error> {
@@ -84,6 +97,18 @@ export function useBulkUpdateQuestionsMutation(): UseMutationResult<BulkResult, 
   return useMutation<BulkResult, Error, BulkQuestionsBody>({
     mutationFn: questionService.bulk,
     onSuccess: () => invalidate(qc, ...TOUCHED),
+  });
+}
+
+/** A topic per question in one request (pickers-builder ADR-02): the tagging queue's "Gán theo gợi ý".
+ *  The answer names what it skipped; the caller reports it. */
+export function useBulkTopicsMutation(): UseMutationResult<BulkTopicsResult, Error, BulkTopicsBody> {
+  const qc = useQueryClient();
+  return useMutation<BulkTopicsResult, Error, BulkTopicsBody>({
+    mutationFn: questionService.bulkTopics,
+    // started, not awaited: one of the queries this refreshes is the queue's own suggestions, which the
+    // model answers in tens of seconds — the teacher hears what the click did at once, not after it
+    onSuccess: () => void invalidate(qc, ...TOUCHED),
   });
 }
 

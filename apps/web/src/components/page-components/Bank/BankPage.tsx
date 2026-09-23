@@ -29,7 +29,7 @@ export function BankPage() {
             </Link>
           </ToolbarButton>
           <ToolbarSeparator />
-          <BulkActions ids={[...p.selected]} topics={p.topics ?? []} tags={p.tags ?? []} onClear={p.clearSelection} />
+          <BulkActions ids={[...p.selected]} topics={p.topics ?? []} subjectId={p.scoped} tags={p.tags ?? []} taxonomy={p.taxonomy} questions={p.items} onClear={p.clearSelection} />
           <ToolbarSeparator />
           <ToolbarButton onClick={p.reload}>
             <RefreshCw className={cn(p.loading && "animate-spin")} /> Nạp

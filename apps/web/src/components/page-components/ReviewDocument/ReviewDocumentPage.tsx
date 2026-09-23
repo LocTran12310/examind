@@ -36,7 +36,7 @@ export function ReviewDocumentPage({ id }: { id: string }) {
       {p.notice && <div className="mb-3"><FormAlert kind="success">{p.notice}</FormAlert></div>}
       <ReviewStateFilter value={p.state} onChange={p.setState} />
       {p.state === "pending" ? (
-        <ReviewQueue key={p.version} doc={info.document} initial={p.queue} topics={p.topics} onChange={p.reloadInfo} renderEditor={(e) => <QuestionEditor {...e} />} />
+        <ReviewQueue key={p.version} doc={info.document} initial={p.queue} topics={p.topics} topicCounts={p.topicCounts} onChange={p.reloadInfo} renderEditor={(e) => <QuestionEditor {...e} />} />
       ) : (
         <QuestionList
           page={p.list}

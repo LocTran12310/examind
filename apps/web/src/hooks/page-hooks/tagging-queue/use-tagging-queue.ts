@@ -5,19 +5,23 @@ import type { QuestionSearchBody } from "@/dtos/question.dto";
 import { useHotkeys } from "@/hooks/common/use-hotkeys";
 import { useTableQuery } from "@/hooks/common/use-table-query";
 import { useDocumentSearchQuery } from "@/hooks/react-query/use-query-document";
-import { useBulkUpdateQuestionsMutation, useQuestionFacetsQuery, useQuestionSearchQuery, useTopicSuggestionsQuery } from "@/hooks/react-query/use-query-question";
+import { useBulkTopicsMutation, useBulkUpdateQuestionsMutation, useQuestionFacetsQuery, useQuestionSearchQuery, useTopicCountsQuery, useTopicSuggestionsQuery } from "@/hooks/react-query/use-query-question";
 import { useTaxonomyQuery } from "@/hooks/react-query/use-query-taxonomy";
 import { useTopicsQuery } from "@/hooks/react-query/use-query-topic";
+import type { SourceDocument } from "@/interfaces/document.interface";
 import type { ParsedQuestion } from "@/interfaces/question.interface";
 import type { Topic } from "@/interfaces/topic.interface";
 import { ApiError } from "@/lib/common/http";
+import { assignSummary, suggestionPairs } from "@/lib/page-libs/tagging-queue/assign";
 import { queueRows, type QueueSuggestion } from "@/lib/page-libs/tagging-queue/rows";
 
 const NEWEST = [{ field: "created_at", desc: true }];
 // the whole backlog is worked from one screen: every status, not just the usable ones (A-04, ADR-02)
 const EVERY_STATUS = "all";
-const DOCUMENTS = { page: 1, limit: 200, sort: NEWEST };
+/** the document filter loads a page at a time and asks for the next as it is scrolled (A-07) */
+const DOCUMENT_PAGE = 50;
 const NO_ROWS: ParsedQuestion[] = [];
+const NO_DOCS: SourceDocument[] = [];
 /** the bulk picker's own value of `picking` (a row's is its question id) */
 export const BULK = "bulk";
 
@@ -48,7 +52,21 @@ export function useTaggingQueue() {
   const { data: facets } = useQuestionFacetsQuery(facetsBody);
   const { data: taxonomy } = useTaxonomyQuery();
   const { data: topics } = useTopicsQuery(null);
-  const { data: documents } = useDocumentSearchQuery(DOCUMENTS);
+  // the papers arrive a page at a time; what has been loaded is kept, so the filter grows as it is scrolled
+  const [documentPage, setDocumentPage] = useState(1);
+  const documentsBody = useMemo(() => ({ page: documentPage, limit: DOCUMENT_PAGE, sort: NEWEST }), [documentPage]);
+  const documents = useDocumentSearchQuery(documentsBody);
+  const [loadedDocuments, setLoadedDocuments] = useState<SourceDocument[]>(NO_DOCS);
+  useEffect(() => {
+    const page = documents.data?.data;
+    if (!page?.length) return;
+    setLoadedDocuments((prev) => {
+      const byId = new Map(prev.map((d) => [d.id, d]));
+      for (const d of page) byId.set(d.id, d);
+      return byId.size === prev.length ? prev : [...byId.values()];
+    });
+  }, [documents.data]);
+  const moreDocuments = loadedDocuments.length < (documents.data?.total ?? 0);
   const items = list.data?.data ?? NO_ROWS;
   const ids = useMemo(() => items.map((q) => q.id), [items]);
   // the rules answer at once; the model takes tens of seconds, so it arrives on its own and replaces them
@@ -56,6 +74,7 @@ export function useTaggingQueue() {
   const { data: modelSuggestions, isFetching: modelPending } = useTopicSuggestionsQuery(ids, true);
   const suggestions = modelSuggestions ?? ruleSuggestions;
   const { mutateAsync: bulk } = useBulkUpdateQuestionsMutation();
+  const { mutateAsync: bulkTopics } = useBulkTopicsMutation();
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [focus, setFocus] = useState(0);
@@ -67,7 +86,7 @@ export function useTaggingQueue() {
   }, [bodyKey]);
 
   const topicsById = useMemo(() => new Map((topics ?? []).map((t) => [t.id, t])), [topics]);
-  const docsById = useMemo(() => new Map((documents?.data ?? []).map((d) => [d.id, d])), [documents]);
+  const docsById = useMemo(() => new Map(loadedDocuments.map((d) => [d.id, d])), [loadedDocuments]);
   const rows = useMemo(
     () => queueRows(items, { suggestions: suggestions ?? {}, topicsById, documents: docsById, taxonomy }),
     [items, suggestions, topicsById, docsById, taxonomy],
@@ -86,6 +105,23 @@ export function useTaggingQueue() {
   }
 
   const applySuggestion = (questionId: string, s: QueueSuggestion) => void assign([questionId], s.topic_id, s.label);
+
+  /** Each selected row takes its own top suggestion, in one request (AC-03, ADR-02). What had no
+   *  suggestion is left alone, and it and whatever the server skipped are named in the answer. */
+  async function applySuggestions() {
+    const { pairs, noSuggestion } = suggestionPairs(rows.filter((r) => selected.has(r.q.id)));
+    if (!pairs.length) {
+      toast.error(`${noSuggestion} câu chưa có gợi ý`);
+      return;
+    }
+    try {
+      const r = await bulkTopics({ pairs });
+      toast.success(assignSummary(r.updated, noSuggestion, r.skipped ?? []));
+      setSelected(new Set());
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : "Có lỗi xảy ra");
+    }
+  }
 
   function applyNth(n: number) {
     const row = rows[at];
@@ -113,13 +149,16 @@ export function useTaggingQueue() {
   // a topic belongs to one subject: a row is picked inside its own subject, the selection inside its common one
   const selectedRows = rows.filter((r) => selected.has(r.q.id));
   const selectedSubjects = new Set(selectedRows.map((r) => r.q.subject_id ?? ""));
-  const pickingSubject = picking === BULK ? [...selectedSubjects][0] : rows.find((r) => r.q.id === picking)?.q.subject_id;
+  const pickingRow = rows.find((r) => r.q.id === picking);
+  const pickingSubject = picking === BULK ? [...selectedSubjects][0] : pickingRow?.q.subject_id;
   const pickerTopics = useMemo(() => (pickingSubject ? (topics ?? []).filter((t) => t.subject_id === pickingSubject) : (topics ?? [])), [topics, pickingSubject]);
+  // the numbers beside the topics are questions of that subject, from the facets (ADR-01)
+  const { data: topicCounts } = useTopicCountsQuery(pickingSubject);
 
   // no count beside a subject: the subjects facet drops the topic dimension, so it counts every question, not the untagged ones
   const subjectOptions: Option[] = (taxonomy?.subjects ?? []).map((s) => ({ value: s.id, label: s.name }));
   const counts = facets?.untagged_documents;
-  const documentOptions: Option[] = (documents?.data ?? [])
+  const documentOptions: Option[] = loadedDocuments
     .filter((d) => !counts || counts[d.id])
     .map((d) => ({ value: d.id, label: counts?.[d.id] ? `${d.filename} (${counts[d.id]})` : d.filename }));
 
@@ -146,6 +185,11 @@ export function useTaggingQueue() {
     documentId,
     subjectOptions,
     documentOptions,
+    /** scrolling to the end of the filter asks for the next page of papers, while there is one (A-07) */
+    loadMoreDocuments: () => {
+      if (moreDocuments && !documents.isFetching) setDocumentPage((p) => p + 1);
+    },
+    loadingDocuments: documents.isFetching && moreDocuments,
     setFilter: (name: string, value: string) => tq.setFilter(name, value || null),
     selected,
     toggle,
@@ -157,8 +201,14 @@ export function useTaggingQueue() {
     picking,
     setPicking,
     pickerTopics,
+    pickerCounts: topicCounts,
+    /** the picker of one row opens on that row's own top suggestion, applying nothing (A-01) */
+    pickerInitial: picking === BULK ? null : (pickingRow?.suggestions[0]?.topic_id ?? null),
     pickerTitle: picking === BULK ? `Gán chuyên đề cho ${selected.size} câu` : "Chọn chuyên đề cho câu này",
     pickTopic,
     applySuggestion,
+    applySuggestions: () => void applySuggestions(),
+    /** how many of the selected questions have a suggestion to take */
+    suggestable: selectedRows.filter((r) => r.suggestions.length > 0).length,
   };
 }

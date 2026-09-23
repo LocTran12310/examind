@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ReviewDocumentPage } from "@/components/page-components/ReviewDocument/ReviewDocumentPage";
@@ -25,7 +25,13 @@ const doc: ReviewDocument = {
   spot_pending: 1, progress: 0.5, review_state: "pending", pending: 12, assigned_to: null, assigned_name: null,
 };
 const taxonomy: Taxonomy = { subjects: [{ id: "s", code: "toan", name: "Toán" }], grades: [{ id: "g", level: 10, name: "Lớp 10" }], semesters: [] };
-const topics: Topic[] = [{ id: "t1", subject_id: "s", parent_id: null, name: "Vectơ", level_kind: "topic", grade: 10, path: "a", depth: 1, sort: 0, child_count: 0 }];
+const topics: Topic[] = [
+  { id: "t0", subject_id: "s", parent_id: null, name: "Hình học", level_kind: "strand", grade: null, path: "a", depth: 1, sort: 0, child_count: 2 },
+  { id: "t1", subject_id: "s", parent_id: "t0", name: "Vectơ", level_kind: "topic", grade: 10, path: "a.b", depth: 2, sort: 0, child_count: 0 },
+  { id: "t2", subject_id: "s", parent_id: "t0", name: "Đường tròn", level_kind: "topic", grade: 10, path: "a.c", depth: 2, sort: 1, child_count: 0 },
+];
+/** questions per topic of môn Toán, as the facets answer them (ADR-01) */
+const topicCounts = { t0: 5, t1: 5, t2: 0 };
 const tags: Tag[] = [{ id: "g1", group: "method", name: "đổi biến" }];
 const approved = pq("q9", 9, { status: "approved", stem: "Câu đã duyệt", group: null });
 
@@ -37,6 +43,7 @@ const base = () => [
   route("GET", "/api/taxonomy", taxonomy),
   route("POST", "/api/tags/search", searchPage(tags)),
   route("POST", "/api/review/documents/d1/questions/search", searchPage([approved])),
+  route("POST", "/api/questions/facets", { subjects: {}, topics: topicCounts, types: {}, difficulties: {}, grades: {}, periods: {}, school_years: {}, tags: {} }),
 ];
 
 beforeEach(() => setUrl("/org/review/d1"));
@@ -93,5 +100,24 @@ describe("review document", () => {
     act(() => void fireEvent.keyDown(window, { key: "Enter" }));
     await waitFor(() => expect(screen.getByTestId("counter")).toHaveTextContent("2/2"));
     expect(lastBody(fetch, "/review/questions/q1/action")).toEqual({ action: "approve" });
+  });
+
+  it("T opens the picker on the topic already suggested, expanded and focused, applying nothing (AC-01, AC-02)", async () => {
+    // the queue's first question carries a suggested topic; the card shows it and the picker starts there
+    const suggested = pq("q1", 1, { topics: [{ id: "t1", name: "Vectơ", is_primary: true, source: "similar", score: 0.8 }] });
+    // the override comes first: the first handler that matches answers
+    const fetch = mockFetch(route("GET", "/api/review/documents/d1/queue", [suggested, pq("q2", 2)]), ...base());
+    render(<ReviewDocumentPage id="d1" />);
+    await screen.findByTestId("queue-card");
+    expect(screen.getByTestId("topic-button")).toHaveTextContent("Vectơ");
+    act(() => void fireEvent.keyDown(window, { key: "t" }));
+
+    const tree = await screen.findByRole("tree", { name: "Cây chuyên đề" });
+    const items = within(tree).getAllByRole("treeitem");
+    // the branch is open, the suggested topic is the focused row, and the numbers are questions
+    expect(items.map((x) => x.textContent)).toEqual(["Hình học5", "Vectơ5", "Đường tròn0"]);
+    expect(items[1]).toHaveAttribute("aria-selected", "true");
+    // still only the teacher applies it: no write yet
+    expect(fetch.mock.calls.some(([, init]) => (init as RequestInit | undefined)?.method === "PATCH")).toBe(false);
   });
 });

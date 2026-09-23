@@ -68,9 +68,10 @@ describe("save shortcut (ui-polish AC-05)", () => {
     render(<QuestionForm initial={formValueOf()} taxonomy={taxonomy} topics={tree} tags={tags} submitLabel="Lưu" onSubmit={vi.fn()} />);
     await u.click(screen.getByTestId("pick-topic"));
     const t = screen.getByRole("tree", { name: "Cây chuyên đề" });
-    expect(within(t).getAllByRole("treeitem").map((x) => x.textContent)).toEqual(["Giải tích1"]); // collapsed
+    // no number beside a topic here: this picker has no subject facets to count questions with (AC-02)
+    expect(within(t).getAllByRole("treeitem").map((x) => x.textContent)).toEqual(["Giải tích"]); // collapsed
     await u.type(screen.getByLabelText("Tìm chuyên đề"), "nguyen");
-    expect(within(t).getAllByRole("treeitem").map((x) => x.textContent)).toEqual(["Giải tích1", "Nguyên hàm"]);
+    expect(within(t).getAllByRole("treeitem").map((x) => x.textContent)).toEqual(["Giải tích", "Nguyên hàm"]);
     await u.keyboard("{Enter}");
     expect(screen.getByTestId("pick-topic")).toHaveTextContent("Giải tích › Nguyên hàm");
   });

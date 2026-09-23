@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronRight } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,9 @@ const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/
 
 /** Checkbox tree of topics; choosing a parent includes all its children. `value`/`onApply` use top-most ids.
  *  With `onChange` instead of `onApply` it is embedded (no buttons, every tick reported); `counts`
- *  shows the number of questions in each subtree. */
+ *  shows the number of questions in each subtree (pickers-builder ADR-01) and is the only number shown.
+ *  `initial` is where a suggestion points: its branch opens and the row is scrolled to and marked, still
+ *  unticked — the teacher confirms (A-01). */
 export function TopicTreeSelect({
   topics,
   value,
@@ -23,6 +25,7 @@ export function TopicTreeSelect({
   onChange,
   onCancel,
   counts,
+  initial,
 }: {
   topics: Topic[];
   value: string[];
@@ -30,6 +33,7 @@ export function TopicTreeSelect({
   onChange?: (ids: string[]) => void;
   onCancel?: () => void;
   counts?: Record<string, number>;
+  initial?: string | null;
 }) {
   const roots = useMemo(() => buildTree(topics), [topics]);
   const ix = useMemo(() => indexTree(roots), [roots]);
@@ -41,6 +45,22 @@ export function TopicTreeSelect({
     for (const id of value) for (let p = ix.parent.get(id); p; p = ix.parent.get(p)) s.add(p);
     return s;
   });
+
+  // the branch of the suggestion, opened and scrolled to as soon as the tree holds it — nothing is ticked
+  const rows = useRef(new Map<string, HTMLDivElement>());
+  const landed = useRef<string | null>(null);
+  useEffect(() => {
+    if (!initial || landed.current === initial || !ix.parent.has(initial)) return;
+    landed.current = initial;
+    setOpen((s) => {
+      const n = new Set(s);
+      for (let p = ix.parent.get(initial); p; p = ix.parent.get(p)) n.add(p);
+      return n;
+    });
+  }, [initial, ix]);
+  useEffect(() => {
+    if (initial) rows.current.get(initial)?.scrollIntoView?.({ block: "center" });
+  }, [initial, open]);
 
   // search keeps matches and their ancestors, opened
   const visible = useMemo(() => {
@@ -61,9 +81,18 @@ export function TopicTreeSelect({
     if (visible && !visible.has(n.id)) return null;
     const expanded = visible ? true : open.has(n.id);
     const st = state(ix, checked, n.id);
+    const empty = !!counts && !counts[n.id];
     return (
       <li key={n.id}>
-        <div className="flex items-center gap-1 rounded-md py-0.5 pr-2 hover:bg-muted/60" style={{ paddingLeft: depth * 18 }}>
+        <div
+          ref={(el) => {
+            if (el) rows.current.set(n.id, el);
+            else rows.current.delete(n.id);
+          }}
+          data-suggested={n.id === initial ? "true" : undefined}
+          className={cn("flex items-center gap-1 rounded-md py-0.5 pr-2 hover:bg-muted/60", n.id === initial && "bg-primary/10 ring-1 ring-primary/30 ring-inset")}
+          style={{ paddingLeft: depth * 18 }}
+        >
           <Button
             variant="ghost"
             size="icon-xs"
@@ -83,11 +112,11 @@ export function TopicTreeSelect({
               }}
               aria-label={n.name}
             />
-            <span className={cn("truncate", depth === 0 && "font-medium", counts && !counts[n.id] && "text-muted-foreground")}>{n.name}</span>
-            {counts ? (
-              <span className="ml-auto text-xs tabular-nums text-muted-foreground">{counts[n.id] ?? 0}</span>
-            ) : (
-              n.children.length > 0 && <span className="text-xs text-muted-foreground">{n.children.length}</span>
+            <span className={cn("truncate", depth === 0 && "font-medium", empty && "text-muted-foreground")}>{n.name}</span>
+            {counts && (
+              <span className={cn("ml-auto text-xs tabular-nums", empty ? "text-muted-foreground/60" : "text-muted-foreground")} title={`${counts[n.id] ?? 0} câu hỏi`}>
+                {counts[n.id] ?? 0}
+              </span>
             )}
           </Label>
         </div>

@@ -50,3 +50,8 @@ export interface BulkQuestionsBody {
   ids: string[];
   set: Record<string, unknown>;
 }
+
+/** `POST /questions/bulk/topics`: one topic per question, at most 200 pairs (pickers-builder ADR-02). */
+export interface BulkTopicsBody {
+  pairs: { question_id: string; topic_id: string }[];
+}

@@ -87,6 +87,8 @@ export const QUESTION_KEYS = {
   ALL: ["questions"] as const,
   SEARCH: (body: unknown) => ["questions", "search", body] as const,
   FACETS: (body: unknown) => ["questions", "facets", body] as const,
+  /** questions per topic of one subject — what a picker shows beside a topic (pickers-builder ADR-01) */
+  TOPIC_COUNTS: (subjectId: string) => ["questions", "facets", "topics", subjectId] as const,
   DETAIL: (id: string) => ["questions", "detail", id] as const,
   STATS: (id: string) => ["questions", "stats", id] as const,
   SUGGESTIONS: (ids: readonly string[], useModel: boolean) => ["questions", "suggestions", useModel, ids] as const,

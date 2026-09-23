@@ -1,5 +1,6 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { Toaster } from "sonner";
 import { describe, expect, it, vi } from "vitest";
 import TaggingQueueRoute from "@/app/(app)/org/review/untagged/page";
 import type { BankFacets, ParsedQuestion, TopicSuggestion } from "@/interfaces/question.interface";
@@ -18,6 +19,8 @@ const topics: Topic[] = [
 ];
 const doc = { id: "d1", filename: "De-thi-thu-2025.pdf", mime: "application/pdf", size: 1, status: "parsed", error: null, meta: {}, page_count: 2, question_count: 40, log: [], created_at: "2026-09-20T03:00:00Z", finished_at: null };
 const facets: BankFacets = { subjects: { s: 2 }, topics: { none: 2 }, types: {}, difficulties: {}, grades: {}, periods: {}, school_years: {}, tags: {}, untagged_documents: { d1: 2 } };
+/** what the bank holds per topic of môn Toán — "Tích phân" has nothing yet (AC-02, ADR-01) */
+const topicCounts = { gt: 7, nh: 7, tp: 0 };
 
 const question = (id: string, stem: string): ParsedQuestion => ({
   id, type: "mcq", stem, options: [], answer: null, solution: "", difficulty: null, grade: 12, status: "auto_approved",
@@ -35,7 +38,12 @@ function stack(pages: ParsedQuestion[][]) {
       const items = pages[Math.min(call++, pages.length - 1)];
       return { body: searchPage(items, items.length) };
     },
-    route("POST", "/api/questions/facets", facets),
+    (url, init) => {
+      if (String(url) !== "/api/questions/facets" || (init?.method ?? "GET") !== "POST") return undefined;
+      // the pickers ask one subject for its topic counts; the page asks for the queue's own facets
+      const asked = JSON.parse(String(init?.body ?? "{}")) as { limit?: number };
+      return { body: asked.limit === 1 ? { ...facets, topics: topicCounts } : facets };
+    },
     route("POST", "/api/questions/suggest-topics", {
       suggestions: {
         q1: [suggestion("nh", "Nguyên hàm", 0.82, "keyword"), suggestion("tp", "Tích phân", 0.44, "similar")],
@@ -43,6 +51,7 @@ function stack(pages: ParsedQuestion[][]) {
       },
     }),
     route("POST", "/api/questions/bulk", { updated: 2 }),
+    route("POST", "/api/questions/bulk/topics", { updated: 1, skipped: [{ question_id: "q2", topic_id: "tp", reason: "subject_mismatch", message: "Chuyên đề không thuộc môn của câu hỏi" }] }),
     route("POST", "/api/documents/search", searchPage([doc])),
     route("GET", "/api/taxonomy", taxonomy),
     route("GET", "/api/topics", topics),
@@ -50,6 +59,8 @@ function stack(pages: ParsedQuestion[][]) {
 }
 
 const twoQuestions = [question("q1", "Tính $\\int x^2 dx$"), question("q2", "Diện tích hình phẳng")];
+// q3 is what the rules and the model could not place: it has no suggestion at all
+const threeQuestions = [...twoQuestions, question("q3", "Một câu lạ")];
 
 describe("tagging queue", () => {
   it("lists the untagged questions of the search body and asks for the suggestions of the page", async () => {
@@ -137,5 +148,88 @@ describe("tagging queue", () => {
     expect(lastBody(fetch, "/questions/search").document_id).toBe("d1");
     // the counts per document must not shrink to the chosen one (AC-05)
     expect(lastBody(fetch, "/questions/facets").document_id).toBeUndefined();
+  });
+
+  it("the row's picker opens on that row's own suggestion and counts questions, applying nothing (AC-01, AC-02)", async () => {
+    setUrl("/org/review/untagged");
+    const fetch = stack([twoQuestions]);
+    const u = userEvent.setup();
+    render(<TaggingQueueRoute />);
+    const row = await screen.findByTestId("untagged-q1");
+    await waitFor(() => expect(within(row).getByRole("button", { name: /Nguyên hàm/ })).toBeInTheDocument());
+    await u.click(within(row).getByRole("button", { name: "Chuyên đề khác…" }));
+
+    const tree = await screen.findByRole("tree", { name: "Cây chuyên đề" });
+    const items = within(tree).getAllByRole("treeitem");
+    // the branch of the suggestion is open and the suggested topic is the focused row
+    expect(items.map((x) => x.textContent)).toEqual(["Giải tích7", "Nguyên hàm7", "Tích phân0"]);
+    expect(items[1]).toHaveAttribute("aria-selected", "true");
+    // the numbers are questions from the facets of the row's subject, not the count of child topics
+    expect(lastBody(fetch, "/questions/facets")).toMatchObject({ subject_id: "s", limit: 1 });
+    // nothing is applied until the teacher picks
+    expect(fetch.mock.calls.some((c) => String(c[0]).startsWith("/api/questions/bulk"))).toBe(false);
+  });
+
+  it("\"Gán theo gợi ý\" sends every row's own suggestion in one request and names what it did not do (AC-03)", async () => {
+    setUrl("/org/review/untagged");
+    const fetch = stack([threeQuestions, [threeQuestions[2]]]);
+    const u = userEvent.setup();
+    render(
+      <>
+        <TaggingQueueRoute />
+        <Toaster />
+      </>,
+    );
+    await screen.findByTestId("untagged-q3");
+    await waitFor(() => expect(within(screen.getByTestId("untagged-q1")).getByRole("button", { name: /Nguyên hàm/ })).toBeInTheDocument());
+    await u.click(screen.getByRole("checkbox", { name: "Chọn cả trang" }));
+    // the bar says up front how many of the three the system can place
+    expect(screen.getByRole("button", { name: "Gán theo gợi ý (2)" })).toBeEnabled();
+    expect(screen.getByText("1 câu chưa có gợi ý")).toBeInTheDocument();
+    await u.click(screen.getByRole("button", { name: "Gán theo gợi ý (2)" }));
+
+    await waitFor(() =>
+      expect(lastBody(fetch, "/questions/bulk/topics")).toEqual({
+        pairs: [
+          { question_id: "q1", topic_id: "nh" },
+          { question_id: "q2", topic_id: "tp" },
+        ],
+      }),
+    );
+    expect(fetch.mock.calls.filter((c) => String(c[0]) === "/api/questions/bulk/topics").length).toBe(1);
+    // the question with no suggestion is untouched and named, and so is what the server skipped
+    const said = await screen.findByText(/Đã gán chuyên đề cho 1 câu/);
+    expect(said).toHaveTextContent("1 câu chưa có gợi ý");
+    expect(said).toHaveTextContent("1 câu bị bỏ qua (Chuyên đề không thuộc môn của câu hỏi)");
+    await waitFor(() => expect(screen.getByText("Còn 1 câu chưa gắn chuyên đề")).toBeInTheDocument());
+  });
+
+  it("the document filter scrolls and asks for the next page at the end of the list (AC-04)", async () => {
+    setUrl("/org/review/untagged");
+    const u = userEvent.setup();
+    const fetch = mockFetch(
+      route("POST", "/api/questions/search", searchPage(twoQuestions, 2)),
+      route("POST", "/api/questions/facets", { ...facets, untagged_documents: undefined }),
+      route("POST", "/api/questions/suggest-topics", { suggestions: {} }),
+      // one paper per page of a bank that holds two
+      (url, init) => {
+        if (String(url) !== "/api/documents/search" || (init?.method ?? "GET") !== "POST") return undefined;
+        const { page } = JSON.parse(String(init?.body ?? "{}")) as { page: number };
+        return { body: searchPage([{ ...doc, id: `d${page}`, filename: `De-${page}.pdf` }], 2, page, 1) };
+      },
+      route("GET", "/api/taxonomy", taxonomy),
+      route("GET", "/api/topics", topics),
+    );
+    render(<TaggingQueueRoute />);
+    await screen.findByTestId("untagged-q1");
+    await u.click(screen.getByRole("combobox", { name: "Đề gốc" }));
+    const list = await screen.findByTestId("option-list");
+    expect(within(list).getByText("De-1.pdf")).toBeInTheDocument();
+
+    fireEvent.scroll(list);
+    await waitFor(() => expect(lastBody(fetch, "/documents/search").page).toBe(2));
+    // what was loaded stays: the list grows instead of being replaced
+    await waitFor(() => expect(within(screen.getByTestId("option-list")).getByText("De-2.pdf")).toBeInTheDocument());
+    expect(within(screen.getByTestId("option-list")).getByText("De-1.pdf")).toBeInTheDocument();
   });
 });
