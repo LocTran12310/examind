@@ -8,6 +8,10 @@ export interface MasteryRow {
   mastery: number | null;
   answers: number;
   tracked: boolean;
+  /** Enough answers to say anything about the topic; otherwise it reads "chưa đủ dữ liệu". */
+  enough_data: boolean;
+  /** Weak by the one server-side rule (learning-telemetry AC-05) — the UI never re-derives it. */
+  weak: boolean;
 }
 
 /** One student of a class: weakest topics and the latest personal review (`GET /classes/{id}/overview`). */

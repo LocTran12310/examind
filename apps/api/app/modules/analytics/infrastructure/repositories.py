@@ -1,20 +1,21 @@
-"""Mastery rows (ORM on the dataclass) and what a plan reads: topics (taxonomy tables), the graded answer facts
-(assessment's table) and the usable questions of the bank (SQLAlchemy Core / SQL, ADR-01)."""
+"""Mastery rows (ORM on the dataclass), their weekly snapshots and what a plan reads: topics (taxonomy tables), the
+graded answer facts (assessment's table) and the usable questions of the bank (SQLAlchemy Core / SQL, ADR-01)."""
 from collections.abc import Iterable
-from datetime import datetime
+from datetime import date, datetime
 import uuid
 
 from sqlalchemy import delete, select, text
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
-from app.modules.analytics.domain.entities import TopicMastery
+from app.modules.analytics.domain.entities import TopicMastery, TopicWeek
 from app.modules.analytics.domain.value_objects import USABLE, AnswerRecord, TopicNode
 from app.modules.analytics.infrastructure import orm  # noqa: F401  (mapping)
-from app.shared.infrastructure.schema.analytics import student_topic_mastery
+from app.shared.infrastructure.schema.analytics import student_topic_mastery, student_topic_week
 from app.shared.infrastructure.schema.assessment import answer_facts
 from app.shared.infrastructure.schema.taxonomy import topics
 
-m_c, t_c, f_c = student_topic_mastery.c, topics.c, answer_facts.c
+m_c, t_c, f_c, w_c = student_topic_mastery.c, topics.c, answer_facts.c, student_topic_week.c
 _TOPIC = (t_c.id, t_c.parent_id, t_c.name, t_c.path, t_c.subject_id)
 
 
@@ -48,6 +49,38 @@ class SqlMasteryRepository:
 
     def flush(self) -> None:
         self.session.flush()
+
+
+class SqlWeekRepository:
+    """The weekly snapshots, written straight to the table (a projection, not an aggregate)."""
+
+    def __init__(self, session: Session):
+        self.session = session
+
+    def put(self, row: TopicWeek) -> None:
+        values = {"student_id": row.student_id, "topic_id": row.topic_id, "organization_id": row.organization_id,
+                  "week_start": row.week_start, "mastery": row.mastery, "answers": row.answers}
+        stmt = insert(student_topic_week).values(**values)
+        self.session.execute(stmt.on_conflict_do_update(index_elements=["student_id", "topic_id", "week_start"],
+                                                        set_={"mastery": stmt.excluded.mastery, "answers": stmt.excluded.answers,
+                                                              "organization_id": stmt.excluded.organization_id}))
+
+    def clear(self, org_id: uuid.UUID | None, week_start: date | None = None) -> None:
+        stmt = delete(student_topic_week)
+        if org_id:
+            stmt = stmt.where(w_c.organization_id == org_id)
+        if week_start:
+            stmt = stmt.where(w_c.week_start == week_start)
+        self.session.execute(stmt)
+
+    def series(self, org_id: uuid.UUID, student_id: uuid.UUID) -> list[TopicWeek]:
+        rows = self.session.execute(select(w_c.student_id, w_c.topic_id, w_c.organization_id, w_c.week_start, w_c.mastery, w_c.answers)
+                                    .where(w_c.organization_id == org_id, w_c.student_id == student_id)
+                                    .order_by(w_c.week_start, w_c.topic_id)).all()
+        return [TopicWeek(*r) for r in rows]
+
+    def empty(self) -> bool:
+        return self.session.scalar(select(w_c.student_id).limit(1)) is None
 
 
 class SqlTopics:

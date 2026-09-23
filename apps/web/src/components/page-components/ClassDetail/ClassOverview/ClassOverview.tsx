@@ -25,7 +25,7 @@ export function ClassOverview({ rows }: { rows: ClassOverviewRow[] }) {
             </TableCell>
             <TableCell className="space-x-1">
               {r.weakest.length === 0 ? (
-                <span className="text-xs text-muted-foreground/70">chưa có dữ liệu</span>
+                <span className="text-xs text-muted-foreground/70">chưa đủ dữ liệu</span>
               ) : (
                 r.weakest.map((w) => (
                   <ToneBadge key={w.name} tone={w.mastery < 0.5 ? "red" : "amber"}>

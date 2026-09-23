@@ -8,7 +8,8 @@ from app.modules.analytics.domain.value_objects import Plan
 from app.shared.domain.errors import Invalid
 
 WEAK_SHARE, REASK_SHARE = 0.6, 0.1
-WEAK_TOPICS = 3
+PLAN_TOPICS = 3  # how many topics a plan targets; which ones are weak is mastery.weak_topics()
+CONSOLIDATE_BELOW = 0.8  # mastery a topic is still worth consolidating below
 RECENT_CORRECT_DAYS = 7
 REASK_AFTER = timedelta(hours=24)
 PRACTICE_MINUTES = 60

@@ -3,6 +3,7 @@ import uuid
 from fastapi import APIRouter, Depends
 
 from app.modules.analytics.application.commands.assign_class_review import AssignClassReview, AssignClassReviewHandler
+from app.modules.analytics.application.commands.rebuild_mastery import RebuildMastery, RebuildMasteryHandler
 from app.modules.analytics.application.commands.start_practice import StartPractice, StartPracticeHandler
 from app.modules.analytics.application.dto import ReportFilters
 from app.modules.analytics.application.queries.class_overview import ClassOverview, ClassOverviewHandler
@@ -12,6 +13,11 @@ from app.modules.analytics.application.queries.my_mastery import MyMasteryHandle
 from app.modules.analytics.application.queries.my_practice import MyPracticeHandler
 from app.modules.analytics.application.queries.student_mastery import StudentMastery, StudentMasteryHandler
 from app.modules.analytics.application.queries.topic_stats import TopicStats, TopicStatsHandler
+from app.modules.analytics.application.queries.weekly_mastery import (
+    MyWeeklyMasteryHandler,
+    StudentWeeklyMastery,
+    StudentWeeklyMasteryHandler,
+)
 from app.modules.analytics.domain.services.reports import term
 from app.modules.analytics.interface import deps
 from app.modules.analytics.interface.schemas import ClassAdaptiveIn, PracticeIn, report_filters
@@ -54,6 +60,24 @@ def my_mastery(actor: Actor = Depends(current_actor), handle: MyMasteryHandler =
 def student_mastery(student_id: uuid.UUID, actor: Actor = Depends(staff_actor),
                     handle: StudentMasteryHandler = Depends(deps.student_mastery)):
     return handle(actor, StudentMastery(student_id))
+
+
+@router.get("/me/mastery/weekly")
+def my_weekly_mastery(actor: Actor = Depends(current_actor), handle: MyWeeklyMasteryHandler = Depends(deps.my_weekly_mastery)):
+    """The student's own weekly snapshots, oldest week first."""
+    return handle(actor)
+
+
+@router.get("/students/{student_id}/mastery/weekly")
+def student_weekly_mastery(student_id: uuid.UUID, actor: Actor = Depends(staff_actor),
+                           handle: StudentWeeklyMasteryHandler = Depends(deps.student_weekly_mastery)):
+    return handle(actor, StudentWeeklyMastery(student_id))
+
+
+@router.post("/analytics/mastery/rebuild")
+def rebuild_mastery(actor: Actor = Depends(current_actor), handle: RebuildMasteryHandler = Depends(deps.rebuild_mastery)):
+    """An org admin replays their organisation's answer facts: {students, topics, facts}."""
+    return vars(handle(actor, RebuildMastery()))
 
 
 @router.get("/classes/{class_id}/overview")

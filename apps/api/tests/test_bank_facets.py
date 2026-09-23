@@ -82,3 +82,16 @@ def test_facets_exclude_their_own_dimension(client, db):
     assert f["tags"] == {str(x["nb"].id): 3, str(x["hinh"].id): 1}
     f = client.post("/api/questions/facets", json={"subject_id": toan, "topic_ids": [str(x["don_dieu"].id)]}).json()
     assert f["topics"][str(x["ham_so"].id)] == 3 and f["types"] == {"mcq": 1, "true_false": 1}
+
+
+def test_questions_without_a_topic_are_counted(client, db):
+    """A question nobody tagged moves no mastery and lands in no report; the bank says how many there are
+    (learning-telemetry T-03-04)."""
+    admin = setup_admin(client, db)
+    x = build(db, admin.organization_id)
+    assert client.post("/api/questions/facets", json={}).json()["topics"]["none"] == 1
+    assert "none" not in client.post("/api/questions/facets", json={"subject_id": str(x["toan"].id)}).json()["topics"]
+    db.add(Question(organization_id=admin.organization_id, subject_id=x["toan"].id, type="mcq", stem="s", status="approved"))
+    db.commit()
+    f = client.post("/api/questions/facets", json={"subject_id": str(x["toan"].id)}).json()
+    assert f["topics"]["none"] == 1 and f["topics"][str(x["ham_so"].id)] == 3  # the tagged subtrees are unchanged

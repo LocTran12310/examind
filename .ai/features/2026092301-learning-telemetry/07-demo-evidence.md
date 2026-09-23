@@ -90,3 +90,54 @@ flagging rule itself is unchanged; `POST /review/key-audit` on the live stack an
   option counts with the key marked, another organisation's question, the two search columns and their 422s;
   `tests/unit/test_bank_handlers.py` — the handler blanks every number below the minimum and 404s across orgs;
   `question-edit.test.tsx` — the panel's numbers with their counts and the option distribution, and "Chưa đủ dữ liệu".
+
+## UOW-03 — One weak-topic rule, decay, recompute and a weekly snapshot (2026-09-23, live stack)
+
+Migration `0018` applied by the api container on start (`alembic_version` = 0018); `alembic check` clean
+(`test_schema_drift.py`). New `student_topic_week(student_id, topic_id, week_start)` — empty on upgrade, filled by the
+bootstrap backfill and kept by the worker. Nothing else in the schema moved.
+
+### AC-05 — one rule, and "chưa đủ dữ liệu" instead of a guess
+`weak_topics()` in `analytics/domain/services/mastery.py` is now the only definition (mastery < 0.6 **and** ≥ 5 answers);
+`weakest()`, the planner's `< 0.8` and the web's `< 0.5` band are gone. `/me/mastery` carries `enough_data` and `weak`,
+so the screen reads the flags instead of a threshold of its own.
+
+`buivanchau` (org `trungtama`) over `GET /api/me/mastery`, 8 tracked topics:
+- **Giá trị lớn nhất, nhỏ nhất** — 0.441, **5** answers → `enough_data: true`, `weak: true` → "Cần ôn".
+- **Tích vô hướng của hai vectơ** 0.350 (1), **Logarit** 0.350 (1), **Đường tiệm cận** 0.529 (3), **Cực trị của hàm số**
+  0.529 (3), **Thống kê** 0.650 (1), **Giới hạn và hàm số liên tục** 0.828 (3), **Thể tích khối chóp** 0.828 (3) →
+  `enough_data: false`, `weak: false` → "Chưa đủ dữ liệu". The first two sit below 0.6 and would have been called weak
+  before; the 0.529 ones would have read "Khá" on the old web bands.
+- `POST /api/me/practice {"count": 20}` answered `groups: [{reason: "Chuyên đề yếu", topic: "Giá trị lớn nhất, nhỏ nhất",
+  count: 20}]` — not one question was planned around a topic with fewer than five answers.
+- `/me/stats` in the browser (http://localhost:8088) shows the same eight rows with "Cần ôn" on one and
+  "Chưa đủ dữ liệu" on seven.
+
+### AC-06 — decay on read and update, and a replay that reproduces it
+Decay is toward 0.5 with a 60-day half-life, computed from `last_at` in `step()` (which now takes the answer's clock),
+in `rollup()` and in the planner — never by a job.
+
+`POST /api/analytics/mastery/rebuild` as `admin` answered `{"students": 4, "topics": 8, "facts": 77}` over the
+organisation's 23 mastery rows. Run twice, the second replay was **byte-identical** to the first (23/23 rows). Against
+the rows written *before* this feature, 13 of 23 moved, by at most **2.0e-05** — the one-time shift ADR-04 predicted, as
+those values were accumulated without decay. A teacher and `buivanchau` both get **403**.
+
+### AC-07 — a weekly snapshot exists
+The bootstrap backfilled **23 rows** for the running business week (Mon 2026-09-21, Asia/Ho_Chi_Minh), 65 answers, mean
+mastery 0.4919; the worker then wrote the same week again on start (`worker.mastery_week_snapshot rows=23`), replacing
+rather than doubling. `GET /api/me/mastery/weekly` returns the series for `buivanchau` (8 topics, 20 answers in the
+week); `GET /api/students/{id}/mastery/weekly` gives staff the same body, a student asking for another student gets
+**403**, and staff on `/me/mastery/weekly` get **403**.
+
+### T-03-04 — the silent gap is countable
+`POST /api/questions/facets` now reports `topics["none"]`: **102** of the organisation's **377** questions carry no topic,
+so they move no mastery and land in no report. The tagged subtree counts are unchanged.
+
+### Checks
+- `make lint-api` (ruff + 4 import contracts), `./scripts/verify.sh apps/api/tests`: **440 passed, 1 skipped**.
+- `cd apps/web && pnpm typecheck`, `pnpm lint`, `pnpm test`: **174 passed** in 49 files.
+- New tests: `tests/test_mastery_rebuild.py` (3) and `tests/test_mastery_weekly.py` (3); `test_mastery_api.py` — the
+  thin topic and the weak one; `test_bank_facets.py` — questions with no topic; `tests/unit/test_analytics_handlers.py`
+  — decay over a half-life, the weak rule with and without evidence, the replay and its 403s, the weekly snapshot,
+  the job matching the backfill, the series' scoping, and a plan that refuses to build on two answers;
+  `mastery.test.tsx` — the bands read the server's flags.

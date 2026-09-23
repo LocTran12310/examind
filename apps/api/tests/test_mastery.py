@@ -5,6 +5,8 @@ from app.modules.analytics.domain.services import mastery
 from app.modules.analytics.interface.deps import analytics_api
 from tests.exam_helpers import assign, display_key, display_wrong, exam_with_questions, klass_with_student, login
 
+ENOUGH = mastery.MIN_ANSWERS  # rounds of the same exam: one answer per question each, so every topic passes the minimum
+
 
 def test_step_is_difficulty_weighted_ema():
     assert mastery.step(0.5, 1.0, "th") == 0.65
@@ -13,15 +15,17 @@ def test_step_is_difficulty_weighted_ema():
     assert mastery.step(0.5, 1.0, None) == 0.65
 
 
-def take(client, db, right: bool, username="hs01"):
+def take(client, db, right: bool, username="hs01", rounds=1):
+    """`rounds` sittings of the same 4-question exam; one round leaves every topic under the weak rule's minimum."""
     admin, exam = exam_with_questions(client, db, mcq=4, tf=0, short=0)
     klass, _ = klass_with_student(client, db, admin, username)
-    a = assign(client, exam["id"], klass["id"])
     s = login(client, "trungtama", username)
-    att = s.post(f"/api/assignments/{a['id']}/start").json()["attempt_id"]
-    for q in s.get(f"/api/attempts/{att}").json()["questions"]:
-        s.put(f"/api/attempts/{att}/answers/{q['id']}", json={"response": display_key(db, q) if right else display_wrong(db, q)})
-    s.post(f"/api/attempts/{att}/submit")
+    for _ in range(rounds):
+        a = assign(client, exam["id"], klass["id"])
+        att = s.post(f"/api/assignments/{a['id']}/start").json()["attempt_id"]
+        for q in s.get(f"/api/attempts/{att}").json()["questions"]:
+            s.put(f"/api/attempts/{att}/answers/{q['id']}", json={"response": display_key(db, q) if right else display_wrong(db, q)})
+        s.post(f"/api/attempts/{att}/submit")
     return admin
 
 

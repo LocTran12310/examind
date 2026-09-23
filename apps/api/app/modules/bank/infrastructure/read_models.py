@@ -201,6 +201,12 @@ class SqlQuestionReader:
         if subject_id and subject_id != "none":
             stmt = stmt.where(node.c.subject_id == subject_id)
         out["topics"] = {str(t): n for t, n in db.execute(stmt).all()}
+        # questions nobody tagged with a topic: they answer no report and move no mastery, so the gap is countable
+        s = sub("topics")
+        untagged = db.scalar(select(func.count()).select_from(questions).join(s, s.c.id == qc.id)
+                             .where(~exists().where(qt.question_id == qc.id)))
+        if untagged:
+            out["topics"]["none"] = untagged
         return out
 
 

@@ -18,9 +18,9 @@ describe("my stats", () => {
       route("GET", "/api/stats/groups?by=type", [{ key: "mcq", label: "mcq", points: 1, max_points: 2, answered: 8, ratio: 0.5 }]),
       route("GET", "/api/me/practice", []),
       route("GET", "/api/me/mastery", [
-        { topic_id: "a", parent_id: null, name: "Đại số", path: "a", depth: 1, mastery: 0.5, answers: 8, tracked: false },
-        { topic_id: "b", parent_id: "a", name: "Mệnh đề", path: "a.b", depth: 2, mastery: 0.3, answers: 4, tracked: true },
-        { topic_id: "c", parent_id: "a", name: "Tập hợp", path: "a.c", depth: 2, mastery: 0.7, answers: 4, tracked: true },
+        { topic_id: "a", parent_id: null, name: "Đại số", path: "a", depth: 1, mastery: 0.5, answers: 12, tracked: false, enough_data: true, weak: false },
+        { topic_id: "b", parent_id: "a", name: "Mệnh đề", path: "a.b", depth: 2, mastery: 0.3, answers: 6, tracked: true, enough_data: true, weak: true },
+        { topic_id: "c", parent_id: "a", name: "Tập hợp", path: "a.c", depth: 2, mastery: 0.7, answers: 6, tracked: true, enough_data: true, weak: false },
       ]),
     );
     render(<MyStatsPage />);

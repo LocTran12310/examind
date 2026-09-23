@@ -7,6 +7,14 @@ from app.shared.application.actor import Actor
 
 
 @dataclass(frozen=True)
+class RebuildResult:
+    """What a mastery replay touched (learning-telemetry AC-06)."""
+    students: int
+    topics: int
+    facts: int
+
+
+@dataclass(frozen=True)
 class ReportFilters:
     """What a report is narrowed to (every field optional). `class_id` is the class the student was in when answering,
     not the current one (school-years ADR-02)."""

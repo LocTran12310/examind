@@ -9,11 +9,11 @@ from app.modules.assessment.domain.entities import AnswerFact
 from app.modules.bank.domain.entities import Question, QuestionTopic
 from app.modules.identity.domain.entities import User
 from app.modules.taxonomy.domain.topics import Topic
-from tests.test_mastery import take
+from tests.test_mastery import ENOUGH, take
 
 
 def setup(client, db):
-    admin = take(client, db, right=False)  # hs01 answered 4 MCQs wrong → weak topics
+    admin = take(client, db, right=False, rounds=ENOUGH)  # hs01 answered the 4 MCQs wrong often enough to call them weak
     student = db.scalar(select(User).where(User.username == "hs01"))
     return admin, student
 

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import uuid
 
 from app.modules.analytics.domain.ports import MasteryRepository, Topics
 from app.modules.analytics.domain.services import mastery as rules
@@ -11,19 +12,20 @@ class RecordAnswer:
     answer: AnswerRecord
 
 
-def record(mastery: MasteryRepository, topics: Topics, a: AnswerRecord) -> bool:
-    """The answer moves the student's mastery of its topic; answers without a (known) topic are ignored."""
+def record(mastery: MasteryRepository, topics: Topics, a: AnswerRecord) -> uuid.UUID | None:
+    """The answer moves the student's mastery of its topic (the topic it moved); answers without a (known) topic
+    are ignored."""
     if not a.topic_path:
-        return False
+        return None
     topic_id = topics.id_by_path(a.organization_id, a.topic_path)
     if topic_id is None:
-        return False
+        return None
     row = mastery.get(a.student_id, topic_id)
     if row is None:
         row = rules.fresh(a.student_id, topic_id, a.organization_id)
         mastery.add(row)
     rules.apply(row, a.correct_ratio, a.difficulty, a.at)
-    return True
+    return topic_id
 
 
 class RecordAnswerHandler:

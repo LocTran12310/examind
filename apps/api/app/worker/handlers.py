@@ -1,6 +1,6 @@
 """Job handlers registered with the worker queue; each job type calls an application command of its module.
-The modules the ingestion pipeline, the attempt sweep (grading → topic mastery) and the key audit talk to are wired here
-as in the API's composition root (app/main.py)."""
+The modules the ingestion pipeline, the attempt sweep (grading → topic mastery), the key audit and the weekly mastery
+snapshot talk to are wired here as in the API's composition root (app/main.py)."""
 from app.modules.academic.interface.deps import academic_api
 from app.modules.analytics.interface import deps as analytics_deps
 from app.modules.assessment.infrastructure.adapters.analytics import AnalyticsFactListener
@@ -40,3 +40,8 @@ def sweep_expired_attempts(db) -> int:
 def audit_answer_keys(db) -> list:
     """Questions whose key the students' answers contradict are flagged (adaptive-review A-09; the worker commits)."""
     return bank_deps.bank_api(db).audit_keys()
+
+
+def snapshot_mastery_week(db) -> int:
+    """The weekly mastery snapshot of the business week running now (learning-telemetry A-06); rows written."""
+    return analytics_deps.analytics_api(db).snapshot_mastery_week()

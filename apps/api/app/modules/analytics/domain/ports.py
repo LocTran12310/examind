@@ -2,11 +2,11 @@
 assessment's exams and attempts), each behind a port. The classes and members a report lists are an application
 port (application/ports.py)."""
 from collections.abc import Iterable
-from datetime import datetime
+from datetime import date, datetime
 from typing import Protocol
 import uuid
 
-from app.modules.analytics.domain.entities import TopicMastery
+from app.modules.analytics.domain.entities import TopicMastery, TopicWeek
 from app.modules.analytics.domain.value_objects import AnswerRecord, PracticeAttempt, ReviewStatus, TopicNode
 
 
@@ -26,6 +26,24 @@ class MasteryRepository(Protocol):
     def empty(self) -> bool: ...
 
     def flush(self) -> None: ...
+
+
+class WeekRepository(Protocol):
+    """The weekly mastery snapshots (learning-telemetry A-06)."""
+
+    def put(self, row: TopicWeek) -> None:
+        """The row of that student, topic and week, replacing what the week held."""
+        ...
+
+    def clear(self, org_id: uuid.UUID | None, week_start: date | None = None) -> None:
+        """Every row (of the org, of that week when given) out, before it is written again."""
+        ...
+
+    def series(self, org_id: uuid.UUID, student_id: uuid.UUID) -> list[TopicWeek]:
+        """The student's snapshots of the org, oldest week first."""
+        ...
+
+    def empty(self) -> bool: ...
 
 
 class Topics(Protocol):

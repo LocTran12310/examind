@@ -1,6 +1,6 @@
 from datetime import date, datetime
 
-from app.shared.infrastructure.timezone import business_date, business_today
+from app.shared.infrastructure.timezone import business_date, business_today, day_start
 
 
 class TzCalendar:
@@ -11,3 +11,6 @@ class TzCalendar:
 
     def day_of(self, when: date | datetime) -> date:
         return business_date(when)
+
+    def start_of(self, day: date) -> datetime:
+        return day_start(day)

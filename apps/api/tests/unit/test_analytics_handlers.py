@@ -1,6 +1,6 @@
-"""Analytics handlers against in-memory ports: mastery, reports, personal review exams and the audit history
-(no database, no HTTP — architecture-refactor ADR-02)."""
-from datetime import UTC, datetime, timedelta
+"""Analytics handlers against in-memory ports: mastery (its one weak rule, decay, replay and weekly snapshot),
+reports, personal review exams and the audit history (no database, no HTTP — architecture-refactor ADR-02)."""
+from datetime import UTC, datetime, time, timedelta, timezone
 import uuid
 
 import pytest
@@ -8,6 +8,13 @@ import pytest
 from app.modules.analytics.application.commands.assign_class_review import AssignClassReview, AssignClassReviewHandler
 from app.modules.analytics.application.commands.rebuild_mastery import RebuildMastery, RebuildMasteryHandler
 from app.modules.analytics.application.commands.record_answer import RecordAnswer, RecordAnswerHandler
+from app.modules.analytics.application.commands.snapshot_week import (
+    BackfillWeeks,
+    BackfillWeeksHandler,
+    SnapshotWeek,
+    SnapshotWeekHandler,
+    WeeklySnapshot,
+)
 from app.modules.analytics.application.commands.start_practice import StartPractice, StartPracticeHandler
 from app.modules.analytics.application.common import PracticePlanner
 from app.modules.analytics.application.dto import ReportFilters
@@ -18,8 +25,14 @@ from app.modules.analytics.application.queries.my_mastery import MyMasteryHandle
 from app.modules.analytics.application.queries.my_practice import MyPracticeHandler
 from app.modules.analytics.application.queries.student_mastery import StudentMastery, StudentMasteryHandler
 from app.modules.analytics.application.queries.topic_stats import TopicStats, TopicStatsHandler
-from app.modules.analytics.domain.services.mastery import START, step
+from app.modules.analytics.application.queries.weekly_mastery import (
+    MyWeeklyMasteryHandler,
+    StudentWeeklyMastery,
+    StudentWeeklyMasteryHandler,
+)
+from app.modules.analytics.domain.services.mastery import HALF_LIFE, MIN_ANSWERS, START, WEAK_BELOW, decay, step, weak_topics
 from app.modules.analytics.domain.services.practice import plan_summary, target_difficulties
+from app.modules.analytics.domain.services.weeks import week_start
 from app.modules.analytics.domain.value_objects import AnswerRecord, Member, PracticeAttempt, ReviewStatus, TopicNode
 from app.modules.audit.application.dto import AuditRow
 from app.modules.audit.application.queries.search_audit import SearchAudit, SearchAuditHandler
@@ -33,6 +46,7 @@ ORG = uuid.uuid4()
 NOW = datetime(2026, 9, 22, 8, 0, tzinfo=UTC)
 TEACHER = Actor(user_id=uuid.uuid4(), org_id=ORG, role="teacher")
 STUDENT = Actor(user_id=uuid.uuid4(), org_id=ORG, role="student")
+BOSS = Actor(user_id=uuid.uuid4(), org_id=ORG, role="org_admin")
 
 # a small tree: Đại số › {Mệnh đề, Tập hợp}, Hình học (a strand without children)
 ALG = TopicNode(uuid.uuid4(), None, "Đại số", "a")
@@ -63,6 +77,45 @@ class FakeMastery:
 
     def flush(self):
         pass
+
+
+class FakeWeeks:
+    def __init__(self):
+        self.rows = {}
+
+    def put(self, row):
+        self.rows[(row.student_id, row.topic_id, row.week_start)] = row
+
+    def clear(self, org_id, week_start=None):
+        def keep(r):
+            return (bool(org_id) and r.organization_id != org_id) or (week_start is not None and r.week_start != week_start)
+
+        self.rows = {k: r for k, r in self.rows.items() if keep(r)}
+
+    def series(self, org_id, student_id):
+        rows = [r for r in self.rows.values() if r.organization_id == org_id and r.student_id == student_id]
+        return sorted(rows, key=lambda r: (r.week_start, str(r.topic_id)))
+
+    def empty(self):
+        return not self.rows
+
+
+class FakeCalendar:
+    """Business days in the fixed +07:00 zone, without the settings behind TzCalendar."""
+
+    TZ = timezone(timedelta(hours=7))
+
+    def __init__(self, now=None):
+        self.now = now or NOW
+
+    def today(self):
+        return self.day_of(self.now)
+
+    def day_of(self, when):
+        return when.astimezone(self.TZ).date() if isinstance(when, datetime) else when
+
+    def start_of(self, day):
+        return datetime.combine(day, time.min, tzinfo=self.TZ).astimezone(UTC)
 
 
 class FakeTopics:
@@ -155,8 +208,24 @@ class FakeAssessment:
 KLASS = uuid.uuid4()
 
 
-def answer(topic: TopicNode | None, ratio: float, difficulty="th", student=STUDENT.user_id, minutes=0) -> AnswerRecord:
-    return AnswerRecord(ORG, student, topic.path if topic else None, ratio, difficulty, NOW + timedelta(minutes=minutes))
+def answer(topic: TopicNode | None, ratio: float, difficulty="th", student=STUDENT.user_id, minutes=0, days=0) -> AnswerRecord:
+    return AnswerRecord(ORG, student, topic.path if topic else None, ratio, difficulty, NOW + timedelta(days=days, minutes=minutes))
+
+
+def enough_answers(topic: TopicNode, ratio: float, n: int = MIN_ANSWERS, first=0, **kw) -> list[AnswerRecord]:
+    """`n` answers on one topic a minute apart — the evidence the weak rule asks for (A-03)."""
+    return [answer(topic, ratio, minutes=first + i, **kw) for i in range(n)]
+
+
+def recorded(*answers: AnswerRecord) -> FakeMastery:
+    mastery = FakeMastery()
+    for a in answers:
+        RecordAnswerHandler(mastery, FakeTopics(), FakeUow())(RecordAnswer(a))
+    return mastery
+
+
+def snapshot(weeks, history, now=None) -> WeeklySnapshot:
+    return WeeklySnapshot(weeks, FakeTopics(), history, FakeCalendar(now), lambda: now or NOW, FakeUow())
 
 
 def planner(mastery=None, history=None, pool=None) -> PracticePlanner:
@@ -174,41 +243,110 @@ def test_an_answer_moves_the_topic_mastery_and_unknown_topics_are_ignored():
     record(RecordAnswer(AnswerRecord(ORG, STUDENT.user_id, "zz.unknown", 1.0, "th", NOW)))
     row = mastery.get(STUDENT.user_id, PROP.id)
     assert list(mastery.rows) == [(STUDENT.user_id, PROP.id)]
-    assert row.answers == 2 and row.mastery == step(step(START, 1.0, "th"), 0.0, "vdc") and row.last_at == NOW + timedelta(minutes=1)
+    later = NOW + timedelta(minutes=1)  # the minute between the two answers decays the first one a little (ADR-04)
+    assert row.answers == 2 and row.last_at == later
+    assert row.mastery == step(step(START, 1.0, "th"), 0.0, "vdc", NOW, later)
 
 
-def test_rebuild_replays_every_fact_and_matches_live_grading():
+def test_mastery_decays_halfway_back_to_the_middle_after_a_half_life():
+    assert decay(1.0, NOW, NOW + HALF_LIFE) == 0.75  # halfway from 1.0 back toward 0.5
+    assert decay(0.1, NOW, NOW + 2 * HALF_LIFE) == 0.4
+    assert decay(0.9, NOW, NOW) == 0.9 and decay(0.9, None, NOW) == 0.9  # no idle time, no clock: untouched
+    # the idle time is spent before the answer lands, so a long break softens what one answer can prove
+    assert step(1.0, 1.0, "th", NOW, NOW + HALF_LIFE) == round(0.75 + 0.3 * 0.25, 6)
+    row = recorded(answer(PROP, 1.0)).get(STUDENT.user_id, PROP.id)
+    rows = MyMasteryHandler(recorded(answer(PROP, 1.0)), FakeTopics(), lambda: NOW + HALF_LIFE)(STUDENT)
+    assert rows[1]["mastery"] == round(decay(row.mastery, row.last_at, NOW + HALF_LIFE), 4)
+
+
+def test_a_topic_is_weak_only_below_the_threshold_and_with_enough_answers():
+    thin = recorded(*enough_answers(GEO, 0.0, MIN_ANSWERS - 1))
+    rows = MyMasteryHandler(thin, FakeTopics(), lambda: NOW)(STUDENT)
+    geo = next(r for r in rows if r["path"] == "g")
+    assert geo["mastery"] < WEAK_BELOW and geo["answers"] == MIN_ANSWERS - 1
+    assert geo["enough_data"] is False and geo["weak"] is False and weak_topics(rows) == []
+
+    mastery = recorded(*enough_answers(PROP, 0.0), *enough_answers(SETS, 1.0), *enough_answers(GEO, 0.0, MIN_ANSWERS - 1))
+    rows = MyMasteryHandler(mastery, FakeTopics(), lambda: NOW)(STUDENT)
+    assert [r["name"] for r in weak_topics(rows)] == ["Mệnh đề"]  # Tập hợp is strong, Hình học has too little behind it
+    assert {r["name"]: (r["enough_data"], r["weak"]) for r in rows if r["tracked"]} == {
+        "Mệnh đề": (True, True), "Tập hợp": (True, False), "Hình học": (False, False)}
+
+
+def test_rebuild_replays_every_fact_for_an_org_admin_only():
     answers = [answer(PROP, 1.0), answer(SETS, 0.0, "nb", minutes=1), answer(PROP, 0.5, minutes=2), answer(None, 1.0, minutes=3)]
-    live = FakeMastery()
-    for a in answers:
-        RecordAnswerHandler(live, FakeTopics(), FakeUow())(RecordAnswer(a))
+    live = recorded(*answers)
     rebuilt = FakeMastery()
     rebuilt.add(live.get(STUDENT.user_id, PROP.id))  # stale rows are cleared first
-    n = RebuildMasteryHandler(rebuilt, FakeTopics(), FakeHistory(answers), FakeUow())(RebuildMastery(ORG))
-    assert n == 4
+    uow = FakeUow()
+    handle = RebuildMasteryHandler(rebuilt, FakeTopics(), FakeHistory(answers), uow)
+    out = handle(BOSS, RebuildMastery())
+    assert vars(out) == {"students": 1, "topics": 2, "facts": 4} and uow.commits == 1
     assert {k: (m.mastery, m.answers) for k, m in rebuilt.rows.items()} == {k: (m.mastery, m.answers) for k, m in live.rows.items()}
+    for who in (TEACHER, STUDENT):
+        with pytest.raises(Forbidden):
+            handle(who, RebuildMastery())
 
 
 def test_my_mastery_rolls_leaves_up_the_tree_and_is_for_students_only():
-    mastery = FakeMastery()
-    for a in (answer(PROP, 0.0), answer(SETS, 1.0), answer(SETS, 1.0)):
-        RecordAnswerHandler(mastery, FakeTopics(), FakeUow())(RecordAnswer(a))
-    rows = MyMasteryHandler(mastery, FakeTopics())(STUDENT)
+    mastery = recorded(answer(PROP, 0.0), answer(SETS, 1.0), answer(SETS, 1.0))
+    rows = MyMasteryHandler(mastery, FakeTopics(), lambda: NOW)(STUDENT)
     assert [r["path"] for r in rows] == ["a", "a.p", "a.s"]
     parent = rows[0]
     assert parent["tracked"] is False and parent["answers"] == 3 and parent["depth"] == 1
     p, s = mastery.get(STUDENT.user_id, PROP.id), mastery.get(STUDENT.user_id, SETS.id)
     assert parent["mastery"] == round((p.mastery * 1 + s.mastery * 2) / 3, 4)
     with pytest.raises(Forbidden):
-        MyMasteryHandler(mastery, FakeTopics())(TEACHER)
+        MyMasteryHandler(mastery, FakeTopics(), lambda: NOW)(TEACHER)
 
 
 def test_staff_read_a_member_s_mastery_only():
     member = Member(STUDENT.user_id, "An", "hs01", role="student")
-    handle = StudentMasteryHandler(FakeMastery(), FakeTopics(), FakeRoster([member]))
+    handle = StudentMasteryHandler(FakeMastery(), FakeTopics(), FakeRoster([member]), lambda: NOW)
     assert handle(TEACHER, StudentMastery(STUDENT.user_id)) == []
     with pytest.raises(NotFound):
         handle(TEACHER, StudentMastery(uuid.uuid4()))
+
+
+# ------------------------------------------------------------------ the weekly snapshot
+
+LATER = NOW + timedelta(days=20)  # every week of the fixtures below has closed by then
+
+
+def test_the_weekly_snapshot_holds_where_each_week_ended_and_what_it_saw():
+    answers = [*enough_answers(PROP, 0.0, 2), *enough_answers(SETS, 1.0, 3, days=14)]
+    weeks = FakeWeeks()
+    written = BackfillWeeksHandler(snapshot(weeks, FakeHistory(answers), LATER))(BackfillWeeks())
+    series = MyWeeklyMasteryHandler(weeks)(STUDENT)["weeks"]
+    monday = week_start(FakeCalendar().day_of(NOW))
+    assert [w["week_start"] for w in series] == [monday + timedelta(days=7 * i) for i in range(4)]
+    assert written == 1 + 1 + 2 + 2  # Mệnh đề alone, again in the silent week, then both, then both again
+    assert [(t["topic_id"], t["answers"]) for t in series[0]["topics"]] == [(PROP.id, 2)]
+    assert [t["answers"] for t in series[1]["topics"]] == [0]  # a week nobody answered in still holds a value
+    assert series[1]["topics"][0]["mastery"] > series[0]["topics"][0]["mastery"]  # decayed back toward the middle
+    assert {t["topic_id"]: t["answers"] for t in series[2]["topics"]} == {PROP.id: 0, SETS.id: 3}
+
+
+def test_the_weekly_job_writes_the_running_week_and_matches_the_backfill():
+    answers = enough_answers(PROP, 0.0, 3)
+    backfilled, live = FakeWeeks(), FakeWeeks()
+    BackfillWeeksHandler(snapshot(backfilled, FakeHistory(answers)))(BackfillWeeks())
+    assert SnapshotWeekHandler(snapshot(live, FakeHistory(answers)), FakeCalendar())(SnapshotWeek()) == 1
+    assert {k: vars(r) for k, r in live.rows.items()} == {k: vars(r) for k, r in backfilled.rows.items()}
+    row = next(iter(live.rows.values()))
+    assert row.mastery == recorded(*answers).get(STUDENT.user_id, PROP.id).mastery  # the week is still running: no decay yet
+    assert BackfillWeeksHandler(snapshot(FakeWeeks(), FakeHistory()))(BackfillWeeks()) == 0  # no facts, no weeks
+
+
+def test_the_weekly_series_is_the_student_s_own_or_a_member_s():
+    weeks, member = FakeWeeks(), Member(STUDENT.user_id, "An", "hs01", role="student")
+    BackfillWeeksHandler(snapshot(weeks, FakeHistory(enough_answers(PROP, 0.0, 2))))(BackfillWeeks())
+    mine = MyWeeklyMasteryHandler(weeks)(STUDENT)
+    assert StudentWeeklyMasteryHandler(weeks, FakeRoster([member]))(TEACHER, StudentWeeklyMastery(STUDENT.user_id)) == mine
+    with pytest.raises(Forbidden):
+        MyWeeklyMasteryHandler(weeks)(TEACHER)
+    with pytest.raises(NotFound):
+        StudentWeeklyMasteryHandler(weeks, FakeRoster([member]))(TEACHER, StudentWeeklyMastery(uuid.uuid4()))
 
 
 # ------------------------------------------------------------------ reports
@@ -277,9 +415,7 @@ def test_a_plan_without_history_is_balanced_over_the_strands():
 
 
 def test_a_plan_targets_weak_topics_reasks_old_mistakes_and_skips_recent_right_answers():
-    mastery = FakeMastery()
-    for a in (answer(PROP, 0.0), answer(PROP, 0.0), answer(SETS, 1.0)):
-        RecordAnswerHandler(mastery, FakeTopics(), FakeUow())(RecordAnswer(a))
+    mastery = recorded(*enough_answers(PROP, 0.0), *enough_answers(SETS, 0.4, first=10))
     pool = FakePool()
     recent = {pool.by_path["a.p"][0][0]}
     mistakes = [pool.by_path["a.s"][1][0], pool.by_path["a.s"][2][0], pool.by_path["a.s"][3][0]]
@@ -290,6 +426,15 @@ def test_a_plan_targets_weak_topics_reasks_old_mistakes_and_skips_recent_right_a
     weak = [p for p in plan.picks if p.reason == "Chuyên đề yếu"]
     assert weak and weak[0].topic == "Mệnh đề"  # the weakest topic comes first
     assert target_difficulties(0.2) == ["nb", "th"] and target_difficulties(0.9) == ["vd", "vdc"]
+
+
+def test_a_plan_is_never_built_around_a_topic_with_too_little_behind_it():
+    thin = recorded(*enough_answers(PROP, 0.0, MIN_ANSWERS - 1))
+    plan = planner(thin, pool=FakePool()).build(ORG, STUDENT.user_id, count=10, seed=1)
+    assert len(plan.picks) == 10 and "Chưa đủ dữ liệu theo chuyên đề" in plan.note
+    assert {p.reason for p in plan.picks} <= {"Làm quen", "Bổ sung"}  # no "Chuyên đề yếu" on two answers
+    enough = recorded(*enough_answers(PROP, 0.0))
+    assert any(p.reason == "Chuyên đề yếu" for p in planner(enough, pool=FakePool()).build(ORG, STUDENT.user_id, count=10, seed=1).picks)
 
 
 def test_start_practice_creates_the_exam_and_an_hour_long_attempt():
@@ -330,15 +475,15 @@ def test_a_class_review_gives_each_active_student_an_own_exam():
 
 def test_class_overview_and_practice_history():
     student = Member(STUDENT.user_id, "An", "hs01", True, "student")
-    mastery = FakeMastery()
-    for a in (answer(PROP, 0.0), answer(SETS, 1.0), answer(SETS, 1.0)):
-        RecordAnswerHandler(mastery, FakeTopics(), FakeUow())(RecordAnswer(a))
+    mastery = recorded(*enough_answers(PROP, 0.0), *enough_answers(SETS, 0.4, first=10),
+                       *enough_answers(GEO, 0.0, MIN_ANSWERS - 1, first=20))
     assessment = FakeAssessment()
     assessment.reviews[student.id] = ReviewStatus(uuid.uuid4(), "Đề ôn cá nhân", "not_started")
     teacher = Member(uuid.uuid4(), "Cô Lan", "gv01", True, "teacher")
-    ov = ClassOverviewHandler(mastery, FakeTopics(), FakeRoster([student, teacher]), assessment)(TEACHER, ClassOverview(KLASS))
+    ov = ClassOverviewHandler(mastery, FakeTopics(), FakeRoster([student, teacher]), assessment, lambda: NOW)(TEACHER, ClassOverview(KLASS))
     assert [o["username"] for o in ov] == ["hs01"]
-    assert [w["name"] for w in ov[0]["weakest"]] == ["Mệnh đề", "Tập hợp"] and ov[0]["review"]["status"] == "not_started"
+    assert [w["name"] for w in ov[0]["weakest"]] == ["Mệnh đề", "Tập hợp"]  # Hình học has too little behind it
+    assert ov[0]["review"]["status"] == "not_started"
 
     settings = {"adaptive": {"note": None, "plan": [{"question_id": "q1", "reason": "Chuyên đề yếu", "topic": "Mệnh đề"},
                                                     {"question_id": "q2", "reason": "Chuyên đề yếu", "topic": "Mệnh đề"},

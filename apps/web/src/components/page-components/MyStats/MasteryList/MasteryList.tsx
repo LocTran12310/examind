@@ -3,9 +3,11 @@
 import { ScoreBar } from "@/components/common/ScoreBar/ScoreBar";
 import type { MasteryRow } from "@/interfaces/mastery.interface";
 
-export function level(m: number | null): string {
-  if (m === null) return "—";
-  return m >= 0.8 ? "Vững" : m >= 0.5 ? "Khá" : "Cần ôn";
+/** The band a topic is in. "Cần ôn" is the server's weak rule, never a threshold of our own (AC-05). */
+export function level(row: Pick<MasteryRow, "mastery" | "enough_data" | "weak">): string {
+  if (!row.enough_data) return "Chưa đủ dữ liệu";
+  if (row.weak) return "Cần ôn";
+  return (row.mastery ?? 0) >= 0.8 ? "Vững" : "Khá";
 }
 
 export function MasteryList({ rows, limit }: { rows: MasteryRow[]; limit?: number }) {
@@ -15,13 +17,13 @@ export function MasteryList({ rows, limit }: { rows: MasteryRow[]; limit?: numbe
   return (
     <ul className="space-y-2" data-testid="mastery">
       {shown.map((r) => (
-        <li key={r.topic_id} className="grid grid-cols-[1fr_120px_56px_56px] items-center gap-2 text-sm">
+        <li key={r.topic_id} className="grid grid-cols-[1fr_120px_56px_96px] items-center gap-2 text-sm">
           <span className="truncate" title={r.path}>
             {r.name}
           </span>
           <ScoreBar ratio={r.mastery ?? 0} />
           <span className="text-right font-medium">{Math.round((r.mastery ?? 0) * 100)}%</span>
-          <span className="text-right text-xs text-muted-foreground">{level(r.mastery)}</span>
+          <span className="text-right text-xs text-muted-foreground">{level(r)}</span>
         </li>
       ))}
     </ul>

@@ -43,6 +43,7 @@ def run() -> None:
         extra_seeders(db)
         triage_legacy_drafts(db)
         backfill_mastery_if_missing(db)
+        backfill_mastery_weeks_if_missing(db)
         db.commit()
 
 
@@ -79,6 +80,13 @@ def backfill_mastery_if_missing(db: Session) -> int:
     from app.modules.analytics.interface.deps import analytics_api
 
     return analytics_api(db).rebuild_mastery_if_missing()
+
+
+def backfill_mastery_weeks_if_missing(db: Session) -> int:
+    """The weekly mastery snapshots of the weeks that passed before they were kept (learning-telemetry A-06)."""
+    from app.modules.analytics.interface.deps import analytics_api
+
+    return analytics_api(db).backfill_mastery_weeks_if_missing()
 
 
 if __name__ == "__main__":

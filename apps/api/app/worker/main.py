@@ -48,7 +48,7 @@ def main() -> None:
         t.start()
     log.info("worker.started", concurrency=concurrency)
     factory = dbmod.session_factory()
-    last_audit = 0.0
+    last_audit, last_week = 0.0, 0.0
     while not stop.is_set():
         HEARTBEAT.touch()
         if time.monotonic() - last_audit > 600:  # key audit every 10 minutes (adaptive-review A-09)
@@ -64,6 +64,17 @@ def main() -> None:
                 except Exception as exc:
                     db.rollback()
                     log.error("worker.key_audit_failed", error=str(exc))
+        if time.monotonic() - last_week > 3600:  # weekly mastery snapshot, kept fresh hourly (learning-telemetry A-06)
+            last_week = time.monotonic()
+            with factory() as db:
+                try:
+                    from app.worker.handlers import snapshot_mastery_week
+
+                    rows = snapshot_mastery_week(db)
+                    log.info("worker.mastery_week_snapshot", rows=rows)
+                except Exception as exc:
+                    db.rollback()
+                    log.error("worker.mastery_week_failed", error=str(exc))
         with factory() as db:
             recovered = queue.recover_stale(db)
             if recovered:
