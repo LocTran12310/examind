@@ -43,4 +43,4 @@ class BulkSetTopicsHandler:
             updated += 1
         record(self.log, actor, None, "bulk", None, {"pairs": len(pairs), "updated": updated, "skipped": len(skipped)}, batch)
         self.uow.commit()
-        return BulkTopicsResult(updated, skipped)
+        return BulkTopicsResult(updated, skipped, batch)

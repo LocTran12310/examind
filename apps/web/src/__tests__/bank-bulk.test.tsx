@@ -167,10 +167,13 @@ describe("bulk actions", () => {
     expect(await screen.findByText("Lượt sửa này đã được hoàn tác")).toBeInTheDocument();
   });
 
-  it("an answer with no batch id offers no way back from the toast", async () => {
-    // the batch is what an undo names; an edit that does not say which one it wrote cannot be taken back here,
-    // and the toast promises nothing it cannot do — "Thay đổi gần đây" is still the way in
-    mockFetch(route("POST", "/api/questions/bulk", { updated: 2 }));
+  it("every bulk edit offers the way back, and undoes the batch it just made (AC-01)", async () => {
+    // the edit names its own batch, so the toast takes back exactly what it reported — no second request to
+    // the history and no guess at which row of it is mine
+    const f = mockFetch(
+      route("POST", "/api/questions/bulk", { updated: 2, batch_id: "batch-9" }),
+      route("POST", "/api/questions/bulk/undo", { restored: 2, batch_id: "batch-10" }),
+    );
     const u = userEvent.setup();
     render(
       <>
@@ -181,7 +184,9 @@ describe("bulk actions", () => {
     await u.click(screen.getByRole("button", { name: /Lớp/ }));
     await u.click(await screen.findByRole("menuitem", { name: "Lớp 11" }));
     expect(await screen.findByText("Đã đặt Lớp 11: 2 câu")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Hoàn tác" })).not.toBeInTheDocument();
+    await u.click(await screen.findByRole("button", { name: "Hoàn tác" }));
+    await waitFor(() => expect(lastBody(f, "/questions/bulk/undo")).toEqual({ batch_id: "batch-9" }));
+    expect(await screen.findByText("Đã hoàn tác 2 câu")).toBeInTheDocument();
   });
 
   it("the topic picker counts questions of the subject in hand, asked for when it opens (AC-02, ADR-01)", async () => {

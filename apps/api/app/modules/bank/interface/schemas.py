@@ -116,6 +116,7 @@ class BulkIn(BaseModel):
 
 class BulkOut(BaseModel):
     updated: int
+    batch_id: uuid.UUID
 
 
 class UndoIn(BaseModel):
@@ -147,6 +148,7 @@ class SkippedPairOut(BaseModel):
 class BulkTopicsOut(BaseModel):
     updated: int
     skipped: list[SkippedPairOut]
+    batch_id: uuid.UUID
 
 
 class ActionIn(BaseModel):

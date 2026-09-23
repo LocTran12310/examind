@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import uuid
 
 from app.modules.bank.application.common import record, set_tags, set_topics
+from app.modules.bank.application.dto import BulkResult
 from app.modules.bank.domain.ports import QuestionRepository, ReviewLog, Taxonomy
 from app.modules.bank.domain.services.quality import blocking_manual, settle
 from app.modules.bank.domain.services.review import blocking_message, check_difficulty, check_grade
@@ -34,7 +35,7 @@ class BulkUpdateQuestionsHandler:
     def __init__(self, questions: QuestionRepository, taxonomy: Taxonomy, log: ReviewLog, uow: UnitOfWork):
         self.questions, self.taxonomy, self.log, self.uow = questions, taxonomy, log, uow
 
-    def __call__(self, actor: Actor, cmd: BulkUpdateQuestions) -> int:
+    def __call__(self, actor: Actor, cmd: BulkUpdateQuestions) -> BulkResult:
         qs = self.questions.many(actor.org_id, list(cmd.ids))
         if len(qs) != len(set(cmd.ids)):
             raise NotFound("Một số câu hỏi không tồn tại")
@@ -78,7 +79,7 @@ class BulkUpdateQuestionsHandler:
                 q.status, q.spot_check = "needs_review", False
             record(self.log, actor, q, "bulk", before, q.snapshot(topics, primary, list(tags)), batch)
         self.uow.commit()
-        return len(qs)
+        return BulkResult(len(qs), batch)
 
     def _guard_topics(self, actor: Actor, cmd: BulkUpdateQuestions, qs: list) -> None:
         """A new subject may not leave a question in another subject's tree: the whole edit is refused, naming the

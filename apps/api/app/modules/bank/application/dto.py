@@ -183,9 +183,18 @@ class SkippedPair:
 
 
 @dataclass(frozen=True)
+class BulkResult:
+    """What a bulk edit answers with: how many questions moved, and the batch the history recorded it under —
+    the caller needs the batch to offer "Hoàn tác" without going looking for its own edit (bulk-safety AC-01)."""
+    updated: int
+    batch_id: uuid.UUID
+
+
+@dataclass(frozen=True)
 class BulkTopicsResult:
     updated: int
     skipped: list[SkippedPair]
+    batch_id: uuid.UUID
 
 
 @dataclass(frozen=True)

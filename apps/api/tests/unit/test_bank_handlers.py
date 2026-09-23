@@ -267,11 +267,11 @@ def test_bulk_is_all_or_nothing(ports):
     a = parsed(qs, stem="a", answer={"key": "A"}, status="needs_review", issues=["OCR"])
     b = parsed(qs, stem="b", answer={"key": "B"}, status="needs_review")
     qs.tags[b.id] = [TAG_B]
-    assert bulk(TEACHER, BulkUpdateQuestions([a.id, b.id], status="approved", difficulty="vd", add_tag_ids=[TAG_A])) == 2
+    assert bulk(TEACHER, BulkUpdateQuestions([a.id, b.id], status="approved", difficulty="vd", add_tag_ids=[TAG_A])).updated == 2
     assert a.status == b.status == "approved" and "OCR" not in a.issues and a.difficulty == "vd"
     assert set(qs.tags[b.id]) == {TAG_A, TAG_B}
     # a decision taken back is the same command (review-ux ADR-02): the question goes back on the desk
-    assert bulk(TEACHER, BulkUpdateQuestions([a.id], status="needs_review")) == 1 and a.status == "needs_review"
+    assert bulk(TEACHER, BulkUpdateQuestions([a.id], status="needs_review")).updated == 1 and a.status == "needs_review"
     with pytest.raises(NotFound):
         bulk(TEACHER, BulkUpdateQuestions([a.id, uuid.uuid4()], difficulty="nb"))
     with pytest.raises(Invalid):
@@ -289,7 +289,7 @@ def test_a_bulk_event_records_everything_the_bar_can_change_and_older_events_sti
     bulk = BulkUpdateQuestionsHandler(qs, tax, log, uow)
     a = parsed(qs, stem="a", answer={"key": "A"}, status="needs_review", difficulty="nb", grade=10, subject_id=SUBJECT)
     qs.topics[a.id], qs.tags[a.id] = ([SUB_TOPIC], SUB_TOPIC), [TAG_B]
-    assert bulk(TEACHER, BulkUpdateQuestions([a.id], difficulty="vdc", grade=11, primary_topic_id=TOPIC, add_tag_ids=[TAG_A])) == 1
+    assert bulk(TEACHER, BulkUpdateQuestions([a.id], difficulty="vdc", grade=11, primary_topic_id=TOPIC, add_tag_ids=[TAG_A])).updated == 1
     placed, tagged, moved = (e for e in log.events if e[0] == a.id)
     assert len(log.batches(a.id)) == 1  # one request, one batch: the placement, the tags and the edit are one unit
     assert placed[1:4] == ("topic", {"topics": [str(SUB_TOPIC)], "primary_topic": str(SUB_TOPIC)},
@@ -333,6 +333,17 @@ def test_recent_changes_are_read_within_the_callers_organisation():
     assert events.asked == [(ORG, req)]
 
 
+def test_a_bulk_edit_answers_with_the_batch_it_was_recorded_under(ports):
+    """AC-01: the toast offers "Hoàn tác" for the edit it just reported, so the answer has to carry the batch —
+    hunting for one's own edit in the history is a second request and a guess at which row is mine."""
+    qs, tax, log, _, _, uow = ports
+    bulk, undo = BulkUpdateQuestionsHandler(qs, tax, log, uow), UndoBatchHandler(qs, tax, log, uow)
+    a = parsed(qs, stem="a", answer={"key": "A"}, difficulty="nb")
+    r = bulk(TEACHER, BulkUpdateQuestions([a.id], difficulty="vdc"))
+    assert (r.updated, r.batch_id) == (1, next(iter(log.batches(a.id))))
+    assert undo(TEACHER, UndoBatch(r.batch_id)).restored == 1 and a.difficulty == "nb"
+
+
 def test_undo_puts_a_whole_batch_back_through_the_aggregate(ports):
     """AC-01: every field the bar moved goes back — status, mức độ, lớp, môn, the placement and the tags — and the
     restore is itself an event, under a new batch naming the one it took back (A-04)."""
@@ -343,7 +354,7 @@ def test_undo_puts_a_whole_batch_back_through_the_aggregate(ports):
     qs.topics[a.id], qs.tags[a.id] = ([SUB_TOPIC], SUB_TOPIC), [TAG_B]
     qs.topics[b.id], qs.tags[b.id] = ([TOPIC], TOPIC), []
     assert bulk(TEACHER, BulkUpdateQuestions([a.id, b.id], status="approved", difficulty="vdc", grade=12,
-                                             primary_topic_id=TOPIC, add_tag_ids=[TAG_A])) == 2
+                                             primary_topic_id=TOPIC, add_tag_ids=[TAG_A])).updated == 2
     batch = next(iter(log.batches(a.id)))
     r = undo(TEACHER, UndoBatch(batch))
     assert (r.restored, r.batch_id != batch, uow.commits) == (2, True, 2)
@@ -390,7 +401,7 @@ def test_undo_refuses_the_whole_batch_when_a_question_is_gone(ports):
     bulk, undo = BulkUpdateQuestionsHandler(qs, tax, log, uow), UndoBatchHandler(qs, tax, log, uow)
     a = parsed(qs, stem="a", answer={"key": "A"}, difficulty="nb")
     b = parsed(qs, stem="b", answer={"key": "B"}, difficulty="nb")
-    assert bulk(TEACHER, BulkUpdateQuestions([a.id, b.id], difficulty="vdc")) == 2
+    assert bulk(TEACHER, BulkUpdateQuestions([a.id, b.id], difficulty="vdc")).updated == 2
     batch = next(iter(log.batches(a.id)))
     qs.remove(b)
     with pytest.raises(Invalid) as e:
@@ -438,7 +449,7 @@ def test_a_batch_is_taken_back_once_and_not_after_the_window(ports):
     qs, tax, log, _, _, uow = ports
     bulk, undo = BulkUpdateQuestionsHandler(qs, tax, log, uow), UndoBatchHandler(qs, tax, log, uow)
     a = parsed(qs, stem="a", answer={"key": "A"}, difficulty="nb")
-    assert bulk(TEACHER, BulkUpdateQuestions([a.id], difficulty="vdc")) == 1
+    assert bulk(TEACHER, BulkUpdateQuestions([a.id], difficulty="vdc")).updated == 1
     batch = next(iter(log.batches(a.id)))
     first = undo(TEACHER, UndoBatch(batch))
     assert a.difficulty == "nb"
@@ -465,7 +476,7 @@ def test_bulk_sets_subject_and_grade_and_refuses_a_topic_of_another_subject(port
     bulk = BulkUpdateQuestionsHandler(qs, tax, log, uow)
     a = parsed(qs, stem="a", answer={"key": "A"}, status="needs_review")
     b = parsed(qs, stem="b", answer={"key": "B"}, status="needs_review")
-    assert bulk(TEACHER, BulkUpdateQuestions([a.id, b.id], subject_id=SUBJECT, grade=11)) == 2
+    assert bulk(TEACHER, BulkUpdateQuestions([a.id, b.id], subject_id=SUBJECT, grade=11)).updated == 2
     assert a.subject_id == b.subject_id == SUBJECT and a.grade == b.grade == 11
     with pytest.raises(Invalid) as e:
         bulk(TEACHER, BulkUpdateQuestions([a.id], grade=9))
@@ -480,9 +491,9 @@ def test_bulk_sets_subject_and_grade_and_refuses_a_topic_of_another_subject(port
     assert e.value.code == "subject_topic_conflict" and "Dao động" in e.value.message
     assert e.value.fields["conflicts"] == [{"question_id": str(b.id), "topic_id": str(OTHER_TOPIC), "topic_name": "Dao động"}]
     assert a.grade == 11  # refused before anything was touched
-    assert bulk(TEACHER, BulkUpdateQuestions([b.id], subject_id=OTHER_SUBJECT)) == 1 and b.subject_id == OTHER_SUBJECT
+    assert bulk(TEACHER, BulkUpdateQuestions([b.id], subject_id=OTHER_SUBJECT)).updated == 1 and b.subject_id == OTHER_SUBJECT
     # the topic set in the same request is what the new subject is checked against
-    assert bulk(TEACHER, BulkUpdateQuestions([b.id], subject_id=SUBJECT, primary_topic_id=TOPIC)) == 1
+    assert bulk(TEACHER, BulkUpdateQuestions([b.id], subject_id=SUBJECT, primary_topic_id=TOPIC)).updated == 1
     assert qs.topics[b.id] == ([TOPIC], TOPIC) and b.subject_id == SUBJECT
 
 

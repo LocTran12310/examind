@@ -28,9 +28,8 @@ export function useBulkActions({ ids, subjectId, onDone, onClear }: { ids: strin
     try {
       const r = await bulk.mutateAsync({ ids, set });
       // the toast is the only moment the teacher still remembers what was selected, so the way back rides on it
-      // (AC-01). Without a batch id there is nothing to take back and the toast says only what it did; the way
-      // back is then "Thay đổi gần đây", which reads the batches out of the history itself.
-      toast.success(`${label}: ${r.updated} câu`, r.batch_id ? { action: { label: "Hoàn tác", onClick: () => void undo.run(r.batch_id!) } } : undefined);
+      // (AC-01); an edit found later goes back through "Thay đổi gần đây", which reads the same batches.
+      toast.success(`${label}: ${r.updated} câu`, { action: { label: "Hoàn tác", onClick: () => void undo.run(r.batch_id) } });
       onDone?.();
     } catch (e) {
       const conflicts = subjectTopicConflicts(e);

@@ -110,7 +110,7 @@ export interface BankFacets {
 export interface BulkResult {
   updated: number;
   /** the batch this edit was recorded under — what "Hoàn tác" takes back (bulk-safety AC-01) */
-  batch_id?: string | null;
+  batch_id: string;
 }
 
 /** Answer of `POST /questions/bulk/undo`: `batch_id` is the restore's own batch, not the one it took back,

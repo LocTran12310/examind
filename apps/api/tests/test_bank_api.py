@@ -76,7 +76,7 @@ def test_bulk_difficulty_topic_tags(client, db):
     topic = db.scalar(select(Topic).where(Topic.organization_id == admin.organization_id, Topic.name == "Vectơ"))
     tag = client.post("/api/tags", json={"group": "source", "name": "Đề 2025"}).json()
     r = client.post("/api/questions/bulk", json={"ids": ids, "set": {"difficulty": "vd", "primary_topic_id": str(topic.id), "add_tag_ids": [tag["id"]]}})
-    assert r.json() == {"updated": 3}
+    assert r.json()["updated"] == 3
     for qid in ids:
         q = client.get(f"/api/questions/{qid}").json()
         assert q["difficulty"] == "vd" and q["topics"][0]["name"] == "Vectơ" and "Đề 2025" in [t["name"] for t in q["tags"]]
@@ -91,7 +91,7 @@ def test_one_bulk_request_writes_one_batch_carrying_the_whole_state(client, db):
     topic = db.scalar(select(Topic).where(Topic.organization_id == admin.organization_id, Topic.name == "Vectơ"))
     tag = client.post("/api/tags", json={"group": "source", "name": "Đề 2024"}).json()
     body = {"ids": ids, "set": {"difficulty": "th", "primary_topic_id": str(topic.id), "add_tag_ids": [tag["id"]]}}
-    assert client.post("/api/questions/bulk", json=body).json() == {"updated": 2}
+    assert client.post("/api/questions/bulk", json=body).json()["updated"] == 2
     events = db.scalars(select(ReviewEvent).where(ReviewEvent.question_id.in_([uuid.UUID(i) for i in ids]),
                                                   ReviewEvent.action.in_(("bulk", "topic", "tag")))).all()
     assert len(events) == 6 and len({e.batch_id for e in events}) == 1 and events[0].batch_id is not None
@@ -113,8 +113,8 @@ def test_recent_changes_read_one_row_per_batch_and_say_why_one_cannot_be_undone(
     admin, _ = loaded(client, db)
     org = admin.organization_id
     ids = [x["id"] for x in search(client, {"limit": 3}).json()["data"]]
-    assert client.post("/api/questions/bulk", json={"ids": ids, "set": {"difficulty": "vdc"}}).json() == {"updated": 3}
-    assert client.post("/api/questions/bulk", json={"ids": ids[:1], "set": {"status": "rejected"}}).json() == {"updated": 1}
+    assert client.post("/api/questions/bulk", json={"ids": ids, "set": {"difficulty": "vdc"}}).json()["updated"] == 3
+    assert client.post("/api/questions/bulk", json={"ids": ids[:1], "set": {"status": "rejected"}}).json()["updated"] == 1
 
     def changes(body=None):
         r = client.post("/api/question-events/search", json=body if body is not None else {"limit": 50})
@@ -170,9 +170,12 @@ def test_undo_puts_a_bulk_edit_back_and_only_once(client, db):
     topic = db.scalar(select(Topic).where(Topic.organization_id == admin.organization_id, Topic.name == "Vectơ"))
     tag = client.post("/api/tags", json={"group": "source", "name": "Đề 2022"}).json()
     edit = {"status": "rejected", "difficulty": "vdc", "primary_topic_id": str(topic.id), "add_tag_ids": [tag["id"]]}
-    assert client.post("/api/questions/bulk", json={"ids": ids, "set": edit}).json() == {"updated": 3}
+    edited = client.post("/api/questions/bulk", json={"ids": ids, "set": edit}).json()
+    assert edited["updated"] == 3
     row = client.post("/api/question-events/search", json={"limit": 1}).json()["data"][0]
     assert row["questions"] == 3 and row["undoable"] is True
+    # the edit names its own batch: the toast undoes what it just reported instead of guessing which row is its own
+    assert edited["batch_id"] == row["batch_id"]
 
     r = client.post("/api/questions/bulk/undo", json={"batch_id": row["batch_id"]})
     assert r.status_code == 200, r.text
@@ -200,13 +203,13 @@ def test_undo_puts_a_bulk_edit_back_and_only_once(client, db):
     # a batch that moved neither the placement nor the tags leaves the links alone: the topic the pipeline placed
     # stays the pipeline's, with its score, instead of coming back as a teacher's own placement
     placed = next(x for x in search(client, {"limit": 20}).json()["data"] if x["topics"] and x["id"] not in ids)
-    assert client.post("/api/questions/bulk", json={"ids": [placed["id"]], "set": {"difficulty": "nb"}}).json() == {"updated": 1}
+    assert client.post("/api/questions/bulk", json={"ids": [placed["id"]], "set": {"difficulty": "nb"}}).json()["updated"] == 1
     solo = client.post("/api/question-events/search", json={"limit": 1}).json()["data"][0]["batch_id"]
     assert client.post("/api/questions/bulk/undo", json={"batch_id": solo}).json()["restored"] == 1
     assert client.get(f"/api/questions/{placed['id']}").json()["topics"] == placed["topics"]
 
     # past the window it is still readable and no longer undoable (AC-05)
-    assert client.post("/api/questions/bulk", json={"ids": ids[:1], "set": {"difficulty": "th"}}).json() == {"updated": 1}
+    assert client.post("/api/questions/bulk", json={"ids": ids[:1], "set": {"difficulty": "th"}}).json()["updated"] == 1
     aged = client.post("/api/question-events/search", json={"limit": 1}).json()["data"][0]["batch_id"]
     db.execute(text("update review_events set created_at = now() - interval '8 days' where batch_id = :b"), {"b": aged})
     db.commit()
@@ -216,7 +219,7 @@ def test_undo_puts_a_bulk_edit_back_and_only_once(client, db):
     assert client.get(f"/api/questions/{ids[0]}").json()["difficulty"] == "th"
 
     # a question the batch touched is deleted: the whole batch is refused, nothing else is put back (AC-02)
-    assert client.post("/api/questions/bulk", json={"ids": ids, "set": {"difficulty": "nb"}}).json() == {"updated": 3}
+    assert client.post("/api/questions/bulk", json={"ids": ids, "set": {"difficulty": "nb"}}).json()["updated"] == 3
     last = client.post("/api/question-events/search", json={"limit": 1}).json()["data"][0]["batch_id"]
     assert client.delete(f"/api/questions/{ids[2]}").status_code == 204
     gone = client.post("/api/questions/bulk/undo", json={"batch_id": last})
@@ -281,7 +284,7 @@ def test_bulk_sets_subject_and_grade_and_refuses_a_topic_of_another_subject(clie
     unclassified = search(client, {"subject_id": "none", "status": "all", "limit": 3}).json()
     ids = [q["id"] for q in unclassified["data"]]
     assert len(ids) == 3 and unclassified["total"] > 3
-    assert client.post("/api/questions/bulk", json={"ids": ids, "set": {"subject_id": str(toan.id), "grade": 11}}).json() == {"updated": 3}
+    assert client.post("/api/questions/bulk", json={"ids": ids, "set": {"subject_id": str(toan.id), "grade": 11}}).json()["updated"] == 3
     one = client.get(f"/api/questions/{ids[0]}").json()
     assert one["subject_id"] == str(toan.id) and one["grade"] == 11
     assert search(client, {"subject_id": "none", "status": "all", "limit": 1}).json()["total"] == unclassified["total"] - 3
