@@ -40,6 +40,11 @@ class QuestionRepository(Protocol):
         """The primary topic of each of these questions that has one."""
         ...
 
+    def topic_ids(self, question_id: uuid.UUID) -> tuple[list[uuid.UUID], uuid.UUID | None]:
+        """Where the question sits now: (its topics, the primary one) — what a review event records as the before
+        of a placement, and what `replace_topics` would take to put it back."""
+        ...
+
     def tag_ids(self, question_id: uuid.UUID) -> set[uuid.UUID]: ...
 
     def replace_tags(self, question_id: uuid.UUID, tag_ids: list[uuid.UUID]) -> None: ...
@@ -49,7 +54,9 @@ class ReviewLog(Protocol):
     """Append-only review history."""
 
     def record(self, org_id: uuid.UUID, user_id: uuid.UUID | None, question_id: uuid.UUID | None, action: str,
-               before: dict | None, after: dict | None) -> None: ...
+               before: dict | None, after: dict | None, batch_id: uuid.UUID | None = None) -> None:
+        """`batch_id` groups the events of one request; a command passes the same id to every event it writes."""
+        ...
 
     def recent_spot_actions(self, org_id: uuid.UUID, limit: int) -> list[str]:
         """spot_ok / spot_fail actions, newest first."""

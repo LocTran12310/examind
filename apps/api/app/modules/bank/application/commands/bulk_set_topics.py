@@ -7,6 +7,7 @@ from app.modules.bank.domain.ports import QuestionRepository, ReviewLog, Taxonom
 from app.modules.bank.domain.services.tagging import SKIP_REASONS, check_pairs, pair_skip
 from app.shared.application.actor import Actor
 from app.shared.application.unit_of_work import UnitOfWork
+from app.shared.domain.ids import new_id
 
 
 @dataclass(frozen=True)
@@ -23,6 +24,7 @@ class BulkSetTopicsHandler:
         self.questions, self.taxonomy, self.log, self.uow = questions, taxonomy, log, uow
 
     def __call__(self, actor: Actor, cmd: BulkSetTopics) -> BulkTopicsResult:
+        batch = new_id()
         pairs = [(q, t) for q, t in cmd.pairs]
         check_pairs(len(pairs))
         mine = {q.id: q for q in self.questions.many(actor.org_id, [q for q, _ in pairs])}
@@ -37,8 +39,8 @@ class BulkSetTopicsHandler:
             if reason:
                 skipped.append(SkippedPair(question_id, topic_id, reason, SKIP_REASONS[reason]))
                 continue
-            set_topics(self.questions, self.taxonomy, self.log, actor, q, None, topic_id)
+            set_topics(self.questions, self.taxonomy, self.log, actor, q, None, topic_id, batch)
             updated += 1
-        record(self.log, actor, None, "bulk", None, {"pairs": len(pairs), "updated": updated, "skipped": len(skipped)})
+        record(self.log, actor, None, "bulk", None, {"pairs": len(pairs), "updated": updated, "skipped": len(skipped)}, batch)
         self.uow.commit()
         return BulkTopicsResult(updated, skipped)

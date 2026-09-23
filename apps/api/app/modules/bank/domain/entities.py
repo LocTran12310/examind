@@ -9,8 +9,12 @@ QUESTION_TYPES = ("mcq", "true_false", "short_answer", "essay")
 STATUSES = ("draft", "auto_approved", "needs_review", "approved", "rejected", "duplicate", "flagged")
 USABLE = ("auto_approved", "approved")
 DIFFICULTIES = ("nb", "th", "vd", "vdc")
-REVIEW_ACTIONS = ("approve", "reject", "restore", "edit", "answer", "topic", "skip", "spot_ok", "spot_fail", "bulk", "triage")
+REVIEW_ACTIONS = ("approve", "reject", "restore", "edit", "answer", "topic", "tag", "skip", "spot_ok", "spot_fail", "bulk",
+                  "triage", "undo")
 STATUS_KEYS = ("auto_approved", "needs_review", "approved", "rejected", "duplicate", "flagged")  # the review counts
+# what a snapshot may hold — everything the bank's bulk bar can move, so a review event is enough to put it back
+SNAPSHOT_FIELDS = ("status", "answer", "confidence", "issues", "difficulty", "grade", "subject_id", "topics",
+                   "primary_topic", "tags")
 
 
 @dataclass(eq=False)
@@ -55,9 +59,19 @@ class Question:
         """An auto-approved question drawn for a random check that nobody looked at yet."""
         return bool(self.spot_check) and self.status == "auto_approved"
 
-    def snapshot(self) -> dict:
-        """What a review event records before/after a change."""
-        return {"status": self.status, "answer": self.answer, "confidence": self.confidence, "issues": list(self.issues or [])}
+    def snapshot(self, topics: list[uuid.UUID] | None = None, primary_topic: uuid.UUID | None = None,
+                 tags: list[uuid.UUID] | None = None) -> dict:
+        """What a review event records before/after a change. Topics and tags are links, not columns of the question,
+        so a caller that holds them passes them in and a caller that does not leaves those keys out: an absent key
+        means "unknown here", never "was empty" — that is how events written before the snapshot widened read back."""
+        snap = {"status": self.status, "answer": self.answer, "confidence": self.confidence, "issues": list(self.issues or []),
+                "difficulty": self.difficulty, "grade": self.grade, "subject_id": str(self.subject_id) if self.subject_id else None}
+        if topics is not None:
+            snap["topics"] = [str(t) for t in topics]
+            snap["primary_topic"] = str(primary_topic) if primary_topic else None
+        if tags is not None:
+            snap["tags"] = sorted(str(t) for t in tags)  # a set has no order; a stable one keeps before/after comparable
+        return snap
 
     def mark_reviewed(self, user_id: uuid.UUID, when: datetime) -> None:
         self.reviewed_by, self.reviewed_at = user_id, when
@@ -88,5 +102,6 @@ class ReviewEvent:
     user_id: uuid.UUID | None = None
     before: dict | None = None
     after: dict | None = None
+    batch_id: uuid.UUID | None = None  # the request that wrote it; one request, one batch (bulk-safety ADR-01)
     id: uuid.UUID = field(default_factory=new_id)
     created_at: datetime | None = None

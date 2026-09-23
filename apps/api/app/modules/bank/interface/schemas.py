@@ -4,7 +4,7 @@ import uuid
 
 from pydantic import BaseModel
 
-from app.modules.bank.application.dto import BankFilters, ItemStats, QuestionView, ReviewDocumentView
+from app.modules.bank.application.dto import BankFilters, EventBatchView, ItemStats, QuestionView, ReviewDocumentView
 from app.shared.domain.errors import Invalid
 from app.shared.interface.search_schemas import SearchBody
 
@@ -298,3 +298,21 @@ class ApprovedOut(BaseModel):
 
 class FlaggedIdsOut(BaseModel):
     flagged: list[str]
+
+
+class QuestionEventOut(BaseModel):
+    """One change of the bank, as "Thay đổi gần đây" shows it: the whole request, not one line per question."""
+    batch_id: uuid.UUID | None
+    created_at: datetime
+    user_id: uuid.UUID | None
+    actor_name: str | None
+    action: str
+    fields: list[str]
+    questions: int
+    undoable: bool
+    reason: str | None
+    message: str | None
+
+
+def question_event_out(v: EventBatchView) -> QuestionEventOut:
+    return QuestionEventOut(**vars(v))

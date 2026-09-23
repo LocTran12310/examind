@@ -26,12 +26,13 @@ from app.modules.bank.application.queries.question_stats import QuestionStatsHan
 from app.modules.bank.application.queries.review_queue import ReviewQueueHandler
 from app.modules.bank.application.queries.search_document_questions import SearchDocumentQuestionsHandler
 from app.modules.bank.application.queries.search_flagged import SearchFlaggedHandler
+from app.modules.bank.application.queries.search_question_events import SearchQuestionEventsHandler
 from app.modules.bank.application.queries.search_questions import SearchQuestionsHandler
 from app.modules.bank.application.queries.search_review_documents import SearchReviewDocumentsHandler
 from app.modules.bank.application.queries.suggest_topics import SuggestTopicsHandler
 from app.modules.bank.domain.ports import StaffDirectory, Taxonomy, TopicSuggestions
 from app.modules.bank.infrastructure.adapters.sql import SqlReviewDocuments, SqlReviewSettings
-from app.modules.bank.infrastructure.read_models import SqlItemStatsReader, SqlQuestionReader, SqlReviewReader
+from app.modules.bank.infrastructure.read_models import SqlEventReader, SqlItemStatsReader, SqlQuestionReader, SqlReviewReader
 from app.modules.bank.infrastructure.repositories import (
     SqlDocumentQuestions,
     SqlDuplicateFinder,
@@ -156,6 +157,10 @@ def bulk_update_questions(db: Session = Depends(get_db)) -> BulkUpdateQuestionsH
 
 def bulk_set_topics(db: Session = Depends(get_db)) -> BulkSetTopicsHandler:
     return BulkSetTopicsHandler(SqlQuestionRepository(db), _RegisteredTaxonomy(db), SqlReviewLog(db), SqlUnitOfWork(db))
+
+
+def search_question_events(db: Session = Depends(get_db)) -> SearchQuestionEventsHandler:
+    return SearchQuestionEventsHandler(SqlEventReader(db))
 
 
 # ------------------------------------------------------------------ review

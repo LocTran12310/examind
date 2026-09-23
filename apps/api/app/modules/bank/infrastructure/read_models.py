@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.modules.bank.application.dto import (
     DocumentRow,
+    EventBatchView,
     ItemStats,
     OptionStat,
     QuestionView,
@@ -16,18 +17,21 @@ from app.modules.bank.application.dto import (
     TopicRefView,
     question_view,
 )
-from app.modules.bank.domain.entities import STATUS_KEYS, STATUSES, USABLE, Question
+from app.modules.bank.domain.entities import SNAPSHOT_FIELDS, STATUS_KEYS, STATUSES, USABLE, Question
+from app.modules.bank.domain.services.history import BLOCKED, UNDONE_BATCH, batch_action, changed_fields, undo_block
 from app.modules.bank.domain.services.review import REVIEW_STATES, WAITING, pending_count, review_state
 from app.modules.bank.domain.services.search_text import query as normalise_query
 from app.modules.bank.infrastructure import orm  # noqa: F401  (mapping)
 from app.modules.bank.infrastructure.tables import answer_facts, attempt_answers, attempts, source_documents
 from app.shared.application.search import Page, SearchRequest
-from app.shared.infrastructure.schema.bank import question_tags, question_topics, questions
+from app.shared.domain.clock import utcnow
+from app.shared.infrastructure.schema.bank import question_tags, question_topics, questions, review_events
 from app.shared.infrastructure.schema.identity import users
 from app.shared.infrastructure.schema.taxonomy import tags, topics
 from app.shared.infrastructure.sql_search import Col, order_by, search, where_clauses
 
 qc, qt, qg, d = questions.c, question_topics.c, question_tags.c, source_documents.c
+ev = review_events.c
 af, att, ans = answer_facts.c, attempts.c, attempt_answers.c
 YEAR = d.metadata["school_year"].astext
 # the item statistics the bank can be searched by (learning-telemetry AC-04); joined only when a request names one
@@ -391,3 +395,60 @@ class SqlReviewReader:
                                           progress=round(done / r.total, 2) if r.total else 1.0,
                                           assigned_to=r.assigned_to, assigned_name=names.get(r.assigned_to)))
         return out
+
+
+
+class SqlEventReader:
+    """The review history grouped by the request that wrote it (bulk-safety ADR-01). An event from before the batch
+    column stands alone — a batch cannot be reconstructed from a timestamp, so it is a group of one that says so.
+    The grouping is a subquery: over it every column is an ordinary one, so the list filters and sorts like the rest."""
+
+    def __init__(self, session: Session):
+        self.session = session
+
+    def batches(self, org_id: uuid.UUID, req: SearchRequest) -> Page[EventBatchView]:
+        key = func.coalesce(ev.batch_id, ev.id)
+        grouped = (select(key.label("batch_key"), ev.batch_id.label("batch_id"), ev.user_id.label("user_id"),
+                          func.min(ev.created_at).label("created_at"),
+                          func.count(func.distinct(ev.question_id)).label("questions"))
+                   .where(ev.organization_id == org_id)
+                   # the actor and the batch are the same on every event of one request, so grouping by them costs
+                   # nothing and spares an aggregate over uuid, which Postgres has no max() for
+                   .group_by(key, ev.batch_id, ev.user_id).subquery())
+        b = grouped.c
+        cols = {"created_at": Col(b.created_at, "date"), "user_id": Col(b.user_id, "uuid", sortable=False),
+                "questions": Col(b.questions, "number")}
+        stmt = (select(b.batch_key, b.batch_id, b.user_id, b.created_at, b.questions, users.c.full_name)
+                .select_from(grouped).outerjoin(users, users.c.id == b.user_id))
+        rows, total = search(self.session, stmt, req, cols, default_sort=[b.created_at.desc(), b.batch_key], scalars=False)
+        if not rows:
+            return Page([], total, req.page, req.limit)
+        actions, fields = self._detail(org_id, [r.batch_key for r in rows])
+        undone = self._undone(org_id, [r.batch_id for r in rows if r.batch_id])
+        now = utcnow()
+        out = []
+        for r in rows:
+            action = batch_action(actions.get(r.batch_key, ()))
+            blocked = undo_block(r.batch_id is not None, action, r.created_at, now, str(r.batch_id) in undone)
+            out.append(EventBatchView(batch_id=r.batch_id, created_at=r.created_at, user_id=r.user_id, actor_name=r.full_name,
+                                      action=action, fields=sorted(fields.get(r.batch_key, ()), key=SNAPSHOT_FIELDS.index),
+                                      questions=r.questions, undoable=blocked is None, reason=blocked,
+                                      message=BLOCKED.get(blocked) if blocked else None))
+        return Page(out, total, req.page, req.limit)
+
+    def _detail(self, org_id: uuid.UUID, keys: list[uuid.UUID]) -> tuple[dict, dict]:
+        """What each batch of the page did: the actions it recorded and the snapshot fields it moved."""
+        rows = self.session.execute(select(func.coalesce(ev.batch_id, ev.id).label("batch_key"), ev.action, ev.before, ev.after)
+                                    .where(ev.organization_id == org_id, func.coalesce(ev.batch_id, ev.id).in_(keys))).all()
+        actions: dict[uuid.UUID, set] = {}
+        fields: dict[uuid.UUID, set] = {}
+        for r in rows:
+            actions.setdefault(r.batch_key, set()).add(r.action)
+            fields.setdefault(r.batch_key, set()).update(changed_fields(r.before, r.after))
+        return actions, fields
+
+    def _undone(self, org_id: uuid.UUID, batch_ids: list[uuid.UUID]) -> set[str]:
+        """Which of these batches an `undo` has already reversed (A-04); the undo names its batch in its own event."""
+        undone = ev.after[UNDONE_BATCH].astext
+        return set(self.session.scalars(select(undone).where(ev.organization_id == org_id, ev.action == "undo",
+                                                             undone.in_([str(b) for b in batch_ids])))) if batch_ids else set()

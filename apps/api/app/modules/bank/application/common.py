@@ -16,37 +16,52 @@ def load_question(questions: QuestionRepository, org_id: uuid.UUID, question_id:
     return q
 
 
-def record(log: ReviewLog, actor: Actor, q: Question | None, action: str, before: dict | None, after: dict | None) -> None:
-    log.record(actor.org_id, actor.user_id, q.id if q else None, action, before, after)
+def record(log: ReviewLog, actor: Actor, q: Question | None, action: str, before: dict | None, after: dict | None,
+           batch: uuid.UUID | None = None) -> None:
+    log.record(actor.org_id, actor.user_id, q.id if q else None, action, before, after, batch)
 
 
 def set_topics(questions: QuestionRepository, taxonomy: Taxonomy, log: ReviewLog, actor: Actor, q: Question,
-               topic_ids: list[uuid.UUID] | None, primary_id: uuid.UUID | None) -> None:
-    """Manual placement: `topic_ids` (None = just the primary one); the primary topic is always among them."""
+               topic_ids: list[uuid.UUID] | None, primary_id: uuid.UUID | None, batch: uuid.UUID | None = None) -> None:
+    """Manual placement: `topic_ids` (None = just the primary one); the primary topic is always among them.
+    The event carries only the placement — the fields the caller is changing around it are its own event's business,
+    so replaying one event never puts back a value another step of the same request had already moved."""
     ids = list(topic_ids) if topic_ids is not None else ([primary_id] if primary_id else [])
     if primary_id and primary_id not in ids:
         ids.insert(0, primary_id)
     if ids and set(ids) - set(taxonomy.topic_paths(actor.org_id, ids)):
         raise Invalid("Chuyên đề không hợp lệ", "topic_ids")
     primary = primary_id or (ids[0] if ids else None)
+    had, had_primary = questions.topic_ids(q.id)
     questions.replace_topics(q.id, ids, primary)
-    record(log, actor, q, "topic", None, {"topics": [str(i) for i in ids], "primary": str(primary) if primary else None})
+    record(log, actor, q, "topic", _placement(had, had_primary), _placement(ids, primary), batch)
 
 
-def set_tags(questions: QuestionRepository, taxonomy: Taxonomy, actor: Actor, q: Question, tag_ids: list[uuid.UUID]) -> None:
+def set_tags(questions: QuestionRepository, taxonomy: Taxonomy, log: ReviewLog, actor: Actor, q: Question,
+             tag_ids: list[uuid.UUID], batch: uuid.UUID | None = None) -> None:
     ids = list(tag_ids)
     if ids and set(ids) - set(taxonomy.tag_groups(actor.org_id, ids)):
         raise Invalid("Tag không hợp lệ", "tag_ids")
+    had = questions.tag_ids(q.id)
     questions.replace_tags(q.id, ids)
+    record(log, actor, q, "tag", _tags(had), _tags(ids), batch)
 
 
-def spot_feedback(log: ReviewLog, settings: ReviewSettings, actor: Actor) -> None:
+def _placement(topic_ids, primary_id) -> dict:
+    return {"topics": [str(i) for i in topic_ids], "primary_topic": str(primary_id) if primary_id else None}
+
+
+def _tags(tag_ids) -> dict:
+    return {"tags": sorted(str(i) for i in tag_ids)}
+
+
+def spot_feedback(log: ReviewLog, settings: ReviewSettings, actor: Actor, batch: uuid.UUID | None = None) -> None:
     """A-07: two failed spot checks in the last twenty make auto-approval stricter."""
     old = settings.threshold(actor.org_id)
     new = raised_threshold(log.recent_spot_actions(actor.org_id, SPOT_WINDOW), old)
     if new is not None:
         settings.set_threshold(actor.org_id, new)
-        record(log, actor, None, "triage", {"threshold": old}, {"threshold": new})
+        record(log, actor, None, "triage", {"threshold": old}, {"threshold": new}, batch)
 
 
 def resolve_filters(taxonomy: Taxonomy, org_id: uuid.UUID, f: BankFilters) -> ResolvedFilters:

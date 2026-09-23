@@ -3,7 +3,7 @@
 # Ticket graph — 2026092305-bulk-safety
 
 - Units of Work: **4**
-- Tickets: **9** (3 done)
+- Tickets: **9** (5 done)
 - Total effort: **3.4d**
 - Critical path: **1.8d** across 4 tickets
 - Theoretical minimum duration with unlimited parallelism: **1.8d**
@@ -26,8 +26,8 @@ slice — the floor on how fast it can finish no matter how many people work on 
 graph LR
   subgraph UOW_01["UOW-01 · A history worth restoring: a wider snapshot and a batch id"]
     T_01_01["✓ T-01-01<br/>Widen what a review event records"]
-    T_01_02["T-01-02<br/>batch_id on review_events"]
-    T_01_03["T-01-03<br/>POST /question-events/search — one row per batch"]
+    T_01_02["✓ T-01-02<br/>batch_id on review_events"]
+    T_01_03["✓ T-01-03<br/>POST /question-events/search — one row per batch"]
   end
   subgraph UOW_02["UOW-02 · Hoàn tác: a bulk edit restored as one unit"]
     T_02_01["T-02-01<br/>UndoBatch: restore a batch through the aggregate"]
@@ -84,8 +84,8 @@ adding people to tickets off this path will not make the feature ship sooner.
 | ID | UoW | Layer | Type | Est | Depends on | Verifies | Status |
 |----|-----|-------|------|-----|-----------|----------|--------|
 | T-01-01 | UOW-01 | domain | feature | 3h | — | AC-01 | done |
-| T-01-02 | UOW-01 | data | feature | 2h | — | AC-03 | todo |
-| T-01-03 | UOW-01 | api | feature | 4h | T-01-01, T-01-02 | AC-03, AC-05 | todo |
+| T-01-02 | UOW-01 | data | feature | 2h | — | AC-03 | done |
+| T-01-03 | UOW-01 | api | feature | 4h | T-01-01, T-01-02 | AC-03, AC-05 | done |
 | T-02-01 | UOW-02 | api | feature | 4h | T-01-01, T-01-02 | AC-01, AC-02 | todo |
 | T-02-02 | UOW-02 | api | feature | 3h | T-02-01 | AC-04, AC-05 | todo |
 | T-03-01 | UOW-03 | web | feature | 3h | T-02-02 | AC-01 | todo |

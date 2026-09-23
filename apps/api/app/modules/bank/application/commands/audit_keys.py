@@ -4,6 +4,7 @@ import uuid
 from app.modules.bank.domain.ports import AnswerStats, QuestionRepository, ReviewLog
 from app.modules.bank.domain.services.key_audit import audit_question
 from app.shared.application.unit_of_work import UnitOfWork
+from app.shared.domain.ids import new_id
 
 
 @dataclass(frozen=True)
@@ -19,6 +20,7 @@ class AuditKeysHandler:
         self.questions, self.stats, self.log, self.uow = questions, stats, log, uow
 
     def __call__(self, cmd: AuditKeys) -> list[uuid.UUID]:
+        batch = new_id()  # one pass, one batch, so the flags it raised read back as a single change
         answers = self.stats.mcq_answers(cmd.org_id)
         by_id = {q.id: q for q in self.questions.many(cmd.org_id, list(answers))}
         flagged = []
@@ -29,7 +31,8 @@ class AuditKeysHandler:
             ev = audit_question(q, rows)
             if ev is None:
                 continue
-            self.log.record(q.organization_id, None, q.id, "triage", {"status": "usable"}, {"status": "flagged", "reason": ev["reason"]})
+            self.log.record(q.organization_id, None, q.id, "triage", {"status": "usable"},
+                            {"status": "flagged", "reason": ev["reason"]}, batch)
             flagged.append(q.id)
         self.uow.flush()
         return flagged

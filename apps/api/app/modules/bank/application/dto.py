@@ -189,6 +189,22 @@ class BulkTopicsResult:
 
 
 @dataclass(frozen=True)
+class EventBatchView:
+    """One row of "Thay đổi gần đây" (A-05): a whole edit, not one line per question. `fields` names the snapshot
+    fields the batch moved; `reason` and `message` say why it can no longer be taken back (bulk-safety ADR-02)."""
+    batch_id: uuid.UUID | None
+    created_at: datetime
+    user_id: uuid.UUID | None
+    actor_name: str | None
+    action: str
+    fields: list[str]
+    questions: int
+    undoable: bool
+    reason: str | None = None
+    message: str | None = None
+
+
+@dataclass(frozen=True)
 class TriageCounts:
     auto_approved: int = 0
     needs_review: int = 0

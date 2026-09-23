@@ -7,6 +7,7 @@ from app.shared.application.actor import Actor
 from app.shared.application.unit_of_work import UnitOfWork
 from app.shared.domain.clock import utcnow
 from app.shared.domain.errors import NotFound
+from app.shared.domain.ids import new_id
 
 
 @dataclass(frozen=True)
@@ -30,6 +31,6 @@ class ApproveConfidentHandler:
             q.mark_reviewed(actor.user_id, now)
         if qs:
             record(self.log, actor, None, "bulk", {"status": "auto_approved"},
-                   {"status": "approved", "count": len(qs), "document": str(cmd.document_id)})
+                   {"status": "approved", "count": len(qs), "document": str(cmd.document_id)}, new_id())
         self.uow.commit()
         return len(qs)

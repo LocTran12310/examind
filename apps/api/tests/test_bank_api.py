@@ -3,6 +3,7 @@ import uuid
 
 from sqlalchemy import select, text
 
+from app.modules.bank.domain.entities import ReviewEvent
 from app.modules.taxonomy.domain.topics import Topic
 from tests.factories import make_org, make_user
 from tests.test_documents_api import run_jobs, sample, upload
@@ -80,6 +81,83 @@ def test_bulk_difficulty_topic_tags(client, db):
         q = client.get(f"/api/questions/{qid}").json()
         assert q["difficulty"] == "vd" and q["topics"][0]["name"] == "Vectơ" and "Đề 2025" in [t["name"] for t in q["tags"]]
     assert client.post("/api/questions/bulk", json={"ids": ids + [str(uuid.uuid4())], "set": {"difficulty": "nb"}}).status_code == 404
+
+
+def test_one_bulk_request_writes_one_batch_carrying_the_whole_state(client, db):
+    """ADR-01: the events of one request share a batch id — that is what makes a bulk edit one unit to read back
+    and to take back. A-02: the recorded state covers every field the bar can move, topics and tags included."""
+    admin, _ = loaded(client, db)
+    ids = [x["id"] for x in search(client, {"limit": 2}).json()["data"]]
+    topic = db.scalar(select(Topic).where(Topic.organization_id == admin.organization_id, Topic.name == "Vectơ"))
+    tag = client.post("/api/tags", json={"group": "source", "name": "Đề 2024"}).json()
+    body = {"ids": ids, "set": {"difficulty": "th", "primary_topic_id": str(topic.id), "add_tag_ids": [tag["id"]]}}
+    assert client.post("/api/questions/bulk", json=body).json() == {"updated": 2}
+    events = db.scalars(select(ReviewEvent).where(ReviewEvent.question_id.in_([uuid.UUID(i) for i in ids]),
+                                                  ReviewEvent.action.in_(("bulk", "topic", "tag")))).all()
+    assert len(events) == 6 and len({e.batch_id for e in events}) == 1 and events[0].batch_id is not None
+    moved = next(e for e in events if e.action == "bulk")
+    assert moved.before["difficulty"] != "th" and moved.after["difficulty"] == "th"
+    assert moved.after["topics"] == [str(topic.id)] and moved.after["primary_topic"] == str(topic.id)
+    assert tag["id"] in moved.after["tags"] and tag["id"] not in moved.before["tags"]
+    assert set(moved.before) == set(moved.after) >= {"status", "answer", "confidence", "issues", "difficulty", "grade",
+                                                     "subject_id", "topics", "primary_topic", "tags"}
+    assert client.post("/api/questions/bulk", json={"ids": ids, "set": {"difficulty": "vdc"}}).status_code == 200
+    again = db.scalars(select(ReviewEvent).where(ReviewEvent.question_id.in_([uuid.UUID(i) for i in ids]),
+                                                 ReviewEvent.action == "bulk")).all()
+    assert len({e.batch_id for e in again}) == 2  # the second request is a batch of its own
+
+
+def test_recent_changes_read_one_row_per_batch_and_say_why_one_cannot_be_undone(client, db):
+    """AC-03 / AC-05: one row per edit — when, who, which fields, how many questions — newest first, each saying
+    whether it can still be taken back. The `undo` rows are written here by hand: the command itself is UOW-02."""
+    admin, _ = loaded(client, db)
+    org = admin.organization_id
+    ids = [x["id"] for x in search(client, {"limit": 3}).json()["data"]]
+    assert client.post("/api/questions/bulk", json={"ids": ids, "set": {"difficulty": "vdc"}}).json() == {"updated": 3}
+    assert client.post("/api/questions/bulk", json={"ids": ids[:1], "set": {"status": "rejected"}}).json() == {"updated": 1}
+
+    def changes(body=None):
+        r = client.post("/api/question-events/search", json=body if body is not None else {"limit": 50})
+        assert r.status_code == 200, r.text
+        return r.json()
+
+    page = changes()
+    assert page["page"] == 1 and page["limit"] == 50 and page["total"] == len(page["data"])
+    latest, older = page["data"][0], page["data"][1]
+    assert latest["action"] == "bulk" and latest["questions"] == 1 and latest["fields"] == ["status"]
+    assert older["action"] == "bulk" and older["questions"] == 3 and older["fields"] == ["difficulty"]
+    assert older["actor_name"] and older["undoable"] is True and older["reason"] is None and older["batch_id"]
+    # an aged batch, a batch an undo has reversed, the undo itself, and a row written before batches existed
+    db.execute(text("update review_events set created_at = now() - interval '8 days' where batch_id = :b"), {"b": older["batch_id"]})
+    db.execute(text("""insert into review_events (id, organization_id, action, after, batch_id)
+                       values (gen_random_uuid(), :o, 'undo', jsonb_build_object('undone_batch_id', cast(:b as text)), gen_random_uuid())"""),
+               {"o": org, "b": latest["batch_id"]})
+    db.execute(text("""insert into review_events (id, organization_id, question_id, action, before, after)
+                       values (gen_random_uuid(), :o, :q, 'bulk', '{"status": "needs_review"}', '{"status": "approved"}')"""),
+               {"o": org, "q": ids[2]})
+    db.commit()
+    page = changes()
+    by_batch = {x["batch_id"]: x for x in page["data"]}
+    assert by_batch[older["batch_id"]]["undoable"] is False and by_batch[older["batch_id"]]["reason"] == "expired"
+    assert "7 ngày" in by_batch[older["batch_id"]]["message"]
+    assert by_batch[latest["batch_id"]]["reason"] == "already_undone" and by_batch[latest["batch_id"]]["undoable"] is False
+    undo = next(x for x in page["data"] if x["action"] == "undo")
+    assert undo["reason"] == "is_undo" and undo["questions"] == 0 and undo["actor_name"] is None
+    before_batches = by_batch[None]
+    assert before_batches["reason"] == "no_batch" and before_batches["questions"] == 1 and before_batches["fields"] == ["status"]
+    assert changes({"limit": 1})["total"] == page["total"] and len(changes({"limit": 1})["data"]) == 1
+    assert changes({"filters": {"questions": {"operator": ">=", "value": 3}}})["total"] == 1
+    assert client.post("/api/question-events/search", json={"filters": {"nope": {"value": "x"}}}).json()["code"] == "bad_filter"
+    # org-scoped and staff-only, like the rest of the bank
+    other = client.__class__(client.app)
+    make_user(db, make_org(db, "orgc"), "gvc", role="teacher")
+    student = client.__class__(client.app)
+    make_user(db, admin.organization, "hs2", role="student")
+    db.commit()
+    other.post("/api/auth/login", json={"org_code": "orgc", "username": "gvc", "password": "Secret123!"})
+    student.post("/api/auth/login", json={"org_code": "trungtama", "username": "hs2", "password": "Secret123!"})
+    assert other.post("/api/question-events/search", json={}).json()["total"] == 0
+    assert student.post("/api/question-events/search", json={}).status_code == 403
 
 
 def test_permissions_and_isolation(client, db):

@@ -13,6 +13,7 @@ from app.shared.application.actor import Actor
 from app.shared.application.unit_of_work import UnitOfWork
 from app.shared.domain.clock import utcnow
 from app.shared.domain.errors import Invalid
+from app.shared.domain.ids import new_id
 
 
 @dataclass(frozen=True)
@@ -39,6 +40,7 @@ class CreateQuestionHandler:
         self.questions, self.taxonomy, self.log, self.views, self.uow = questions, taxonomy, log, views, uow
 
     def __call__(self, actor: Actor, cmd: CreateQuestion) -> QuestionView:
+        batch = new_id()  # one request, one batch — a single edit is a batch of one (bulk-safety ADR-01)
         qtype = check_type(cmd.type or "mcq")
         q = Question(organization_id=actor.org_id, type=qtype, stem=cmd.stem or "", options=cmd.options or [], solution=cmd.solution or "",
                      difficulty=check_difficulty(cmd.difficulty), grade=cmd.grade, subject_id=cmd.subject_id,
@@ -53,9 +55,9 @@ class CreateQuestionHandler:
         q.mark_reviewed(actor.user_id, utcnow())
         self.questions.add(q)
         if cmd.primary_topic_id or cmd.topic_ids:
-            set_topics(self.questions, self.taxonomy, self.log, actor, q, cmd.topic_ids, cmd.primary_topic_id)
+            set_topics(self.questions, self.taxonomy, self.log, actor, q, cmd.topic_ids, cmd.primary_topic_id, batch)
         if cmd.tag_ids:
-            set_tags(self.questions, self.taxonomy, actor, q, cmd.tag_ids)
-        record(self.log, actor, q, "edit", None, q.snapshot())
+            set_tags(self.questions, self.taxonomy, self.log, actor, q, cmd.tag_ids, batch)
+        record(self.log, actor, q, "edit", None, q.snapshot(), batch)
         self.uow.commit()
         return self.views.views([q])[0]

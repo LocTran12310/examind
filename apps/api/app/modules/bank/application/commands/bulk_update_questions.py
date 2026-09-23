@@ -10,6 +10,7 @@ from app.shared.application.actor import Actor
 from app.shared.application.unit_of_work import UnitOfWork
 from app.shared.domain.clock import utcnow
 from app.shared.domain.errors import Conflict, Invalid, NotFound
+from app.shared.domain.ids import new_id
 
 BULK_STATUSES = ("approved", "rejected", "needs_review")
 
@@ -46,9 +47,13 @@ class BulkUpdateQuestionsHandler:
             if not self.taxonomy.subject_exists(actor.org_id, cmd.subject_id):
                 raise Invalid("Môn học không hợp lệ", "subject_id")
             self._guard_topics(actor, cmd, qs)
-        now = utcnow()
+        now, batch = utcnow(), new_id()  # every event of this request shares one batch: the bar's edit is one unit
         for q in qs:
-            before = q.snapshot()
+            # the whole state the bar can move, read before anything is touched: one event is enough to put the
+            # question back, without reading the finer topic/tag events of the same batch
+            topics, primary = self.questions.topic_ids(q.id)
+            tags = self.questions.tag_ids(q.id)
+            before = q.snapshot(topics, primary, list(tags))
             if cmd.difficulty:
                 q.difficulty = cmd.difficulty
             if cmd.grade is not None:
@@ -56,9 +61,11 @@ class BulkUpdateQuestionsHandler:
             if cmd.subject_id:
                 q.subject_id = cmd.subject_id
             if cmd.primary_topic_id:
-                set_topics(self.questions, self.taxonomy, self.log, actor, q, None, cmd.primary_topic_id)
+                set_topics(self.questions, self.taxonomy, self.log, actor, q, None, cmd.primary_topic_id, batch)
+                topics, primary = [cmd.primary_topic_id], cmd.primary_topic_id
             if cmd.add_tag_ids:
-                set_tags(self.questions, self.taxonomy, actor, q, list(self.questions.tag_ids(q.id) | set(cmd.add_tag_ids)))
+                tags = tags | set(cmd.add_tag_ids)
+                set_tags(self.questions, self.taxonomy, self.log, actor, q, list(tags), batch)
             if cmd.status == "approved":
                 if blocking_manual(q.issues or []):
                     raise Conflict(blocking_message(q, f"Câu {q.number or ''}"), code="has_blocking_issues")
@@ -69,7 +76,7 @@ class BulkUpdateQuestionsHandler:
                 q.status, q.spot_check = "rejected", False
             elif cmd.status == "needs_review":  # a decision taken back: the question goes back on a teacher's desk
                 q.status, q.spot_check = "needs_review", False
-            record(self.log, actor, q, "bulk", before, q.snapshot())
+            record(self.log, actor, q, "bulk", before, q.snapshot(topics, primary, list(tags)), batch)
         self.uow.commit()
         return len(qs)
 

@@ -10,6 +10,7 @@ from app.shared.application.actor import Actor
 from app.shared.application.unit_of_work import UnitOfWork
 from app.shared.domain.clock import utcnow
 from app.shared.domain.errors import Invalid
+from app.shared.domain.ids import new_id
 
 CONTENT = frozenset({"stem", "options", "solution"})
 
@@ -41,6 +42,7 @@ class UpdateQuestionHandler:
         self.questions, self.taxonomy, self.log, self.settings, self.views, self.uow = questions, taxonomy, log, settings, views, uow
 
     def __call__(self, actor: Actor, cmd: UpdateQuestion) -> QuestionView:
+        batch = new_id()
         q = load_question(self.questions, actor.org_id, cmd.question_id)
         before = q.snapshot()
         was_spot = q.is_spot_pending
@@ -54,15 +56,15 @@ class UpdateQuestionHandler:
                 raise Invalid("Môn học không hợp lệ", "subject_id")
             q.subject_id = cmd.subject_id
         if cmd.topic_ids is not None or cmd.primary_topic_id is not None:
-            set_topics(self.questions, self.taxonomy, self.log, actor, q, cmd.topic_ids, cmd.primary_topic_id)
+            set_topics(self.questions, self.taxonomy, self.log, actor, q, cmd.topic_ids, cmd.primary_topic_id, batch)
         if cmd.tag_ids is not None:
-            set_tags(self.questions, self.taxonomy, actor, q, cmd.tag_ids)
+            set_tags(self.questions, self.taxonomy, self.log, actor, q, cmd.tag_ids, batch)
         if was_spot and changed:
             spot_check_failed_by_edit(q, actor.user_id, utcnow())
-            record(self.log, actor, q, "spot_fail", before, q.snapshot())
-            spot_feedback(self.log, self.settings, actor)
+            record(self.log, actor, q, "spot_fail", before, q.snapshot(), batch)
+            spot_feedback(self.log, self.settings, actor, batch)
         else:
             action = "answer" if "answer" in cmd.sent and not (cmd.sent & CONTENT) else "edit"
-            record(self.log, actor, q, action, before, q.snapshot())
+            record(self.log, actor, q, action, before, q.snapshot(), batch)
         self.uow.commit()
         return self.views.views([q])[0]

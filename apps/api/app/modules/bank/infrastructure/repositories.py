@@ -81,6 +81,13 @@ class SqlQuestionRepository:
                                          .where(question_topics.c.question_id.in_(question_ids),
                                                 question_topics.c.is_primary.is_(True))).all())
 
+    def topic_ids(self, question_id: uuid.UUID) -> tuple[list[uuid.UUID], uuid.UUID | None]:
+        self.session.flush()
+        rows = self.session.execute(select(question_topics.c.topic_id, question_topics.c.is_primary)
+                                    .where(question_topics.c.question_id == question_id)
+                                    .order_by(question_topics.c.is_primary.desc(), question_topics.c.topic_id)).all()
+        return [t for t, _ in rows], next((t for t, primary in rows if primary), None)
+
     def tag_ids(self, question_id: uuid.UUID) -> set[uuid.UUID]:
         return set(self.session.scalars(select(question_tags.c.tag_id).where(question_tags.c.question_id == question_id)))
 
@@ -96,9 +103,9 @@ class SqlReviewLog:
         self.session = session
 
     def record(self, org_id: uuid.UUID, user_id: uuid.UUID | None, question_id: uuid.UUID | None, action: str,
-               before: dict | None, after: dict | None) -> None:
+               before: dict | None, after: dict | None, batch_id: uuid.UUID | None = None) -> None:
         self.session.add(ReviewEvent(organization_id=org_id, question_id=question_id, user_id=user_id, action=action,
-                                     before=before, after=after))
+                                     before=before, after=after, batch_id=batch_id))
 
     def recent_spot_actions(self, org_id: uuid.UUID, limit: int) -> list[str]:
         self.session.flush()

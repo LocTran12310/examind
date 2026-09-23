@@ -2,7 +2,7 @@
 from typing import Protocol
 import uuid
 
-from app.modules.bank.application.dto import ItemStats, QuestionView, ResolvedFilters, ReviewDocumentView
+from app.modules.bank.application.dto import EventBatchView, ItemStats, QuestionView, ResolvedFilters, ReviewDocumentView
 from app.modules.bank.domain.entities import Question
 from app.shared.application.search import Page, SearchRequest
 
@@ -31,6 +31,15 @@ class QuestionReader(QuestionViews, Protocol):
         ...
 
     def demo(self, org_id: uuid.UUID) -> Question | None: ...
+
+
+class EventReader(Protocol):
+    """The review history of the org grouped the way a teacher reads it: one row per request, not per question."""
+
+    def batches(self, org_id: uuid.UUID, req: SearchRequest) -> Page[EventBatchView]:
+        """Batches of the org, newest first. An event written before batches existed is a batch of one that cannot
+        be taken back. Filters: created_at (date) · user_id (uuid)."""
+        ...
 
 
 class ItemStatsReader(Protocol):

@@ -11,6 +11,7 @@ from app.shared.application.actor import Actor
 from app.shared.application.unit_of_work import UnitOfWork
 from app.shared.domain.clock import utcnow
 from app.shared.domain.errors import NotFound
+from app.shared.domain.ids import new_id
 
 
 @dataclass(frozen=True)
@@ -36,7 +37,7 @@ class ApplyAnswerKeyHandler:
         for q in qs:
             by_num.setdefault(q.number, []).append(q)
         applied, approved, unmatched = 0, 0, []
-        now = utcnow()
+        now, batch = utcnow(), new_id()
         for (part, n), letter in sorted(key.items(), key=lambda kv: ((kv[0][0] or ""), kv[0][1])):
             q = by_part.get((part, n)) or (by_num.get(n, [None])[0] if len(by_num.get(n, [])) == 1 else None)
             if q is None or letter not in {o.get("label") for o in q.options or []}:
@@ -53,6 +54,6 @@ class ApplyAnswerKeyHandler:
                 q.status = "approved"
                 q.mark_reviewed(actor.user_id, now)
                 approved += 1
-            record(self.log, actor, q, "answer", before, q.snapshot())
+            record(self.log, actor, q, "answer", before, q.snapshot(), batch)
         self.uow.commit()
         return AnswerKeyResult(applied, approved, unmatched)

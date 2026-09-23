@@ -82,9 +82,14 @@ review_events = Table(
     Column("action", String(16), nullable=False),
     Column("before", JSONB(none_as_null=True)),
     Column("after", JSONB(none_as_null=True)),
+    # the request that wrote this event; every event of one request shares it, so a bulk edit is one unit the
+    # history can show and an undo can restore. Null = written before the column existed (bulk-safety ADR-01)
+    Column("batch_id", UUID(as_uuid=True)),
 )
 
 # indexes the migrations create (declared here so the metadata matches the database; `alembic check` is empty)
 Index("ix_questions_org_status", questions.c.organization_id, questions.c.status)
 Index("uq_question_topics_primary", question_topics.c.question_id, unique=True, postgresql_where=text("is_primary"))
 Index("ix_questions_search_trgm", questions.c.search_text, postgresql_using="gin", postgresql_ops={"search_text": "gin_trgm_ops"})
+Index("ix_review_events_org_batch", review_events.c.organization_id, review_events.c.batch_id)
+Index("ix_review_events_org_created", review_events.c.organization_id, review_events.c.created_at)

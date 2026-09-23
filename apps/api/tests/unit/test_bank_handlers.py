@@ -1,5 +1,6 @@
 """Bank handlers against in-memory ports: writing, bulk, review, answer keys, key audit, triage, item statistics (ADR-02)."""
 from dataclasses import replace
+from datetime import UTC, datetime, timedelta
 import uuid
 
 import pytest
@@ -21,8 +22,10 @@ from app.modules.bank.application.dto import BankFilters, ItemStats, OptionStat,
 from app.modules.bank.application.queries.question_stats import QuestionStats, QuestionStatsHandler
 from app.modules.bank.application.queries.review_queue import ReviewQueue, ReviewQueueHandler
 from app.modules.bank.application.queries.search_document_questions import SearchDocumentQuestions, SearchDocumentQuestionsHandler
+from app.modules.bank.application.queries.search_question_events import SearchQuestionEvents, SearchQuestionEventsHandler
 from app.modules.bank.application.queries.suggest_topics import MAX_QUESTIONS, SuggestTopics, SuggestTopicsHandler
 from app.modules.bank.domain.entities import STATUS_KEYS, Question
+from app.modules.bank.domain.services.history import BLOCKED, batch_action, changed_fields, undo_block
 from app.modules.bank.domain.services.review import pending_count, review_state, waits_for_review
 from app.shared.application.actor import Actor
 from app.shared.application.search import Page, SearchRequest
@@ -76,6 +79,9 @@ class FakeQuestions:
     def primary_topic_ids(self, question_ids):
         return {q: primary for q, (_, primary) in self.topics.items() if q in question_ids and primary is not None}
 
+    def topic_ids(self, question_id):
+        return self.topics.get(question_id, ([], None))
+
     def tag_ids(self, question_id):
         return set(self.tags.get(question_id, []))
 
@@ -87,14 +93,17 @@ class FakeLog:
     def __init__(self):
         self.events: list = []
 
-    def record(self, org_id, user_id, question_id, action, before, after):
-        self.events.append((question_id, action, before, after))
+    def record(self, org_id, user_id, question_id, action, before, after, batch_id=None):
+        self.events.append((question_id, action, before, after, batch_id))
 
     def recent_spot_actions(self, org_id, limit):
-        return [a for _, a, _, _ in reversed(self.events) if a in ("spot_ok", "spot_fail")][:limit]
+        return [e[1] for e in reversed(self.events) if e[1] in ("spot_ok", "spot_fail")][:limit]
 
     def actions(self, qid=None):
-        return [a for q, a, _, _ in self.events if qid is None or q == qid]
+        return [e[1] for e in self.events if qid is None or e[0] == qid]
+
+    def batches(self, qid=None):
+        return {e[4] for e in self.events if qid is None or e[0] == qid}
 
 
 class FakeTaxonomy:
@@ -184,7 +193,7 @@ def test_create_is_approved_and_placed_or_refused_with_blocking_issues(ports):
     v = create(TEACHER, CreateQuestion(stem="1 + 1 = ?", options=OPTS, answer={"key": "B"}, primary_topic_id=TOPIC, tag_ids=[TAG_A]))
     assert v.status == "approved" and v.answer_source == "manual" and uow.commits == 1
     assert qs.topics[v.id] == ([TOPIC], TOPIC) and qs.tags[v.id] == [TAG_A]
-    assert log.actions(v.id) == ["topic", "edit"]
+    assert log.actions(v.id) == ["topic", "tag", "edit"]
     with pytest.raises(Invalid) as e:
         create(TEACHER, CreateQuestion(stem="x", options=OPTS))
     assert e.value.code == "has_blocking_issues"
@@ -253,6 +262,57 @@ def test_bulk_is_all_or_nothing(ports):
     with pytest.raises(Conflict) as e:
         bulk(TEACHER, BulkUpdateQuestions([broken.id], status="approved"))
     assert e.value.message.startswith("Câu 7 còn lỗi")
+
+
+def test_a_bulk_event_records_everything_the_bar_can_change_and_older_events_still_read(ports):
+    """A-02: the recorded state is what an undo has to put back, so it holds every field the bulk bar sets — topics
+    and tags included — and a placement or a tag change carries its own before, not only its after."""
+    qs, tax, log, _, _, uow = ports
+    bulk = BulkUpdateQuestionsHandler(qs, tax, log, uow)
+    a = parsed(qs, stem="a", answer={"key": "A"}, status="needs_review", difficulty="nb", grade=10, subject_id=SUBJECT)
+    qs.topics[a.id], qs.tags[a.id] = ([SUB_TOPIC], SUB_TOPIC), [TAG_B]
+    assert bulk(TEACHER, BulkUpdateQuestions([a.id], difficulty="vdc", grade=11, primary_topic_id=TOPIC, add_tag_ids=[TAG_A])) == 1
+    placed, tagged, moved = (e for e in log.events if e[0] == a.id)
+    assert len(log.batches(a.id)) == 1  # one request, one batch: the placement, the tags and the edit are one unit
+    assert placed[1:4] == ("topic", {"topics": [str(SUB_TOPIC)], "primary_topic": str(SUB_TOPIC)},
+                           {"topics": [str(TOPIC)], "primary_topic": str(TOPIC)})
+    assert tagged[1:4] == ("tag", {"tags": [str(TAG_B)]}, {"tags": sorted([str(TAG_A), str(TAG_B)])})
+    before, after = moved[2], moved[3]
+    assert changed_fields(before, after) == ["difficulty", "grade", "topics", "primary_topic", "tags"]
+    assert (before["difficulty"], before["grade"], before["subject_id"]) == ("nb", 10, str(SUBJECT))
+    assert before["topics"] == [str(SUB_TOPIC)] and before["primary_topic"] == str(SUB_TOPIC) and before["tags"] == [str(TAG_B)]
+    assert (after["difficulty"], after["grade"], after["topics"]) == ("vdc", 11, [str(TOPIC)])
+    # an event written before the snapshot widened: a field it does not mention is unknown, never "was empty"
+    assert changed_fields({"status": "needs_review"}, {"status": "approved", "difficulty": "vd"}) == ["status"]
+    assert changed_fields(None, None) == [] and changed_fields({"tags": []}, None) == []
+
+
+def test_a_batch_is_named_by_its_coarsest_action_and_says_why_it_cannot_be_taken_back():
+    """ADR-02: seven days, and the most specific refusal wins — a batch that was undone says so, not that it is old."""
+    now = datetime(2026, 9, 23, 10, tzinfo=UTC)
+    assert batch_action({"topic", "tag", "bulk"}) == "bulk" and batch_action({"topic", "tag"}) == "topic"
+    assert batch_action({"undo", "bulk"}) == "undo" and batch_action(()) == ""
+    assert undo_block(True, "bulk", now - timedelta(days=6, hours=23), now, False) is None
+    assert undo_block(True, "bulk", now - timedelta(days=7, seconds=1), now, False) == "expired"
+    assert undo_block(True, "bulk", now, now, True) == "already_undone"
+    assert undo_block(True, "undo", now, now, False) == "is_undo"  # an undo is not undone a second time (A-04)
+    assert undo_block(False, "bulk", now - timedelta(days=400), now, True) == "no_batch"  # written before batches existed
+    assert set(BLOCKED) == {"no_batch", "is_undo", "already_undone", "expired"}
+
+
+def test_recent_changes_are_read_within_the_callers_organisation():
+    class FakeEvents:
+        def __init__(self):
+            self.asked: list = []
+
+        def batches(self, org_id, req):
+            self.asked.append((org_id, req))
+            return Page([], 0, req.page, req.limit)
+
+    events = FakeEvents()
+    req = SearchRequest(page=2, limit=5)
+    assert SearchQuestionEventsHandler(events)(TEACHER, SearchQuestionEvents(req)).total == 0
+    assert events.asked == [(ORG, req)]
 
 
 def test_bulk_sets_subject_and_grade_and_refuses_a_topic_of_another_subject(ports):

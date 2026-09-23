@@ -21,6 +21,7 @@ from app.modules.bank.application.queries.question_stats import QuestionStats, Q
 from app.modules.bank.application.queries.review_queue import ReviewQueue, ReviewQueueHandler
 from app.modules.bank.application.queries.search_document_questions import SearchDocumentQuestions, SearchDocumentQuestionsHandler
 from app.modules.bank.application.queries.search_flagged import SearchFlagged, SearchFlaggedHandler
+from app.modules.bank.application.queries.search_question_events import SearchQuestionEvents, SearchQuestionEventsHandler
 from app.modules.bank.application.queries.search_questions import SearchQuestions, SearchQuestionsHandler
 from app.modules.bank.application.queries.search_review_documents import SearchReviewDocuments, SearchReviewDocumentsHandler
 from app.modules.bank.application.queries.suggest_topics import SuggestTopics, SuggestTopicsHandler
@@ -40,6 +41,7 @@ from app.modules.bank.interface.schemas import (
     FlaggedIdsOut,
     ParsedQuestionOut,
     QuestionCreate,
+    QuestionEventOut,
     QuestionOut,
     QuestionPatch,
     QuestionSearchBody,
@@ -51,6 +53,7 @@ from app.modules.bank.interface.schemas import (
     SuggestTopicsIn,
     TopicSuggestionOut,
     parsed_out,
+    question_event_out,
     question_out,
     question_stats_out,
     review_document_out,
@@ -149,6 +152,18 @@ def patch_question(question_id: uuid.UUID, body: QuestionPatch, actor: Actor = D
                    handle: UpdateQuestionHandler = Depends(deps.update_question)):
     sent = body.model_dump(exclude_unset=True)
     return parsed_out(handle(actor, UpdateQuestion(question_id, **{k: v for k, v in sent.items() if v is not None}, sent=frozenset(sent))))
+
+
+# ------------------------------------------------------------------ what changed
+
+
+@router.post("/question-events/search", response_model=PageOut[QuestionEventOut])
+def search_question_events(body: SearchBody, actor: Actor = Depends(staff_actor),
+                           handle: SearchQuestionEventsHandler = Depends(deps.search_question_events)):
+    """"Thay đổi gần đây" (bulk-safety A-05): one row per request that changed the bank — when, who, which fields and
+    how many questions — newest first. `undoable` is false with a `reason` when the batch is too old (ADR-02), was
+    already taken back, is itself an undo, or predates the batch column. Filters: created_at (date) · user_id (uuid)."""
+    return _page(handle(actor, SearchQuestionEvents(body.to_request())), question_event_out)
 
 
 # ------------------------------------------------------------------ review
