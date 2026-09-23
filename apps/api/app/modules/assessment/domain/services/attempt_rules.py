@@ -1,6 +1,6 @@
 """Taking an exam: the attempt's question and option order, what a student sees (shuffled MCQ options relabelled
 A, B, C, D), answer checks, the server-side time limit and grading on submit (exam-practice US-03, US-04, ADR-02, ADR-03)."""
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 import random
 import uuid
 
@@ -98,6 +98,35 @@ def checked_response(q: QuestionRef, response) -> dict | None:
     if q.type == "short_answer":
         return {"value": str(response.get("value", ""))[:MAX_SHORT]}
     return {"text": str(response.get("text", ""))[:MAX_TEXT]}
+
+
+def _given(value) -> bool:
+    return value.strip() != "" if isinstance(value, str) else value is not None
+
+
+def answered(ans: AttemptAnswer | None) -> bool:
+    """Whether the student left anything on the question: no row, no response or an empty one is not an answer
+    (learning-telemetry ADR-02)."""
+    return bool(ans is not None and ans.response and any(_given(v) for v in ans.response.values()))
+
+
+def _aware(when: datetime | None) -> datetime | None:
+    return when.replace(tzinfo=UTC) if when is not None and when.tzinfo is None else when
+
+
+def track_timing(att: Attempt, ans: AttemptAnswer, seconds, first_seen: datetime | None, now: datetime) -> None:
+    """One save's telemetry (learning-telemetry ADR-01): the seconds the runner reports are added to the question's
+    total, the total clamped to the attempt window (started_at → the earlier of now and the deadline). A missing,
+    negative or absurd value is evidence gone missing, never an error."""
+    started = att.started_at or now
+    window = max(0, int((min(now, att.deadline_at) - started).total_seconds()))
+    reported = seconds if isinstance(seconds, (int, float)) and not isinstance(seconds, bool) and seconds > 0 else 0
+    ans.seconds_spent = min((ans.seconds_spent or 0) + int(min(reported, window)), window)
+    ans.save_count = (ans.save_count or 0) + 1
+    if ans.first_seen_at is None:
+        seen = _aware(first_seen)
+        ans.first_seen_at = min(max(seen, started), now) if seen is not None else now
+    ans.answered_at = now
 
 
 def expired(att: Attempt, now: datetime) -> bool:

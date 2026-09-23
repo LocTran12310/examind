@@ -103,6 +103,11 @@ class AnswerFacts(Protocol):
         """The fact of that answer becomes `fact` (None: none, e.g. an essay not graded yet)."""
         ...
 
+    def earlier(self, student_id: uuid.UUID, question_id: uuid.UUID, attempt_id: uuid.UUID, before: datetime) -> bool:
+        """Whether the student already has a fact for that question from another attempt started before `before`
+        (learning-telemetry ADR-01: what makes an answer the first attempt)."""
+        ...
+
 
 class QuestionBank(Protocol):
     """The bank context, seen from assessment."""

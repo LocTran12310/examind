@@ -152,16 +152,17 @@ class FakeAssignments:
 
 
 class FakeAttempts:
-    def __init__(self):
+    def __init__(self, clock: "Clock | None" = None):
         self.rows: dict = {}
         self.answer_rows: dict = {}
+        self.clock = clock or Clock()
 
     def get(self, org_id, attempt_id):
         att = self.rows.get(attempt_id)
         return att if att is not None and att.organization_id == org_id else None
 
     def add(self, att):
-        att.started_at = att.started_at or NOW
+        att.started_at = att.started_at or self.clock()
         self.rows[att.id] = att
 
     def of_student(self, assignment_id, student_id):
@@ -194,13 +195,18 @@ class FakeAttempts:
 
 
 class FakeFacts:
-    def __init__(self):
+    def __init__(self, attempts: "FakeAttempts"):
         self.rows: dict = {}
+        self.attempts = attempts
 
     def replace(self, attempt_id, question_id, fact):
         self.rows.pop((attempt_id, question_id), None)
         if fact is not None:
             self.rows[(attempt_id, question_id)] = fact
+
+    def earlier(self, student_id, question_id, attempt_id, before):
+        return any(f.student_id == student_id and f.question_id == question_id and f.attempt_id != attempt_id
+                   and self.attempts.rows[f.attempt_id].started_at < before for f in self.rows.values())
 
 
 class FakeListener:
@@ -242,8 +248,8 @@ class World:
 
     def __init__(self, *refs: QuestionRef, now: datetime = NOW):
         self.clock = Clock(now)
-        self.exams, self.bank, self.assignments, self.attempts = FakeExams(), FakeBank(*refs), FakeAssignments(), FakeAttempts()
-        self.facts, self.listener = FakeFacts(), FakeListener()
+        self.exams, self.bank, self.assignments, self.attempts = FakeExams(), FakeBank(*refs), FakeAssignments(), FakeAttempts(self.clock)
+        self.facts, self.listener = FakeFacts(self.attempts), FakeListener()
         self.roster = FakeRoster({CLASS: {STUDENT.user_id}}, {STUDENT.user_id, OTHER.user_id})
         self.uow = FakeUow()
         self.exam = Exam(organization_id=ORG, title="Kiểm tra")
@@ -267,8 +273,9 @@ class World:
         return StartAttemptHandler(self.assignments, self.attempts, self.exams, self.bank, self.roster, self.grading(), self.clock,
                                    self.uow, rng)(actor, StartAttempt(a.id))
 
-    def save(self, att_id, qid, response, actor: Actor = STUDENT):
-        return SaveAnswerHandler(self.attempts, self.bank, self.grading(), self.clock, self.uow)(actor, SaveAnswer(att_id, qid, response))
+    def save(self, att_id, qid, response, actor: Actor = STUDENT, seconds=None, first_seen=None):
+        return SaveAnswerHandler(self.attempts, self.bank, self.grading(), self.clock, self.uow)(
+            actor, SaveAnswer(att_id, qid, response, seconds, first_seen))
 
     def submit(self, att_id, actor: Actor = STUDENT):
         return SubmitAttemptHandler(self.attempts, self.grading(), self.clock, self.uow)(actor, SubmitAttempt(att_id))
@@ -477,9 +484,11 @@ def test_submit_grades_writes_facts_in_order_and_closes():
     assert att.score == 0.25 + 0.5 and att.max_score == 0.25 * 2 + 1 + 1 and att.needs_grading is True and att.submitted_at == NOW
     assert w.attempts.answer(att_id, q1.id).key_snapshot == {"key": "B"}
     graded = [f.question_id for f in w.listener.facts]
-    assert graded == [qid for qid in map(uuid.UUID, att.question_order) if qid != e.id]  # the essay waits for a teacher
+    # the essay waits for a teacher, the second question was never answered (ADR-02)
+    assert graded == [qid for qid in map(uuid.UUID, att.question_order) if qid not in (e.id, q2.id)]
     fact = w.facts.rows[(att_id, q1.id)]
     assert fact.topic_path == "dai_so" and fact.correct_ratio == 1.0 and fact.school_year_id == YEAR and fact.class_ids == [CLASS]
+    assert fact.first_attempt is True
     with pytest.raises(Conflict) as closed:
         w.save(att_id, q1.id, {"key": "A"})
     assert closed.value.code == "attempt_closed"
@@ -505,6 +514,64 @@ def test_essay_grading_updates_the_total_and_its_fact():
     ans = w.attempts.answer(att_id, e.id)
     assert ans.comment == "Thiếu bước 2" and ans.is_correct is False and ans.graded_by == TEACHER.user_id
     assert w.facts.rows[(att_id, e.id)].points == 0.5
+
+
+def test_timing_accumulates_over_the_saves_and_is_clamped_to_the_attempt_window():
+    q = mcq()
+    w = World(q)
+    att_id = w.start(w.assignment())
+    w.clock.at = NOW + timedelta(seconds=30)
+    w.save(att_id, q.id, {"key": "A"}, seconds=12, first_seen=NOW + timedelta(seconds=5))
+    ans = w.attempts.answer(att_id, q.id)
+    assert ans.seconds_spent == 12 and ans.save_count == 1 and ans.first_seen_at == NOW + timedelta(seconds=5)
+    assert ans.answered_at == w.clock.at
+    w.clock.at = NOW + timedelta(seconds=60)
+    w.save(att_id, q.id, {"key": "B"}, seconds=-5, first_seen=NOW)  # nonsense costs nothing and the first sight stands
+    assert ans.seconds_spent == 12 and ans.save_count == 2 and ans.first_seen_at == NOW + timedelta(seconds=5)
+    w.save(att_id, q.id, {"key": "C"}, seconds=10_000)  # absurd: down to the window (started_at → now)
+    assert ans.seconds_spent == 60 and ans.save_count == 3
+
+
+def test_an_unanswered_question_scores_zero_and_leaves_no_fact():
+    q, blank, never = mcq(), QuestionRef(id=uuid.uuid4(), organization_id=ORG, type="short_answer", status="approved",
+                                         answer={"value": "2"}), mcq()
+    w = World(q, blank, never)
+    att_id = w.start(w.assignment())
+    w.save(att_id, q.id, {"key": shown_key(w, att_id, q)})
+    w.save(att_id, blank.id, {"value": "   "})  # opened, nothing written down
+    w.submit(att_id)
+    att = w.attempts.rows[att_id]
+    assert set(w.facts.rows) == {(att_id, q.id)} and [f.question_id for f in w.listener.facts] == [q.id]
+    assert w.attempts.answer(att_id, blank.id).points == 0.0 and w.attempts.answer(att_id, never.id).points == 0.0
+    assert att.score == 0.25 and att.max_score == 0.25 * 2 + 0.5  # the blanks still count against the result
+
+
+def test_an_abandoned_attempt_is_swept_without_any_fact():
+    q = mcq()
+    w = World(q)
+    att_id = w.start(w.assignment())
+    w.clock.at = NOW + timedelta(hours=3)
+    assert SweepExpiredAttemptsHandler(w.attempts, w.grading(), w.clock)() == 1
+    assert w.attempts.rows[att_id].status == "submitted" and w.attempts.rows[att_id].score == 0
+    assert w.facts.rows == {} and w.listener.facts == []
+
+
+def test_only_the_first_answer_of_a_question_is_a_first_attempt():
+    q = mcq()
+    w = World(q)
+    a = w.assignment(max_attempts=2)
+    first = w.start(a)
+    w.save(first, q.id, {"key": shown_key(w, first, q)})
+    w.submit(first)
+    assert w.facts.rows[(first, q.id)].first_attempt is True
+    w.clock.at = NOW + timedelta(minutes=5)
+    second = w.start(a)
+    w.clock.at = NOW + timedelta(minutes=6)
+    w.save(second, q.id, {"key": shown_key(w, second, q)}, seconds=7)
+    w.submit(second)
+    fact = w.facts.rows[(second, q.id)]
+    assert fact.first_attempt is False and fact.seconds_spent == 7 and fact.answered_at == NOW + timedelta(minutes=6)
+    assert w.facts.rows[(first, q.id)].first_attempt is True
 
 
 def test_an_empty_essay_scores_zero_without_waiting():

@@ -121,6 +121,11 @@ attempt_answers = Table(
     Column("comment", Text),
     Column("graded_by", UUID(as_uuid=True), ForeignKey("users.id")),
     Column("updated_at", DateTime(timezone=True), server_default=func.now(), onupdate=func.now()),
+    # what the runner reports while the question is on screen (learning-telemetry ADR-01)
+    Column("first_seen_at", DateTime(timezone=True)),
+    Column("answered_at", DateTime(timezone=True)),
+    Column("seconds_spent", Integer, nullable=False, default=0),
+    Column("save_count", Integer, nullable=False, default=0),
 )
 
 # one graded answer, denormalised for reporting (exam-practice ADR-01)
@@ -145,6 +150,10 @@ answer_facts = Table(
     Column("school_year_id", UUID(as_uuid=True), ForeignKey("school_years.id"), index=True),
     Column("term_code", String(8)),
     Column("class_ids", ARRAY(UUID(as_uuid=True)), nullable=False, default=list, server_default="{}"),
+    # the answer's own evidence, copied from attempt_answers (learning-telemetry ADR-01)
+    Column("seconds_spent", Integer),
+    Column("answered_at", DateTime(timezone=True)),
+    Column("first_attempt", Boolean),
 )
 
 # indexes the migrations create (declared here so the metadata matches the database; `alembic check` is empty)

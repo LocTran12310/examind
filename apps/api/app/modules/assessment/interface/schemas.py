@@ -219,6 +219,8 @@ class StartOut(BaseModel):
 
 class AnswerIn(BaseModel):
     response: dict | None
+    seconds_spent: int | None = None  # the runner's measure since the last save; clamped, never refused
+    first_seen_at: datetime | None = None
 
 
 class GradeIn(BaseModel):

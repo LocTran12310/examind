@@ -111,6 +111,10 @@ class AttemptAnswer:
     comment: str | None = None
     graded_by: uuid.UUID | None = None
     updated_at: datetime | None = None
+    first_seen_at: datetime | None = None  # when the runner first showed the question (learning-telemetry ADR-01)
+    answered_at: datetime | None = None  # the last save
+    seconds_spent: int = 0  # accumulated over the saves, clamped to the attempt window
+    save_count: int = 0
 
 
 @dataclass(eq=False)
@@ -133,5 +137,8 @@ class AnswerFact:
     school_year_id: uuid.UUID | None = None
     term_code: str | None = None
     class_ids: list = field(default_factory=list)
+    seconds_spent: int | None = None  # what the answer took (learning-telemetry ADR-01)
+    answered_at: datetime | None = None
+    first_attempt: bool | None = None  # no earlier fact for this student and question
     id: uuid.UUID = field(default_factory=new_id)
     created_at: datetime | None = None

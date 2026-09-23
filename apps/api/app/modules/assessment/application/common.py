@@ -108,18 +108,21 @@ class Grading:
 
     def record(self, att: Attempt, q: QuestionRef, ans: AttemptAnswer,
                classification: tuple[str | None, list[uuid.UUID]] | None = None) -> None:
-        """The answer's fact follows its points: replaced, or removed while it has none."""
-        if ans.points is None or not ans.max_points:
+        """The answer's fact follows its points: replaced, or removed while it has none. A question nobody answered
+        still scores 0 in the result but leaves no fact behind (learning-telemetry ADR-02)."""
+        if ans.points is None or not ans.max_points or not attempt_rules.answered(ans):
             self.facts.replace(att.id, q.id, None)
             return
         if att.id not in self._snapshots:  # one lookup per attempt, not per question
             self._snapshots[att.id] = self.roster.snapshot(att.organization_id, att.student_id, att.submitted_at or self.clock())
         snap = self._snapshots[att.id]
         path, tag_ids = classification if classification is not None else self.bank.classification([q.id]).get(q.id, (None, []))
+        first = not self.facts.earlier(att.student_id, q.id, att.id, att.started_at or self.clock())
         fact = AnswerFact(organization_id=att.organization_id, attempt_id=att.id, assignment_id=att.assignment_id, exam_id=att.exam_id,
                           student_id=att.student_id, question_id=q.id, topic_path=path, tag_ids=list(tag_ids), qtype=q.type,
                           difficulty=q.difficulty, points=ans.points, max_points=ans.max_points,
                           correct_ratio=round(ans.points / ans.max_points, 4), created_at=self.clock(),
-                          school_year_id=snap.school_year_id, term_code=snap.term_code, class_ids=list(snap.class_ids))
+                          school_year_id=snap.school_year_id, term_code=snap.term_code, class_ids=list(snap.class_ids),
+                          seconds_spent=ans.seconds_spent, answered_at=ans.answered_at, first_attempt=first)
         self.facts.replace(att.id, q.id, fact)
         self.listener.recorded(fact)

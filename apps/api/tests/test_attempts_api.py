@@ -1,8 +1,10 @@
 from datetime import timedelta
+import uuid
 
 from sqlalchemy import select
 
-from app.modules.assessment.domain.entities import AnswerFact, Attempt
+from app.modules.analytics.domain.entities import TopicMastery
+from app.modules.assessment.domain.entities import AnswerFact, Attempt, AttemptAnswer
 from app.shared.domain.clock import utcnow as now
 from tests.exam_helpers import assign, display_key, exam_with_questions, key_of, klass_with_student, login
 
@@ -53,8 +55,52 @@ def test_submit_grades_and_writes_facts(client, db):
     a = db.get(Attempt, att)
     assert abs(a.score - expected) < 1e-6 and a.max_score == exam["total_points"]
     facts = db.scalars(select(AnswerFact).where(AnswerFact.attempt_id == a.id)).all()
-    assert len(facts) == exam["question_count"] and all(f.topic_path for f in facts if f.qtype == "mcq")
+    # the short answer was left empty: scored 0 above, but no fact (learning-telemetry ADR-02)
+    assert len(facts) == exam["question_count"] - 1 and all(f.topic_path for f in facts if f.qtype == "mcq")
+    assert all(f.first_attempt is True for f in facts) and not any(f.qtype == "short_answer" for f in facts)
     assert s.put(f"/api/attempts/{att}/answers/{view['questions'][0]['id']}", json={"response": {"key": "A"}}).status_code == 409
+
+
+def test_timing_accumulates_over_the_saves_and_reaches_the_fact(client, db):
+    _, _, _, s, att = started(client, db)
+    a = db.get(Attempt, att)
+    a.started_at = now() - timedelta(minutes=10)  # ten minutes of window to spend
+    db.commit()
+    view = s.get(f"/api/attempts/{att}").json()
+    q = next(x for x in view["questions"] if x["type"] == "mcq")
+    url = f"/api/attempts/{att}/answers/{q['id']}"
+    seen = (now() - timedelta(minutes=9)).isoformat()
+    assert s.put(url, json={"response": display_key(db, q), "seconds_spent": 90, "first_seen_at": seen}).json()["seconds_spent"] == 90
+    assert s.put(url, json={"response": display_key(db, q), "seconds_spent": 75}).json()["seconds_spent"] == 165
+    clamped = s.put(url, json={"response": display_key(db, q), "seconds_spent": 99_999}).json()["seconds_spent"]
+    assert 165 < clamped <= 10 * 60  # never more than the attempt window
+    assert s.put(url, json={"response": display_key(db, q), "seconds_spent": -30}).json()["seconds_spent"] == clamped
+    db.expire_all()
+    ans = db.get(AttemptAnswer, (a.id, uuid.UUID(q["id"])))
+    assert ans.save_count == 4 and ans.answered_at is not None
+    assert abs((now() - ans.first_seen_at).total_seconds() - 9 * 60) < 5  # the first sight the runner reported
+    s.post(f"/api/attempts/{att}/submit")
+    db.expire_all()
+    fact = db.scalars(select(AnswerFact).where(AnswerFact.attempt_id == a.id, AnswerFact.question_id == uuid.UUID(q["id"]))).one()
+    assert fact.seconds_spent == clamped and fact.first_attempt is True and fact.answered_at == ans.answered_at
+
+
+def test_an_abandoned_attempt_leaves_no_facts_and_no_mastery(client, db):
+    _, _, _, s, att = started(client, db)
+    a = db.get(Attempt, att)
+    before = s.get("/api/me/mastery").json()
+    a.deadline_at = now() - timedelta(minutes=5)
+    db.commit()
+    from app.modules.assessment.interface.deps import assessment_api
+
+    assert assessment_api(db).sweep_expired() == 1
+    db.commit()
+    db.expire_all()
+    closed = db.get(Attempt, att)
+    assert closed.status == "submitted" and closed.score == 0
+    assert db.scalars(select(AnswerFact).where(AnswerFact.attempt_id == a.id)).all() == []
+    assert db.scalars(select(TopicMastery).where(TopicMastery.student_id == closed.student_id)).all() == []
+    assert s.get("/api/me/mastery").json() == before
 
 
 def test_deadline_is_enforced_and_swept(client, db):

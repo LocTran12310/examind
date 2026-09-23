@@ -219,7 +219,7 @@ def get_attempt(attempt_id: uuid.UUID, response: Response, actor: Actor = Depend
 @router.put("/attempts/{attempt_id}/answers/{qid}")
 def save_answer(attempt_id: uuid.UUID, qid: uuid.UUID, body: AnswerIn, response: Response, actor: Actor = Depends(current_actor),
                 handle: SaveAnswerHandler = Depends(deps.save_answer)):
-    saved = handle(actor, SaveAnswer(attempt_id, qid, body.response))
+    saved = handle(actor, SaveAnswer(attempt_id, qid, body.response, body.seconds_spent, body.first_seen_at))
     _server_time(response)
     return saved
 

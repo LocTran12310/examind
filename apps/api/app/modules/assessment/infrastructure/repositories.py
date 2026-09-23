@@ -15,6 +15,7 @@ from app.modules.assessment.domain.entities import (
 )
 from app.modules.assessment.infrastructure import orm  # noqa: F401  (mapping)
 from app.shared.infrastructure.schema.assessment import (
+    answer_facts,
     assignment_targets,
     assignments,
     attempt_answers,
@@ -22,7 +23,7 @@ from app.shared.infrastructure.schema.assessment import (
     exam_questions,
 )
 
-eq_c, at_c, t_c = exam_questions.c, attempts.c, assignment_targets.c
+eq_c, at_c, t_c, f_c = exam_questions.c, attempts.c, assignment_targets.c, answer_facts.c
 
 
 class _Repo:
@@ -152,3 +153,8 @@ class SqlAnswerFacts(_Repo):
         if fact is not None:
             self.session.add(fact)
             self.session.flush()
+
+    def earlier(self, student_id: uuid.UUID, question_id: uuid.UUID, attempt_id: uuid.UUID, before: datetime) -> bool:
+        return bool(self.session.scalar(select(exists().where(
+            f_c.student_id == student_id, f_c.question_id == question_id, f_c.attempt_id != attempt_id,
+            at_c.id == f_c.attempt_id, at_c.started_at < before))))

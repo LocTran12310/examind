@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 import uuid
 
 from app.modules.assessment.application.common import Clock, Grading, load_attempt
@@ -15,11 +16,14 @@ class SaveAnswer:
     attempt_id: uuid.UUID
     question_id: uuid.UUID
     response: dict | None
+    seconds_spent: int | None = None  # what the runner measured since the last save
+    first_seen_at: datetime | None = None
 
 
 class SaveAnswerHandler:
     """Autosave of one answer while the attempt runs (past the deadline the attempt is closed instead); MCQ choices
-    arrive in the shown labels and are stored in the original ones."""
+    arrive in the shown labels and are stored in the original ones. Each save carries the seconds the question was on
+    screen, which the attempt accumulates and clamps (learning-telemetry ADR-01)."""
 
     def __init__(self, attempts: AttemptRepository, bank: QuestionBank, grading: Grading, clock: Clock, uow: UnitOfWork):
         self.attempts, self.bank, self.grading, self.clock, self.uow = attempts, bank, grading, clock, uow
@@ -40,6 +44,9 @@ class SaveAnswerHandler:
             ans = AttemptAnswer(attempt_id=att.id, question_id=q.id)
             self.attempts.add_answer(ans)
         ans.response = clean
-        ans.updated_at = self.clock()
+        now = self.clock()
+        ans.updated_at = now
+        attempt_rules.track_timing(att, ans, cmd.seconds_spent, cmd.first_seen_at, now)
         self.uow.commit()
-        return {"question_id": ans.question_id, "response": attempt_rules.to_display(att, q, ans.response), "saved_at": ans.updated_at}
+        return {"question_id": ans.question_id, "response": attempt_rules.to_display(att, q, ans.response),
+                "saved_at": ans.updated_at, "seconds_spent": ans.seconds_spent}
