@@ -6,7 +6,7 @@ viewports: [desktop, mobile]
 
 # Verification — Undo for the bulk bar, and a way back from a detail page
 
-Signed in as an org admin, against the owner's real bank: 357 Toán questions and 21 nobody has classified.
+Signed in as an org admin, against the owner's real bank: 357 Toán questions and 20 nobody has classified.
 
 **The run leaves the bank as it found it.** S2 makes a real edit — one question's mức độ — and S3 takes it back
 out of "Thay đổi gần đây", which is the feature verifying itself. Every step starts from a fresh page load, so

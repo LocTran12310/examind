@@ -731,3 +731,58 @@ one status and nothing else; an uncaught exception still fails a step. The steps
 papers built from your documents, and both refusals were confirmed to write nothing before the run. The 62
 questions tagged during the UOW-02 walk are real assignments taken from the suggestions; say the word and they
 go back to untagged.
+
+## 25. F18 `2026092305-bulk-safety` (2026-09-24)
+From your walk of the bank and the assignment report: the toolbar changes mức độ, môn, lớp, chuyên đề and tags
+on the whole selection in one click — fast, and easy to fire by accident — with no way back and no way to find
+what happened; and the assignment report had no way back to where you came from.
+
+**What the investigation found.** Every bulk edit already wrote a before/after snapshot per question into
+`review_events`. But the snapshot held only `status, answer, confidence, issues` — the five fields the toolbar
+can change were exactly the five it did not keep — and nothing in the product ever read that table. So "khó tìm
+lại được" was literally true: the data to undo with did not exist.
+
+**What changed**
+- **The history is worth restoring.** The snapshot now covers difficulty, grade, subject, the topic list with
+  its primary, and tags. It is *partial* on purpose: each event records only the fields it moved, and a field no
+  event mentions is left out rather than written as null — which is why events from before this feature read
+  back as "unknown" instead of pretending everything was empty.
+- **One request is one batch.** Migration `0019` adds `batch_id` with two indexes; every command that writes
+  more than one event threads one id through. A single edit is a batch of one, so the history has one shape.
+- **`POST /questions/bulk/undo`** restores a batch through the same aggregate and the same guards an edit goes
+  through, all or nothing. The restore is itself an event under a new batch, so it cannot run twice: 409 for a
+  second undo, 409 for undoing an undo, 422 past seven days, 422 when a question of the batch is gone.
+- **"Hoàn tác" in the toast**, and **"Thay đổi gần đây"** in the bank's toolbar — one row per edit with when,
+  who, what fields, how many questions, and an undo per row; a row that cannot be taken back says why, in the
+  API's own sentence.
+- **Each bulk action names how many questions it will change**, on the button and in the menu header.
+- **Back links** on the assignment report, the attempt result, the new-question form and the question preview.
+
+**Three things worth your attention**
+- **A defect only the live run caught.** Undoing a batch that never touched the placement still rewrote the
+  topic links, turning a pipeline placement (`auto`, 0.61) into a teacher's manual one (`manual`, 1.0). Fixed —
+  an untouched placement or tag set is now left alone — and guarded by tests. The two questions affected during
+  the trial were put back to `auto`/0.61 and `auto`/0.73, by id.
+- **A defect only the screenshots caught.** Six columns did not fit the "Thay đổi gần đây" sheet, so the column
+  holding the undo button was clipped off the right edge at 1440 px. The sheet is wider now. On a phone the list
+  still scrolls sideways to reach that column; pinning it was tried and reverted because a 176 px pinned cell
+  draws on top of a 390 px row. A phone layout for this list is separate work, and the verification says so.
+- **A limit of the existing data.** `review_events.question_id` is `ON DELETE SET NULL`, so deleting a question
+  empties its link in the history. A batch that lost a question is still refused whole, but it cannot name which
+  question — it says so rather than guessing. Naming it needs the history to carry the id itself: one migration,
+  your call.
+
+**Per-question points: no** — ADR-03, and the reasoning is in your answer above. The same question is worth
+different amounts in different papers; the paper already answers it with `points_by_type` plus a per-question
+override; two defaults would be a conflict to resolve on every insert. If recurring paper shapes need their own
+numbers, that is an exam template, not a field on the question.
+
+**Checks.** API 491 → **498 passed, 1 skipped**; web 207 → **216 passed** in 52 files; ruff and the four import
+contracts green. Browser verification: 7 steps × 2 viewports, 14/14 green, every screenshot read.
+
+**Live data.** The verification writes to the real bank and takes it back within the same run: S2 sets one
+question's mức độ, S3 undoes it from "Thay đổi gần đây". The difficulty facet reads `{none: 376, th: 1}` before
+and after every run. The first version of the spec did *not* do this — it left one question at "Vận dụng cao"
+per viewport — and fixing that is why the undo is pressed in the list rather than in the toast. Undoing those
+leftovers also turned up older residue from the construction runs: three questions an agent had given a
+difficulty on 2026-09-23 and never taken back. Both were restored through the product's own undo.
