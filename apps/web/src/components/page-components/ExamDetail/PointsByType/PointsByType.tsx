@@ -8,8 +8,9 @@ import type { QuestionType } from "@/interfaces/question.interface";
 /** "Điểm mặc định theo loại câu": saved when a field loses focus with a new value. */
 export function PointsByType({ settings, onChange }: { settings: ExamSettings; onChange: (type: QuestionType, points: number) => void }) {
   return (
-    <Panel>
+    <Panel id="diem-mac-dinh">
       <h2 className="mb-2 font-medium">Điểm mặc định theo loại câu</h2>
+      <p className="mb-2 text-sm text-muted-foreground">Đổi ở đây sẽ áp lại cho mọi câu cùng loại trong đề, kể cả câu đã sửa điểm riêng — xem “Thang điểm của đề”.</p>
       <div className="grid grid-cols-2 gap-2 text-sm">
         {(Object.keys(TYPE_LABEL) as QuestionType[]).map((t) => (
           <Label key={t} className="justify-between font-normal">

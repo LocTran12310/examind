@@ -9,6 +9,6 @@
 | AC-03 | T-01-02, T-02-02 | UOW-01, UOW-02 | open |
 | AC-04 | T-01-02, T-02-02 | UOW-01, UOW-02 | open |
 | AC-05 | T-02-02 | UOW-02 | open |
-| AC-06 | T-03-01 | UOW-03 | open |
+| AC-06 | T-03-01 | UOW-03 | done |
 
 Coverage: **6/6** acceptance criteria.

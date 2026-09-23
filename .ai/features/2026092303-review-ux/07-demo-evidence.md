@@ -84,3 +84,78 @@ On *20. Sở GD & ĐT Hà Tĩnh* (`done`, 22/22 approved), question *Câu 1* thr
 The row was then put back byte for byte (`reviewed_by`, `reviewed_at`, `updated_at` restored to the values
 recorded before the demo); the whole list compares equal to the reading of §1. The two `bulk` entries the
 review log kept are the ordinary audit trail of a status change (A-05).
+
+## UOW-03 — The exam states its own weighting
+
+Run on the live stack (`docker compose up -d --build web`, org `trungtama`, user `admin`), 2026-09-23.
+Read-only: no exam, question or setting was written.
+
+### Checks
+
+| Check | Result |
+| --- | --- |
+| `pnpm typecheck` | clean |
+| `NODE_OPTIONS=--max-old-space-size=6144 pnpm lint` | **ESLint: No issues found** |
+| `pnpm test` | **191 passed** (51 files), 4 of them new in `src/__tests__/exam-builder.test.tsx` |
+| `scripts/close_ticket.sh … T-03-01` | exit 0 |
+
+### 1. What the strip says (AC-06)
+
+"Thang điểm của đề" sits at the top of the exam screen, above "Ma trận đề": a row per part with the number of
+questions, the points per question in force and the part's total, a "Cả đề" row with the raw total, then one
+sentence about the scale.
+
+*Sở GD&ĐT Hà Tĩnh · Thi thử · 2024-2025* (22 questions, built from a document):
+
+| Phần | Số câu | Điểm/câu | Tổng phần |
+| --- | ---: | ---: | ---: |
+| Phần I — Trắc nghiệm | 12 | 0,25 | 3 |
+| Phần II — Đúng/Sai | 4 | 1 | 4 |
+| Phần III — Trả lời ngắn | 6 | 0,5 | 3 |
+| **Cả đề** | **22** | tổng thô | **10** |
+
+> Tổng thô **10** điểm — đã đúng thang 10, không phải quy đổi.
+
+The two other document exams (Bà Rịa - Vũng Tàu, Ninh Bình) carry the same 22 questions and the same 10 points.
+
+### 2. A paper that is not already the scale
+
+*Kiểm tra 15p - Hàm số bậc 2* (10 questions, all Trắc nghiệm):
+
+| Phần | Số câu | Điểm/câu | Tổng phần |
+| --- | ---: | ---: | ---: |
+| Phần I — Trắc nghiệm | 10 | 0,25 | 2,5 |
+| **Cả đề** | **10** | tổng thô | **2,5** |
+
+> Tổng thô **2,5** điểm, quy về thang **10**: mỗi điểm thô thành **4** điểm (10 ÷ 2,5).
+
+The 10-point paper gets the plain sentence, the 2,5-point paper the conversion — the confusing "×1" case never
+appears.
+
+### 3. A question worth something else than its type default
+
+No live exam has one, so the case was shown by rewriting the exam payload in the browser (a client-side
+response rewrite, nothing sent to the API): question 3 of the Hà Tĩnh paper at 1 instead of 0,25.
+
+- Phần I reads `0,25 (có câu khác)` and its total moves to 3,75; Cả đề to 10,75, with the conversion
+  "mỗi điểm thô thành 0,93 điểm (10 ÷ 10,75)".
+- An amber block names it: **1 câu lệch điểm mặc định** — "Điểm của câu đã sửa riêng; đổi điểm mặc định của
+  loại sẽ ghi đè lại: *Câu 3: 1 thay vì 0,25*".
+- The link jumps to that question's `điểm` input in "Câu hỏi trong đề" (verified: the page scrolled to the
+  input holding 1).
+
+The same case is covered by the unit test `a question worth something else than its type default is named`.
+
+### 4. Where the numbers are edited
+
+The strip does not own any input. It links to the two places that already do: "Sửa điểm mặc định theo loại" and
+"Điểm mặc định theo loại câu" → the per-type panel, "Câu hỏi trong đề" → the per-question `điểm` inputs. The
+per-type panel gained one sentence, because the API overwrites every question of that type when a default
+changes: *"Đổi ở đây sẽ áp lại cho mọi câu cùng loại trong đề, kể cả câu đã sửa điểm riêng."*
+
+### 5. Widths and themes
+
+Checked at 1440×900 and 375×812, dark and light. At 375 px the exam screen's two columns were clipping their
+content (the questions table's intrinsic width pushed the grid item to 406 px inside a 375 px viewport); the two
+column wrappers now carry `min-w-0`, so the whole strip — including "Tổng phần" — is on screen without a
+sideways scroll. No API call, no endpoint and no stored value changed (A-04).

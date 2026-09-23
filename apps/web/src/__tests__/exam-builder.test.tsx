@@ -5,7 +5,10 @@ import { BlueprintEditor } from "@/components/page-components/ExamDetail/Bluepri
 import { ExamDetailPage } from "@/components/page-components/ExamDetail/ExamDetailPage";
 import { ExamQuestions } from "@/components/page-components/ExamDetail/ExamQuestions/ExamQuestions";
 import { ExamQuestionsTable } from "@/components/page-components/ExamDetail/ExamQuestionsTable/ExamQuestionsTable";
+import { ExamWeighting } from "@/components/page-components/ExamDetail/ExamWeighting/ExamWeighting";
+import { SECTION_OF_TYPE } from "@/constants/exam.constant";
 import type { Exam, ExamQuestion } from "@/interfaces/exam.interface";
+import type { QuestionType } from "@/interfaces/question.interface";
 import type { Topic } from "@/interfaces/topic.interface";
 import { movedTo, swapped } from "@/lib/page-libs/exam-detail/order";
 import { lastBody, mockFetch, renderWithQuery, route, searchPage } from "./helpers";
@@ -22,6 +25,11 @@ const exam = (o: Partial<Exam> = {}): Exam => ({
   settings: { points_by_type: { mcq: 0.25, true_false: 1, short_answer: 0.5, essay: 1 }, scale_to: 10 },
   blueprint: [], source: "manual", question_count: 3, total_points: 0.75, created_at: "2026-09-22T00:00:00Z", questions: [eq(1), eq(2), eq(3)], ...o,
 });
+
+/** a question of a given type, in the part that type belongs to, worth `points` */
+const wq = (n: number, type: QuestionType, points: number): ExamQuestion => ({ ...eq(n, SECTION_OF_TYPE[type]), type, points });
+/** the cells of one row of the weighting strip */
+const cells = (id: string) => within(screen.getByTestId(id)).getAllByRole("cell").map((c) => c.textContent);
 
 beforeEach(() => setUrl("/org/exams/e1"));
 afterEach(() => vi.unstubAllGlobals());
@@ -128,6 +136,47 @@ describe("exam builder", () => {
     expect(within(results).getByRole("button", { name: "Đã có" })).toBeDisabled();
     await u.click(within(results).getByRole("button", { name: "Thêm" }));
     await waitFor(() => expect(lastBody(f, "/exams/e1/questions")).toEqual({ question_ids: ["q9"] }));
+  });
+
+  it("the weighting strip states each part, the raw total and the 10-point scale", () => {
+    const qs = [
+      ...Array.from({ length: 12 }, (_, i) => wq(i + 1, "mcq", 0.25)),
+      ...Array.from({ length: 4 }, (_, i) => wq(13 + i, "true_false", 1)),
+      ...Array.from({ length: 6 }, (_, i) => wq(17 + i, "short_answer", 0.5)),
+    ];
+    render(<ExamWeighting exam={exam({ questions: qs, question_count: 22, total_points: 10 })} />);
+    expect(cells("weight-I")).toEqual(["Phần ITrắc nghiệm", "12", "0,25", "3"]);
+    expect(cells("weight-II")).toEqual(["Phần IIĐúng/Sai", "4", "1", "4"]);
+    expect(cells("weight-III")).toEqual(["Phần IIITrả lời ngắn", "6", "0,5", "3"]);
+    expect(cells("weight-total")).toEqual(["Cả đề", "22", "tổng thô", "10"]);
+    expect(screen.getByTestId("weight-scale")).toHaveTextContent("Tổng thô 10 điểm — đã đúng thang 10, không phải quy đổi.");
+    expect(screen.queryByTestId("weight-odd")).not.toBeInTheDocument();
+  });
+
+  it("a paper worth less than the scale says what one raw point becomes", () => {
+    const qs = Array.from({ length: 10 }, (_, i) => wq(i + 1, "mcq", 0.25));
+    render(<ExamWeighting exam={exam({ questions: qs, question_count: 10, total_points: 2.5 })} />);
+    expect(cells("weight-I")).toEqual(["Phần ITrắc nghiệm", "10", "0,25", "2,5"]);
+    expect(cells("weight-total")).toEqual(["Cả đề", "10", "tổng thô", "2,5"]);
+    expect(screen.getByTestId("weight-scale")).toHaveTextContent("Tổng thô 2,5 điểm, quy về thang 10: mỗi điểm thô thành 4 điểm (10 ÷ 2,5).");
+  });
+
+  it("a question worth something else than its type default is named", () => {
+    const qs = [wq(1, "mcq", 0.25), { ...wq(2, "mcq", 0.5), id: "odd" }, wq(3, "mcq", 0.25)];
+    render(<ExamWeighting exam={exam({ questions: qs, question_count: 3, total_points: 1 })} />);
+    expect(cells("weight-I")).toEqual(["Phần ITrắc nghiệm", "3", "0,25 (có câu khác)", "1"]);
+    const odd = screen.getByTestId("weight-odd");
+    expect(odd).toHaveTextContent("1 câu lệch điểm mặc định");
+    expect(within(odd).getByRole("link", { name: "Câu 2: 0,5 thay vì 0,25" })).toHaveAttribute("href", "#points-odd");
+  });
+
+  it("the page shows the strip and links to the points inputs", async () => {
+    mockFetch(...pageRoutes(exam()));
+    renderWithQuery(<ExamDetailPage id="e1" />);
+    const strip = await screen.findByTestId("exam-weighting");
+    expect(cells("weight-total")).toEqual(["Cả đề", "3", "tổng thô", "0,75"]);
+    expect(within(strip).getByRole("link", { name: "Sửa điểm mặc định theo loại" })).toHaveAttribute("href", "#diem-mac-dinh");
+    expect(within(strip).getByRole("link", { name: "Câu hỏi trong đề" })).toHaveAttribute("href", "#cau-hoi-trong-de");
   });
 
   it("the questions table posts /exams/{id}/questions/search with its own filters", async () => {

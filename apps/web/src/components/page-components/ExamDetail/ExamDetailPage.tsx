@@ -15,6 +15,7 @@ import { AssignedList } from "./AssignedList/AssignedList";
 import { BankSearch } from "./BankSearch/BankSearch";
 import { BlueprintEditor } from "./BlueprintEditor/BlueprintEditor";
 import { ExamQuestions } from "./ExamQuestions/ExamQuestions";
+import { ExamWeighting } from "./ExamWeighting/ExamWeighting";
 import { PointsByType } from "./PointsByType/PointsByType";
 
 export function ExamDetailPage({ id }: { id: string }) {
@@ -45,12 +46,13 @@ export function ExamDetailPage({ id }: { id: string }) {
         </div>
       )}
       <div className="grid gap-6 xl:grid-cols-[3fr_2fr]">
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
+          <ExamWeighting exam={exam} />
           <Panel>
             <h2 className="mb-3 font-medium">Ma trận đề</h2>
             <BlueprintEditor initial={exam.blueprint} topics={p.topics} tags={p.tags} shortfalls={p.shortfalls} onGenerate={p.generate} />
           </Panel>
-          <Panel>
+          <Panel id="cau-hoi-trong-de">
             <h2 className="mb-2 font-medium">Câu hỏi trong đề</h2>
             {exam.questions.length === 0 ? (
               <p className="text-sm text-muted-foreground">Chưa có câu nào — tạo theo ma trận hoặc thêm từ ngân hàng.</p>
@@ -59,7 +61,7 @@ export function ExamDetailPage({ id }: { id: string }) {
             )}
           </Panel>
         </div>
-        <div className="space-y-4">
+        <div className="min-w-0 space-y-4">
           <AssignedList assigned={p.assigned} />
           <PointsByType settings={exam.settings} onChange={p.setTypePoints} />
           <BankSearch search={p.search} onSearchChange={p.setSearch} onFind={p.findInBank} found={p.found} inExam={p.inExam} onAdd={p.addQuestion} />
