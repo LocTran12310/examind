@@ -31,4 +31,10 @@ describe("assignment report", () => {
     expect(screen.getByTestId("qs-1")).toHaveTextContent("Hay chọn sai: C (1)");
     expect(pct(null)).toBe("—");
   });
+
+  it("leads back to the exam list the bài giao belongs to (AC-07)", async () => {
+    mockFetch(route("GET", "/api/assignments/a/report", report));
+    renderWithQuery(<AssignmentReportPage id="a" />);
+    expect(await screen.findByRole("link", { name: "← Đề thi" })).toHaveAttribute("href", "/org/exams");
+  });
 });

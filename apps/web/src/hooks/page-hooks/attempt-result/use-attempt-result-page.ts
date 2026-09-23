@@ -13,5 +13,11 @@ export function useAttemptResultPage(id: string) {
     error: result.error ? (result.error instanceof ApiError ? result.error.message : "Không tải được dữ liệu") : null,
     staff,
     description: staff && attempt ? `Bài làm của ${attempt.student.full_name} (${attempt.student.username})` : undefined,
+    /** where the list this attempt sits in is: the report for staff, the student's own assignments otherwise */
+    back: staff
+      ? attempt?.assignment_id
+        ? { href: `/org/assignments/${attempt.assignment_id}`, label: "Báo cáo bài giao" }
+        : { href: "/org/exams", label: "Đề thi" }
+      : { href: "/home", label: "Bài được giao" },
   };
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { BackLink } from "@/components/common/BackLink/BackLink";
 import { OptionSelect } from "@/components/common/OptionSelect/OptionSelect";
 import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { Panel } from "@/components/common/Panel/Panel";
@@ -10,6 +11,7 @@ export function QuestionPreviewPage() {
   const { data, error, mode, setMode, selected, setSelected } = useQuestionPreviewPage();
   return (
     <>
+      <BackLink href="/org/bank">Ngân hàng câu hỏi</BackLink>
       <PageHeader
         title="Xem trước câu hỏi"
         description="Câu mẫu dùng để kiểm tra hiển thị công thức, hình và lời giải"

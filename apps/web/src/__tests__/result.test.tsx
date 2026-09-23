@@ -44,7 +44,7 @@ describe("result view", () => {
   });
 
   it("teachers see whose attempt it is, tab switches, and grade essays (PATCH, then the result refetches)", async () => {
-    const view = { id: "att", student: { id: "s", full_name: "Nguyễn An", username: "an" } } as AttemptView;
+    const view = { id: "att", assignment_id: "a1", student: { id: "s", full_name: "Nguyễn An", username: "an" } } as AttemptView;
     const f = mockFetch(
       route("GET", "/api/attempts/att/result", result({ needs_grading: true, questions: [essay] })),
       route("GET", "/api/attempts/att", view),
@@ -56,6 +56,8 @@ describe("result view", () => {
       </MeProvider>,
     );
     expect(await screen.findByText("Bài làm của Nguyễn An (an)")).toBeInTheDocument();
+    // the teacher came from the report of that bài giao (AC-07)
+    expect(screen.getByRole("link", { name: "← Báo cáo bài giao" })).toHaveAttribute("href", "/org/assignments/a1");
     expect(screen.getByText("Rời tab 2 lần")).toBeInTheDocument();
     await userEvent.type(screen.getByLabelText("Điểm tự luận"), "0.5");
     await userEvent.type(screen.getByLabelText("Nhận xét"), "Thiếu bước 2");
@@ -77,6 +79,8 @@ describe("result view", () => {
     expect(await screen.findByTestId("rq-1")).toBeInTheDocument();
     expect(screen.queryByTestId("essay-grader")).toBeNull();
     expect(f.mock.calls.some(([url]) => url === "/api/attempts/att")).toBe(false);
+    // a student goes back to their own list of assignments (AC-07)
+    expect(screen.getByRole("link", { name: "← Bài được giao" })).toHaveAttribute("href", "/home");
   });
 
   it("a failed load shows the error", async () => {
@@ -87,5 +91,6 @@ describe("result view", () => {
       </MeProvider>,
     );
     expect(await screen.findByText("Không tìm thấy bài làm")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "← Bài được giao" })).toHaveAttribute("href", "/home");
   });
 });

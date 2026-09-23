@@ -3,6 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { formValueOf, payloadOf, QuestionForm } from "@/components/common/QuestionForm/QuestionForm";
 import { QuestionDetailPage } from "@/components/page-components/QuestionDetail/QuestionDetailPage";
+import { QuestionNewPage } from "@/components/page-components/QuestionNew/QuestionNewPage";
+import { QuestionPreviewPage } from "@/components/page-components/QuestionPreview/QuestionPreviewPage";
 import type { ParsedQuestion, QuestionStats } from "@/interfaces/question.interface";
 import type { Tag } from "@/interfaces/tag.interface";
 import type { Taxonomy } from "@/interfaces/taxonomy.interface";
@@ -16,6 +18,8 @@ const topics: Topic[] = [{ id: "t1", subject_id: "s", parent_id: null, name: "Ve
 const tags: Tag[] = [{ id: "g1", group: "method", name: "đổi biến" }];
 const thin: QuestionStats = { observations: 4, enough_data: false, correct_ratio: null, first_attempt_ratio: null,
   discrimination: null, median_seconds: null, options: [] };
+const demo = { id: "demo", type: "mcq", stem: "Câu mẫu", options: "ABCD".split("").map((l) => ({ label: l, content: l })), answer: { key: "A" },
+  solution: "", difficulty: null, grade: null, status: "approved", subject_id: null, topics: [], tags: [] } as unknown as ParsedQuestion;
 
 describe("question form", () => {
   it("creates a new MCQ with topic, tag, difficulty and a preview", async () => {
@@ -140,5 +144,19 @@ describe("question statistics (learning-telemetry AC-03)", () => {
     expect(panel).toHaveTextContent("Chưa đủ dữ liệu — cần ít nhất 10 lượt trả lời (hiện có 4).");
     expect(within(panel).queryByTestId("option-stats")).toBeNull();
     expect(panel).not.toHaveTextContent("Tỉ lệ đúng");
+  });
+});
+
+describe("the way back to the bank (AC-07)", () => {
+  it("the new-question form links to the question bank", async () => {
+    mockFetch(route("GET", "/api/taxonomy", taxonomy), route("GET", "/api/topics", topics), route("POST", "/api/tags/search", searchPage(tags)));
+    render(<QuestionNewPage />);
+    expect(await screen.findByRole("link", { name: "← Ngân hàng câu hỏi" })).toHaveAttribute("href", "/org/bank");
+  });
+
+  it("the question preview links to the question bank", async () => {
+    mockFetch(route("GET", "/api/questions/demo", demo));
+    render(<QuestionPreviewPage />);
+    expect(await screen.findByRole("link", { name: "← Ngân hàng câu hỏi" })).toHaveAttribute("href", "/org/bank");
   });
 });
