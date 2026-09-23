@@ -605,3 +605,50 @@ and was left alone; T-01-02's ticket tests were repointed at the runner test so 
 
 **Live data touched, on purpose**: to make a question cross the 10-observation threshold, 2 exams, 3 student
 accounts and 24 attempts were created in `trungtama`. Nothing was deleted. Say if you want them cleaned up.
+
+## 22. F15 `2026092302-topic-coverage` (2026-09-23)
+F14 made it visible that 102 of 377 questions had no topic — 101 of them `auto_approved`, so nobody was ever asked
+about them, and every answer on them was invisible to mastery, to the practice planner and to topic reports.
+
+**What changed**
+- `POST /questions/search` takes `has_topic`; `POST /questions/facets` reports the untagged count per document.
+- `POST /questions/suggest-topics` returns up to three candidates per question with score and origin
+  (`keyword` / `similar` / `ai`), computed on demand and never stored (ADR-01). The bank reaches the classifier
+  through ingestion's `application/api.py` (ADR-03), so the layer rules stay intact.
+- Ingestion no longer auto-approves a question it could not classify: it waits for review with the reason in the
+  document log (ADR-02). That is what let the 101 go silent.
+- `Duyệt câu hỏi › Chưa gắn chuyên đề`: the queue, suggestions as buttons, `1/2/3` to apply, `↑↓` to move,
+  multi-select with one bulk request, remaining counter, filters by subject and document.
+- **G3 was reopened mid-feature** (recorded): the rules covered only 14 of 102 questions, so A-05 ("no model in
+  the queue") was refuted by measurement and UOW-03 added a model pass (ADR-04) — the model is asked only about
+  what the rules could not place, its candidates are marked `ai`, and a missing/failing/slow model degrades to the
+  rule candidates with `model_used: false`.
+- **A real bug behind the low coverage**: `TAG_SYSTEM` showed a one-element example, so the 7B model answered once
+  per batch of ten — for the queue *and* for the ingestion pipeline. The prompt now states the expected count and
+  repeats the question numbers. Coverage of the untagged backlog went 18% → **90%**; a page of 20 now costs 31–51 s,
+  so the queue asks the rules first (0.1 s) and lets the model's answer arrive on its own.
+- Ordering: rule candidates lead, the last of the three slots is reserved for a model candidate.
+
+**Numbers** — API 474 passed / 1 skipped, web 180 passed, ruff and the 4 import contracts clean, golden set
+unchanged (18 documents → 396/396 questions, 393 answers, 386 solutions). Live: 109 untagged at the start, 27
+assigned from the queue, 82 left when the measurement ran.
+
+**A correction you should read.** The "agreement with what a teacher chose" figures first recorded in
+`07-demo-evidence.md` were wrong in their label: those 27 topics were chosen by the agent that exercised the
+queue, **not by a teacher**. They are not ground truth, the numbers built on them (22% / 19% / 0 of 27) measure
+agreement with another machine's guess, and the evidence file now says so. The only quality signal that exists is
+a hand read of eight `ai` candidates: four plausible, two plainly wrong. Before trusting the model pass, a teacher
+should review a sample.
+
+**Data note.** Those 27 `question_topics` rows carry `source = 'manual'`, which reads as a human decision though
+no human made it. Decide whether to clear them (back to the queue) or leave them; F15 does not touch them (A-04).
+
+**Assumptions to confirm**: A-01 (suggestions computed, not stored), A-02 (unclassified waits for review), A-03
+(a screen of its own), A-04 (existing auto-approved untagged keep their status), A-05 (**superseded by
+measurement**), A-06 (the model suggests, never decides), A-07 (batched per page, only for what the rules missed).
+
+**Deviations recorded in `07-demo-evidence.md`**: the queue sends `status: all` (an unclassified question is now
+`needs_review`); the document filter uses the existing `document_id`; rows show the document's upload date; the
+subject facet counts every question of the subject, not the untagged ones; AC-04 was verified by test and by the
+golden re-parse, not by a live re-upload; the live org's `tag_model` was set to the enabled qwen2.5:7b so the
+feature could be measured.

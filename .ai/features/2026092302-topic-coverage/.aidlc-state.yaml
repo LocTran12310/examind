@@ -5,7 +5,7 @@ slug: 2026092302-topic-coverage
 profile: none
 created: 2026-09-23T12:15:09
 ruleset: 5
-current_gate: G3
+current_gate: G5
 history:
   - gate: G0
     action: passed
@@ -142,3 +142,13 @@ history:
     at: 2026-09-23T13:20:01
     by: Loc Tran
     ticket: T-03-02
+  - gate: G4
+    action: passed
+    at: 2026-09-23T13:55:10
+    by: Loc Tran
+    evidence: every done ticket has a passing verification run; all 7 tickets done, all UoW checklists ticked
+  - gate: G5
+    action: passed
+    at: 2026-09-23T13:55:10
+    by: Loc Tran
+    evidence: assumptions resolved, ADRs settled, graph valid

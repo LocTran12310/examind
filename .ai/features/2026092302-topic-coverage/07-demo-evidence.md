@@ -256,3 +256,24 @@ one question per ten, which is precisely the 8/78 measured above. Making the pro
 question is the obvious next step and would lift both the pipeline and the queue — but it changes the ingestion
 classifier, which `00-intent.md` puts out of scope for this feature. It belongs in the final review as the
 first thing to try, alongside A-05's original question of whether the model is worth its 10 s per page at all.
+
+## After the prompt fix (2026-09-23, owner's session)
+
+The measurement above exposed the real ceiling: `TAG_SYSTEM` showed a one-element example, so qwen2.5:7b mirrored
+it and answered once per batch of ten. The prompt now states the expected count and repeats the question numbers
+(`tag_request`), and the shortlist puts rule candidates first with the last slot reserved for a model candidate.
+
+| | Before | After |
+| --- | --- | --- |
+| Untagged questions with any candidate | 15/82 (18%) rules · 23/82 (28%) with the model | 7/40 (18%) rules · **36/40 (90%)** with the model |
+| Questions the model answered | ~1 per batch of 10 | 36/40 asked (90%) |
+| Time for a page of 20 | 8.5–11.8 s | **31–51 s** (the model now writes ten answers, not one) |
+| Agreement with the 27 already-assigned topics | top 22% | top 19%, `ai` top 0/27 |
+
+Because a page now costs half a minute, the queue asks twice: once without the model (0.1 s, fills the rows at
+once) and once with it, which arrives on its own and replaces them ("Đang hỏi AI…" while it works).
+
+**What these numbers do and do not say.** Coverage is real: nine of ten untagged questions now get something to
+look at instead of nothing. Quality is unproven: the 27 topics compared against were assigned by an agent, not a
+teacher, and the only quality signal is the hand read of eight `ai` candidates (four plausible, two plainly
+wrong). A teacher reviewing a sample is what would turn this into a measurement.
