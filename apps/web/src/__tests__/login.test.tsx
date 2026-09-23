@@ -21,6 +21,14 @@ describe("LoginForm", () => {
     await waitFor(() => expect(screen.getByLabelText("Tổ chức")).toHaveValue("TrungtamA"));
   });
 
+  it("a link with ?org= wins over the remembered code", async () => {
+    localStorage.setItem(ORG_KEY, "TrungtamA");
+    window.history.replaceState(null, "", "/login?org=trungtamb");
+    render(<LoginForm onSuccess={() => {}} />);
+    await waitFor(() => expect(screen.getByLabelText("Tổ chức")).toHaveValue("trungtamb"));
+    window.history.replaceState(null, "", "/login");
+  });
+
   it("stores the org code after a successful login", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(me), { status: 200, headers: { "content-type": "application/json" } })));
     const onSuccess = vi.fn();

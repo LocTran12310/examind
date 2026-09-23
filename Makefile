@@ -6,8 +6,12 @@ API_PORT     ?= 58100
 EXAMIN_DIR   ?=
 
 .DEFAULT_GOAL := help
+VERIFY       := python3 $(HOME)/.claude/skills/ai-dlc-verify/scripts/verify.py
+VERIFY_CHECK := python3 $(HOME)/.claude/skills/ai-dlc-verify/scripts/evidence_check.py
+export AIDLC_VERIFY_PYTHON ?= $(HOME)/.venvs/aidlc-verify/bin/python
+
 .PHONY: help up down logs ps dev api-dev web-dev migrate revision seed test test-api test-web test-unit \
-        lint lint-api lint-web fix typecheck build golden backup
+        lint lint-api lint-web fix typecheck build golden backup verify verify-doctor verify-check
 
 help: ## Show this list
 	@grep -hE '^[a-z][a-zA-Z0-9_-]*:.*?## ' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[1m%-12s\033[0m %s\n", $$1, $$2}'
@@ -84,6 +88,21 @@ typecheck: ## tsc --noEmit
 
 fix: ## ruff --fix on the API (mechanical lint fixes; there is no formatter, see AGENTS.md)
 	cd apps/api && uv run ruff check --fix .
+
+## ----------------------------------------------------------------- browser verification
+
+verify-doctor: ## Which rung verification is on: make verify-doctor f=.ai/features/<slug>
+	@test -n "$(f)" || (echo 'usage: make verify-doctor f=.ai/features/<slug>' && exit 1)
+	$(VERIFY) $(f) --doctor
+
+verify: ## Walk a feature's 07-verification.md in a browser: make verify f=.ai/features/<slug>
+	@test -n "$(f)" || (echo 'usage: make verify f=.ai/features/<slug>' && exit 1)
+	./scripts/verify-seed-session.sh >/dev/null
+	$(VERIFY) $(f) --write
+
+verify-check: ## Check the evidence backs the claims: make verify-check f=.ai/features/<slug>
+	@test -n "$(f)" || (echo 'usage: make verify-check f=.ai/features/<slug>' && exit 1)
+	$(VERIFY_CHECK) $(f)
 
 build: ## Production build of the web app
 	cd apps/web && pnpm build

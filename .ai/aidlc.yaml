@@ -7,3 +7,28 @@ evidence:
   timeout: 900
   output_ceiling: 8192
   aging_hours: 48
+
+# Browser verification of a UoW's demo script (ai-dlc-verify). `local` is the compose stack on :8088;
+# there is no staging or production yet, so nothing else is declared.
+verify:
+  environments:
+    local: { url: "${LOCAL_URL}", required: true }
+  viewports:
+    desktop: { width: 1440, height: 900 }
+    mobile:  { width: 390, height: 844, isMobile: true }   # the app branches at 768; neither viewport sits on it
+  auth:
+    recipe: form
+    # The form has three fields and the recipe fills two, so the org code is seeded into the browser the way
+    # the app itself remembers it: `.ai/.auth/local.json` carries `examind.org_code` in localStorage, and the
+    # runner loads that state before signing in (scripts/verify-seed-session.sh writes it).
+    path: /login
+    landing: /org/review
+    selectors:
+      user: "input[name=username]"
+      password: "input[name=password]"
+      submit: "button[type=submit]"
+    ready_when: { gone: "text=Đang đăng nhập" }
+  warmup: { attempts: 1 }
+  failure_signals:
+    - { selector: "[data-sonner-toast][data-type=error]", message: "ứng dụng báo lỗi" }
+    - console_errors

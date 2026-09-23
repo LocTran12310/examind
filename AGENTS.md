@@ -43,6 +43,8 @@ make golden             # the 18 official exam papers (needs EXAMIN_DIR)
 make migrate            # alembic upgrade head
 make revision m="..."   # new Alembic revision (autogenerate)
 make fix                # ruff --fix on the API (lint fixes; no formatter — see below)
+make verify f=.ai/features/<slug>        # walk that feature's 07-verification.md in a real browser
+make verify-check f=.ai/features/<slug>  # check the screenshots back the claims
 ```
 
 `scripts/verify.sh <paths…>` runs exactly the tests named (API paths run in docker, web paths in vitest);
@@ -60,6 +62,23 @@ it is what the plan controller records as evidence.
   kebab-case file names for hooks, services, stores and constants.
 - **Commits**: `type(scope): summary` (`feat`, `fix`, `refactor`, `docs`, `test`, `chore`), body explains why.
   Commit only when the work runs; never commit a red suite.
+
+## Browser verification
+
+A feature that changes a screen carries `07-verification.md`: the demo script as a table of steps, each with the
+path, the interaction and — the part that matters — an `Assert` column. `make verify f=…` drives it in Chromium at
+1440×900 and 390×844, writes screenshots under `.ai/features/<slug>/evidence/` and generates `08-evidence.md`;
+`make verify-check` refuses to let a ticked checkbox stand on evidence that does not exist.
+
+Two rules learned the hard way, both recorded in the spec files:
+- **Assert text from the page body, not the sidebar.** At 390 px the sidebar is collapsed, so a claim on a nav
+  label passes on desktop and fails on mobile for a reason unrelated to the feature.
+- **A passing assertion is not a useful screenshot.** An assertion is satisfied by a row below the fold; add a
+  `scroll` so the frame actually shows what the step claims.
+
+Credentials live in `.ai/credentials.env` (ignored). The login form has three fields and the runner fills two, so
+`scripts/verify-seed-session.sh` seeds the org code into the browser state the runner loads — `make verify` runs it
+for you.
 
 ## Planning (AI-DLC)
 

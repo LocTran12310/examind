@@ -1,6 +1,10 @@
 # secrets and local data
 .env
 backups/
+.ai/credentials.env
+.ai/.auth/
+.ai/features/*/08-evidence.md
+.ai/features/*/evidence/
 
 # python
 __pycache__/

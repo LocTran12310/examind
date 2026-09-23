@@ -5,15 +5,17 @@ import type { Me } from "@/interfaces/auth.interface";
 import { ApiError } from "@/lib/common/http";
 import { homeFor } from "@/lib/common/nav";
 
+/** `?org=` wins (a link handed to one centre, and what the verification run signs in with),
+ *  else the code remembered from the last login on this browser. */
 function readOrg(): string {
   try {
-    return localStorage.getItem(ORG_KEY) ?? "";
+    return new URLSearchParams(window.location.search).get("org") || localStorage.getItem(ORG_KEY) || "";
   } catch {
     return "";
   }
 }
 
-/** Org code (remembered from the last login), username and password; `onSuccess` replaces the redirect. */
+/** Org code (from the link or remembered), username and password; `onSuccess` replaces the redirect. */
 export function useLoginForm(onSuccess?: (me: Me) => void) {
   const [org, setOrg] = useState("");
   const [username, setUsername] = useState("");
