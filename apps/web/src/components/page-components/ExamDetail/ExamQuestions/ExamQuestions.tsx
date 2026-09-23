@@ -126,6 +126,9 @@ export function ExamQuestions({ questions, onSaveOrder, onSwap, onRemove, onPoin
                       điểm
                     </Label>
                     <Input
+                      // uncontrolled so typing is not fought over; keyed by the value so a swap or a change
+                      // made elsewhere remounts it with what the exam now says
+                      key={q.points}
                       id={`points-${q.id}`}
                       aria-label={`Điểm câu ${q.position}`}
                       type="number"

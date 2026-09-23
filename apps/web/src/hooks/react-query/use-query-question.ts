@@ -30,13 +30,15 @@ export function useQuestionFacetsQuery(body: QuestionSearchBody, enabled = true)
 
 /** How many usable questions each topic's subtree holds in one subject — the number a picker writes beside a
  *  topic (pickers-builder ADR-01, AC-02). Without a subject there is no honest number, so nothing is asked for
- *  and the picker shows none. Same source as the bank's filters, so the two never disagree. */
-export function useTopicCountsQuery(subjectId: string | null | undefined, enabled = true): UseQueryResult<Record<string, number>, Error> {
-  const on = enabled && Boolean(subjectId) && subjectId !== NO_SUBJECT;
+ *  and the picker shows none. Same source as the bank's filters, so the two never disagree.
+ *  `allSubjects` counts the whole bank instead, for a screen whose tree is the whole taxonomy — an exam with no
+ *  subject of its own; the number then covers exactly the tree that is shown. */
+export function useTopicCountsQuery(subjectId: string | null | undefined, enabled = true, allSubjects = false): UseQueryResult<Record<string, number>, Error> {
+  const scoped = Boolean(subjectId) && subjectId !== NO_SUBJECT;
   return useQuery<Record<string, number>, Error>({
-    queryKey: QUESTION_KEYS.TOPIC_COUNTS(subjectId ?? ""),
-    queryFn: async () => (await questionService.facets({ subject_id: subjectId!, page: 1, limit: 1 })).topics,
-    enabled: on,
+    queryKey: QUESTION_KEYS.TOPIC_COUNTS(scoped ? subjectId! : "all"),
+    queryFn: async () => (await questionService.facets({ page: 1, limit: 1, ...(scoped ? { subject_id: subjectId! } : {}) })).topics,
+    enabled: enabled && (scoped || allSubjects),
   });
 }
 

@@ -251,3 +251,116 @@ when the picker opens.
 - **Unchanged:** the refused "Môn → Vật lý" wrote nothing (checked: "Chưa phân môn" still 22 straight after), and
   opening a picker on a suggestion — in the tagging queue and with `T` in the review queue — wrote nothing
   (`b7890b0c-…` still holds only its own topic).
+
+## UOW-03 — A blueprint that reads well and a swap the teacher controls
+
+Tickets T-03-01, T-03-02 (both `done`). Suite: `cd apps/web && pnpm typecheck && pnpm lint && pnpm test`
+→ **203 passed** in 51 files (198 before this UoW; +5 cases, all in `exam-builder.test.tsx`). Screens walked in the
+built stack (`docker compose up -d --build web`, `http://localhost:8088`), organisation `trungtama`, signed in as
+`admin`, on an exam created for the walk and deleted afterwards (see "What this demo changed on live data").
+
+### 1. The matrix row is one line, and says what its topic holds (AC-02 for this screen, AC-06)
+
+The row was a `flex flex-wrap`: at the width the builder actually gets it wrapped onto a second line with the `×`
+stranded. It is now a grid — one line from `lg` up, two deliberate columns below it:
+
+| Width | What the row does | Measured |
+| --- | --- | --- |
+| 1440 px | one line: chuyên đề · tag · loại · mức độ · số câu · ✕ | six cells, tops 336–338, row 50 px high, topic cell 157 px |
+| 1024 px | the same one line, wider (the page is one column here) | tops 272–274, topic cell 216 px |
+| 390 px | stacks: chuyên đề full width, then tag+loại, mức độ+số câu, then "✕ Xóa dòng" at the right | five rows, 190 px high, `document.scrollWidth` 390 — no sideways scroll |
+
+The topic button names the topic itself (`Nguyên hàm`) and carries the whole path in its tooltip
+(`Giải tích › Nguyên hàm`) — the line is narrow, and the path is what the picker shows anyway.
+
+**The count is questions, and it is on the row.** `BlueprintEditor` now takes the counts UOW-02 left unwired:
+`useBlueprintEditor` asks `POST /questions/facets` for the exam's subject, and — for an exam that has no subject of
+its own, which is every exam created by hand — for the whole bank, because the tree it offers is the whole
+taxonomy too (`useTopicCountsQuery(..., allSubjects)`); the number then covers exactly what is listed. Live, the
+picker opened on `Số học 3 · Đại số 57 · Giải tích 118 · Hình học 126 · Thống kê và Xác suất 34`, and
+`nguyen ham` gave `Giải tích 118 › Nguyên hàm 3 › Nguyên hàm cơ bản 0`. Picking `Nguyên hàm` wrote
+**`Nguyên hàm · 3 câu`** on the row.
+
+**An empty topic is named before generating.** On the second row, `so nguyen to` →
+`Số học 3 › Số nguyên tố, ƯCLN và BCNN 0`; the row took a destructive border, read **`0 câu`** in red and said
+*"Chuyên đề “Số nguyên tố, ƯCLN và BCNN” chưa có câu hỏi nào dùng được — chọn chuyên đề khác trước khi tạo đề."*
+"Tạo đề theo ma trận" stays enabled: the facet count is subject-wide, the row also filters by type and difficulty,
+and the server is the authority on what a row can draw from.
+
+**The refusal.** Generating anyway was refused by `POST /exams/{id}/blueprint` (422 `empty_topic`) and the matrix
+showed the server's own sentence, under the buttons, in the destructive alert:
+
+> Dòng 2: chuyên đề “Số nguyên tố, ƯCLN và BCNN” không có câu hỏi nào dùng được (0 câu). Chọn chuyên đề khác hoặc
+> bổ sung câu hỏi cho chuyên đề này.
+
+Nothing was added (the exam stayed at 2 câu), the refusal is attached to the row it names (`details.fields.row`)
+and disappears as soon as the matrix is edited. It does **not** go to the page's error line any more — a refusal
+about a row belongs on the row.
+
+**Shortfalls still report.** The first row asked for 3 câu of `Nguyên hàm` where only 2 are `Trắc nghiệm`: the exam
+took the 2 it could and the row said **`thiếu 1 câu`**, next to its `3 câu` count. A partly-fillable row is still a
+shortfall, not a refusal.
+
+### 2. "Đổi câu": the system picks, or the teacher does (AC-07, ADR-03)
+
+"Đổi câu" now opens a dialog headed by the question it replaces — its stem, and
+*"Câu 1 · Trắc nghiệm · 0,5 điểm — câu thay thế giữ nguyên vị trí và số điểm này."* — with both paths in it:
+
+- **"Để hệ thống chọn"** is the automatic replacement the builder has always done (`POST /exams/{id}/questions/{qid}/swap`).
+- **the bank below it**: the bank's own search (accent-insensitive, debounced) and its usual filters — môn,
+  chuyên đề (the same `TopicPicker`, with the same counts), loại câu, mức độ, tag — defaulted to the exam's
+  subject and to the type of the position being replaced. Results are rendered as the bank renders them (stem,
+  loại, mức độ, lớp, chuyên đề chính, tags) with a "Chọn" per row, over `POST /questions/search` (limit 20, with
+  "195 câu phù hợp — đang xem 20 câu đầu, thu hẹp bộ lọc để thấy câu cần tìm").
+
+**A question already in the exam cannot be chosen twice.** Searching `nguyen ham` while both of the exam's
+questions matched, both rows offered a disabled **"Đã có trong đề"**.
+
+**A question of another type is refused, not silently re-priced (decision).** The position's part and its default
+points both come from the type, so a different type cannot keep both promises of AC-07. The type filter lists every
+type (the others labelled `(khác loại)`) so a teacher can look, and rows of another type carry a disabled
+**"Khác loại"** — live, filtering to `Trả lời ngắn` gave three results, all disabled. The dialog says what to do
+instead: *"Chỉ chọn được câu cùng loại (Trắc nghiệm): phần của đề và điểm mặc định đều theo loại câu. Muốn dùng câu
+khác loại thì bỏ câu này rồi thêm câu đó từ ngân hàng — đề sẽ tự xếp lại phần và điểm."*
+
+**How a chosen swap keeps the place and the points.** `POST /exams/{id}/questions/{qid}/swap` takes no question, and
+`apps/api` is not this UoW's to change, so the page hook does it with the endpoints that exist, in the order that
+fails safest: add the chosen question → remove the old one → `PUT /order` with the old list, the new id in the old
+one's place → `PATCH` the points back when they differ from the type default. If a step fails the question is at
+worst at the end of the paper, never gone.
+
+Live, on `Câu 1` deliberately set to **0,5 điểm** (its type default is 0,25):
+
+| Step | Request | Result |
+| --- | --- | --- |
+| choose `Phương trình 4^{2x-4}=16…` | `POST /exams/{id}/questions` `{question_ids:[d945aa50-…]}` | added at the end |
+| | `DELETE /exams/{id}/questions/{old}` | old one gone, positions renumbered |
+| | `PUT /exams/{id}/order` | the chosen question back at position 1 |
+| | `PATCH /exams/{id}/questions/{new}` `{points: 0.5}` | its points restored |
+
+`GET /exams/{id}` afterwards: `1 · I · mcq · 0.5 · d945aa50-…` and `2 · I · mcq · 0.25 · 55412916-…`, total 0,75 —
+same place, same points, the rest of the order untouched. The automatic path on `Câu 2` then replaced it with the
+system's pick (`Nguyên hàm của hàm số f(x)=x−sinx`), still at position 2 and 0,25 điểm.
+
+**One fix beyond the ticket's wording.** The per-question points input is uncontrolled (`defaultValue`), and after a
+swap React kept the node it had mounted mid-sequence: the box read `0,25` while the exam, the weighting strip and
+the server all said `0,5`. It is now keyed by the value (`key={q.points}`), so a change made anywhere remounts it
+with what the exam says. Found in the walk, not by the tests.
+
+### 3. What the suite covers
+
+`apps/web/src/__tests__/exam-builder.test.tsx`, +5 cases: the row shows a topic's question count (and the picker's
+number is questions, not children); an empty topic is named on its row before generating; the page shows the
+server's `empty_topic` refusal, marks the row and drops it when the matrix is edited; the chooser searches the bank
+with the position's own filters and refuses a question already in the exam or of another type; a chosen question
+takes the place, the number and the points of the one it replaces; the automatic replacement is still one click.
+
+### What this demo changed on live data
+
+- **Created and removed:** one exam, **`8bcd9618-4fde-43c4-9b69-0532cc949205` "Thử ma trận UOW-03"**, built for the
+  walk (two matrix rows, two questions, one points edit, two swaps) and deleted afterwards
+  (`DELETE /api/exams/{id}` → 204). `POST /exams/search` then listed the same four exams as before, with the three
+  document-built papers at 22 questions each.
+- **Unchanged:** the three exams built from documents (`b9e582b5-…`, `9eda617d-…`, `f8897dd5-…`) and
+  "Kiểm tra 15p - Hàm số bậc 2" (`be4eddb5-…`) were never opened for editing; the refused generation wrote nothing;
+  the bank itself was not written to at all — a swap only moves rows of the exam.

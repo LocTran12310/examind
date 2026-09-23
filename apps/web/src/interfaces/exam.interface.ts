@@ -44,6 +44,16 @@ export interface BlueprintShortfall {
   missing: number;
 }
 
+/** A matrix row `POST /exams/{id}/blueprint` refused: its topic holds no usable question
+ *  (422 `empty_topic`; pickers-builder A-05, AC-06). */
+export interface BlueprintRefusal {
+  row: number;
+  topic_id: string;
+  topic_name: string;
+  question_count: number;
+  message: string;
+}
+
 /** Answer of `POST /exams/{id}/blueprint`. */
 export interface BlueprintResult {
   added: number;

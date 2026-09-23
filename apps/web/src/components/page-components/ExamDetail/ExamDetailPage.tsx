@@ -17,6 +17,7 @@ import { BlueprintEditor } from "./BlueprintEditor/BlueprintEditor";
 import { ExamQuestions } from "./ExamQuestions/ExamQuestions";
 import { ExamWeighting } from "./ExamWeighting/ExamWeighting";
 import { PointsByType } from "./PointsByType/PointsByType";
+import { SwapQuestionDialog } from "./SwapQuestionDialog/SwapQuestionDialog";
 
 export function ExamDetailPage({ id }: { id: string }) {
   const p = useExamDetailPage(id);
@@ -50,14 +51,23 @@ export function ExamDetailPage({ id }: { id: string }) {
           <ExamWeighting exam={exam} />
           <Panel>
             <h2 className="mb-3 font-medium">Ma trận đề</h2>
-            <BlueprintEditor initial={exam.blueprint} topics={p.topics} tags={p.tags} shortfalls={p.shortfalls} onGenerate={p.generate} />
+            <BlueprintEditor
+              initial={exam.blueprint}
+              topics={p.topics}
+              tags={p.tags}
+              subjectId={exam.subject_id}
+              shortfalls={p.shortfalls}
+              refusal={p.refusal}
+              onEdit={p.clearRefusal}
+              onGenerate={p.generate}
+            />
           </Panel>
           <Panel id="cau-hoi-trong-de">
             <h2 className="mb-2 font-medium">Câu hỏi trong đề</h2>
             {exam.questions.length === 0 ? (
               <p className="text-sm text-muted-foreground">Chưa có câu nào — tạo theo ma trận hoặc thêm từ ngân hàng.</p>
             ) : (
-              <ExamQuestions questions={exam.questions} onSaveOrder={p.saveOrder} onSwap={p.swap} onRemove={p.remove} onPoints={p.setPoints} />
+              <ExamQuestions questions={exam.questions} onSaveOrder={p.saveOrder} onSwap={p.openSwap} onRemove={p.remove} onPoints={p.setPoints} />
             )}
           </Panel>
         </div>
@@ -67,6 +77,9 @@ export function ExamDetailPage({ id }: { id: string }) {
           <BankSearch search={p.search} onSearchChange={p.setSearch} onFind={p.findInBank} found={p.found} inExam={p.inExam} onAdd={p.addQuestion} />
         </div>
       </div>
+      <FormDialog open={!!p.swapping} title={p.swapping ? `Đổi câu ${p.swapping.position}` : "Đổi câu"} wide onOpenChange={(o) => !o && p.closeSwap()}>
+        {p.swapping && <SwapQuestionDialog question={p.swapping} subjectId={exam.subject_id} inExam={p.inExam} onAuto={p.autoSwap} onChoose={p.chooseSwap} />}
+      </FormDialog>
       <FormDialog open={p.assigning} title="Giao bài" wide onOpenChange={(o) => !o && p.setAssigning(false)}>
         {p.assigning && <AssignDialog examId={id} title={exam.title} classes={p.classes} onDone={p.doneAssigning} />}
       </FormDialog>

@@ -17,6 +17,8 @@ import { setUrl } from "./router-mock";
 vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);
 
 const topics: Topic[] = [{ id: "ds", subject_id: "s", parent_id: null, name: "Đại số", level_kind: "strand", grade: null, path: "a", depth: 1, sort: 0, child_count: 0 }];
+/** `POST /questions/facets`: the counts the pickers and the matrix rows show (ADR-01) */
+const facets = (t: Record<string, number>) => ({ subjects: {}, topics: t, types: {}, difficulties: {}, grades: {}, periods: {}, school_years: {}, tags: {} });
 const eq = (n: number, section = "I"): ExamQuestion => ({ id: `q${n}`, type: "mcq", stem: `Câu ${n}`, options: [], answer: null, solution: "", difficulty: null,
   grade: null, status: "approved", number: n, part: null, confidence: 1, issues: [], parse_method: null, parse_model: null, answer_source: null,
   subject_id: null, semester_code: null, exam_kind: null, topics: [], tags: [], position: n, section, points: 0.25, row: 0 });
@@ -28,6 +30,11 @@ const exam = (o: Partial<Exam> = {}): Exam => ({
 
 /** a question of a given type, in the part that type belongs to, worth `points` */
 const wq = (n: number, type: QuestionType, points: number): ExamQuestion => ({ ...eq(n, SECTION_OF_TYPE[type]), type, points });
+/** body of the request that went to `url` with `method` */
+const sent = (f: { mock: { calls: unknown[][] } }, method: string, url: string) => {
+  const call = [...f.mock.calls].reverse().find((c) => c[0] === url && ((c[1] as RequestInit | undefined)?.method ?? "GET") === method);
+  return call ? JSON.parse(String((call[1] as RequestInit).body)) : null;
+};
 /** the cells of one row of the weighting strip */
 const cells = (id: string) => within(screen.getByTestId(id)).getAllByRole("cell").map((c) => c.textContent);
 
@@ -35,25 +42,55 @@ beforeEach(() => setUrl("/org/exams/e1"));
 afterEach(() => vi.unstubAllGlobals());
 
 // the page loads the exam, its subject's topics and tags, the classes and the exam's assignments
-const pageRoutes = (e: Exam) => [
+const pageRoutes = (e: Exam, counts: Record<string, number> = {}) => [
   route("GET", "/api/exams/e1", e),
-  route("GET", "/api/topics", topics),
+  route("GET", /^\/api\/topics(\?|$)/, topics),
+  route("GET", "/api/taxonomy", { subjects: [{ id: "s", code: "toan", name: "Toán" }], grades: [], semesters: [] }),
+  route("POST", "/api/questions/facets", facets(counts)),
   route("POST", "/api/tags/search", searchPage([])),
   route("POST", "/api/classes/search", searchPage([])),
   route("POST", "/api/assignments/search", searchPage([])),
 ];
 
 describe("exam builder", () => {
-  it("blueprint rows need a topic, then generate", async () => {
+  it("blueprint rows need a topic, then generate; the row says how many questions the topic holds", async () => {
     const onGenerate = vi.fn();
-    render(<BlueprintEditor initial={[]} topics={topics} tags={[]} shortfalls={[{ row: 0, missing: 2 }]} onGenerate={onGenerate} />);
+    mockFetch(route("POST", "/api/questions/facets", facets({ ds: 12 })));
+    renderWithQuery(<BlueprintEditor initial={[]} topics={topics} tags={[]} subjectId="s" shortfalls={[{ row: 0, missing: 2 }]} refusal={null} onEdit={vi.fn()} onGenerate={onGenerate} />);
     expect(screen.getByRole("button", { name: "Tạo đề theo ma trận" })).toBeDisabled();
     expect(screen.getByTestId("row-0")).toHaveTextContent("thiếu 2 câu");
     await userEvent.click(screen.getByRole("button", { name: "Chọn chuyên đề…" }));
+    // the picker writes questions beside a topic, not the number of child topics (AC-02, ADR-01)
+    await waitFor(() => expect(within(screen.getByRole("tree", { name: "Cây chuyên đề" })).getByTitle("12 câu hỏi")).toBeInTheDocument());
     await userEvent.click(within(screen.getByRole("tree", { name: "Cây chuyên đề" })).getByText("Đại số"));
+    expect(screen.getByTestId("row-0")).toHaveTextContent("12 câu");
     fireEvent.change(screen.getByLabelText("Số câu"), { target: { value: "6" } });
     await userEvent.click(screen.getByRole("button", { name: "Tạo đề theo ma trận" }));
     expect(onGenerate).toHaveBeenCalledWith([{ type: "mcq", count: 6, topic_id: "ds" }]);
+  });
+
+  it("a topic that holds nothing is named on its row before generating", async () => {
+    mockFetch(route("POST", "/api/questions/facets", facets({ ds: 0 })));
+    renderWithQuery(<BlueprintEditor initial={[{ topic_id: "ds", type: "mcq", count: 6 }]} topics={topics} tags={[]} subjectId="s" shortfalls={[]} refusal={null} onEdit={vi.fn()} onGenerate={vi.fn()} />);
+    await waitFor(() => expect(screen.getByTestId("row-0")).toHaveTextContent("0 câu"));
+    expect(screen.getByTestId("row-0")).toHaveTextContent("Chuyên đề “Đại số” chưa có câu hỏi nào dùng được");
+    expect(screen.getByRole("button", { name: "Tạo đề theo ma trận" })).toBeEnabled(); // the server is the authority
+  });
+
+  it("the page shows the server's empty-topic refusal, naming the row and the topic", async () => {
+    const message = "Dòng 1: chuyên đề “Đại số” không có câu hỏi nào dùng được (0 câu). Chọn chuyên đề khác hoặc bổ sung câu hỏi cho chuyên đề này.";
+    mockFetch(
+      route("POST", "/api/exams/e1/blueprint", { code: "empty_topic", message, details: { fields: { rows: "Dòng 1", row: 0, topic_id: "ds", topic_name: "Đại số", question_count: 0 } } }, 422),
+      ...pageRoutes(exam({ subject_id: "s", blueprint: [{ topic_id: "ds", type: "mcq", count: 6 }] }), { ds: 0 }),
+    );
+    const u = userEvent.setup();
+    renderWithQuery(<ExamDetailPage id="e1" />);
+    await u.click(await screen.findByRole("button", { name: "Tạo đề theo ma trận" }));
+    expect(await screen.findByTestId("blueprint-refusal")).toHaveTextContent(message);
+    // the row it names is marked too, and editing the matrix drops the refusal
+    expect(screen.getByTestId("row-0")).toHaveTextContent("0 câu");
+    fireEvent.change(screen.getByLabelText("Số câu"), { target: { value: "4" } });
+    await waitFor(() => expect(screen.queryByTestId("blueprint-refusal")).not.toBeInTheDocument());
   });
 
   it("question list: sections, swap, remove, points", async () => {
@@ -177,6 +214,62 @@ describe("exam builder", () => {
     expect(cells("weight-total")).toEqual(["Cả đề", "3", "tổng thô", "0,75"]);
     expect(within(strip).getByRole("link", { name: "Sửa điểm mặc định theo loại" })).toHaveAttribute("href", "#diem-mac-dinh");
     expect(within(strip).getByRole("link", { name: "Câu hỏi trong đề" })).toHaveAttribute("href", "#cau-hoi-trong-de");
+  });
+
+  it("“Đổi câu” opens the chooser: the bank's own filters, and no question that is already in the exam or of another type", async () => {
+    const bank = [
+      { ...eq(9), stem: "Câu ngân hàng" },
+      { ...eq(2), stem: "Đã trong đề" },
+      { ...eq(8), type: "essay" as const, section: "IV", stem: "Câu tự luận" },
+    ];
+    const f = mockFetch(route("POST", "/api/questions/search", searchPage(bank)), ...pageRoutes(exam({ subject_id: "s" })));
+    const u = userEvent.setup();
+    renderWithQuery(<ExamDetailPage id="e1" />);
+    await u.click(within(await screen.findByTestId("eq-1")).getByRole("button", { name: "Đổi câu" }));
+    expect(await screen.findByTestId("swap-dialog")).toHaveTextContent("giữ nguyên vị trí và số điểm này");
+    // the chooser searches the bank in the exam's subject, for the type of the position it replaces
+    await waitFor(() => expect(lastBody(f, "/questions/search")).toEqual({ page: 1, limit: 20, subject_id: "s", type: "mcq" }));
+    expect(within(screen.getByTestId("swap-q9")).getByRole("button", { name: "Chọn" })).toBeEnabled();
+    expect(within(screen.getByTestId("swap-q2")).getByRole("button", { name: "Đã có trong đề" })).toBeDisabled();
+    expect(within(screen.getByTestId("swap-q8")).getByRole("button", { name: "Khác loại" })).toBeDisabled();
+    // searching again keeps the position's type and adds the words typed
+    await u.type(screen.getByLabelText("Tìm nội dung"), "parabol");
+    await waitFor(() => expect(lastBody(f, "/questions/search")).toEqual({ page: 1, limit: 20, q: "parabol", subject_id: "s", type: "mcq" }));
+  });
+
+  it("a chosen question takes the place, the number and the points of the one it replaces", async () => {
+    const e = exam({ subject_id: "s", questions: [{ ...eq(1), points: 0.5 }, eq(2), eq(3)] });
+    const f = mockFetch(
+      route("POST", "/api/questions/search", searchPage([{ ...eq(9), stem: "Câu ngân hàng" }])),
+      route("POST", "/api/exams/e1/questions", e),
+      route("DELETE", "/api/exams/e1/questions/q1", e),
+      route("PUT", "/api/exams/e1/order", e),
+      route("PATCH", "/api/exams/e1/questions/q9", e),
+      ...pageRoutes(e),
+    );
+    const u = userEvent.setup();
+    renderWithQuery(<ExamDetailPage id="e1" />);
+    await u.click(within(await screen.findByTestId("eq-1")).getByRole("button", { name: "Đổi câu" }));
+    await u.click(within(await screen.findByTestId("swap-q9")).getByRole("button", { name: "Chọn" }));
+    await waitFor(() => expect(sent(f, "PATCH", "/api/exams/e1/questions/q9")).toEqual({ points: 0.5 }));
+    expect(sent(f, "POST", "/api/exams/e1/questions")).toEqual({ question_ids: ["q9"] });
+    expect(f.mock.calls.some(([url, init]) => url === "/api/exams/e1/questions/q1" && (init as RequestInit)?.method === "DELETE")).toBe(true);
+    // same place in the order, and the points the teacher had set, not the default of the type
+    expect(sent(f, "PUT", "/api/exams/e1/order")).toEqual({ question_ids: ["q9", "q2", "q3"] });
+    expect(screen.queryByTestId("swap-dialog")).not.toBeInTheDocument();
+  });
+
+  it("the automatic replacement is still one click", async () => {
+    const f = mockFetch(
+      route("POST", "/api/questions/search", searchPage([])),
+      route("POST", "/api/exams/e1/questions/q1/swap", exam()),
+      ...pageRoutes(exam({ subject_id: "s" })),
+    );
+    const u = userEvent.setup();
+    renderWithQuery(<ExamDetailPage id="e1" />);
+    await u.click(within(await screen.findByTestId("eq-1")).getByRole("button", { name: "Đổi câu" }));
+    await u.click(await screen.findByRole("button", { name: "Để hệ thống chọn" }));
+    await waitFor(() => expect(f.mock.calls.some(([url]) => url === "/api/exams/e1/questions/q1/swap")).toBe(true));
   });
 
   it("the questions table posts /exams/{id}/questions/search with its own filters", async () => {

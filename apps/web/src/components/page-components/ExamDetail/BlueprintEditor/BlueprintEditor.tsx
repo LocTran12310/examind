@@ -1,5 +1,6 @@
 "use client";
 
+import { X } from "lucide-react";
 import { FormAlert } from "@/components/common/FormAlert/FormAlert";
 import { FormDialog } from "@/components/common/FormDialog/FormDialog";
 import { OptionSelect } from "@/components/common/OptionSelect/OptionSelect";
@@ -9,33 +10,52 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DIFFICULTY_LABEL, TYPE_LABEL } from "@/constants/question.constant";
 import { useBlueprintEditor } from "@/hooks/page-hooks/exam-detail/use-blueprint-editor";
-import type { BlueprintRow, BlueprintShortfall } from "@/interfaces/exam.interface";
+import type { BlueprintRefusal, BlueprintRow, BlueprintShortfall } from "@/interfaces/exam.interface";
 import type { Tag } from "@/interfaces/tag.interface";
 import type { Topic } from "@/interfaces/topic.interface";
+import { cn } from "@/lib/utils";
 
 export interface BlueprintEditorProps {
   initial: BlueprintRow[];
   topics: Topic[];
   tags: Tag[];
+  /** the exam's subject: what the counts beside a topic are counted in (ADR-01) */
+  subjectId: string | null;
   shortfalls: BlueprintShortfall[];
+  /** the row the server refused because its topic holds nothing (AC-06) */
+  refusal: BlueprintRefusal | null;
+  onEdit: () => void;
   onGenerate: (rows: BlueprintRow[]) => void;
 }
 
-export function BlueprintEditor({ initial, topics, tags, shortfalls, onGenerate }: BlueprintEditorProps) {
-  const b = useBlueprintEditor(initial, topics);
+/** The exam matrix. One row is one line at desktop width and a deliberate two-column stack below it;
+ *  each row says how many questions its topic holds, so an empty one is visible before generating.
+ *  The row names the topic itself and keeps the whole path in the tooltip — the line is narrow. */
+export function BlueprintEditor({ initial, topics, tags, subjectId, shortfalls, refusal, onEdit, onGenerate }: BlueprintEditorProps) {
+  const b = useBlueprintEditor(initial, topics, subjectId, onEdit);
   return (
     <div className="space-y-3" data-testid="blueprint">
       {b.rows.map((r, i) => {
         const miss = shortfalls.find((s) => s.row === i);
         const topic = r.topic_id ? b.byId.get(r.topic_id) : undefined;
+        const held = b.held(r);
+        const empty = held === 0;
+        const refused = refusal?.row === i;
         return (
-          <div key={i} className="flex flex-wrap items-center gap-2 rounded-lg border border-border p-2" data-testid={`row-${i}`}>
-            <Button variant="outline" size="sm" onClick={() => b.setPicking(i)}>
-              {topic ? topicLabel(topic, b.byId) : "Chọn chuyên đề…"}
+          <div
+            key={i}
+            className={cn(
+              "grid grid-cols-2 items-center gap-2 rounded-lg border p-2 lg:grid-cols-[minmax(0,1fr)_6.5rem_7rem_6.5rem_4rem_auto]",
+              refused || empty ? "border-destructive/60" : "border-border",
+            )}
+            data-testid={`row-${i}`}
+          >
+            <Button variant="outline" size="sm" className="col-span-2 min-w-0 justify-start lg:col-span-1" title={topic ? topicLabel(topic, b.byId) : undefined} onClick={() => b.setPicking(i)}>
+              <span className="truncate">{topic ? topic.name : "Chọn chuyên đề…"}</span>
+              {held !== null && <span className={cn("ml-auto shrink-0 text-xs tabular-nums", empty ? "text-destructive" : "text-muted-foreground")}>{held} câu</span>}
             </Button>
             <OptionSelect
               aria-label="Tag"
-              className="w-36"
               value={r.tag_id ?? ""}
               onValueChange={(v) => b.set(i, { tag_id: v || null })}
               emptyLabel="hoặc tag…"
@@ -43,24 +63,32 @@ export function BlueprintEditor({ initial, topics, tags, shortfalls, onGenerate 
             />
             <OptionSelect
               aria-label="Loại câu"
-              className="w-40"
               value={r.type}
               onValueChange={(v) => b.set(i, { type: v as BlueprintRow["type"] })}
               options={Object.entries(TYPE_LABEL).map(([k, v]) => ({ value: k, label: v }))}
             />
             <OptionSelect
               aria-label="Mức độ"
-              className="w-36"
               value={r.difficulty ?? ""}
               onValueChange={(v) => b.set(i, { difficulty: (v || null) as BlueprintRow["difficulty"] })}
               emptyLabel="Mọi mức độ"
               options={Object.entries(DIFFICULTY_LABEL).map(([k, v]) => ({ value: k, label: v }))}
             />
-            <Input aria-label="Số câu" type="number" min={1} max={200} className="w-20" value={r.count} onChange={(e) => b.set(i, { count: Number(e.target.value) })} />
-            <Button size="sm" variant="ghost" onClick={() => b.removeRow(i)} aria-label="Xóa dòng">
-              ✕
+            <Input aria-label="Số câu" type="number" min={1} max={200} value={r.count} onChange={(e) => b.set(i, { count: Number(e.target.value) })} />
+            <Button size="sm" variant="ghost" className="col-span-2 justify-self-end text-muted-foreground lg:col-span-1" onClick={() => b.removeRow(i)} aria-label="Xóa dòng">
+              <X />
+              <span className="lg:hidden">Xóa dòng</span>
             </Button>
-            {miss && <span className="text-sm text-amber-700 dark:text-amber-400">thiếu {miss.missing} câu</span>}
+            {(empty || miss) && (
+              <div className="col-span-2 flex flex-wrap gap-x-3 text-sm lg:col-span-6">
+                {empty && (
+                  <span className="text-destructive">
+                    Chuyên đề “{topic ? topic.name : r.topic_id}” chưa có câu hỏi nào dùng được — chọn chuyên đề khác trước khi tạo đề.
+                  </span>
+                )}
+                {miss && <span className="text-amber-700 dark:text-amber-400">thiếu {miss.missing} câu</span>}
+              </div>
+            )}
           </div>
         );
       })}
@@ -74,8 +102,19 @@ export function BlueprintEditor({ initial, topics, tags, shortfalls, onGenerate 
         </Button>
       </div>
       {b.invalid && <FormAlert kind="warning">Mỗi dòng cần chuyên đề hoặc tag và số câu.</FormAlert>}
+      {refusal && (
+        <div data-testid="blueprint-refusal">
+          <FormAlert>{refusal.message}</FormAlert>
+        </div>
+      )}
       <FormDialog open={b.picking !== null} title="Chọn chuyên đề (gồm nhánh con)" onOpenChange={(o) => !o && b.setPicking(null)}>
-        <TopicPicker topics={topics} onPick={(t) => b.pick(t.id)} onClose={() => b.setPicking(null)} />
+        <TopicPicker
+          topics={topics}
+          counts={b.counts}
+          initial={b.picking !== null ? (b.rows[b.picking]?.topic_id ?? null) : null}
+          onPick={(t) => b.pick(t.id)}
+          onClose={() => b.setPicking(null)}
+        />
       </FormDialog>
     </div>
   );
