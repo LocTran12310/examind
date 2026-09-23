@@ -36,8 +36,9 @@ t(id="T-01-01", uow="UOW-01", title="Timing columns and the grading rule", layer
   context="ADR-01, ADR-02.", done_when=["Columns + migration", "Seconds clamped and accumulated", "No fact for an unanswered question"])
 t(id="T-01-02", uow="UOW-01", title="Runner reports seconds per question", layer="web", estimate="3h",
   depends_on=["T-01-01"], verifies=["AC-01"],
-  tests=[f"{S}/__tests__/result.test.tsx", f"{S}/__tests__/exams.test.tsx"],
-  touches=[f"{S}/hooks/page-hooks/exam-runner/use-exam-runner.ts", f"{S}/services/attempt.service.ts", f"{S}/dtos/attempt.dto.ts"],
+  tests=[f"{S}/__tests__/exam-runner.test.tsx"],
+  touches=[f"{S}/hooks/page-hooks/exam-runner/use-exam-runner.ts", f"{S}/hooks/page-hooks/exam-runner/use-question-timer.ts",
+           f"{S}/hooks/react-query/use-query-attempt.ts", f"{S}/services/attempt.service.ts", f"{S}/dtos/attempt.dto.ts"],
   context="", done_when=["Seconds sent with each save", "Returning to a question adds time"])
 t(id="T-02-01", uow="UOW-02", title="Item statistics read model and question detail", layer="api", estimate="4h",
   depends_on=["T-01-01"], verifies=["AC-03"], assumptions=["A-05"],

@@ -4,6 +4,7 @@ import { http } from "@/lib/common/http";
 
 export const attemptService = {
   get: (id: string) => http<AttemptView>(`/attempts/${id}`),
+  /** One answer plus the time it took; the answer is stored, the timing accumulated. */
   saveAnswer: (id: string, questionId: string, body: SaveAnswerBody) => http<unknown>(`/attempts/${id}/answers/${questionId}`, { method: "PUT", body }),
   submit: (id: string) => http<unknown>(`/attempts/${id}/submit`, { method: "POST" }),
   /** The student left the exam tab. */

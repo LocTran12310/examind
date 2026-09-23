@@ -58,7 +58,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on: []
     blocks:
       - T-01-02
@@ -79,7 +79,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on:
       - T-01-01
     blocks: []
@@ -87,6 +87,8 @@ ticket:
       - AC-01
     touches:
       - apps/web/src/hooks/page-hooks/exam-runner/use-exam-runner.ts   # new
+      - apps/web/src/hooks/page-hooks/exam-runner/use-question-timer.ts   # new
+      - apps/web/src/hooks/react-query/use-query-attempt.ts   # new
       - apps/web/src/services/attempt.service.ts   # new
       - apps/web/src/dtos/attempt.dto.ts   # new
   - id: T-02-01

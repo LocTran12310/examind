@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { answered } from "@/lib/common/answer";
 import { useSaveAnswerMutation, useSubmitAttemptMutation, useTabSwitchMutation } from "@/hooks/react-query/use-query-attempt";
+import { useQuestionTimer } from "@/hooks/page-hooks/exam-runner/use-question-timer";
 import type { AttemptQuestion, AttemptView } from "@/interfaces/attempt.interface";
 import { ApiError } from "@/lib/common/http";
 import type { AnswerResponse } from "@/types/attempt.type";
@@ -12,6 +13,7 @@ const RETRY_EVERY = 3000;
  * The exam while it is open: answers kept here and autosaved after a short pause (unsaved ones retried),
  * a countdown on the server clock (`server_now` sets the offset) that submits at zero, and every
  * switch away from the tab reported. An answer refused because the attempt closed ends the exam.
+ * Each save carries the seconds the question was on screen since the last one (learning-telemetry ADR-01).
  */
 export function useExamRunner(view: AttemptView, onFinished: () => void) {
   const [answers, setAnswers] = useState<Record<string, AnswerResponse>>(() => Object.fromEntries(view.questions.map((q) => [q.id, q.response])));
@@ -28,17 +30,21 @@ export function useExamRunner(view: AttemptView, onFinished: () => void) {
   const { mutateAsync: saveAnswer } = useSaveAnswerMutation(view.id);
   const { mutateAsync: submit } = useSubmitAttemptMutation(view.id);
   const { mutateAsync: reportTabSwitch } = useTabSwitchMutation(view.id);
+  const timer = useQuestionTimer(q.id, !closed);
 
   const finish = useCallback(async () => {
     setClosed(true);
+    timer.close();
     await submit().catch(() => undefined);
     onFinished();
-  }, [submit, onFinished]);
+  }, [submit, onFinished, timer]);
 
   const flush = useCallback(
     async (qid: string, value: AnswerResponse) => {
+      const { seconds, firstSeenAt } = timer.take(qid);
       try {
-        await saveAnswer({ questionId: qid, response: value });
+        await saveAnswer({ questionId: qid, body: { response: value, seconds_spent: seconds, first_seen_at: firstSeenAt } });
+        timer.reported(qid, seconds);
         setPending((p) => {
           if (p[qid] !== value) return p;
           const n = { ...p };
@@ -60,7 +66,7 @@ export function useExamRunner(view: AttemptView, onFinished: () => void) {
         // network errors: keep pending, the retry loop picks it up
       }
     },
-    [saveAnswer, onFinished],
+    [saveAnswer, onFinished, timer],
   );
 
   function change(value: AnswerResponse) {

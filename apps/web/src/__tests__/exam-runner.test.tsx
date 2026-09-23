@@ -45,7 +45,32 @@ describe("exam runner", () => {
     await act(async () => void vi.advanceTimersByTime(600));
     await waitFor(() => expect(screen.getByText("Đã lưu")).toBeInTheDocument());
     expect(f.mock.calls[0][0]).toBe("/api/attempts/att/answers/q2");
-    expect(JSON.parse(String(f.mock.calls[0][1]?.body))).toEqual({ response: { key: "B" } });
+    expect(JSON.parse(String(f.mock.calls[0][1]?.body))).toMatchObject({ response: { key: "B" } });
+  });
+
+  it("reports the seconds a question was on screen and adds them up when it is revisited", async () => {
+    const f = mockFetch((url, init) => (init?.method === "PUT" ? { body: { ok: true } } : undefined));
+    const saves = () => f.mock.calls.filter((c) => String(c[0]) === "/api/attempts/att/answers/q1").map((c) => JSON.parse(String((c[1] as RequestInit).body)));
+    renderWithQuery(<Runner view={view()} onFinished={() => {}} />);
+    await act(async () => void vi.advanceTimersByTime(5000));
+    fireEvent.click(screen.getByTestId("option-B"));
+    await act(async () => void vi.advanceTimersByTime(600));
+    await waitFor(() => expect(saves()).toHaveLength(1));
+    const first = saves()[0];
+    expect(first.seconds_spent).toBeGreaterThanOrEqual(5);
+    expect(typeof first.first_seen_at).toBe("string");
+    // away to câu 2 and back: only the time on câu 1 is added to câu 1
+    fireEvent.click(within(screen.getByTestId("navigator")).getByRole("button", { name: "Câu 2" }));
+    await act(async () => void vi.advanceTimersByTime(4000));
+    fireEvent.click(within(screen.getByTestId("navigator")).getByRole("button", { name: "Câu 1" }));
+    await act(async () => void vi.advanceTimersByTime(3000));
+    fireEvent.click(screen.getByTestId("option-D"));
+    await act(async () => void vi.advanceTimersByTime(600));
+    await waitFor(() => expect(saves()).toHaveLength(2));
+    const second = saves()[1];
+    expect(second.seconds_spent).toBeGreaterThanOrEqual(3);
+    expect(second.seconds_spent).toBeLessThan(8);
+    expect(second.first_seen_at).toBe(first.first_seen_at);
   });
 
   it("true/false and short answer inputs; counts unanswered", async () => {

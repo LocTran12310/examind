@@ -3,7 +3,7 @@
 # Ticket graph — 2026092301-learning-telemetry
 
 - Units of Work: **3**
-- Tickets: **9** (0 done)
+- Tickets: **9** (2 done)
 - Total effort: **3.8d**
 - Critical path: **1.5d** across 3 tickets
 - Theoretical minimum duration with unlimited parallelism: **1.5d**
@@ -24,8 +24,8 @@ slice — the floor on how fast it can finish no matter how many people work on 
 ```mermaid
 graph LR
   subgraph UOW_01["UOW-01 · Answers carry timing, attempt number and no fact when unanswered"]
-    T_01_01["T-01-01<br/>Timing columns and the grading rule"]
-    T_01_02["T-01-02<br/>Runner reports seconds per question"]
+    T_01_01["✓ T-01-01<br/>Timing columns and the grading rule"]
+    T_01_02["✓ T-01-02<br/>Runner reports seconds per question"]
   end
   subgraph UOW_02["UOW-02 · Item statistics per question, searchable"]
     T_02_01["T-02-01<br/>Item statistics read model and question detail"]
@@ -80,8 +80,8 @@ adding people to tickets off this path will not make the feature ship sooner.
 
 | ID | UoW | Layer | Type | Est | Depends on | Verifies | Status |
 |----|-----|-------|------|-----|-----------|----------|--------|
-| T-01-01 | UOW-01 | api | feature | 4h | — | AC-01, AC-02 | todo |
-| T-01-02 | UOW-01 | web | feature | 3h | T-01-01 | AC-01 | todo |
+| T-01-01 | UOW-01 | api | feature | 4h | — | AC-01, AC-02 | done |
+| T-01-02 | UOW-01 | web | feature | 3h | T-01-01 | AC-01 | done |
 | T-02-01 | UOW-02 | api | feature | 4h | T-01-01 | AC-03 | todo |
 | T-02-02 | UOW-02 | api | feature | 3h | T-02-01 | AC-04 | todo |
 | T-02-03 | UOW-02 | web | feature | 3h | T-02-01 | AC-03 | todo |

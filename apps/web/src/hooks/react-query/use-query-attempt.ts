@@ -1,9 +1,8 @@
 import { useMutation, useQuery, useQueryClient, type UseMutationResult, type UseQueryResult } from "@tanstack/react-query";
 import { ASSIGNMENT_KEYS, ATTEMPT_KEYS } from "@/constants/react-query-key.constant";
-import type { GradeAnswerBody } from "@/dtos/attempt.dto";
+import type { GradeAnswerBody, SaveAnswerBody } from "@/dtos/attempt.dto";
 import type { AttemptResult, AttemptView, GradeResult } from "@/interfaces/attempt.interface";
 import { invalidate } from "@/lib/common/query-client";
-import type { AnswerResponse } from "@/types/attempt.type";
 import { attemptService } from "@/services/attempt.service";
 
 /** An attempt as the runner sees it; `enabled` false when not needed (e.g. a student on the result page). */
@@ -17,9 +16,9 @@ export function useAttemptResultQuery(id: string): UseQueryResult<AttemptResult,
 
 /** Autosave of one answer. The runner owns the answers while the exam is open, so nothing is refetched
  *  (a refetch per keystroke would only move the clock); submitting refreshes the attempt. */
-export function useSaveAnswerMutation(attemptId: string): UseMutationResult<unknown, Error, { questionId: string; response: AnswerResponse }> {
-  return useMutation<unknown, Error, { questionId: string; response: AnswerResponse }>({
-    mutationFn: ({ questionId, response }) => attemptService.saveAnswer(attemptId, questionId, { response }),
+export function useSaveAnswerMutation(attemptId: string): UseMutationResult<unknown, Error, { questionId: string; body: SaveAnswerBody }> {
+  return useMutation<unknown, Error, { questionId: string; body: SaveAnswerBody }>({
+    mutationFn: ({ questionId, body }) => attemptService.saveAnswer(attemptId, questionId, body),
   });
 }
 
