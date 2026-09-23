@@ -32,3 +32,7 @@ verify:
   failure_signals:
     - { selector: "[data-sonner-toast][data-type=error]", message: "ứng dụng báo lỗi" }
     - console_errors
+    # Several guards of this app answer 422 and put the reason on screen, and the browser logs a
+    # console.error for any non-2xx fetch — so without this line a refusal could never be verified,
+    # only turned off. The filter is this one status; an uncaught exception still fails the step.
+    - { console_ignore: "the server responded with a status of 422" }
