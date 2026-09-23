@@ -41,7 +41,8 @@ nothing is undecided, `in_progress` otherwise.
 | --- | --- |
 | `POST /review/documents/search` | rows gain `review_state`, `pending`; both filterable, `review_state` sortable |
 | `POST /review/documents/{id}/questions/search` | `state` (pending default / approved / rejected / duplicate / all) + the search contract |
-| `PATCH /questions/{id}`, `POST /questions/bulk` | unchanged; used to re-decide |
+| `PATCH /questions/{id}` | unchanged; used to correct the content of a question in any state |
+| `POST /questions/bulk` | `set.status` also takes `needs_review`: how an approval is taken back (ADR-02) |
 
 ## State ownership
 | State | Owner | Lifetime |
@@ -72,7 +73,10 @@ breakdown one click away.
 **Context:** Approving is a keystroke and today it is final from the review page.
 **Decision:** The document page can show any state and re-decide through the same command that decided first; no
 undo stack, no new endpoint.
-**Consequences:** A mistake costs one correction, not a database edit; nothing new to keep consistent.
+**Consequences:** A mistake costs one correction, not a database edit; nothing new to keep consistent. Taking an
+approval back had no expression — approve and reject were the only bulk statuses — so `POST /questions/bulk`
+accepts `needs_review` as a third one: the question goes back on the teacher's desk, audited like any other
+status change (A-05). The counts and `review_state` are derived, so they follow by themselves.
 **Status:** accepted
 
 ### ADR-03 — The 5% sample keeps its purpose and gets a name

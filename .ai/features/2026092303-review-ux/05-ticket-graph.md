@@ -3,7 +3,7 @@
 # Ticket graph — 2026092303-review-ux
 
 - Units of Work: **3**
-- Tickets: **5** (0 done)
+- Tickets: **5** (2 done)
 - Total effort: **2.2d**
 - Critical path: **1.4d** across 3 tickets
 - Theoretical minimum duration with unlimited parallelism: **1.4d**
@@ -24,8 +24,8 @@ slice — the floor on how fast it can finish no matter how many people work on 
 ```mermaid
 graph LR
   subgraph UOW_01["UOW-01 · One state per document, and every question reachable"]
-    T_01_01["T-01-01<br/>review_state and pending on the document list"]
-    T_01_02["T-01-02<br/>A document's questions by state"]
+    T_01_01["✓ T-01-01<br/>review_state and pending on the document list"]
+    T_01_02["✓ T-01-02<br/>A document's questions by state"]
   end
   subgraph UOW_02["UOW-02 · The review list and page a teacher can read"]
     T_02_01["T-02-01<br/>The review list: one state, a filter, the sample explained"]
@@ -65,8 +65,8 @@ adding people to tickets off this path will not make the feature ship sooner.
 
 | ID | UoW | Layer | Type | Est | Depends on | Verifies | Status |
 |----|-----|-------|------|-----|-----------|----------|--------|
-| T-01-01 | UOW-01 | api | feature | 3h | — | AC-01 | todo |
-| T-01-02 | UOW-01 | api | feature | 4h | T-01-01 | AC-03, AC-04 | todo |
+| T-01-01 | UOW-01 | api | feature | 3h | — | AC-01 | done |
+| T-01-02 | UOW-01 | api | feature | 4h | T-01-01 | AC-03, AC-04 | done |
 | T-02-01 | UOW-02 | web | feature | 4h | T-01-01 | AC-01, AC-02 | todo |
 | T-02-02 | UOW-02 | web | feature | 4h | T-01-02, T-02-01 | AC-03, AC-04, AC-05 | todo |
 | T-03-01 | UOW-03 | web | feature | 3h | — | AC-06 | todo |
