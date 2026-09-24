@@ -1,0 +1,29 @@
+# Managed by scripts/aidlc.py — do not edit by hand.
+# Editing this file to skip a gate defeats the point of having one.
+feature: exam-runner-and-roles
+slug: 2026092402-exam-runner-and-roles
+profile: none
+created: 2026-09-24T12:17:13
+ruleset: 7
+current_gate: G3
+history:
+  - gate: G0
+    action: passed
+    at: 2026-09-24T12:18:34
+    by: Loc Tran
+    evidence: architecture map verified by Loc Tran (blanket pre-approval in chat, 2026-09-22 — confirm at final review); 00-intent.md complete
+  - gate: G1
+    action: passed
+    at: 2026-09-24T12:18:34
+    by: Loc Tran
+    evidence: 6 assumptions, none blocking-and-pending; 7 acceptance criteria defined
+  - gate: G2
+    action: passed
+    at: 2026-09-24T12:19:09
+    by: Loc Tran
+    evidence: 4 ADR(s) recorded
+  - gate: G3
+    action: passed
+    at: 2026-09-24T12:19:23
+    by: Loc Tran
+    evidence: graph valid - 4 UoW, 7 tickets, no cycles
