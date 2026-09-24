@@ -6,7 +6,7 @@ from app.modules.bank.application.dto import UndoResult
 from app.modules.bank.domain.entities import STATUSES
 from app.modules.bank.domain.ports import QuestionRepository, ReviewLog, Taxonomy
 from app.modules.bank.domain.services.history import BLOCKED, UNDONE_BATCH, batch_action, lost_question, restore_targets, undo_block
-from app.modules.bank.domain.services.review import check_difficulty, check_grade
+from app.modules.bank.domain.services.review import check_difficulty, check_difficulty_source, check_grade
 from app.modules.bank.domain.services.tagging import check_subject_change
 from app.shared.application.actor import Actor
 from app.shared.application.unit_of_work import UnitOfWork
@@ -98,6 +98,9 @@ class UndoBatchHandler:
             q.status = target["status"]
         if "difficulty" in target:
             q.difficulty = check_difficulty(target["difficulty"])
+            # the trace belongs to the value, so it goes back with it. An event written before the trace existed
+            # names no source, and a level in such an event can only have been a person's: nothing else wrote one
+            q.difficulty_source = check_difficulty_source(target.get("difficulty_source", "manual" if q.difficulty else None))
         if "grade" in target:
             q.grade = check_grade(target["grade"], levels) or None
         if "subject_id" in target:

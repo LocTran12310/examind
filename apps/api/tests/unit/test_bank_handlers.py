@@ -36,7 +36,7 @@ from app.modules.bank.domain.services.history import (
     restore_targets,
     undo_block,
 )
-from app.modules.bank.domain.services.review import pending_count, review_state, waits_for_review
+from app.modules.bank.domain.services.review import fill_difficulty, pending_count, review_state, waits_for_review
 from app.shared.application.actor import Actor
 from app.shared.application.search import Page, SearchRequest
 from app.shared.domain.errors import Conflict, Forbidden, Invalid, NotFound
@@ -280,6 +280,55 @@ def test_bulk_is_all_or_nothing(ports):
     with pytest.raises(Conflict) as e:
         bulk(TEACHER, BulkUpdateQuestions([broken.id], status="approved"))
     assert e.value.message.startswith("Câu 7 còn lỗi")
+
+
+def test_every_human_path_marks_the_difficulty_as_a_persons_and_a_machine_never_overwrites_it(ports):
+    """difficulty-at-upload AC-04: create, single edit and the bulk bar all leave `manual` behind, the level is
+    checked on every one of them, and a machine pass leaves a level a person set exactly where it is (ADR-04)."""
+    qs, tax, log, settings, views, uow = ports
+    create = CreateQuestionHandler(qs, tax, log, views, uow)
+    update = UpdateQuestionHandler(qs, tax, log, settings, views, uow)
+    bulk = BulkUpdateQuestionsHandler(qs, tax, log, uow)
+    made = qs.rows[create(TEACHER, CreateQuestion(stem="1 + 1 = ?", options=OPTS, answer={"key": "B"}, difficulty="vd")).id]
+    assert (made.difficulty, made.difficulty_source) == ("vd", "manual")
+    with pytest.raises(Invalid):
+        create(TEACHER, CreateQuestion(stem="1 + 1 = ?", options=OPTS, answer={"key": "B"}, difficulty="kho"))
+
+    q = parsed(qs, stem="a", answer={"key": "A"}, difficulty="nb", difficulty_source="auto")
+    update(TEACHER, UpdateQuestion(q.id, difficulty="vdc", sent=frozenset({"difficulty"})))
+    assert (q.difficulty, q.difficulty_source) == ("vdc", "manual")
+    with pytest.raises(Invalid):  # the hole PATCH /questions/{id} left open: any string used to be stored as a level
+        update(TEACHER, UpdateQuestion(q.id, difficulty="kho", sent=frozenset({"difficulty"})))
+    update(TEACHER, UpdateQuestion(q.id, difficulty="", sent=frozenset({"difficulty"})))
+    assert (q.difficulty, q.difficulty_source) == (None, None)  # no level, no provenance to claim
+
+    bulk(TEACHER, BulkUpdateQuestions([q.id], difficulty="th"))
+    assert (q.difficulty, q.difficulty_source) == ("th", "manual")
+    assert not fill_difficulty(q, "vdc", "ai") and (q.difficulty, q.difficulty_source) == ("th", "manual")
+    machine = parsed(qs, stem="b", answer={"key": "A"})
+    assert fill_difficulty(machine, "nb", "auto") and (machine.difficulty, machine.difficulty_source) == ("nb", "auto")
+    assert fill_difficulty(machine, "vd", "ai") and (machine.difficulty, machine.difficulty_source) == ("vd", "ai")
+    with pytest.raises(Invalid):
+        fill_difficulty(machine, "vd", "somewhere")
+    # the trace is recorded so an undo can put it back, but it is not something a person changed: one edit, one field
+    moved = [e for e in log.events if e[0] == q.id][-1]
+    assert moved[2]["difficulty_source"] is None and moved[3]["difficulty_source"] == "manual"
+    assert changed_fields(moved[2], moved[3]) == ["difficulty"]
+
+
+def test_undo_puts_back_the_level_together_with_who_set_it(ports):
+    """AC-04: the pipeline's `auto` level comes back as the pipeline's, not as a level the teacher chose."""
+    qs, tax, log, _, _, uow = ports
+    bulk, undo = BulkUpdateQuestionsHandler(qs, tax, log, uow), UndoBatchHandler(qs, tax, log, uow)
+    a = parsed(qs, stem="a", answer={"key": "A"}, difficulty="nb", difficulty_source="auto")
+    bulk(TEACHER, BulkUpdateQuestions([a.id], difficulty="vdc"))
+    undo(TEACHER, UndoBatch(next(iter(log.batches(a.id)))))
+    assert (a.difficulty, a.difficulty_source) == ("nb", "auto")
+    # an event written before the trace existed names no source; a level in one can only have been a person's
+    old = parsed(qs, stem="b", answer={"key": "A"}, difficulty="th", difficulty_source="ai")
+    log.events.append((old.id, "bulk", {"difficulty": "nb"}, {"difficulty": "th"}, (batch := uuid.uuid4())))
+    undo(TEACHER, UndoBatch(batch))
+    assert (old.difficulty, old.difficulty_source) == ("nb", "manual")
 
 
 def test_a_bulk_event_records_everything_the_bar_can_change_and_older_events_still_read(ports):

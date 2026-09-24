@@ -7,7 +7,7 @@ from app.modules.bank.application.ports import QuestionViews
 from app.modules.bank.domain.entities import Question
 from app.modules.bank.domain.ports import QuestionRepository, ReviewLog, Taxonomy
 from app.modules.bank.domain.services.quality import blocking, evaluate
-from app.modules.bank.domain.services.review import check_difficulty, check_type, valid_answer
+from app.modules.bank.domain.services.review import check_type, set_difficulty, valid_answer
 from app.modules.bank.domain.services.search_text import for_question
 from app.shared.application.actor import Actor
 from app.shared.application.unit_of_work import UnitOfWork
@@ -43,9 +43,10 @@ class CreateQuestionHandler:
         batch = new_id()  # one request, one batch — a single edit is a batch of one (bulk-safety ADR-01)
         qtype = check_type(cmd.type or "mcq")
         q = Question(organization_id=actor.org_id, type=qtype, stem=cmd.stem or "", options=cmd.options or [], solution=cmd.solution or "",
-                     difficulty=check_difficulty(cmd.difficulty), grade=cmd.grade, subject_id=cmd.subject_id,
+                     grade=cmd.grade, subject_id=cmd.subject_id,
                      semester_code=cmd.semester_code, exam_kind=cmd.exam_kind, source="manual", status="approved", issues=[],
                      answer_source="manual")
+        set_difficulty(q, cmd.difficulty)
         if cmd.answer:
             q.answer = valid_answer(q.type, q.options, cmd.answer)
         q.issues, q.confidence = evaluate(q.type, q.stem, q.options, q.answer, q.solution)

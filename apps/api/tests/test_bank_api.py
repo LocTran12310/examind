@@ -83,6 +83,42 @@ def test_bulk_difficulty_topic_tags(client, db):
     assert client.post("/api/questions/bulk", json={"ids": ids + [str(uuid.uuid4())], "set": {"difficulty": "nb"}}).status_code == 404
 
 
+def test_a_level_a_person_sets_is_marked_as_theirs_and_survives_the_machine(client, db):
+    """difficulty-at-upload AC-04 over HTTP: whichever way a teacher sets a mức độ — the form, the bulk bar — the
+    question records that a person set it, an invalid level is refused on every one of those ways, and an undo puts
+    back the level the pipeline had put there rather than turning it into the teacher's own."""
+    loaded(client, db)
+    body = {"type": "mcq", "stem": "Đạo hàm của x^2", "options": OPTS, "answer": {"key": "C"}, "difficulty": "th"}
+    made = client.post("/api/questions", json=body).json()
+    assert (made["difficulty"], made["difficulty_source"]) == ("th", "manual")
+    assert client.post("/api/questions", json={**body, "difficulty": "kho"}).status_code == 422
+
+    qid = search(client, {"limit": 1}).json()["data"][0]["id"]
+    # a level the pipeline wrote, as UOW-02 writes it: the trace is what tells it apart from a teacher's own
+    db.execute(text("update questions set difficulty = 'nb', difficulty_source = 'auto' where id = :q"), {"q": qid})
+    db.commit()
+    assert client.get(f"/api/questions/{qid}").json()["difficulty_source"] == "auto"
+    # PATCH used to store any string as a level: the check runs on this path too now
+    bad = client.patch(f"/api/questions/{qid}", json={"difficulty": "trung bình"})
+    assert bad.status_code == 422 and bad.json()["details"]["fields"]["difficulty"] == "Mức độ không hợp lệ"
+    assert client.get(f"/api/questions/{qid}").json()["difficulty"] == "nb"
+    patched = client.patch(f"/api/questions/{qid}", json={"difficulty": "vd"}).json()
+    assert (patched["difficulty"], patched["difficulty_source"]) == ("vd", "manual")
+    cleared = client.patch(f"/api/questions/{qid}", json={"difficulty": ""}).json()
+    assert (cleared["difficulty"], cleared["difficulty_source"]) == (None, None)
+
+    assert client.post("/api/questions/bulk", json={"ids": [qid], "set": {"difficulty": "kho"}}).status_code == 422
+    db.execute(text("update questions set difficulty = 'nb', difficulty_source = 'auto' where id = :q"), {"q": qid})
+    db.commit()
+    assert client.post("/api/questions/bulk", json={"ids": [qid], "set": {"difficulty": "vdc"}}).json()["updated"] == 1
+    assert client.get(f"/api/questions/{qid}").json()["difficulty_source"] == "manual"
+    batch = client.post("/api/question-events/search", json={"limit": 1}).json()["data"][0]
+    assert batch["fields"] == ["difficulty"]  # the trace moved with the level; it is not a second edit to show
+    assert client.post("/api/questions/bulk/undo", json={"batch_id": batch["batch_id"]}).json()["restored"] == 1
+    back = client.get(f"/api/questions/{qid}").json()
+    assert (back["difficulty"], back["difficulty_source"]) == ("nb", "auto")
+
+
 def test_one_bulk_request_writes_one_batch_carrying_the_whole_state(client, db):
     """ADR-01: the events of one request share a batch id — that is what makes a bulk edit one unit to read back
     and to take back. A-02: the recorded state covers every field the bar can move, topics and tags included."""

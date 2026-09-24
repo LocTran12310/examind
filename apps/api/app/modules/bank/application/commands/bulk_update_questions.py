@@ -5,7 +5,7 @@ from app.modules.bank.application.common import record, set_tags, set_topics
 from app.modules.bank.application.dto import BulkResult
 from app.modules.bank.domain.ports import QuestionRepository, ReviewLog, Taxonomy
 from app.modules.bank.domain.services.quality import blocking_manual, settle
-from app.modules.bank.domain.services.review import blocking_message, check_difficulty, check_grade
+from app.modules.bank.domain.services.review import blocking_message, check_difficulty, check_grade, set_difficulty
 from app.modules.bank.domain.services.tagging import check_subject_change
 from app.shared.application.actor import Actor
 from app.shared.application.unit_of_work import UnitOfWork
@@ -56,7 +56,7 @@ class BulkUpdateQuestionsHandler:
             tags = self.questions.tag_ids(q.id)
             before = q.snapshot(topics, primary, list(tags))
             if cmd.difficulty:
-                q.difficulty = cmd.difficulty
+                set_difficulty(q, cmd.difficulty)
             if cmd.grade is not None:
                 q.grade = cmd.grade or None
             if cmd.subject_id:

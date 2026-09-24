@@ -7,6 +7,9 @@ import uuid
 from app.modules.bank.domain.entities import SNAPSHOT_FIELDS, ReviewEvent
 
 UNDO_WINDOW = timedelta(days=7)  # ADR-02: long enough for "I noticed on Monday", short enough not to reverse a month
+# recorded so an undo can put it back, but not something a person changed: the trace follows the value it belongs to,
+# so the history says "mức độ" once instead of listing the level and its provenance as two edits
+TRACE_FIELDS = ("difficulty_source",)
 UNDONE_BATCH = "undone_batch_id"  # an `undo` event names the batch it reversed under this key of its `after`
 # what names a batch of events, coarsest first: an undo, then the bulk bar, then the verb of a single edit
 BATCH_ACTIONS = ("undo", "bulk", "triage", "edit", "answer", "approve", "reject", "restore", "spot_fail", "spot_ok",
@@ -23,7 +26,7 @@ def changed_fields(before: dict | None, after: dict | None) -> list[str]:
     """The snapshot fields one event moved, in snapshot order. A field missing on either side is unknown, not empty:
     an event recorded before the snapshot widened says nothing about the difficulty, so it never claims it changed."""
     b, a = before or {}, after or {}
-    return [f for f in SNAPSHOT_FIELDS if f in b and f in a and b[f] != a[f]]
+    return [f for f in SNAPSHOT_FIELDS if f not in TRACE_FIELDS and f in b and f in a and b[f] != a[f]]
 
 
 def restore_targets(events: Iterable[ReviewEvent]) -> dict[uuid.UUID, dict]:

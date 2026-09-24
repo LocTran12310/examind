@@ -82,6 +82,7 @@ class QuestionView:
     parse_method: str | None = None
     parse_model: str | None = None
     answer_source: str | None = None
+    difficulty_source: str | None = None
     subject_id: uuid.UUID | None = None
     semester_code: str | None = None
     exam_kind: str | None = None
@@ -99,7 +100,8 @@ def question_view(q, topics=(), tags=(), group: str | None = None) -> QuestionVi
     return QuestionView(
         id=q.id, type=q.type, stem=q.stem, options=q.options or [], answer=q.answer, solution=q.solution, difficulty=q.difficulty,
         grade=q.grade, status=q.status, number=q.number, part=q.part, confidence=q.confidence, issues=q.issues or [],
-        parse_method=q.parse_method, parse_model=q.parse_model, answer_source=q.answer_source, subject_id=q.subject_id,
+        parse_method=q.parse_method, parse_model=q.parse_model, answer_source=q.answer_source,
+        difficulty_source=q.difficulty_source, subject_id=q.subject_id,
         semester_code=q.semester_code, exam_kind=q.exam_kind, topics=list(topics), tags=list(tags), page=q.page,
         spot_check=q.spot_check, duplicate_of=q.duplicate_of, source_document_id=q.source_document_id, group=group,
         flag_evidence=q.flag_evidence,

@@ -4,7 +4,7 @@ read by (review-ux ADR-01)."""
 from datetime import datetime
 import uuid
 
-from app.modules.bank.domain.entities import DIFFICULTIES, QUESTION_TYPES, Question
+from app.modules.bank.domain.entities import DIFFICULTIES, DIFFICULTY_SOURCES, QUESTION_TYPES, Question
 from app.modules.bank.domain.services.quality import blocking, blocking_manual, reevaluate, settle, triage_status
 from app.modules.bank.domain.services.search_text import for_question
 from app.shared.domain.errors import Conflict, Invalid
@@ -77,6 +77,30 @@ def check_difficulty(difficulty: str | None) -> str | None:
     if difficulty and difficulty not in DIFFICULTIES:
         raise Invalid("Mức độ không hợp lệ", "difficulty")
     return difficulty
+
+
+def check_difficulty_source(source: str | None) -> str | None:
+    if source and source not in DIFFICULTY_SOURCES:
+        raise Invalid("Nguồn mức độ không hợp lệ", "difficulty_source")
+    return source
+
+
+def set_difficulty(q: Question, difficulty: str | None) -> None:
+    """A person sets the level (difficulty-at-upload ADR-01): every human path goes through here, so the value and
+    the trace can never disagree. Clearing the level clears the trace with it — a question with no level has no
+    provenance to claim, and a stale `manual` would go on shielding it from the machine passes (ADR-04)."""
+    q.difficulty = check_difficulty(difficulty) or None
+    q.difficulty_source = "manual" if q.difficulty else None
+
+
+def fill_difficulty(q: Question, difficulty: str, source: str) -> bool:
+    """A machine fills a level: `auto` from the position rule, `ai` from the model. True when the question moved.
+    A level a person set is never touched (ADR-04) — a teacher who corrects a level and finds it back the way the
+    machine had it after the next re-parse stops correcting levels."""
+    if q.difficulty_source == "manual" or not difficulty:
+        return False
+    q.difficulty, q.difficulty_source = check_difficulty(difficulty), check_difficulty_source(source)
+    return True
 
 
 def check_grade(grade: int | None, levels: set[int]) -> int | None:

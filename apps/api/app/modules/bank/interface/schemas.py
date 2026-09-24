@@ -53,6 +53,7 @@ class ParsedQuestionOut(QuestionOut):
     parse_method: str | None
     parse_model: str | None
     answer_source: str | None
+    difficulty_source: str | None  # auto (position rule) | ai | manual — who put that level there (ADR-01)
     subject_id: uuid.UUID | None
     semester_code: str | None
     exam_kind: str | None

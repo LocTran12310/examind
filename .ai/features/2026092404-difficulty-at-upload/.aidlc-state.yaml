@@ -74,3 +74,30 @@ history:
     at: 2026-09-24T15:54:19
     by: Loc Tran
     ticket: T-01-02
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-24T15:54:35
+    by: Loc Tran
+    ticket: T-01-03
+  - gate: G4
+    action: scope
+    at: 2026-09-24T16:03:18
+    by: Loc Tran
+    ticket: T-01-03
+  - gate: G4
+    action: scope
+    at: 2026-09-24T16:03:25
+    by: Loc Tran
+    reason: one rule for the three human paths lives in the bank's review service; undo_batch, history and the read DTO/schema carry the trace the ticket adds
+    ticket: T-01-03
+  - gate: G4
+    action: evidence
+    at: 2026-09-24T16:03:55
+    by: Loc Tran
+    ticket: T-01-03
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-24T16:03:55
+    by: Loc Tran
+    reason: one rule for the three human paths lives in the bank's review service; undo_batch, history and the read DTO/schema carry the trace the ticket adds
+    ticket: T-01-03
