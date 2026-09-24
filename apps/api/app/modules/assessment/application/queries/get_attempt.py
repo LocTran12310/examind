@@ -1,10 +1,9 @@
 from dataclasses import dataclass
 import uuid
 
-from app.modules.assessment.application.common import Clock, Grading, load_attempt
+from app.modules.assessment.application.common import Clock, Grading, load_attempt, runner_question
 from app.modules.assessment.application.ports import ResultReader
 from app.modules.assessment.domain.ports import AssignmentRepository, AttemptRepository, ExamRepository
-from app.modules.assessment.domain.services import attempt_rules
 from app.shared.application.actor import Actor
 from app.shared.application.unit_of_work import UnitOfWork
 
@@ -30,16 +29,8 @@ class GetAttemptHandler:
         a = self.assignments.get_any(att.assignment_id) if att.assignment_id else None
         exam = self.exams.get_any(att.exam_id)
         answers = {x.question_id: x for x in self.attempts.answers(att.id)}
-        questions = []
-        for i, (eq, q) in enumerate(self.grading.questions(att), start=1):
-            ans = answers.get(q.id)
-            questions.append({
-                "id": q.id, "type": q.type, "stem": q.stem, "answer": None, "solution": "", "difficulty": q.difficulty, "grade": q.grade,
-                "status": q.status,
-                "options": [{k: v for k, v in o.items() if k != "is_true"} for o in attempt_rules.display_options(att, q)],
-                "number": i, "section": eq.section, "points": eq.points,
-                "response": attempt_rules.to_display(att, q, ans.response) if ans else None,
-            })
+        questions = [runner_question(att, eq, q, i, (answers[q.id].response if q.id in answers else None))
+                     for i, (eq, q) in enumerate(self.grading.questions(att), start=1)]
         student = self.people.people({att.student_id}).get(att.student_id)
         return {"id": att.id, "title": a.title if a else exam.title, "status": att.status, "started_at": att.started_at,
                 "deadline_at": att.deadline_at, "submitted_at": att.submitted_at, "server_now": self.clock(), "tab_switches": att.tab_switches,

@@ -57,6 +57,17 @@ def exam_rows(exams: ExamRepository, bank: QuestionBank, exam_id: uuid.UUID) -> 
     return [(eq, refs[eq.question_id]) for eq in eqs if eq.question_id in refs]
 
 
+def runner_question(att: Attempt | None, eq: ExamQuestion, q: QuestionRef, number: int, response: dict | None) -> dict:
+    """One question as the runner shows it: the key, the truth flags and the solution stripped, MCQ options in the
+    order of the sitting and relabelled A–D. A trial run's paper goes through this same function (exam-runner ADR-04)
+    with `att` None — the exam's own order, nothing behind it; a second shape for staff is how a key starts leaking."""
+    return {"id": q.id, "type": q.type, "stem": q.stem, "answer": None, "solution": "", "difficulty": q.difficulty, "grade": q.grade,
+            "status": q.status,
+            "options": [{k: v for k, v in o.items() if k != "is_true"} for o in attempt_rules.display_options(att, q)],
+            "number": number, "section": eq.section, "points": eq.points,
+            "response": attempt_rules.to_display(att, q, response)}
+
+
 def students_of(assignments: AssignmentRepository, roster: Roster, a: Assignment) -> set[uuid.UUID]:
     """Targeted students, plus the active students (active accounts) of the targeted classes."""
     targets = assignments.targets(a.id)

@@ -43,8 +43,9 @@ def in_order(att: Attempt, rows: list[tuple[ExamQuestion, QuestionRef]]) -> list
     return [by_id[i] for i in order if i in by_id]
 
 
-def ordered_options(att: Attempt, q: QuestionRef) -> list[dict]:
-    order = (att.option_orders or {}).get(str(q.id))
+def ordered_options(att: Attempt | None, q: QuestionRef) -> list[dict]:
+    """`att` is None for a paper nobody is sitting: the question's own option order (exam-runner ADR-04)."""
+    order = (att.option_orders or {}).get(str(q.id)) if att else None
     opts = q.options or []
     if not order:
         return opts
@@ -52,7 +53,7 @@ def ordered_options(att: Attempt, q: QuestionRef) -> list[dict]:
     return [by_label[lab] for lab in order if lab in by_label]
 
 
-def label_maps(att: Attempt, q: QuestionRef) -> tuple[dict, dict]:
+def label_maps(att: Attempt | None, q: QuestionRef) -> tuple[dict, dict]:
     """Shuffled MCQ options are shown as A, B, C, D in their new order: (display→original, original→display)."""
     if q.type != "mcq":
         return {}, {}
@@ -61,21 +62,21 @@ def label_maps(att: Attempt, q: QuestionRef) -> tuple[dict, dict]:
     return to_orig, {v: k for k, v in to_orig.items()}
 
 
-def display_options(att: Attempt, q: QuestionRef) -> list[dict]:
+def display_options(att: Attempt | None, q: QuestionRef) -> list[dict]:
     opts = ordered_options(att, q)
     if q.type != "mcq":
         return opts
     return [{**o, "label": DISPLAY[i]} for i, o in enumerate(opts)]
 
 
-def to_display(att: Attempt, q: QuestionRef, value: dict | None) -> dict | None:
+def to_display(att: Attempt | None, q: QuestionRef, value: dict | None) -> dict | None:
     """A response or key in the labels the student sees."""
     if q.type != "mcq" or not value or "key" not in value:
         return value
     return {**value, "key": label_maps(att, q)[1].get(value["key"], value["key"])}
 
 
-def from_display(att: Attempt, q: QuestionRef, response):
+def from_display(att: Attempt | None, q: QuestionRef, response):
     """A student's MCQ choice back in the question's original labels ("?" for a label that is not shown)."""
     if q.type == "mcq" and isinstance(response, dict) and "key" in response:
         return {**response, "key": label_maps(att, q)[0].get(response["key"], "?")}
@@ -133,12 +134,18 @@ def expired(att: Attempt, now: datetime) -> bool:
     return att.status == "in_progress" and now > att.deadline_at + GRACE
 
 
+def graded(q: QuestionRef, response: dict | None, points: float) -> scoring.Grade:
+    """One response against the question's current key; an empty essay scores 0 instead of waiting for a teacher.
+    A trial run grades through this too (exam-runner ADR-01), so it cannot score differently from a real sitting."""
+    if q.type == "essay" and not (response or {}).get("text"):
+        return scoring.Grade(0.0, points, False, 0.0)  # nothing to grade
+    return scoring.grade(q.type, q.answer, response, points)
+
+
 def grade_answer(ans: AttemptAnswer, q: QuestionRef, points: float) -> None:
-    """Grade against the current key and keep that key with the answer; an empty essay scores 0."""
-    g = scoring.grade(q.type, q.answer, ans.response, points)
+    """Grade against the current key and keep that key with the answer."""
+    g = graded(q, ans.response, points)
     ans.key_snapshot, ans.max_points, ans.points, ans.is_correct = q.answer, points, g.points, g.is_correct
-    if q.type == "essay" and not (ans.response or {}).get("text"):
-        ans.points, ans.is_correct = 0.0, False  # nothing to grade
 
 
 def close(att: Attempt, answers: list[AttemptAnswer], max_total: float, now: datetime, auto: bool) -> None:

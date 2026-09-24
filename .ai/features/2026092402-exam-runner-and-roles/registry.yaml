@@ -98,7 +98,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 2
-    status: todo
+    status: in_progress
     depends_on: []
     blocks: []
     verifies:
@@ -125,16 +125,19 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 3
-    status: in_progress
+    status: done
     depends_on: []
     blocks:
       - T-03-02
     verifies:
       - AC-04
     touches:
-      - apps/api/app/modules/assessment/application/queries   # new
+      - apps/api/app/modules/assessment/application/queries/assignment_paper.py   # new
+      - apps/api/app/modules/assessment/application/queries/get_attempt.py   # now goes through runner_question
+      - apps/api/app/modules/assessment/application/common.py   # runner_question, shared with GET /attempts/{id}
+      - apps/api/app/modules/assessment/domain/services/attempt_rules.py   # the display helpers take no attempt
       - apps/api/app/modules/assessment/interface/router.py   # new
-      - apps/api/app/modules/assessment/interface/schemas.py   # new
+      - apps/api/app/modules/assessment/interface/deps.py   # new
   - id: T-03-02
     uow: UOW-03
     title: 'POST /assignments/{id}/trial — chấm mà không ghi'

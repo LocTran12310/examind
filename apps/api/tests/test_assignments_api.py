@@ -1,3 +1,8 @@
+import uuid
+
+from sqlalchemy import select
+
+from app.modules.assessment.domain.entities import ExamQuestion
 from tests.exam_helpers import assign, exam_with_questions, klass_with_student, login
 
 
@@ -43,6 +48,26 @@ def test_the_student_side_endpoints_answer_staff(client, db):
     home = s.get("/api/me/assignments").json()
     assert [x["state"] for x in home] == ["open"]  # the student is untouched
     assert s.post(f"/api/assignments/{a['id']}/start").status_code == 200
+
+
+def test_the_paper_is_the_student_view_with_nothing_behind_it(client, db):
+    """exam-runner AC-04: the same stripping as the runner (ADR-04), the exam's order, no timer and no attempt."""
+    admin, exam = exam_with_questions(client, db)
+    klass, _ = klass_with_student(client, db, admin)
+    a = assign(client, exam["id"], klass["id"], title="Kiểm tra giữa kỳ")
+    paper = client.get(f"/api/assignments/{a['id']}/paper").json()
+    assert paper["title"] == "Kiểm tra giữa kỳ" and paper["assignment_id"] == a["id"]
+    assert paper["max_score"] == exam["total_points"] and "deadline_at" not in paper and "id" not in paper
+    assert len(paper["questions"]) == exam["question_count"]
+    assert all(q["answer"] is None and q["solution"] == "" for q in paper["questions"])
+    assert all("is_true" not in o for q in paper["questions"] for o in q["options"])
+    assert all(q["response"] is None for q in paper["questions"])
+    by_position = db.scalars(select(ExamQuestion.question_id).where(ExamQuestion.exam_id == exam["id"]).order_by(ExamQuestion.position)).all()
+    assert [q["id"] for q in paper["questions"]] == [str(i) for i in by_position]  # the exam's order, never shuffled
+    assert [q["number"] for q in paper["questions"]] == list(range(1, exam["question_count"] + 1))
+    s = login(client, "trungtama", "hs01")
+    assert s.get(f"/api/assignments/{a['id']}/paper").status_code == 403  # the paper is for whoever set the exam
+    assert client.get(f"/api/assignments/{uuid.uuid4()}/paper").status_code == 404
 
 
 def test_validation_and_permissions(client, db):

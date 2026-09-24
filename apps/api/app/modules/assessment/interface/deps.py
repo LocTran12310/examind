@@ -25,6 +25,7 @@ from app.modules.assessment.application.commands.swap_exam_question import SwapE
 from app.modules.assessment.application.commands.update_assignment import UpdateAssignmentHandler
 from app.modules.assessment.application.commands.update_exam import UpdateExamHandler
 from app.modules.assessment.application.common import Grading
+from app.modules.assessment.application.queries.assignment_paper import AssignmentPaperHandler
 from app.modules.assessment.application.queries.assignment_report import AssignmentReportHandler
 from app.modules.assessment.application.queries.attempt_result import AttemptResultHandler
 from app.modules.assessment.application.queries.get_assignment import GetAssignmentHandler
@@ -171,6 +172,11 @@ def delete_assignment(db: Session = Depends(get_db)) -> DeleteAssignmentHandler:
 
 def my_assignments(db: Session = Depends(get_db)) -> MyAssignmentsHandler:
     return MyAssignmentsHandler(SqlAssignmentRepository(db), SqlAttemptRepository(db), _roster_of(db), utcnow)
+
+
+def assignment_paper(db: Session = Depends(get_db)) -> AssignmentPaperHandler:
+    """No UnitOfWork on purpose: a trial run has nothing to commit (exam-runner ADR-01)."""
+    return AssignmentPaperHandler(SqlAssignmentRepository(db), SqlExamRepository(db), _bank_of(db))
 
 
 def assignment_report(db: Session = Depends(get_db)) -> AssignmentReportHandler:

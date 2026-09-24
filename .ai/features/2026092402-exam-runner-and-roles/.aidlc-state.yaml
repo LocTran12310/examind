@@ -116,3 +116,28 @@ history:
     by: Loc Tran
     reason: Các file lệch đều là việc apps/api đang chạy song song của UOW-03 (T-03-01) trong cùng cây làm việc; T-01-02 chỉ sửa apps/web và các file web đều đã khai trong touches -
     ticket: T-01-02
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-24T12:34:50
+    by: Loc Tran
+    ticket: T-02-01
+  - gate: G4
+    action: scope
+    at: 2026-09-24T12:35:08
+    by: Loc Tran
+    ticket: T-03-01
+  - gate: G4
+    action: scope
+    at: 2026-09-24T12:35:23
+    by: Loc Tran
+    ticket: T-03-01
+  - gate: G4
+    action: evidence
+    at: 2026-09-24T12:35:53
+    by: Loc Tran
+    ticket: T-03-01
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-24T12:35:53
+    by: Loc Tran
+    ticket: T-03-01

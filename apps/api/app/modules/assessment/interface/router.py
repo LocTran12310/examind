@@ -19,6 +19,7 @@ from app.modules.assessment.application.commands.submit_attempt import SubmitAtt
 from app.modules.assessment.application.commands.swap_exam_question import SwapExamQuestion, SwapExamQuestionHandler
 from app.modules.assessment.application.commands.update_assignment import UpdateAssignment, UpdateAssignmentHandler
 from app.modules.assessment.application.commands.update_exam import UpdateExam, UpdateExamHandler
+from app.modules.assessment.application.queries.assignment_paper import AssignmentPaper, AssignmentPaperHandler
 from app.modules.assessment.application.queries.assignment_report import AssignmentReport, AssignmentReportHandler
 from app.modules.assessment.application.queries.attempt_result import AttemptResult, AttemptResultHandler
 from app.modules.assessment.application.queries.get_assignment import GetAssignment, GetAssignmentHandler
@@ -186,6 +187,13 @@ def patch_assignment(aid: uuid.UUID, body: AssignmentPatch, actor: Actor = Depen
 def delete_assignment(aid: uuid.UUID, actor: Actor = Depends(staff_actor), handle: DeleteAssignmentHandler = Depends(deps.delete_assignment)):
     handle(actor, DeleteAssignment(aid))
     return Response(status_code=204)
+
+
+@router.get("/assignments/{aid}/paper")
+def assignment_paper(aid: uuid.UUID, actor: Actor = Depends(staff_actor), handle: AssignmentPaperHandler = Depends(deps.assignment_paper)):
+    """The paper as a student sees it (no keys, no solutions) with no attempt behind it: no timer, no deadline, no
+    attempt id — what a trial run is read from (exam-runner ADR-01)."""
+    return handle(actor, AssignmentPaper(aid))
 
 
 @router.get("/assignments/{aid}/report")
