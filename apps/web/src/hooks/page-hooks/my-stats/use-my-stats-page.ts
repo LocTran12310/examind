@@ -8,8 +8,12 @@ import { useGroupStatsQuery, useTopicStatsQuery } from "@/hooks/react-query/use-
  *  answer facts, and a teacher's practice would land in the organisation's numbers as if a student had sat it. */
 export function useMyStatsPage() {
   const me = useMe();
-  const { data: topics } = useTopicStatsQuery();
-  const { data: types } = useGroupStatsQuery("type");
+  // scoped to the caller on purpose. The stats endpoints narrow to a student automatically and otherwise answer
+  // for the whole organisation — which is what /org/reports wants and the exact opposite of what a page called
+  // "của tôi" may show. Staff reach this page now that roles nest, so the scope has to be said out loud.
+  const mine = { student_id: me.id };
+  const { data: topics } = useTopicStatsQuery(mine);
+  const { data: types } = useGroupStatsQuery("type", mine);
   const { data: mastery } = useMyMasteryQuery();
   const { data: practice } = usePracticeHistoryQuery();
   return { ready: !!(topics && types && mastery), canPractise: me.role === "student",

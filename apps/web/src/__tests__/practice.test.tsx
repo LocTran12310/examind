@@ -22,8 +22,8 @@ describe("adaptive practice UI", () => {
 
   it("history shows why questions were chosen", async () => {
     mockFetch(
-      route("GET", "/api/stats/topics", [{ id: "a", parent_id: null, name: "Đại số", path: "a", depth: 1, level_kind: "strand", points: 1, max_points: 2, answered: 8, ratio: 0.5 }]),
-      route("GET", "/api/stats/groups?by=type", []),
+      route("GET", /\/api\/stats\/topics\?/, [{ id: "a", parent_id: null, name: "Đại số", path: "a", depth: 1, level_kind: "strand", points: 1, max_points: 2, answered: 8, ratio: 0.5 }]),
+      route("GET", /\/api\/stats\/groups\?by=type/, []),
       route("GET", "/api/me/mastery", []),
       route("GET", "/api/me/practice", [{ attempt_id: "a", title: "Đề ôn", status: "submitted", started_at: "2026-09-22T00:00:00Z", submitted_at: "", score10: 6,
       note: null, groups: [{ reason: "Chuyên đề yếu", topic: "Mệnh đề", count: 12 }, { reason: "Ôn lại câu từng làm sai", topic: null, count: 2 }] }]));
