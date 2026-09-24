@@ -16,6 +16,7 @@ from app.modules.ingestion.domain.services.difficulty_rules import (
     DIFFICULTY_TEXT_CHARS,
     difficulty_for,
     difficulty_request,
+    question_text,
     read_difficulty_reply,
 )
 
@@ -123,10 +124,54 @@ def test_a_reply_that_is_not_json_is_a_model_error():
         read_difficulty_reply('{"results": [', {1: "a"})
 
 
+MCQ_OPTIONS = [{"label": "A", "content": "1"}, {"label": "B", "content": "2"},
+               {"label": "C", "content": "3"}, {"label": "D", "content": "4"}]
+
+
+def test_a_multiple_choice_question_is_shown_with_its_options():
+    """Without them the model is asked to solve from scratch a question a student answers by elimination, and the
+    first measurement caught it reading Phần I as two bands harder than the paper's own shape implies."""
+    got = question_text("Giá trị của x là?", "mcq", MCQ_OPTIONS)
+    assert got.splitlines() == ["Giá trị của x là?", "A. 1", "B. 2", "C. 3", "D. 4"]
+
+
+def test_a_true_false_question_is_shown_with_its_statements_but_never_which_are_true():
+    """`is_true` is the answer. A model told the answer is not judging how hard the question is to answer."""
+    options = [{"label": "a", "content": "Hàm số đồng biến", "is_true": True},
+               {"label": "b", "content": "Đồ thị cắt trục hoành", "is_true": False}]
+    got = question_text("Cho hàm số f(x) = x^2.", "true_false", options)
+    assert got.splitlines() == ["Cho hàm số f(x) = x^2.", "a. Hàm số đồng biến", "b. Đồ thị cắt trục hoành"]
+    assert "True" not in got and "is_true" not in got
+
+
+@pytest.mark.parametrize("qtype", ["short_answer", "essay"])
+def test_a_question_whose_options_are_not_the_question_is_sent_as_it_was(qtype):
+    """The stem is the whole question for these, so nothing is added — and a stray options list is not smuggled in."""
+    assert question_text("Tính tích phân.", qtype, MCQ_OPTIONS) == "Tính tích phân."
+
+
+def test_options_that_say_nothing_leave_the_stem_alone():
+    """A paper the splitter could not read options out of still gets a level: the pass must not hand the model a
+    stem with four empty lines under it, which reads as a question with blank choices."""
+    assert question_text("Câu hỏi.", "mcq", []) == "Câu hỏi."
+    assert question_text("Câu hỏi.", "mcq", None) == "Câu hỏi."
+    assert question_text("Câu hỏi.", "mcq", [{"label": "A", "content": ""}, "rác"]) == "Câu hỏi."
+
+
+def test_the_whole_question_shares_one_length_budget():
+    """Stem and options are cut together, because the cut happens in `difficulty_request` on the finished text.
+    A stem long enough to fill the budget leaves no room for its options, and that is the honest failure: the
+    alternative is silently dropping the stem's tail to make space."""
+    long_stem = "y" * (DIFFICULTY_TEXT_CHARS + 100)
+    asked = difficulty_request([(1, question_text(long_stem, "mcq", MCQ_OPTIONS))])
+    assert len(asked.split("Câu 1: ")[1].strip()) == DIFFICULTY_TEXT_CHARS
+    assert "A. 1" not in asked
+
+
 def test_the_request_restates_the_count_and_the_numbers():
     """The lesson of the tagging pass: a small model mirrors the example and answers once for a whole batch unless
     the request says again how many answers it wants and for which questions."""
-    asked = difficulty_request([(3, "Tính đạo hàm"), (4, "x" * 900)])
+    asked = difficulty_request([(3, "Tính đạo hàm"), (4, "x" * (DIFFICULTY_TEXT_CHARS + 300))])
     assert "Trả về đúng 2 phần tử, cho các câu: 3, 4." in asked
     assert "Câu 3: Tính đạo hàm" in asked and "Câu 4: " in asked
     assert len(asked.split("Câu 4: ")[1].strip()) == DIFFICULTY_TEXT_CHARS  # a long question is cut, not sent whole

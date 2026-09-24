@@ -69,8 +69,31 @@ Số phần tử trong "results" phải bằng đúng số câu hỏi được h
 không chắc thì vẫn chọn mức gần nhất. Trả về DUY NHẤT JSON:
 {"results": [{"number": 1, "level": "nb"}, {"number": 2, "level": "vd"}]}."""
 
-DIFFICULTY_BATCH = 10       # questions per model call, as the tagging pass sizes it: what a 7B model still reads whole
-DIFFICULTY_TEXT_CHARS = 600  # of each question; what makes a question hard shows in its first lines
+DIFFICULTY_BATCH = 10        # questions per model call, as the tagging pass sizes it: what a 7B model still reads whole
+DIFFICULTY_TEXT_CHARS = 1200  # of each question, stem and options together — see `question_text`
+
+# The types whose options are part of the question rather than a listing beside it. For everything else the stem
+# is the whole question and there is nothing to add.
+TYPES_WITH_OPTIONS = ("mcq", "true_false")
+
+
+def question_text(stem: str, qtype: str, options: list | None = None) -> str:
+    """One question as the model is shown it: the stem, and for `TYPES_WITH_OPTIONS` the options under it.
+
+    The first measurement of this pass sent the stem alone, and the two signals came apart by two bands or more
+    on 47 of Phần I's 208 questions — with the model reading the question as *harder* in 42 of those 47. That is
+    what a model judging a multiple-choice question without its options would do: asked to solve from scratch
+    rather than to pick from four, it never sees the three distractors that make the answer obvious. A true/false
+    question is the starker case — its stem is often only the setting, and all four statements are the work.
+
+    **Which option is correct is never sent.** A model told the answer is not judging how hard the question is to
+    answer any more, and `is_true` is the one field in a true/false option that would tell it.
+    """
+    if qtype not in TYPES_WITH_OPTIONS:
+        return stem
+    lines = [f"{o.get('label')}. {o.get('content')}".strip()
+             for o in (options or []) if isinstance(o, dict) and o.get("content")]
+    return "\n".join([stem, *lines]) if lines else stem
 
 # A small model answers in the words of the prompt as often as in its codes, and "vận dụng cao" ends with the whole
 # of "vận dụng" — so the reply is matched against the full label, never a prefix of one.

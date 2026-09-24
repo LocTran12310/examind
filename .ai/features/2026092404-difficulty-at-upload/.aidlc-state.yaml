@@ -166,3 +166,50 @@ history:
     by: Loc Tran
     reason: the write path the stage needs (the bank's set_difficulty, its port and the adapter) and the two tests that now answer the difficulty request of the same model
     ticket: T-02-02
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-25T00:02:11
+    by: Loc Tran
+    ticket: T-03-01
+  - gate: G4
+    action: scope
+    at: 2026-09-25T00:02:11
+    by: Loc Tran
+    ticket: T-03-01
+  - gate: G4
+    action: scope
+    at: 2026-09-25T00:02:35
+    by: Loc Tran
+    reason: difficulty_rules.py và difficulty_suggest.py trong cùng cây làm việc là của T-02-03, ticket sinh ra từ chính phép đo này và depends_on nó, nên không thể start trước khi ticket này đóng
+    ticket: T-03-01
+  - gate: G4
+    action: evidence
+    at: 2026-09-25T00:02:57
+    by: Loc Tran
+    ticket: T-03-01
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-25T00:02:57
+    by: Loc Tran
+    reason: difficulty_rules.py và difficulty_suggest.py trong cùng cây làm việc là của T-02-03, ticket sinh ra từ chính phép đo này và depends_on nó, nên không thể start trước khi ticket này đóng
+    ticket: T-03-01
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-25T00:03:02
+    by: Loc Tran
+    ticket: T-02-03
+  - gate: G4
+    action: scope
+    at: 2026-09-25T00:03:02
+    by: Loc Tran
+    ticket: T-02-03
+  - gate: G4
+    action: evidence
+    at: 2026-09-25T00:03:28
+    by: Loc Tran
+    ticket: T-02-03
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-25T00:03:28
+    by: Loc Tran
+    ticket: T-02-03

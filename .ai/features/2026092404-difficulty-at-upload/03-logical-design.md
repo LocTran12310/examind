@@ -65,6 +65,49 @@ thuận giữa model và quy tắc vị trí, phân bố mỗi bên, và — ở
 đúng thật. Con số ấy được đọc **trước khi** chốt hằng số "ai dẫn", và được ghi vào review cuối. Đây là đúng cách
 F15 đã làm với chuyên đề, và là lý do lần ấy phát hiện prompt sai khiến độ phủ 18%.
 
+**Kết quả đo, 2026-09-24, `trungtama`, 381 câu dùng được, `qwen2.5:7b`.** Hai lượt: lượt đầu gửi đề trần, lượt
+sau gửi kèm phương án (T-02-03, thay đổi sinh ra từ chính lượt đầu).
+
+| | đề trần | kèm phương án |
+| --- | --- | --- |
+| model đọc được | 380/381 | 381/381 |
+| trùng khớp với quy tắc | 35% | 36% |
+| lệch một bậc | 46% | 46% |
+| lệch ≥ hai bậc | 74 (19%) | 68 (18%) |
+| phân bố model | nb 17 · th 30 · vd 46 · vdc 7 | nb 17 · th 27 · **vd 51** · vdc 5 |
+| cả lượt | 308s | 366s |
+
+Chỗ lệch ≥ hai bậc **không rải đều mà dồn theo Phần, mỗi Phần một hướng** — đây là thứ con số tổng giấu đi:
+
+| | đề trần | kèm phương án |
+| --- | --- | --- |
+| Phần I (209) | 47 — model cao hơn 42 | 49 — model cao hơn 38, thấp hơn 11 |
+| Phần II (70) | 9 — 3 cao, 6 thấp | **2** |
+| Phần III (100) | 17 — thấp hơn **17/17** | 16 — thấp hơn **16/16** |
+
+Ba điều đọc được, và một điều đoán sai:
+
+1. **Phần II là nơi phương án quyết định** (9 → 2). Đề của câu đúng/sai thường chỉ là bối cảnh; bốn mệnh đề mới
+   là câu hỏi. Gửi thiếu chúng là gửi thiếu câu hỏi.
+2. **Phần III lệch một chiều tuyệt đối, và đó là trần của quy tắc chứ không phải lỗi model.**
+   `BY_PART["3"] = ((3,"vd"), (6,"vdc"))` không có cách nào gán `nb` hay `th`, nên một câu trả lời ngắn thực sự
+   dễ là thứ quy tắc không với tới được. 0 câu lệch lên trên là hệ quả tất yếu của việc đụng trần.
+3. **Giả thuyết về Phần I sai.** Đã đoán 47 câu lệch ở Phần I là do model không thấy phương án. Cho nó thấy rồi:
+   tổng không giảm (47 → 49). Cơ chế có thật — hướng "model chấm khó hơn" tụt 42 → 38 — nhưng số câu "model chấm
+   dễ hơn hai bậc" tăng 5 → 11: phương án làm model thấy câu dễ đi, chỉ là nó **đi quá** quy tắc chứ không hội tụ
+   về quy tắc. Hai bên bất đồng về Phần I vì một lý do khác, chưa biết là gì.
+
+**Chốt: model dẫn ở đâu nó trả lời được, quy tắc lấp phần còn lại — tức giữ nguyên ADR-02.** Không dựa vào độ
+chính xác, vì chưa đo được: `difficulty_for(part, number, type)` là hàm thuần của ba thứ đã nằm sẵn trên câu hỏi,
+nên nhãn của quy tắc không mang một bit thông tin nào hệ thống chưa có — câu số 3 và số 5 của Phần I vĩnh viễn
+cùng mức bất kể nội dung. Nhãn của model là nhãn duy nhất có thông tin mới. Việc của quy tắc là bảo đảm không câu
+nào trống mức, không phải làm tín hiệu chính.
+
+**Cái chốt này chưa được kiểm chứng, và phải nói thẳng ra:** mục 4 của báo cáo — đối chiếu tỉ lệ làm đúng thật —
+có **mẫu 0 câu**. Cả cơ sở dữ liệu có 1 dòng `answer_facts`. Đồng thuận không phải độ chính xác: hai tín hiệu
+cùng sai một kiểu vẫn cho đồng thuận cao. Phải đo lại khi học sinh đã làm bài thật, và việc phải theo dõi là
+model dồn về `vd` ngày một đậm (46% → 51%); script tự cảnh báo ở ngưỡng 70%.
+
 ### ADR-04 — `manual` là bất khả xâm phạm
 **Status:** accepted
 Không lượt tách lại, không lệnh điền, không lượt model nào được đổi một mức độ mang dấu `manual`. Một giáo viên

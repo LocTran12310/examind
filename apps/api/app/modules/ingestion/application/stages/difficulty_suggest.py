@@ -17,7 +17,7 @@ from app.modules.ingestion.application.run import IngestRun
 from app.modules.ingestion.application.stages.topic_suggest import Stored
 from app.modules.ingestion.domain.errors import LlmError
 from app.modules.ingestion.domain.ports import AiModelRepository, ChatModels, QuestionBank
-from app.modules.ingestion.domain.services.difficulty_rules import difficulty_for
+from app.modules.ingestion.domain.services.difficulty_rules import difficulty_for, question_text
 from app.modules.ingestion.domain.services.splitter import ParsedQuestion
 
 
@@ -34,7 +34,7 @@ class DifficultySuggester:
             return {}
         model = DifficultyModelPass(self.chat, m)
         out: dict[uuid.UUID, str] = {}
-        for batch in model.batches([(q.id, p.number, q.stem) for p, q in rows]):
+        for batch in model.batches([(q.id, p.number, question_text(q.stem, p.type, q.options)) for p, q in rows]):
             try:
                 out.update(model.ask(batch))
             except LlmError as exc:

@@ -68,6 +68,17 @@ t(id="T-02-02", uow="UOW-02", title="Một bước mới trong pipeline", layer=
   context="ADR-02, ADR-03. Model dẫn, quy tắc lấp, độ phủ 100%.",
   done_when=["Không câu nào rỗng sau khi tách", "Model hỏng chỉ là cảnh báo",
              "Bộ 18 đề chuẩn không đổi một con số"])
+t(id="T-02-03", uow="UOW-02", title="Câu trắc nghiệm và đúng/sai gửi kèm phương án", layer="api", estimate="3h",
+  depends_on=["T-03-01"], verifies=["AC-02"], assumptions=["A-05"],
+  tests=[f"{API}/tests/unit/test_ingestion_rules.py", f"{API}/tests/test_ingest_pipeline.py"],
+  touches=[f"{M}/ingestion/domain/services/difficulty_rules.py",
+           f"{M}/ingestion/application/stages/difficulty_suggest.py",
+           f"{API}/scripts/difficulty_report.py"],
+  context="T-03-01 đo ra: Phần I lệch ≥2 bậc 47/208, model cao hơn ở 42/47. Prompt chỉ gửi stem, nên model chấm "
+          "một câu trắc nghiệm như câu tự giải — không thấy ba phương án nhiễu làm nó dễ đi. Đáp án đúng vẫn "
+          "không gửi: nó nói mức độ không còn là mức độ nữa.",
+  done_when=["Phương án nằm trong prompt, is_true thì không", "Câu không có phương án giữ nguyên hình cũ",
+             "Chạy lại báo cáo và ghi lại con số mới"])
 t(id="T-03-01", uow="UOW-03", title="Báo cáo đo hai tín hiệu", layer="api", estimate="3h",
   depends_on=["T-02-01"], verifies=["AC-02"], assumptions=["A-05"],
   tests=[f"{API}/tests/unit/test_ingestion_rules.py"],
