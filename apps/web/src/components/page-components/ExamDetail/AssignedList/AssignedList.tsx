@@ -20,8 +20,12 @@ export function AssignedList({ assigned }: { assigned: Assignment[] }) {
                 {a.classes.join(", ")} · {formatDateTime(a.open_at)} → {formatDateTime(a.close_at)}
               </span>
             </span>
-            <span className="text-xs text-muted-foreground">
+            <span className="flex shrink-0 items-center gap-3 text-xs text-muted-foreground">
               {a.submitted}/{a.students} đã nộp
+              {/* the only way into a trial run: this is the one list in the app that points at an assignment (AC-04) */}
+              <Link href={`/org/assignments/${a.id}/trial`} className="whitespace-nowrap text-primary hover:underline" title="Tự làm thử đề này — không ghi lại gì">
+                Làm thử
+              </Link>
             </span>
           </li>
         ))}

@@ -164,7 +164,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-01-02
       - T-03-02
@@ -173,7 +173,16 @@ ticket:
       - AC-04
       - AC-05
     touches:
-      - apps/web/src/components/page-components/ExamDetail/AssignedList/AssignedList.tsx   # new
-      - apps/web/src/app/(app)/org/assignments/[id]/trial   # new
-      - apps/web/src/services/assignment.service.ts   # new
-      - apps/web/src/hooks/react-query/use-query-assignment.ts   # new
+      - apps/web/src/components/page-components/ExamDetail/AssignedList/AssignedList.tsx   # lối vào "Làm thử
+      - apps/web/src/components/page-components/ExamTrial/ExamTrialPage.tsx   # new
+      - apps/web/src/app/(app)/org/assignments/[id]/trial/page.tsx   # new
+      - apps/web/src/hooks/page-hooks/exam-trial/use-exam-trial-page.ts   # new
+      - apps/web/src/components/page-components/ExamRunner/Runner/Runner.tsx   # prop trial
+      - apps/web/src/hooks/page-hooks/exam-runner/use-exam-runner.ts   # chế độ chạy thử
+      - apps/web/src/components/page-components/AttemptResult/ResultView/ResultView.tsx   # result.id có thể null
+      - apps/web/src/services/assignment.service.ts   # paper + trial
+      - apps/web/src/hooks/react-query/use-query-assignment.ts   # paper + trial
+      - apps/web/src/interfaces/assignment.interface.ts   # AssignmentPaper
+      - apps/web/src/interfaces/attempt.interface.ts   # RunnerPaper, AttemptResult.id
+      - apps/web/src/dtos/assignment.dto.ts   # TrialBody
+      - apps/web/src/constants/react-query-key.constant.ts   # ASSIGNMENT_KEYS.PAPER

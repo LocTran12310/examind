@@ -3,7 +3,7 @@
 # Ticket graph — 2026092402-exam-runner-and-roles
 
 - Units of Work: **4**
-- Tickets: **7** (6 done)
+- Tickets: **7** (7 done)
 - Total effort: **2.8d**
 - Critical path: **1.4d** across 3 tickets
 - Theoretical minimum duration with unlimited parallelism: **1.4d**
@@ -37,7 +37,7 @@ graph LR
     T_03_02["✓ T-03-02<br/>POST /assignments/{id}/trial — chấm mà không ghi"]
   end
   subgraph UOW_04["UOW-04 · Giáo viên ngồi vào ghế học sinh"]
-    T_04_01["T-04-01<br/>Làm thử từ đề đã giao"]
+    T_04_01["✓ T-04-01<br/>Làm thử từ đề đã giao"]
   end
   T_01_01 --> T_01_02
   T_03_01 --> T_03_02
@@ -76,4 +76,4 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-02-02 | UOW-02 | api | feature | 3h | — | AC-07 | done |
 | T-03-01 | UOW-03 | api | feature | 3h | — | AC-04 | done |
 | T-03-02 | UOW-03 | api | feature | 4h | T-03-01 | AC-05 | done |
-| T-04-01 | UOW-04 | web | feature | 4h | T-01-02, T-03-02 | AC-04, AC-05 | todo |
+| T-04-01 | UOW-04 | web | feature | 4h | T-01-02, T-03-02 | AC-04, AC-05 | done |

@@ -112,7 +112,8 @@ export function ResultView({ result, staff }: { result: AttemptResult; staff?: b
             <QuestionView question={q} mode="result" number={i + 1} selected={q.type === "mcq" ? ((q.response ?? {}).key as string) ?? null : null} solutionOpen={!q.is_correct} />
             <YourAnswer q={q} />
             {q.comment && <FormAlert kind="info">Nhận xét: {q.comment}</FormAlert>}
-            {staff && q.type === "essay" && (
+            {/* a trial run has no attempt id, so there is nothing to grade an essay against (exam-runner ADR-01) */}
+            {staff && result.id && q.type === "essay" && (
               <EssayGrader attemptId={result.id} questionId={q.id} max={q.max_points} points={q.points} comment={q.comment} />
             )}
           </article>

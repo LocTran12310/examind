@@ -1,3 +1,4 @@
+import type { RunnerPaper } from "@/interfaces/attempt.interface";
 import type { QuestionType } from "@/interfaces/question.interface";
 import type { AssignmentState, ResultsPolicy } from "@/types/assignment.type";
 import type { AttemptStatus } from "@/types/attempt.type";
@@ -54,4 +55,12 @@ export interface AssignmentReport {
 /** Answer of `POST /assignments/{id}/start`. */
 export interface StartedAttempt {
   attempt_id: string;
+}
+
+/** `GET /assignments/{id}/paper`: the questions as a student sees them (no keys, no solutions) with no attempt
+ *  behind them — what a trial run is sat from. */
+export interface AssignmentPaper extends RunnerPaper {
+  assignment_id: string;
+  exam_id: string;
+  max_score: number;
 }

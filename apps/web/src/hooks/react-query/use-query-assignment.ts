@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient, type UseMutationResult, type UseQueryResult } from "@tanstack/react-query";
 import { ASSIGNMENT_KEYS, ATTEMPT_KEYS } from "@/constants/react-query-key.constant";
-import type { CreateAssignmentBody } from "@/dtos/assignment.dto";
+import type { CreateAssignmentBody, TrialBody } from "@/dtos/assignment.dto";
 import type { SearchBody } from "@/dtos/search.dto";
-import type { Assignment, AssignmentReport, MyAssignment, StartedAttempt } from "@/interfaces/assignment.interface";
+import type { Assignment, AssignmentPaper, AssignmentReport, MyAssignment, StartedAttempt } from "@/interfaces/assignment.interface";
+import type { AttemptResult } from "@/interfaces/attempt.interface";
 import type { RowsQueryOptions, SearchPage } from "@/interfaces/search-page.interface";
 import { invalidate } from "@/lib/common/query-client";
 import { LIMIT_ALL } from "@/lib/common/search-body";
@@ -24,6 +25,17 @@ export function useExamAssignmentsQuery(examId: string): UseQueryResult<Assignme
 
 export function useAssignmentReportQuery(id: string): UseQueryResult<AssignmentReport, Error> {
   return useQuery<AssignmentReport, Error>({ queryKey: ASSIGNMENT_KEYS.REPORT(id), queryFn: () => assignmentService.report(id) });
+}
+
+/** The paper of an assignment, for a trial run: no attempt is started, so nothing changes by reading it. */
+export function useAssignmentPaperQuery(id: string): UseQueryResult<AssignmentPaper, Error> {
+  return useQuery<AssignmentPaper, Error>({ queryKey: ASSIGNMENT_KEYS.PAPER(id), queryFn: () => assignmentService.paper(id) });
+}
+
+/** Grade a trial run. Nothing is invalidated on purpose: a trial leaves no attempt, no answer fact and no report
+ *  entry behind (exam-runner ADR-01), so no cached answer can have moved. */
+export function useTrialMutation(id: string): UseMutationResult<AttemptResult, Error, TrialBody> {
+  return useMutation<AttemptResult, Error, TrialBody>({ mutationFn: (body) => assignmentService.trial(id, body) });
 }
 
 /** The signed-in student's assignments. */

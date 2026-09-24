@@ -7,20 +7,27 @@ import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useExamRunner } from "@/hooks/page-hooks/exam-runner/use-exam-runner";
-import type { AttemptView } from "@/interfaces/attempt.interface";
+import type { RunnerPaper } from "@/interfaces/attempt.interface";
 import { answered } from "@/lib/common/answer";
 import { cardId } from "@/lib/page-libs/exam-runner/card-id";
 import { formatLeft } from "@/lib/page-libs/exam-runner/format-left";
 import { cn } from "@/lib/utils";
+import type { AnswerResponse } from "@/types/attempt.type";
 import { PaperView } from "../PaperView/PaperView";
 import { QuestionCard } from "../QuestionCard/QuestionCard";
 
 /** Which questions the student is looking at; a page reload comes back to "one" on purpose (ADR-03). */
 type ViewMode = "one" | "paper";
 
-/** The exam screen: one question or the whole paper, the navigator, the countdown and "Nộp bài". */
-export function Runner({ view, onFinished }: { view: AttemptView; onFinished: () => void }) {
-  const r = useExamRunner(view, onFinished);
+/**
+ * The exam screen: one question or the whole paper, the navigator, the countdown and "Nộp bài".
+ *
+ * `trial` is the same screen sat by whoever set the exam (AC-04): there is no attempt behind it, so the countdown
+ * and the saved badge have nothing to show and a badge saying so takes their place. The rest is deliberately one
+ * screen and not two — a teacher who checks a paper must see exactly what the class will see.
+ */
+export function Runner({ view, trial, onFinished }: { view: RunnerPaper; trial?: boolean; onFinished: (answers: Record<string, AnswerResponse>) => void }) {
+  const r = useExamRunner(view, onFinished, trial);
   const [mode, setMode] = useState<ViewMode>("one");
   const q = r.q;
   /** The navigator moves the current question in both modes; on the whole paper it also brings the card up. */
@@ -38,12 +45,20 @@ export function Runner({ view, onFinished }: { view: AttemptView; onFinished: ()
           <ToggleGroupItem value="one">Một câu</ToggleGroupItem>
           <ToggleGroupItem value="paper">Toàn đề</ToggleGroupItem>
         </ToggleGroup>
-        <span className={cn("font-mono text-lg", r.left < 60_000 ? "text-destructive" : "text-foreground")} data-testid="timer">
-          {formatLeft(r.left)}
-        </span>
-        {r.unsaved > 0 ? <ToneBadge tone="amber">Chưa lưu {r.unsaved}</ToneBadge> : <ToneBadge tone="green">Đã lưu</ToneBadge>}
+        {r.left !== null && (
+          <span className={cn("font-mono text-lg", r.left < 60_000 ? "text-destructive" : "text-foreground")} data-testid="timer">
+            {formatLeft(r.left)}
+          </span>
+        )}
+        {trial ? (
+          <ToneBadge tone="amber">Chạy thử · không ghi lại gì</ToneBadge>
+        ) : r.unsaved > 0 ? (
+          <ToneBadge tone="amber">Chưa lưu {r.unsaved}</ToneBadge>
+        ) : (
+          <ToneBadge tone="green">Đã lưu</ToneBadge>
+        )}
         <Button onClick={() => r.setConfirming(true)} disabled={r.closed}>
-          Nộp bài
+          {trial ? "Chấm thử" : "Nộp bài"}
         </Button>
       </div>
       {r.error && (
@@ -86,15 +101,16 @@ export function Runner({ view, onFinished }: { view: AttemptView; onFinished: ()
           </div>
         </aside>
       </div>
-      <FormDialog open={r.confirming} title="Nộp bài?" onOpenChange={(o) => !o && r.setConfirming(false)}>
+      <FormDialog open={r.confirming} title={trial ? "Chấm bản chạy thử?" : "Nộp bài?"} onOpenChange={(o) => !o && r.setConfirming(false)}>
         <p className="mb-4 text-sm">
-          {r.unanswered ? `Bạn còn ${r.unanswered} câu chưa làm. ` : ""}Sau khi nộp sẽ không sửa được nữa.
+          {r.unanswered ? `Bạn còn ${r.unanswered} câu chưa làm. ` : ""}
+          {trial ? "Bản chạy thử được chấm ngay và không ghi lại gì." : "Sau khi nộp sẽ không sửa được nữa."}
         </p>
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => r.setConfirming(false)}>
             Làm tiếp
           </Button>
-          <Button onClick={() => void r.submitNow()}>Nộp bài</Button>
+          <Button onClick={() => void r.submitNow()}>{trial ? "Chấm thử" : "Nộp bài"}</Button>
         </div>
       </FormDialog>
     </div>

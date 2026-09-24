@@ -8,8 +8,19 @@ export interface AttemptQuestion extends Question {
   response: AnswerResponse;
 }
 
+/** What the runner works on. An attempt fills in the whole of it; a trial run's paper has a title and questions and
+ *  nothing else — no attempt to save to, no deadline, no server clock (exam-runner ADR-01). */
+export interface RunnerPaper {
+  id?: string;
+  status?: AttemptStatus;
+  deadline_at?: string;
+  server_now?: string;
+  title: string;
+  questions: AttemptQuestion[];
+}
+
 /** `GET /attempts/{id}`: what the runner needs; `server_now` sets the countdown on the server clock. */
-export interface AttemptView {
+export interface AttemptView extends RunnerPaper {
   id: string;
   title: string;
   status: AttemptStatus;
@@ -32,9 +43,10 @@ export interface ResultQuestion extends ParsedQuestion {
   comment: string | null;
 }
 
-/** `GET /attempts/{id}/result`; `hidden` with a `reason` when the policy keeps answers back. */
+/** `GET /attempts/{id}/result`; `hidden` with a `reason` when the policy keeps answers back.
+ *  `id` is null for a trial run: it is graded in memory and there is no attempt to point at (exam-runner ADR-01). */
 export interface AttemptResult {
-  id: string;
+  id: string | null;
   title: string;
   status: string;
   submitted_at: string | null;

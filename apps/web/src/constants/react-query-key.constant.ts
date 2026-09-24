@@ -141,6 +141,7 @@ export const ASSIGNMENT_KEYS = {
   ALL: ["assignments"] as const,
   SEARCH: (body: unknown) => ["assignments", "search", body] as const,
   REPORT: (id: string) => ["assignments", "report", id] as const,
+  PAPER: (id: string) => ["assignments", "paper", id] as const,
   MINE: ["assignments", "mine"] as const,
 };
 
