@@ -5,7 +5,7 @@ slug: 2026092402-exam-runner-and-roles
 profile: none
 created: 2026-09-24T12:17:13
 ruleset: 7
-current_gate: G3
+current_gate: G5
 history:
   - gate: G0
     action: passed
@@ -201,3 +201,13 @@ history:
     at: 2026-09-24T13:22:07
     by: Loc Tran
     ticket: T-04-01
+  - gate: G4
+    action: passed
+    at: 2026-09-24T14:01:56
+    by: Loc Tran
+    evidence: every done ticket has a passing verification run; all 7 tickets done, all UoW checklists ticked
+  - gate: G5
+    action: passed
+    at: 2026-09-24T14:01:56
+    by: Loc Tran
+    evidence: assumptions resolved, ADRs settled, graph valid

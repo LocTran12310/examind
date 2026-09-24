@@ -43,6 +43,17 @@ dữ liệu mà `.ai/e2e/teaching-loop` dùng, và `python3 scripts/e2e_teardown
 - **Học sinh nộp bài.** Không bước nào nộp: nộp sinh `answer_facts` thật trên tổ chức thật, và F20 không có gì cần
   chứng minh ở đó. Một lượt làm dở sẽ bị worker quét và không để lại fact nào.
 
+## Bằng chứng này không gác cổng, và đây là lý do
+
+`evidence_check.py` đòi **mọi** acceptance criterion phải có ảnh ở **mọi** environment được đánh dấu bắt buộc.
+Tính năng này trải trên hai vai, nên điều đó không thể đúng: "giáo viên thấy mục của học sinh" không kiểm được
+khi đang là học sinh, và "chế độ toàn đề lưu được câu trả lời" không kiểm được khi đang là giáo viên. Tôi đã thử
+bật cờ ấy lên cho `e2e-teacher` và `e2e-hs01`: công cụ lập tức đòi AC-05, AC-06 và AC-07 ở `e2e-hs01`, thứ không
+cách nào dựng ra được.
+
+Nên hai environment ấy để `required: false`, và bằng chứng ở đây **được ghi và được đọc** chứ không được máy ép.
+Cái chốt còn lại là lời khẳng định rằng chúng đã được đọc thật — 20/20 ảnh, từng tấm một.
+
 ## Notes
 
 `no-text=Câu sau` ở S3 là cách nói "đây không còn là chế độ một câu": nút chuyển câu chỉ tồn tại ở chế độ ấy. Ngược

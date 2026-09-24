@@ -846,3 +846,50 @@ hệt một bộ lọc không khớp gì, cho tới lúc nó khớp mọi thứ.
 
 **Ngoài phạm vi, nói rõ trong bản spec.** Tổng quan theo khối — anh chốt bỏ, và nó **chưa tồn tại** chứ không
 phải chưa test. Tự luận — chuẩn THPT 2025 không có. Hai chính sách xem kết quả còn lại — cần bài giao đã đóng.
+
+## 28. F20 `2026092402-exam-runner-and-roles` (2026-09-24)
+Bốn việc anh nêu sau khi xem vòng chạy end-to-end: màn làm bài nhảy layout, chỉ xem được một câu, giáo viên không
+thử được đề mình giao, và vai trò đang phẳng thay vì lồng nhau.
+
+**Layout nhảy — một dòng CSS.** `Runner` là `mx-auto max-w-5xl` bên trong `<main class="flex flex-col">`. Trên một
+flex item, `margin-inline: auto` **huỷ `align-items: stretch`**, nên bề rộng rơi về shrink-to-fit — và "fit" là bề
+rộng của đúng câu đang hiện. Thêm `w-full` là xong. Soát cả app: chỉ mình `Runner` dính; hai chỗ `mx-auto` còn lại
+nằm trong block flow bình thường. Ảnh S1/S2 là phép đo: một câu trắc nghiệm bốn phương án và một câu trả lời ngắn,
+khung ở x≈337–1122 và bảng câu ở x≈1142–1358 trong **cả hai**, chỉ chiều cao đổi.
+
+**Toàn đề.** Nút "Một câu / Toàn đề" trong thanh trên. Cả hai chế độ render cùng một `QuestionCard`, nên chúng
+không thể lệch nhau. Trả lời một câu ở chế độ toàn đề làm câu đó thành câu hiện tại — nhờ vậy đồng hồ từng câu vẫn
+đo thứ có thật và bấm về "Một câu" là rơi đúng câu vừa làm.
+
+**Chạy thử (ADR-01).** Hai endpoint không ghi gì: `GET /assignments/{id}/paper` và `POST /assignments/{id}/trial`.
+Không attempt, không `answer_facts`, không mastery, không `UnitOfWork` để mà commit. Phương án kia — attempt thật
+có cờ `trial` — bắt mọi chỗ tổng hợp phải nhớ lọc, và quên một chỗ là sai số liệu không ai thấy. Test HTTP cho một
+học sinh thật làm và nộp **trước**, để các con số khác 0 và có thứ để làm hỏng, rồi đếm bốn bảng và đọc lại toàn bộ
+JSON báo cáo quanh lần chạy thử: tất cả giống hệt. ADR-04 được tôn trọng bằng cách rút chung phần tước đáp án, chứ
+không copy — hai bản sao sẽ lệch, và ngày chúng lệch là ngày đáp án rò ra một đường.
+
+**Vai trò lồng nhau (ADR-02).** HS ⊂ GV ⊂ Admin, khai một chỗ. Đếm thật: học sinh 2 mục, giáo viên 14, quản trị 16,
+super admin 18. Hằng `STAFF` co từ `["org_admin","teacher"]` xuống `["teacher"]` — chính việc co được đó chứng minh
+mục mới từ nay chỉ cần khai một vai trò.
+
+**Ba lỗi bắt được sau khi hai agent giao việc, đáng ghi hơn phần còn lại**
+1. **Hai nửa gặp nhau ở một chỗ mỗi bên chỉ thấy một nửa.** Thanh điều hướng cho giáo viên thấy "Tiến độ của tôi",
+   còn ba endhpoint phía sau vẫn chặn `role != "student"` → bấm vào là 403. Ba endpoint đó chỉ **đọc** của chính
+   người gọi nên mở ra; nhưng nút **"Tạo đề ôn tập" thì không**, và đây là chỗ quy tắc lồng nhau dừng lại: nó tạo
+   lượt làm bài thật cùng `answer_facts` thật, nên bài ôn của giáo viên sẽ nằm trong số liệu của trung tâm như thể
+   một học sinh đã làm.
+2. **Ảnh chụp lúc verify bắt được một lỗi số liệu.** Trang "Tiến độ của tôi" của giáo viên hiện 100% trên hai
+   chuyên đề — không phải của họ. `/stats/topics` tự thu hẹp về một học sinh khi người gọi là học sinh, còn lại thì
+   trả lời cho **cả tổ chức**: đúng thứ `/org/reports` cần và đúng thứ ngược lại với một trang tên là "của tôi".
+   Trang giờ nói rõ phạm vi bằng id của chính người gọi. Lỗi này chỉ lộ ra vì vai trò lồng nhau mở trang ấy cho
+   nhân viên.
+3. **Một fake port yếu trong test.** `practice_attempts` trả cùng một danh sách cho mọi người gọi, nên nó không thể
+   hiện được điều đáng khẳng định nhất: handler hỏi về **chính người gọi**. Giờ nó khoá theo học sinh như bản thật.
+
+**Bằng chứng này không gác cổng, và tôi nói rõ thay vì giấu.** `evidence_check` đòi mọi AC phải có ảnh ở mọi
+environment bắt buộc — không thể đúng với một tính năng trải trên hai vai. Tôi đã thử bật cờ: công cụ lập tức đòi
+AC-05, AC-06, AC-07 ở phiên học sinh, thứ không cách nào dựng ra. Nên hai environment để `required: false`, ảnh
+được ghi và **được đọc** — 20/20, từng tấm — và cái chốt còn lại là lời khẳng định ấy trung thực.
+
+**Kiểm chứng.** API 498 → **504 passed, 1 skipped**; web 216 → **231 passed** (54 file); ruff và 4 import contract
+xanh. Trình duyệt: 10 bước × 2 vai × 2 viewport, 20/20.
