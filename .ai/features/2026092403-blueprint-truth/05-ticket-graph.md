@@ -3,7 +3,7 @@
 # Ticket graph — 2026092403-blueprint-truth
 
 - Units of Work: **2**
-- Tickets: **4** (3 done)
+- Tickets: **4** (4 done)
 - Total effort: **1.2d**
 - Critical path: **6h** across 2 tickets
 - Theoretical minimum duration with unlimited parallelism: **6h**
@@ -28,7 +28,7 @@ graph LR
   end
   subgraph UOW_02["UOW-02 · Bỏ nhãn xếp hạng, và nút chế độ xem có icon"]
     T_02_01["✓ T-02-01<br/>Bỏ nhãn xếp hạng ở ba màn"]
-    T_02_02["T-02-02<br/>Nút chế độ xem có icon và tooltip"]
+    T_02_02["✓ T-02-02<br/>Nút chế độ xem có icon và tooltip"]
   end
   T_01_01 --> T_01_02
 ```
@@ -60,4 +60,4 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-01-01 | UOW-01 | web | feature | 4h | — | AC-01, AC-02 | done |
 | T-01-02 | UOW-01 | web | feature | 2h | T-01-01 | AC-03 | done |
 | T-02-01 | UOW-02 | web | feature | 2h | — | AC-04 | done |
-| T-02-02 | UOW-02 | web | feature | 2h | — | AC-05 | todo |
+| T-02-02 | UOW-02 | web | feature | 2h | — | AC-05 | done |

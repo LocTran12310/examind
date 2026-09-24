@@ -118,6 +118,19 @@ describe("exam runner", () => {
     expect(screen.getByTestId("exam-question")).toHaveTextContent("Câu hỏi số 3");
   });
 
+  it("each reading mode carries an icon and a tooltip, and still says which mode it is (AC-05)", async () => {
+    mockFetch(() => ({ body: {} }));
+    renderWithQuery(<Runner view={view()} onFinished={() => {}} />);
+    const one = screen.getByRole("radio", { name: "Một câu" }), paper = screen.getByRole("radio", { name: "Toàn đề" });
+    expect(one.querySelector("svg")).toBeInTheDocument();
+    expect(paper.querySelector("svg")).toBeInTheDocument();
+    // the tooltip sits on the same element as the toggle and must not take the selected look with it
+    expect(one).toHaveAttribute("data-state", "on");
+    expect(paper).toHaveAttribute("data-state", "off");
+    fireEvent.focus(paper);
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Cả đề trên một trang, làm câu nào trước cũng được");
+  });
+
   it("answers any question of the whole paper and the navigator follows (AC-03)", async () => {
     const f = mockFetch((url, init) => (init?.method === "PUT" ? { body: {} } : undefined));
     const scrolled = vi.spyOn(Element.prototype, "scrollIntoView").mockImplementation(() => {});

@@ -1,11 +1,13 @@
 "use client";
 
+import { Rows3, Square } from "lucide-react";
 import { useState } from "react";
 import { FormAlert } from "@/components/common/FormAlert/FormAlert";
 import { FormDialog } from "@/components/common/FormDialog/FormDialog";
 import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useExamRunner } from "@/hooks/page-hooks/exam-runner/use-exam-runner";
 import type { RunnerPaper } from "@/interfaces/attempt.interface";
 import { answered } from "@/lib/common/answer";
@@ -16,8 +18,16 @@ import type { AnswerResponse } from "@/types/attempt.type";
 import { PaperView } from "../PaperView/PaperView";
 import { QuestionCard } from "../QuestionCard/QuestionCard";
 
-/** Which questions the student is looking at; a page reload comes back to "one" on purpose (ADR-03). */
+/** Which questions the student is looking at; a page reload comes back to "one" on purpose (exam-runner ADR-03). */
 type ViewMode = "one" | "paper";
+
+/** The two readings of a paper, each with the icon and the sentence that say what it does (blueprint-truth
+ *  ADR-03). Two bare words in a bar a student meets a handful of times left them to guess; the label stays at
+ *  wide widths and the name a screen reader says is the mode's own, at every width. */
+const MODES: { value: ViewMode; label: string; Icon: typeof Square; hint: string }[] = [
+  { value: "one", label: "Một câu", Icon: Square, hint: "Mỗi lần một câu, có nút Câu trước / Câu sau" },
+  { value: "paper", label: "Toàn đề", Icon: Rows3, hint: "Cả đề trên một trang, làm câu nào trước cũng được" },
+];
 
 /**
  * The exam screen: one question or the whole paper, the navigator, the countdown and "Nộp bài".
@@ -41,10 +51,23 @@ export function Runner({ view, trial, onFinished }: { view: RunnerPaper; trial?:
     <div className="mx-auto w-full max-w-5xl">
       <div className="sticky top-0 z-10 -mx-4 mb-4 flex flex-wrap items-center gap-3 border-b border-border bg-card/95 px-4 py-2 backdrop-blur">
         <span className="min-w-0 flex-1 truncate font-medium">{view.title}</span>
-        <ToggleGroup type="single" variant="outline" size="sm" spacing={0} value={mode} aria-label="Chế độ xem" onValueChange={(v) => v && setMode(v as ViewMode)}>
-          <ToggleGroupItem value="one">Một câu</ToggleGroupItem>
-          <ToggleGroupItem value="paper">Toàn đề</ToggleGroupItem>
-        </ToggleGroup>
+        <TooltipProvider delayDuration={300}>
+          <ToggleGroup type="single" variant="outline" size="sm" spacing={0} value={mode} aria-label="Chế độ xem" onValueChange={(v) => v && setMode(v as ViewMode)}>
+            {MODES.map(({ value, label, Icon, hint }) => (
+              <Tooltip key={value}>
+                <TooltipTrigger asChild>
+                  {/* the trigger writes its own `data-state` over the toggle's, and the selected look hangs on
+                      the toggle's — so the item states which it is instead of letting the tooltip decide */}
+                  <ToggleGroupItem value={value} aria-label={label} data-state={mode === value ? "on" : "off"}>
+                    <Icon />
+                    <span className="hidden sm:inline">{label}</span>
+                  </ToggleGroupItem>
+                </TooltipTrigger>
+                <TooltipContent>{hint}</TooltipContent>
+              </Tooltip>
+            ))}
+          </ToggleGroup>
+        </TooltipProvider>
         {r.left !== null && (
           <span className={cn("font-mono text-lg", r.left < 60_000 ? "text-destructive" : "text-foreground")} data-testid="timer">
             {formatLeft(r.left)}
