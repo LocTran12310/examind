@@ -13,7 +13,7 @@ export function ClassOverview({ rows }: { rows: ClassOverviewRow[] }) {
       <TableHeader>
         <TableRow>
           <TableHead>Học sinh</TableHead>
-          <TableHead>Chuyên đề yếu nhất</TableHead>
+          <TableHead>Mức nắm vững theo chuyên đề (thấp trước)</TableHead>
           <TableHead>Đề ôn cá nhân</TableHead>
         </TableRow>
       </TableHeader>

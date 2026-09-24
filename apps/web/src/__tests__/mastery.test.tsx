@@ -34,5 +34,8 @@ describe("mastery UI", () => {
     );
     expect(screen.getByTestId("ov-an")).toHaveTextContent("Mệnh đề 30%");
     expect(screen.getByTestId("ov-an")).toHaveTextContent("Đã làm");
+    // the column says what the numbers are and how they are ordered, not that a child's topic is the worst (AC-04, ADR-02)
+    expect(screen.getByRole("columnheader", { name: "Mức nắm vững theo chuyên đề (thấp trước)" })).toBeInTheDocument();
+    expect(document.body).not.toHaveTextContent("yếu nhất");
   });
 });

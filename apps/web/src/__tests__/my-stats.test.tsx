@@ -30,5 +30,8 @@ describe("my stats", () => {
     const weak = await screen.findByTestId("mastery");
     expect(weak.textContent?.indexOf("Mệnh đề")).toBeLessThan(weak.textContent?.indexOf("Tập hợp") ?? 0);
     expect(weak).not.toHaveTextContent("Đại số");
+    // the order carries the same information; calling a student's topic "cần ôn nhất" passes a verdict (AC-04, ADR-02)
+    expect(screen.getByRole("heading", { name: "Mức nắm vững (thấp trước)" })).toBeInTheDocument();
+    expect(document.body).not.toHaveTextContent(/yếu nhất|cần ôn nhất/);
   });
 });

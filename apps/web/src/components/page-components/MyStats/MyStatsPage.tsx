@@ -22,7 +22,7 @@ export function MyStatsPage() {
         <div className="space-y-4">
           <PracticeHistory items={p.practice} />
           <Panel>
-            <h2 className="mb-2 font-medium">Mức nắm vững (cần ôn nhất trước)</h2>
+            <h2 className="mb-2 font-medium">Mức nắm vững (thấp trước)</h2>
             <MasteryList rows={p.mastery} limit={8} />
           </Panel>
           <Panel>

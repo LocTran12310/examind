@@ -27,6 +27,9 @@ describe("result view", () => {
     renderWithQuery(<ResultView result={result()} />);
     expect(screen.getByTestId("score10")).toHaveTextContent("5");
     expect(screen.getAllByTestId("topic-row")[0]).toHaveTextContent("Vectơ");
+    // still sorted so the topic to revise is on top, but the screen no longer names it (AC-04, ADR-02)
+    expect(screen.getByText("Theo chuyên đề (tỉ lệ thấp trước)")).toBeInTheDocument();
+    expect(document.body).not.toHaveTextContent("yếu nhất");
     const first = screen.getByTestId("rq-1");
     expect(within(first).getByTestId("option-B")).toHaveAttribute("data-correct", "true");
     expect(within(first).getByTestId("option-C")).toHaveClass("bg-destructive/10");

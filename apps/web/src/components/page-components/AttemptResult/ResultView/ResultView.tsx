@@ -89,7 +89,7 @@ export function ResultView({ result, staff }: { result: AttemptResult; staff?: b
           ))}
         </Panel>
         <Panel>
-          <div className="mb-2 text-sm text-muted-foreground">Theo chuyên đề (yếu nhất trước)</div>
+          <div className="mb-2 text-sm text-muted-foreground">Theo chuyên đề (tỉ lệ thấp trước)</div>
           {result.topics?.slice(0, 6).map((t) => (
             <div key={t.topic} className="mb-1 text-sm" data-testid="topic-row">
               <div className="flex justify-between gap-2">

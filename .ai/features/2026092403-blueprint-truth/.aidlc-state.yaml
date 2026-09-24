@@ -81,3 +81,30 @@ history:
     by: Loc Tran
     reason: cung mot file thuan cua trang nhu T-01-01 - cau noi ly do thieu la mot ham thuan (shortfallReason) nen o lib/page-libs/exam-detail/blueprint.ts, component chi dung layout
     ticket: T-01-02
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-24T15:06:28
+    by: Loc Tran
+    ticket: T-02-01
+  - gate: G4
+    action: scope
+    at: 2026-09-24T15:09:14
+    by: Loc Tran
+    ticket: T-02-01
+  - gate: G4
+    action: scope
+    at: 2026-09-24T15:09:21
+    by: Loc Tran
+    reason: man Tinh hinh lop (ClassOverview) duoc kiem o mastery.test.tsx chu khong phai result.test.tsx hay my-stats.test.tsx; tests - cua ticket viet truoc khi tra file test that su phu man do
+    ticket: T-02-01
+  - gate: G4
+    action: evidence
+    at: 2026-09-24T15:09:24
+    by: Loc Tran
+    ticket: T-02-01
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-24T15:09:24
+    by: Loc Tran
+    reason: man Tinh hinh lop (ClassOverview) duoc kiem o mastery.test.tsx chu khong phai result.test.tsx hay my-stats.test.tsx; tests - cua ticket viet truoc khi tra file test that su phu man do
+    ticket: T-02-01
