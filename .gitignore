@@ -5,6 +5,8 @@ backups/
 .ai/.auth/
 .ai/features/*/08-evidence.md
 .ai/features/*/evidence/
+.ai/e2e/*/08-evidence.md
+.ai/e2e/*/evidence/
 
 # python
 __pycache__/

@@ -11,7 +11,8 @@ VERIFY_CHECK := python3 $(HOME)/.claude/skills/ai-dlc-verify/scripts/evidence_ch
 export AIDLC_VERIFY_PYTHON ?= $(HOME)/.venvs/aidlc-verify/bin/python
 
 .PHONY: help up down logs ps dev api-dev web-dev migrate revision seed test test-api test-web test-unit \
-        lint lint-api lint-web fix typecheck build golden backup verify verify-doctor verify-check
+        lint lint-api lint-web fix typecheck build golden backup verify verify-doctor verify-check \
+        e2e e2e-fixture e2e-teardown
 
 help: ## Show this list
 	@grep -hE '^[a-z][a-zA-Z0-9_-]*:.*?## ' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[1m%-12s\033[0m %s\n", $$1, $$2}'
@@ -103,6 +104,19 @@ verify: ## Walk a feature's 07-verification.md in a browser: make verify f=.ai/f
 verify-check: ## Check the evidence backs the claims: make verify-check f=.ai/features/<slug>
 	@test -n "$(f)" || (echo 'usage: make verify-check f=.ai/features/<slug>' && exit 1)
 	$(VERIFY_CHECK) $(f)
+
+E2E := .ai/e2e/teaching-loop
+
+e2e-fixture: ## The sandbox the end-to-end walk runs in: class, students, questions (idempotent)
+	python3 scripts/e2e_fixture.py
+
+e2e: ## Walk the whole teaching loop in a browser — six sessions, one teacher and four students
+	@for env in e2e-teacher e2e-hs01 e2e-hs02 e2e-hs03 e2e-hs04 e2e-report; do \
+		./scripts/verify-seed-session.sh $$env >/dev/null; done
+	$(VERIFY) $(E2E) --write
+
+e2e-teardown: ## Remove what a walk left behind: make e2e-teardown [--yes for the attempts]
+	python3 scripts/e2e_teardown.py $(ARGS)
 
 build: ## Production build of the web app
 	cd apps/web && pnpm build

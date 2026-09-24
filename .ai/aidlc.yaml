@@ -1,5 +1,5 @@
 profile: none
-ruleset: 5
+ruleset: 7
 layers: [domain, data, api, worker, web, infra, test]
 
 evidence:
@@ -13,6 +13,37 @@ evidence:
 verify:
   environments:
     local: { url: "${LOCAL_URL}", required: true }
+    # The end-to-end teaching-loop walk (.ai/e2e/teaching-loop) drives six sessions against this same stack:
+    # a teacher who sets the paper, four students who sit it, and the teacher again to read the reports. The
+    # runner loops environments on the OUTSIDE, so their order here is the order of the walk — which is why the
+    # teacher appears twice under two names on one account. None of them is `required`: this is a regression
+    # walk across features, not the evidence of any Unit of Work, and it must never stand between a gate and G4.
+    # The parser does not read a map nested inside an inline map, so these are written out in block form —
+    # inline, the whole `auth:` is silently dropped and every session lands on the teacher's page.
+    e2e-teacher:
+      url: "${LOCAL_URL}"
+      required: false
+      auth: { landing: /org/review, credentials_prefix: E2E_TEACHER }
+    e2e-hs01:
+      url: "${LOCAL_URL}"
+      required: false
+      auth: { landing: /home, credentials_prefix: E2E_HS01 }
+    e2e-hs02:
+      url: "${LOCAL_URL}"
+      required: false
+      auth: { landing: /home, credentials_prefix: E2E_HS02 }
+    e2e-hs03:
+      url: "${LOCAL_URL}"
+      required: false
+      auth: { landing: /home, credentials_prefix: E2E_HS03 }
+    e2e-hs04:
+      url: "${LOCAL_URL}"
+      required: false
+      auth: { landing: /home, credentials_prefix: E2E_HS04 }
+    e2e-report:
+      url: "${LOCAL_URL}"
+      required: false
+      auth: { landing: /org/exams, credentials_prefix: E2E_TEACHER }
   viewports:
     desktop: { width: 1440, height: 900 }
     mobile:  { width: 390, height: 844, isMobile: true }   # the app branches at 768; neither viewport sits on it
@@ -32,7 +63,3 @@ verify:
   failure_signals:
     - { selector: "[data-sonner-toast][data-type=error]", message: "ứng dụng báo lỗi" }
     - console_errors
-    # Several guards of this app answer 422 and put the reason on screen, and the browser logs a
-    # console.error for any non-2xx fetch — so without this line a refusal could never be verified,
-    # only turned off. The filter is this one status; an uncaught exception still fails the step.
-    - { console_ignore: "the server responded with a status of 422" }

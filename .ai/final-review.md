@@ -811,3 +811,38 @@ in the database any more and cannot be recovered.
 foreign key came back and went away again. API **498 passed, 1 skipped**; ruff and the four import contracts
 green. No browser verification and none claimed: this is invisible on screen unless a question is deleted, and no
 verification run may delete a question from your bank — the UoW says that in place of an evidence checklist.
+
+## 27. Kịch bản end-to-end `.ai/e2e/teaching-loop` (2026-09-24)
+Mọi bản verification trước đều theo từng feature, nên không có gì chạy qua cả chuỗi dạy học. Đây là vòng đó:
+duyệt câu hỏi → soạn đề theo ma trận → giao bài → **bốn học sinh làm và nộp** → giáo viên đọc báo cáo. 20 bước,
+sáu phiên đăng nhập, chạy trên chính `trungtama`. `make e2e` · 20/20 xanh · tôi đã đọc cả 20 ảnh.
+
+**Bốn học sinh, bốn bài làm khác nhau.** Runner chạy một bảng bước cho mọi environment, nên nếu bốn em dùng chung
+một dòng bước thì bốn bài giống hệt nhau và báo cáo không có phổ điểm nào để xem. Mỗi em vì vậy có dòng riêng với
+mẫu trả lời viết tay, và kết quả trên màn hình đúng như tính trước: **9.09 · 7.27 · 3.64 · 1**, trung bình 5.25,
+phổ điểm bốn cột rời nhau, `"Hay chọn sai: B (2)"` ở hai câu mà hs03 và hs04 cùng sai một kiểu, bản đồ nhiệt lớp
+bốn màu 91% / 73% / 36% / 10%.
+
+**Một quyết định đáng ghi.** Mười câu hỏi dùng **một khoá cho mỗi loại** (trắc nghiệm đều đáp án A, đúng/sai đều
+Đ-Đ-S-Đ, trả lời ngắn đều 5). Không phải cho tiện: đề sinh từ ma trận, và ma trận lấy câu ra khỏi chuyên đề theo
+thứ tự không ai hứa hẹn, nên "câu ở vị trí 3" không phải cùng một câu giữa hai lần chạy. Một khoá cho mỗi loại
+làm đúng/sai độc lập với thứ tự — đó là điều kiện để nói trước ai mấy điểm.
+
+**Vùng cát trong tổ chức thật.** Anh chọn chạy trên dữ liệu thật; 29 trong 30 học sinh thật chưa từng đăng nhập
+(`must_change_password`), nên dùng các em nghĩa là đổi mật khẩu thật của trẻ con và nhét vào hồ sơ của chúng
+những câu trả lời máy sinh. Thay vào đó fixture dựng lớp, học sinh, chuyên đề và câu hỏi của riêng nó, tất cả
+mang tiền tố `E2E`. Không một học sinh hay lớp có thật nào bị đụng tới.
+
+**Cái không dọn được, và tại sao thế là đúng.** Bài đã nộp không xoá được qua sản phẩm — và điều đó đúng: một câu
+trả lời thật không nên là thứ giáo viên xoá được. Script dọn in ra câu SQL, chạy khi có `--yes`, rồi dựng lại
+mastery. Đã kiểm thật: `answer_facts` 41 → 1, đúng 40 dòng của vòng chạy, cái còn lại là fact F14 của anh.
+
+**Một suýt nữa đáng ghi hơn cả phần còn lại.** Bản đầu của script dọn hỏi `/assignments/search` bằng
+`{"exam_id": …}`. Endpoint đó không có bộ lọc ấy và **bỏ qua trong im lặng**, nên câu hỏi "các bài giao của đề
+tôi" được trả lời bằng mọi bài giao của tổ chức — script suýt xoá bài giao thật của trung tâm, và thứ duy nhất
+chặn lại là API từ chối xoá một bài giao đã có người làm. Giờ nó lọc bằng id nó tự phân giải, cộng một guard từ
+chối bất cứ thứ gì không mang tiền tố `E2E`. Bài học ghi trong `.ai/e2e/README.md`: một bộ lọc bị bỏ qua trông y
+hệt một bộ lọc không khớp gì, cho tới lúc nó khớp mọi thứ.
+
+**Ngoài phạm vi, nói rõ trong bản spec.** Tổng quan theo khối — anh chốt bỏ, và nó **chưa tồn tại** chứ không
+phải chưa test. Tự luận — chuẩn THPT 2025 không có. Hai chính sách xem kết quả còn lại — cần bài giao đã đóng.
