@@ -1,8 +1,23 @@
 """The pure rules of the ingestion pipeline: what a question's position in the paper says about its level
 (difficulty-at-upload T-01-02) and how a difficulty model's reply is read (T-02-01)."""
+import json
+
 import pytest
 
-from app.modules.ingestion.domain.services.difficulty_rules import BY_PART, BY_TYPE, difficulty_for
+from app.modules.ingestion.application.difficulty import DifficultyModelPass
+from app.modules.ingestion.domain.entities import AiModel
+from app.modules.ingestion.domain.errors import LlmError
+from app.modules.ingestion.domain.ports import ChatResult
+from app.modules.ingestion.domain.services.difficulty_rules import (
+    BY_PART,
+    BY_TYPE,
+    DIFFICULTY_BATCH,
+    DIFFICULTY_SYSTEM,
+    DIFFICULTY_TEXT_CHARS,
+    difficulty_for,
+    difficulty_request,
+    read_difficulty_reply,
+)
 
 LEVELS = ("nb", "th", "vd", "vdc")  # the bank's scale, restated here: the rule may never invent a fifth level
 
@@ -64,7 +79,78 @@ def test_every_band_names_a_level_of_the_scale():
 
 
 def test_the_rule_needs_nothing_but_its_arguments():
-    """T-01-02: pure. The module reads no clock, no database and no config — its imports say so."""
+    """T-01-02: pure. No clock, no database, no config, no framework — the module's imports say so."""
+    import ast
+    import inspect
+
     import app.modules.ingestion.domain.services.difficulty_rules as mod
 
-    assert not [n for n in vars(mod) if not n.startswith("_") and n not in ("BY_PART", "BY_TYPE", "difficulty_for")]
+    tree = ast.parse(inspect.getsource(mod))
+    imported = {n.names[0].name if isinstance(n, ast.Import) else n.module
+                for n in ast.walk(tree) if isinstance(n, (ast.Import, ast.ImportFrom))}
+    assert imported == {"unicodedata", "app.modules.ingestion.domain.services.ai_parse"}
+
+
+def test_a_reply_becomes_levels_by_the_number_the_prompt_gave():
+    keys = {7: "a", 8: "b"}
+    reply = json.dumps({"results": [{"number": 7, "level": "vd"}, {"number": 8, "level": "nb"}]})
+    assert read_difficulty_reply(reply, keys) == {"a": "vd", "b": "nb"}
+    assert read_difficulty_reply("Đây là kết quả: ```json\n" + reply + "\n```", keys) == {"a": "vd", "b": "nb"}
+
+
+def test_the_label_is_read_in_words_as_well_as_in_codes():
+    """A 7B model answers in the words of the prompt as readily as in its codes — and "vận dụng cao" ends with
+    the whole of "vận dụng", so the two must not be told apart by a prefix."""
+    rows = [{"number": 1, "level": "Nhận biết"}, {"number": 2, "level": "vận dụng cao"}, {"number": 3, "level": " VD "},
+            {"number": 4, "level": "thong hieu"}]
+    got = read_difficulty_reply(json.dumps({"results": rows}), {1: "a", 2: "b", 3: "c", 4: "d"})
+    assert got == {"a": "nb", "b": "vdc", "c": "vd", "d": "th"}
+
+
+def test_anything_that_is_not_one_of_the_four_levels_is_dropped():
+    """The position rule keeps those questions, so a bad answer costs coverage of the model, never a level."""
+    rows = [{"number": 1, "level": "trung bình"}, {"number": 2, "level": 3}, {"number": 3}, {"number": 99, "level": "nb"},
+            {"level": "nb"}, {"number": "x", "level": "nb"}, {"number": 4, "level": "vdc"}]
+    assert read_difficulty_reply(json.dumps({"results": rows}), {1: "a", 2: "b", 3: "c", 4: "d"}) == {"d": "vdc"}
+    assert read_difficulty_reply(json.dumps({"results": "nb"}), {1: "a"}) == {}
+    assert read_difficulty_reply(json.dumps({"answer": "nb"}), {1: "a"}) == {}
+
+
+def test_a_reply_that_is_not_json_is_a_model_error():
+    with pytest.raises(LlmError):
+        read_difficulty_reply("Mức độ của câu 1 là nhận biết.", {1: "a"})
+    with pytest.raises(LlmError):
+        read_difficulty_reply('{"results": [', {1: "a"})
+
+
+def test_the_request_restates_the_count_and_the_numbers():
+    """The lesson of the tagging pass: a small model mirrors the example and answers once for a whole batch unless
+    the request says again how many answers it wants and for which questions."""
+    asked = difficulty_request([(3, "Tính đạo hàm"), (4, "x" * 900)])
+    assert "Trả về đúng 2 phần tử, cho các câu: 3, 4." in asked
+    assert "Câu 3: Tính đạo hàm" in asked and "Câu 4: " in asked
+    assert len(asked.split("Câu 4: ")[1].strip()) == DIFFICULTY_TEXT_CHARS  # a long question is cut, not sent whole
+    assert all(code in DIFFICULTY_SYSTEM for code in LEVELS)
+
+
+def test_the_pass_asks_in_batches_and_maps_each_answer_back_to_its_question():
+    rows = [(f"q{i}", i, f"Câu {i}") for i in range(1, 26)]
+
+    class Chat:
+        def __init__(self):
+            self.asked = []
+
+        def chat(self, model, system, user, images=None, json_mode=True, timeout=None, schema=None):
+            self.asked.append(user)
+            numbers = [int(x.split(":")[0].replace("Câu ", "")) for x in user.split("CÂU HỎI:")[1].strip().split("\n\n")]
+            return ChatResult(json.dumps({"results": [{"number": n, "level": "th"} for n in numbers]}), 1, "m")
+
+    chat = Chat()
+    model = AiModel(organization_id=None, name="m", provider="ollama", model="m:1", base_url="http://m")
+    pass_ = DifficultyModelPass(chat, model)
+    batches = list(pass_.batches(rows))
+    assert [len(b) for b in batches] == [DIFFICULTY_BATCH, DIFFICULTY_BATCH, 5]
+    got = {}
+    for batch in batches:
+        got.update(pass_.ask(batch))
+    assert got == {f"q{i}": "th" for i in range(1, 26)} and len(chat.asked) == 3

@@ -6,7 +6,13 @@ question before anything else runs, so this costs nothing and never fails.
 It is a **convention, not a reading**: it says what a paper of this shape usually puts at that position, not what
 this particular question asks. That is why the model leads where it answers (A-05) and this only fills the rest —
 but it fills *every* rest, because an empty level is the problem the feature exists to solve.
+
+The model's half — the prompt and the reading of its reply — sits here too, the way `topic_rules` holds the
+tagging prompt: one wording, and one place where a reply becomes a level.
 """
+import unicodedata
+
+from app.modules.ingestion.domain.services.ai_parse import parse_json
 
 # (last number of the band, level) per part, in order; past the last band the level stays the highest one named.
 # Phần I — 12 multiple-choice questions, four options, the part every candidate is meant to finish:
@@ -51,3 +57,55 @@ def difficulty_for(part: str | None, number: int | None, qtype: str) -> str:
         if n <= last:
             return level
     return bands[-1][1]
+
+
+DIFFICULTY_SYSTEM = """Bạn xếp mức độ nhận thức cho câu hỏi toán THPT. Với MỖI câu hỏi trong yêu cầu, chọn MỘT
+mức và trả về đúng mã của nó:
+"nb" = nhận biết: nhắc lại định nghĩa, công thức, hoặc đọc thẳng một giá trị từ đề, hình, bảng.
+"th" = thông hiểu: một bước biến đổi hoặc một lần áp dụng công thức là ra đáp số.
+"vd" = vận dụng: nhiều bước, phải tự chọn hướng làm.
+"vdc" = vận dụng cao: nhiều bước kết hợp nhiều chủ đề, hoặc lập luận dài, hoặc bài toán thực tế phải mô hình hóa.
+Số phần tử trong "results" phải bằng đúng số câu hỏi được hỏi, theo đúng thứ tự, không bỏ sót câu nào; câu nào
+không chắc thì vẫn chọn mức gần nhất. Trả về DUY NHẤT JSON:
+{"results": [{"number": 1, "level": "nb"}, {"number": 2, "level": "vd"}]}."""
+
+DIFFICULTY_BATCH = 10       # questions per model call, as the tagging pass sizes it: what a 7B model still reads whole
+DIFFICULTY_TEXT_CHARS = 600  # of each question; what makes a question hard shows in its first lines
+
+# A small model answers in the words of the prompt as often as in its codes, and "vận dụng cao" ends with the whole
+# of "vận dụng" — so the reply is matched against the full label, never a prefix of one.
+LEVEL_WORDS = {
+    "nb": "nb", "nhận biết": "nb", "nhan biet": "nb",
+    "th": "th", "thông hiểu": "th", "thong hieu": "th",
+    "vd": "vd", "vận dụng": "vd", "van dung": "vd",
+    "vdc": "vdc", "vận dụng cao": "vdc", "van dung cao": "vdc",
+}
+
+
+def difficulty_request(rows: list[tuple[int, str]]) -> str:
+    """The user half of the prompt: one batch of questions, numbered for the answer to refer to."""
+    qs = "\n\n".join(f"Câu {number}: {text[:DIFFICULTY_TEXT_CHARS]}" for number, text in rows)
+    numbers = ", ".join(str(number) for number, _ in rows)
+    # small models mirror the example and answer once for a whole batch: name the count and the numbers again
+    return f"Trả về đúng {len(rows)} phần tử, cho các câu: {numbers}.\n\nCÂU HỎI:\n{qs}"
+
+
+def read_difficulty_reply(text: str, keys: dict) -> dict:
+    """What the model chose, as {caller key: level}; raises LlmError on an answer that is not JSON.
+    The label is the answer here — there is no listing to index into — so anything that does not read as one of
+    the four levels is dropped and the position rule keeps that question."""
+    results = parse_json(text).get("results")
+    out: dict = {}
+    for r in results if isinstance(results, list) else []:
+        try:
+            key = keys[int(r["number"])]
+        except (KeyError, TypeError, ValueError):
+            continue
+        level = _level(r.get("level"))
+        if level is not None:
+            out[key] = level
+    return out
+
+
+def _level(value) -> str | None:
+    return LEVEL_WORDS.get(unicodedata.normalize("NFC", value).strip().lower()) if isinstance(value, str) else None
