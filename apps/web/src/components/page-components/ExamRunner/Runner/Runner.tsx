@@ -16,8 +16,10 @@ import { cn } from "@/lib/utils";
 export function Runner({ view, onFinished }: { view: AttemptView; onFinished: () => void }) {
   const r = useExamRunner(view, onFinished);
   const q = r.q;
+  // `w-full` is load-bearing (AC-01): on a flex item `margin-inline: auto` cancels `align-items: stretch`, so
+  // without it the frame shrinks to the width of whatever question is on screen and the page jumps on every move.
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto w-full max-w-5xl">
       <div className="sticky top-0 z-10 -mx-4 mb-4 flex flex-wrap items-center gap-3 border-b border-border bg-card/95 px-4 py-2 backdrop-blur">
         <span className="min-w-0 flex-1 truncate font-medium">{view.title}</span>
         <span className={cn("font-mono text-lg", r.left < 60_000 ? "text-destructive" : "text-foreground")} data-testid="timer">

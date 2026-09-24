@@ -35,6 +35,18 @@ describe("exam runner", () => {
     expect(formatLeft(-5)).toBe("00:00");
   });
 
+  it("keeps one width whatever question is on screen (AC-01)", () => {
+    mockFetch(() => ({ body: {} }));
+    const { container } = renderWithQuery(<Runner view={view()} onFinished={() => {}} />);
+    // mx-auto on a flex item cancels stretch, so w-full is what stops the frame following the content
+    const frame = container.firstElementChild as HTMLElement;
+    expect(frame).toHaveClass("mx-auto", "w-full", "max-w-5xl");
+    const before = frame.className;
+    fireEvent.click(within(screen.getByTestId("navigator")).getByRole("button", { name: "Câu 4" }));
+    expect(screen.getByTestId("exam-question")).toHaveTextContent("Câu hỏi số 4");
+    expect(frame.className).toBe(before);
+  });
+
   it("restores answers, autosaves after a debounce and shows the unsaved badge", async () => {
     const f = mockFetch((url, init) => (init?.method === "PUT" ? { body: { ok: true } } : undefined));
     renderWithQuery(<Runner view={view()} onFinished={() => {}} />);
