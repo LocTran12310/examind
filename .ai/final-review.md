@@ -893,3 +893,40 @@ AC-05, AC-06, AC-07 ở phiên học sinh, thứ không cách nào dựng ra. N�
 
 **Kiểm chứng.** API 498 → **504 passed, 1 skipped**; web 216 → **231 passed** (54 file); ruff và 4 import contract
 xanh. Trình duyệt: 10 bước × 2 vai × 2 viewport, 20/20.
+
+## 29. F21 `2026092403-blueprint-truth` (2026-09-24)
+Anh hỏi: *"chuyên đề có 14 câu, số câu cần là 10, nhưng chỉ tạo được 7 câu, thiếu 3 câu? Không biết lý do là gì."*
+Đây là lỗi thật và tôi dựng lại chính xác: **Mệnh đề** có **14 câu dùng được** — **7 Trắc nghiệm, 7 Đúng/Sai,
+0 Trả lời ngắn**, và cả 14 đều không có mức độ.
+
+**Con số không sai; nó trả lời một câu hỏi khác.** Số cạnh dòng lấy từ `counts[topic_id]` của một lần gọi facets
+cho cả môn, còn lệnh tạo đề lấy câu qua `pool(...)` với `status="usable"` **cộng loại câu và mức độ của chính
+dòng đó`. Hai phép đếm khác nhau chạy song song, và "14 → 7" là lần lệch đầu tiên lộ ra. Đúng loại lỗi F17 đã sửa
+một tầng trên (số chuyên đề con thay vì số câu hỏi); lần này ở tầng dưới.
+
+**Cách sửa không phải chỉnh con số cho khớp, mà là hỏi đúng câu hỏi** (ADR-01). Mỗi dòng gọi
+`POST /questions/search` với chính bộ lọc của nó và đọc `total` — cùng một phép lọc mà pool dùng, nên hai con số
+không thể lệch lần nữa. Agent còn bắt được một chỗ tôi bỏ sót trong đề bài: `subject_id` và `tag_ids` cũng nằm
+trong `PoolFilter`, thiếu chúng là tái lập đúng cái drift mà ADR-01 dựng lên để chặn.
+
+Màn hình giờ nói cả hai con số: **"Chuyên đề có 14 câu dùng được, nhưng chỉ 7 câu là «Trắc nghiệm» — thiếu 3
+câu."** Và nó hiện **trước khi** bấm tạo đề.
+
+**Nhãn xếp hạng (ADR-02).** Ba chỗ bỏ cách gọi tên, giữ nguyên thứ tự: "Theo chuyên đề (tỉ lệ thấp trước)",
+"Mức nắm vững theo chuyên đề (thấp trước)", "Mức nắm vững (thấp trước)". Lý do anh nêu, và nó đúng: thứ tự đã nói
+đủ điều cần nói, còn gọi một chuyên đề của một đứa trẻ là "yếu nhất" là một phán quyết. Ba test ghim chữ mới và
+ghim luôn rằng chữ cũ không quay lại.
+
+**Nút chế độ xem (ADR-03).** `Một câu` mang icon ô vuông, `Toàn đề` mang icon ba dòng, mỗi cái một tooltip; ở
+390px nhãn ẩn đi và chỉ còn icon — đúng "chuyển sang Icon rồi thêm tooltip". Một bẫy agent ghi lại: `TooltipTrigger
+asChild` ghi đè `data-state` của toggle, thứ mà kiểu dáng "đang chọn" bám vào; giờ có test ghim để chế độ đang
+chọn không lặng lẽ mất dấu.
+
+**Câu hỏi còn lại của anh, trả lời bằng số liệu.** Loại câu **có** phân: 207 trắc nghiệm, 101 trả lời ngắn, 70
+đúng/sai. **Tự luận: 0 câu** — chuẩn THPT 2025 không có phần ấy, nên dòng "Tự luận · Vận dụng" trong ảnh của anh
+chắc chắn ra rỗng. **Mức độ: 376/378 câu không có** — mọi dòng chọn Mức độ đều ra rỗng. Anh đã chốt để phần phân
+mức độ lúc tách đề lại sau; từ nay ít nhất màn hình nói thẳng con số 0 thay vì để anh phát hiện sau khi tạo đề.
+
+**Kiểm chứng.** Web 231 → **234 passed** (54 file), lint xanh. Trình duyệt: 4 bước × 2 vai × 2 viewport, 8/8, đọc
+từng ảnh. Không bước nào bấm "Tạo đề theo ma trận", nên ma trận chỉ nằm trong state của trang và không một dòng
+nào được ghi.

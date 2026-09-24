@@ -5,7 +5,7 @@ slug: 2026092403-blueprint-truth
 profile: none
 created: 2026-09-24T14:49:41
 ruleset: 7
-current_gate: G3
+current_gate: G5
 history:
   - gate: G0
     action: passed
@@ -128,3 +128,13 @@ history:
     at: 2026-09-24T15:14:11
     by: Loc Tran
     ticket: T-02-02
+  - gate: G4
+    action: passed
+    at: 2026-09-24T15:28:07
+    by: Loc Tran
+    evidence: every done ticket has a passing verification run; all 4 tickets done, all UoW checklists ticked
+  - gate: G5
+    action: passed
+    at: 2026-09-24T15:28:08
+    by: Loc Tran
+    evidence: assumptions resolved, ADRs settled, graph valid
