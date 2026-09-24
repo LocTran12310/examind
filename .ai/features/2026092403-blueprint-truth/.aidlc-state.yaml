@@ -54,3 +54,30 @@ history:
     by: Loc Tran
     reason: lib/page-libs/exam-detail/blueprint.ts la file thuan cua chinh trang nay; bo loc cua mot dong ma tran la mot ham thuan nen nam o day chu khong nam trong hook - touches - cua ticket viet truoc khi biet dieu do
     ticket: T-01-01
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-24T15:03:07
+    by: Loc Tran
+    ticket: T-01-02
+  - gate: G4
+    action: scope
+    at: 2026-09-24T15:05:49
+    by: Loc Tran
+    ticket: T-01-02
+  - gate: G4
+    action: scope
+    at: 2026-09-24T15:05:57
+    by: Loc Tran
+    reason: cung mot file thuan cua trang nhu T-01-01 - cau noi ly do thieu la mot ham thuan (shortfallReason) nen o lib/page-libs/exam-detail/blueprint.ts, component chi dung layout
+    ticket: T-01-02
+  - gate: G4
+    action: evidence
+    at: 2026-09-24T15:06:01
+    by: Loc Tran
+    ticket: T-01-02
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-24T15:06:01
+    by: Loc Tran
+    reason: cung mot file thuan cua trang nhu T-01-01 - cau noi ly do thieu la mot ham thuan (shortfallReason) nen o lib/page-libs/exam-detail/blueprint.ts, component chi dung layout
+    ticket: T-01-02

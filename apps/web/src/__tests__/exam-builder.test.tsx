@@ -92,6 +92,16 @@ describe("exam builder", () => {
     await waitFor(() => expect(screen.getByTestId("row-0")).toHaveTextContent("2 câu"));
   });
 
+  it("a row short of questions says how many the topic holds and how many match its own filters (AC-03)", async () => {
+    mockFetch(rowPool({ mcq: 7, essay: 14 }), route("POST", "/api/questions/facets", facets({ ds: 14 })));
+    const rows = [{ topic_id: "ds", type: "mcq" as const, count: 10 }, { topic_id: "ds", type: "essay" as const, count: 20 }];
+    renderWithQuery(<BlueprintEditor initial={rows} topics={topics} tags={[]} subjectId="s" shortfalls={[]} refusal={null} onEdit={vi.fn()} onGenerate={vi.fn()} />);
+    // the topic is full, the row's own type is what cuts it — the case "thiếu 3 câu" alone could not tell
+    await waitFor(() => expect(screen.getByTestId("row-0")).toHaveTextContent("Chuyên đề có 14 câu dùng được, nhưng chỉ 7 câu là “Trắc nghiệm” — thiếu 3 câu."));
+    // nothing narrows this row, so the topic itself is the limit
+    expect(screen.getByTestId("row-1")).toHaveTextContent("Chuyên đề chỉ có 14 câu dùng được — thiếu 6 câu.");
+  });
+
   it("a topic that holds nothing is named on its row before generating", async () => {
     mockFetch(rowPool({ mcq: 0 }), route("POST", "/api/questions/facets", facets({ ds: 0 })));
     renderWithQuery(<BlueprintEditor initial={[{ topic_id: "ds", type: "mcq", count: 6 }]} topics={topics} tags={[]} subjectId="s" shortfalls={[]} refusal={null} onEdit={vi.fn()} onGenerate={vi.fn()} />);

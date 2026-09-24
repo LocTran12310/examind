@@ -3,7 +3,7 @@
 # Ticket graph — 2026092403-blueprint-truth
 
 - Units of Work: **2**
-- Tickets: **4** (1 done)
+- Tickets: **4** (2 done)
 - Total effort: **1.2d**
 - Critical path: **6h** across 2 tickets
 - Theoretical minimum duration with unlimited parallelism: **6h**
@@ -24,7 +24,7 @@ slice — the floor on how fast it can finish no matter how many people work on 
 graph LR
   subgraph UOW_01["UOW-01 · Con số của một dòng ma trận là con số lệnh tạo đề sẽ dùng"]
     T_01_01["✓ T-01-01<br/>Mỗi dòng hỏi số câu của chính bộ lọc của nó"]
-    T_01_02["T-01-02<br/>Thiếu câu thì nói rõ vì sao"]
+    T_01_02["✓ T-01-02<br/>Thiếu câu thì nói rõ vì sao"]
   end
   subgraph UOW_02["UOW-02 · Bỏ nhãn xếp hạng, và nút chế độ xem có icon"]
     T_02_01["T-02-01<br/>Bỏ nhãn xếp hạng ở ba màn"]
@@ -58,6 +58,6 @@ adding people to tickets off this path will not make the feature ship sooner.
 | ID | UoW | Layer | Type | Est | Depends on | Verifies | Status |
 |----|-----|-------|------|-----|-----------|----------|--------|
 | T-01-01 | UOW-01 | web | feature | 4h | — | AC-01, AC-02 | done |
-| T-01-02 | UOW-01 | web | feature | 2h | T-01-01 | AC-03 | todo |
+| T-01-02 | UOW-01 | web | feature | 2h | T-01-01 | AC-03 | done |
 | T-02-01 | UOW-02 | web | feature | 2h | — | AC-04 | todo |
 | T-02-02 | UOW-02 | web | feature | 2h | — | AC-05 | todo |

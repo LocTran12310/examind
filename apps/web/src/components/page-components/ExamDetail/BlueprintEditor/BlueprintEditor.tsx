@@ -6,6 +6,7 @@ import { FormDialog } from "@/components/common/FormDialog/FormDialog";
 import { OptionSelect } from "@/components/common/OptionSelect/OptionSelect";
 import { TopicPicker } from "@/components/common/TopicPicker/TopicPicker";
 import { topicLabel } from "@/lib/common/topic-tree";
+import { shortfallReason } from "@/lib/page-libs/exam-detail/blueprint";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DIFFICULTY_LABEL, TYPE_LABEL } from "@/constants/question.constant";
@@ -42,6 +43,10 @@ export function BlueprintEditor({ initial, topics, tags, subjectId, shortfalls, 
         const held = b.held(r);
         const matching = b.matching(i);
         const empty = held === 0;
+        // the row's own pool is smaller than what it asks for, which is known before generating now (AC-03);
+        // once the server has answered, its count is the authority — it also knows what the other rows took.
+        // An empty topic says so in red already, and repeating it as a shortfall would add nothing.
+        const missing = miss ? miss.missing : !empty && matching !== null && matching < r.count ? r.count - matching : 0;
         const refused = refusal?.row === i;
         return (
           <div
@@ -81,14 +86,14 @@ export function BlueprintEditor({ initial, topics, tags, subjectId, shortfalls, 
               <X />
               <span className="lg:hidden">Xóa dòng</span>
             </Button>
-            {(empty || miss) && (
+            {(empty || missing > 0) && (
               <div className="col-span-2 flex flex-wrap gap-x-3 text-sm lg:col-span-6">
                 {empty && (
                   <span className="text-destructive">
                     Chuyên đề “{topic ? topic.name : r.topic_id}” chưa có câu hỏi nào dùng được — chọn chuyên đề khác trước khi tạo đề.
                   </span>
                 )}
-                {miss && <span className="text-amber-700 dark:text-amber-400">thiếu {miss.missing} câu</span>}
+                {missing > 0 && <span className="text-amber-700 dark:text-amber-400">{shortfallReason(r, held, matching, missing)}</span>}
               </div>
             )}
           </div>
