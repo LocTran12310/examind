@@ -4,7 +4,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { PracticeButton } from "@/components/common/PracticeButton/PracticeButton";
 import { ClassAdaptiveDialog } from "@/components/page-components/ClassDetail/ClassAdaptiveDialog/ClassAdaptiveDialog";
 import { MyStatsPage } from "@/components/page-components/MyStats/MyStatsPage";
-import { mockFetch, renderWithQuery, route } from "./helpers";
+import { MeProvider } from "@/hooks/common/use-me";
+import { mockFetch, renderWithQuery, route, me } from "./helpers";
 
 const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
@@ -26,7 +27,9 @@ describe("adaptive practice UI", () => {
       route("GET", "/api/me/mastery", []),
       route("GET", "/api/me/practice", [{ attempt_id: "a", title: "Đề ôn", status: "submitted", started_at: "2026-09-22T00:00:00Z", submitted_at: "", score10: 6,
       note: null, groups: [{ reason: "Chuyên đề yếu", topic: "Mệnh đề", count: 12 }, { reason: "Ôn lại câu từng làm sai", topic: null, count: 2 }] }]));
-    renderWithQuery(<MyStatsPage />);
+    renderWithQuery(<MeProvider value={me("student")}>
+        <MyStatsPage />
+      </MeProvider>);
     const h = await screen.findByTestId("practice-history");
     expect(h).toHaveTextContent("Chuyên đề yếu: Mệnh đề × 12");
     expect(h).toHaveTextContent("Ôn lại câu từng làm sai × 2");

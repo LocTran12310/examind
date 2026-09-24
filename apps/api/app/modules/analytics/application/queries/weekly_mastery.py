@@ -4,7 +4,7 @@ import uuid
 from app.modules.analytics.application.ports import Roster
 from app.modules.analytics.domain.ports import WeekRepository
 from app.shared.application.actor import Actor
-from app.shared.domain.errors import Forbidden, NotFound
+from app.shared.domain.errors import NotFound
 
 
 @dataclass(frozen=True)
@@ -29,8 +29,6 @@ class MyWeeklyMasteryHandler:
         self.weeks = weeks
 
     def __call__(self, actor: Actor) -> dict:
-        if actor.role != "student":
-            raise Forbidden()
         return series(self.weeks, actor.org_id, actor.user_id)
 
 

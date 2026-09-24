@@ -9,7 +9,7 @@ export function StudentHomePage() {
   const p = useStudentHomePage();
   return (
     <>
-      <PageHeader title={p.title} description={p.orgName} actions={<PracticeButton />} />
+      <PageHeader title={p.title} description={p.orgName} actions={p.canPractise ? <PracticeButton /> : undefined} />
       <StudentAssignments />
     </>
   );

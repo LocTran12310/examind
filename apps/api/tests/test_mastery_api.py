@@ -11,7 +11,9 @@ def test_mastery_endpoints(client, db):
     assert all(r["enough_data"] and not r["weak"] for r in tracked)  # answered enough, and answered right
     parents = [r for r in rows if not r["tracked"]]
     assert all(p["answers"] >= 1 for p in parents)
-    assert client.get("/api/me/mastery").status_code == 403  # staff use the per-student endpoint
+    # roles nest (exam-runner-and-roles ADR-02): staff may ask for their own rows and get their own — empty,
+    # because nobody assigns them work. A student's rows are still a different question: /students/{id}/mastery
+    assert client.get("/api/me/mastery").json() == []
     student_id = s.get("/api/auth/me").json()["id"]
     assert client.get(f"/api/students/{student_id}/mastery").json() == rows
     assert s.get(f"/api/students/{student_id}/mastery").status_code == 403

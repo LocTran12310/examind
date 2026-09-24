@@ -199,7 +199,9 @@ class FakeAssessment:
         return uuid.uuid4()
 
     def practice_attempts(self, org_id, student_id, limit):
-        return self.practice[:limit]
+        # keyed by student, like the real reader: the handler passes actor.user_id, and a fake that ignored it
+        # would answer a teacher with a student's history and hide exactly the thing worth asserting
+        return [a for who, a in self.practice if who == student_id][:limit]
 
     def latest_review(self, org_id, student_id):
         return self.reviews.get(student_id)
@@ -288,7 +290,7 @@ def test_rebuild_replays_every_fact_for_an_org_admin_only():
             handle(who, RebuildMastery())
 
 
-def test_my_mastery_rolls_leaves_up_the_tree_and_is_for_students_only():
+def test_my_mastery_rolls_leaves_up_the_tree_and_answers_whoever_asks_about_themselves():
     mastery = recorded(answer(PROP, 0.0), answer(SETS, 1.0), answer(SETS, 1.0))
     rows = MyMasteryHandler(mastery, FakeTopics(), lambda: NOW)(STUDENT)
     assert [r["path"] for r in rows] == ["a", "a.p", "a.s"]
@@ -296,8 +298,9 @@ def test_my_mastery_rolls_leaves_up_the_tree_and_is_for_students_only():
     assert parent["tracked"] is False and parent["answers"] == 3 and parent["depth"] == 1
     p, s = mastery.get(STUDENT.user_id, PROP.id), mastery.get(STUDENT.user_id, SETS.id)
     assert parent["mastery"] == round((p.mastery * 1 + s.mastery * 2) / 3, 4)
-    with pytest.raises(Forbidden):
-        MyMasteryHandler(mastery, FakeTopics(), lambda: NOW)(TEACHER)
+    # roles nest (exam-runner-and-roles ADR-02): a teacher asking for their own rows gets their own, which is
+    # empty. Reading a student's is a different question and has its own handler.
+    assert MyMasteryHandler(mastery, FakeTopics(), lambda: NOW)(TEACHER) == []
 
 
 def test_staff_read_a_member_s_mastery_only():
@@ -343,8 +346,7 @@ def test_the_weekly_series_is_the_student_s_own_or_a_member_s():
     BackfillWeeksHandler(snapshot(weeks, FakeHistory(enough_answers(PROP, 0.0, 2))))(BackfillWeeks())
     mine = MyWeeklyMasteryHandler(weeks)(STUDENT)
     assert StudentWeeklyMasteryHandler(weeks, FakeRoster([member]))(TEACHER, StudentWeeklyMastery(STUDENT.user_id)) == mine
-    with pytest.raises(Forbidden):
-        MyWeeklyMasteryHandler(weeks)(TEACHER)
+    assert MyWeeklyMasteryHandler(weeks)(TEACHER)["weeks"] == []
     with pytest.raises(NotFound):
         StudentWeeklyMasteryHandler(weeks, FakeRoster([member]))(TEACHER, StudentWeeklyMastery(uuid.uuid4()))
 
@@ -488,12 +490,12 @@ def test_class_overview_and_practice_history():
     settings = {"adaptive": {"note": None, "plan": [{"question_id": "q1", "reason": "Chuyên đề yếu", "topic": "Mệnh đề"},
                                                     {"question_id": "q2", "reason": "Chuyên đề yếu", "topic": "Mệnh đề"},
                                                     {"question_id": "q3", "reason": "Bổ sung", "topic": None}]}}
-    assessment.practice = [PracticeAttempt(uuid.uuid4(), "Đề ôn tập – An", "submitted", NOW, NOW, 7.5, settings)]
+    assessment.practice = [(STUDENT.user_id, PracticeAttempt(uuid.uuid4(), "Đề ôn tập – An", "submitted", NOW, NOW, 7.5, settings))]
     history = MyPracticeHandler(assessment)(STUDENT)
     assert history[0]["score10"] == 7.5 and history[0]["groups"] == [{"reason": "Chuyên đề yếu", "topic": "Mệnh đề", "count": 2},
                                                                       {"reason": "Bổ sung", "topic": None, "count": 1}]
-    with pytest.raises(Forbidden):
-        MyPracticeHandler(assessment)(TEACHER)
+    # roles nest, so a teacher may ask — and is answered about themselves, not about the student (ADR-02)
+    assert MyPracticeHandler(assessment)(TEACHER) == []
 
 
 # ------------------------------------------------------------------ audit history

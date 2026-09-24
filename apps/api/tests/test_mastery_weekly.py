@@ -69,4 +69,5 @@ def test_the_series_endpoints_are_org_scoped(client, db):
     student_id = s.get("/api/auth/me").json()["id"]
     assert client.get(f"/api/students/{student_id}/mastery/weekly").json() == body
     assert s.get(f"/api/students/{student_id}/mastery/weekly").status_code == 403  # a student only sees their own
-    assert client.get("/api/me/mastery/weekly").status_code == 403  # staff use the per-student endpoint
+    # staff read their own series too (exam-runner-and-roles ADR-02); it is empty, and it is theirs
+    assert client.get("/api/me/mastery/weekly").json()["weeks"] == []

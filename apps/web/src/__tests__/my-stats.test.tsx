@@ -1,7 +1,8 @@
 import { screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import MyStatsPage from "@/app/(app)/me/stats/page";
-import { mockFetch, renderWithQuery as render, route } from "./helpers";
+import { MeProvider } from "@/hooks/common/use-me";
+import { mockFetch, renderWithQuery as render, route, me } from "./helpers";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
@@ -23,7 +24,9 @@ describe("my stats", () => {
         { topic_id: "c", parent_id: "a", name: "Tập hợp", path: "a.c", depth: 2, mastery: 0.7, answers: 6, tracked: true, enough_data: true, weak: false },
       ]),
     );
-    render(<MyStatsPage />);
+    render(<MeProvider value={me("student")}>
+        <MyStatsPage />
+      </MeProvider>);
     const weak = await screen.findByTestId("mastery");
     expect(weak.textContent?.indexOf("Mệnh đề")).toBeLessThan(weak.textContent?.indexOf("Tập hợp") ?? 0);
     expect(weak).not.toHaveTextContent("Đại số");

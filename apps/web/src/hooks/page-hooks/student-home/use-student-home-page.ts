@@ -19,8 +19,10 @@ export function useStudentHome() {
   };
 }
 
-/** Greeting of the home page. */
+/** Greeting of the home page. `canPractise` is the one thing that does not nest with the roles: a practice run
+ *  writes a real attempt and real answer facts, so a teacher's would land in the organisation's numbers as if a
+ *  student had sat it. Staff reach this page and see their own assignments — usually none. */
 export function useStudentHomePage() {
   const me = useMe();
-  return { title: `Xin chào, ${me.full_name}`, orgName: me.org.name };
+  return { title: `Xin chào, ${me.full_name}`, orgName: me.org.name, canPractise: me.role === "student" };
 }
