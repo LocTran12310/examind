@@ -34,7 +34,22 @@ export interface NavGroup {
   items: NavItem[];
 }
 
-const STAFF: Role[] = ["org_admin", "teacher"];
+/**
+ * Roles nest, they are not disjoint sets (ADR-02): HS ⊂ GV ⊂ Admin. An item's `roles` therefore names the
+ * *lowest* role allowed to see it, and everything above inherits it — a new item needs one role, not three.
+ * `super_admin` stays outside the chain: it is a platform role granted through `isSuper`, and the items only a
+ * platform admin may see name it on their own.
+ */
+const NESTED: Role[] = ["student", "teacher", "org_admin"];
+
+/** The roles a role covers: itself plus everything below it in the chain. */
+export function rolesUnder(role: Role): Role[] {
+  const rank = NESTED.indexOf(role);
+  return rank < 0 ? [role] : NESTED.slice(0, rank + 1);
+}
+
+/** "staff and above" — with nesting one role is enough, "teacher" already reaches an org admin. */
+const STAFF: Role[] = ["teacher"];
 
 export const NAV_GROUPS: NavGroup[] = [
   {
@@ -82,9 +97,10 @@ export const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
-/** Items for the role in the active org; a super admin working inside an org keeps the "Hệ thống" items. */
+/** Items for the role in the active org, the roles below it included; a super admin keeps the "Hệ thống" items. */
 export function groupsFor(role: Role, isSuper = false): NavGroup[] {
-  const can = (i: NavItem) => i.roles.includes(role) || (isSuper && i.roles.includes("super_admin"));
+  const covers = rolesUnder(role);
+  const can = (i: NavItem) => i.roles.some((r) => covers.includes(r)) || (isSuper && i.roles.includes("super_admin"));
   return NAV_GROUPS.map((g) => ({ ...g, items: g.items.filter(can) })).filter((g) => g.items.length);
 }
 

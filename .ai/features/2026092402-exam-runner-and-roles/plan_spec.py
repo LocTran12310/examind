@@ -55,9 +55,13 @@ t(id="T-01-02", uow="UOW-01", title="Chế độ Toàn đề", layer="web", esti
   done_when=["Hai chế độ chuyển qua lại", "Trả lời được ở chế độ toàn đề", "Tự lưu và bảng câu không đổi"])
 t(id="T-02-01", uow="UOW-02", title="Điều hướng theo vai trò lồng nhau", layer="web", estimate="2h",
   verifies=["AC-06"], assumptions=["A-04"],
-  tests=[f"{S}/__tests__/nav.test.ts"],
+  tests=[f"{S}/__tests__/nav.test.ts", f"{S}/__tests__/shell.test.tsx"],
   touches=[f"{S}/lib/common/nav.ts"],
   context="ADR-02. roles của một mục nghĩa là vai trò thấp nhất thấy được nó.",
+  notes=['`NESTED = ["student", "teacher", "org_admin"]` và `rolesUnder(role)` — chuỗi bao hàm viết một lần, `groupsFor` chỉ hỏi `covers`.',
+         '`STAFF` còn đúng một vai trò (`["teacher"]`): mục mới chỉ cần khai vai trò thấp nhất, không phải cả ba.',
+         "`super_admin` vẫn ngoài chuỗi — cấp qua `isSuper` và do chính các mục Hệ thống khai; `homeFor` không đổi.",
+         'shell.test.tsx: nhóm "Học tập" giờ có trong menu giáo viên, đây là hành vi mới của AC-06.'],
   done_when=["GV thấy mục của HS", "Admin thấy mục của GV", "homeFor giữ nguyên cho từng vai trò"])
 t(id="T-02-02", uow="UOW-02", title="Endpoint phía học sinh nhận nhân viên", layer="api", estimate="3h",
   verifies=["AC-07"], assumptions=["A-04", "A-05"],

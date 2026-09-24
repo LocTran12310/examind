@@ -23,7 +23,8 @@ const shell = (role: Me["role"]) =>
 
 describe("navigation", () => {
   it("groups items by role", () => {
-    expect(groupsFor("teacher").map((g) => g.label)).toEqual(["Đề & câu hỏi", "Lớp & học sinh", "Báo cáo", "Cài đặt"]);
+    // "Học tập" comes with the nesting HS ⊂ GV ⊂ Admin (ADR-02); nav.test.ts covers the containment itself
+    expect(groupsFor("teacher").map((g) => g.label)).toEqual(["Đề & câu hỏi", "Lớp & học sinh", "Báo cáo", "Cài đặt", "Học tập"]);
     expect(groupsFor("teacher").flatMap((g) => g.items.map((i) => i.href))).not.toContain("/org/settings/ingestion");
     expect(groupsFor("super_admin").map((g) => g.label)).toEqual(["Cài đặt", "Hệ thống"]);
     expect(groupsFor("student").flatMap((g) => g.items.map((i) => i.href))).toEqual(["/home", "/me/stats"]);
