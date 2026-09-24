@@ -13,6 +13,7 @@ Everything it creates is removed again by scripts/e2e_teardown.py. It reads .ai/
 account and the URL, and writes nothing to disk.
 """
 import argparse
+import datetime
 import json
 import os
 import sys
@@ -23,6 +24,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PREFIX = "E2E"
 CLASS_NAME = f"{PREFIX} · lớp thử"
 TOPIC_NAME = f"{PREFIX} · chuyên đề thử"
+EXAM_TITLE = f"{PREFIX} · vòng dạy học"
 STUDENT_PASSWORD = "E2eHocSinh!2026"
 STUDENTS = [("e2e.hs01", "E2E Học sinh 01"), ("e2e.hs02", "E2E Học sinh 02"),
             ("e2e.hs03", "E2E Học sinh 03"), ("e2e.hs04", "E2E Học sinh 04")]
@@ -105,7 +107,7 @@ def one(rows: list, name: str, key: str = "name"):
     return next((r for r in rows if r.get(key) == name), None)
 
 
-def build(api: Api, show: bool, reset: bool) -> dict:
+def build(api: Api, show: bool, reset: bool, with_exam: bool = False) -> dict:
     subject = one(api("GET", "/taxonomy")["subjects"], "Toán")
     topics = api("GET", f"/topics?subject_id={subject['id']}")
     topic = one(topics, TOPIC_NAME)
@@ -152,8 +154,31 @@ def build(api: Api, show: bool, reset: bool) -> dict:
                                                    "grade": 12, "difficulty": "th", "primary_topic_id": topic["id"]})
             made_questions.append(found)
 
+    exam = assignment = None
+    if with_exam and made_questions and klass and not show:
+        exam, assignment = _paper(api, klass, made_questions)
     return {"subject": subject, "topic": topic, "class": klass, "students": students,
-            "questions": made_questions, "created_students": made}
+            "questions": made_questions, "created_students": made, "exam": exam, "assignment": assignment}
+
+
+def _paper(api: Api, klass: dict, questions: list) -> tuple[dict, dict]:
+    """An exam of the ten questions, already given to the test class. The end-to-end walk builds these through
+    the screens on purpose — this is for the verification runs that need a paper to already be sitting there."""
+    exam = one(api("POST", "/exams/search", {"page": 1, "limit": 200})["data"], EXAM_TITLE, "title")
+    if exam is None:
+        exam = api("POST", "/exams", {"title": EXAM_TITLE})
+        api("POST", f"/exams/{exam['id']}/questions", {"question_ids": [q["id"] for q in questions]})
+        exam = api("GET", f"/exams/{exam['id']}")
+    assignment = one(api("POST", "/assignments/search", {"page": 1, "limit": 200})["data"], EXAM_TITLE, "title")
+    if assignment is None:
+        opens = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)
+        assignment = api("POST", "/assignments", {
+            "exam_id": exam["id"], "title": EXAM_TITLE, "class_ids": [klass["id"]],
+            "open_at": opens.isoformat(), "close_at": (opens + datetime.timedelta(days=7)).isoformat(),
+            "duration_minutes": 120, "max_attempts": 1,
+            # deterministic labels: a verification step that clicks "phương án A" must mean the same A every run
+            "shuffle_questions": False, "shuffle_options": False, "results_policy": "after_submit"})
+    return exam, assignment
 
 
 def report(state: dict) -> None:
@@ -168,6 +193,8 @@ def report(state: dict) -> None:
         for qtype, key in KEY.items():
             count = sum(1 for s in QUESTIONS if s["type"] == qtype)
             print(f"  {qtype:<13} ×{count}  {json.dumps(key, ensure_ascii=False)}")
+    if state.get("assignment"):
+        print(f"bài giao  : {EXAM_TITLE} · {state['assignment']['id']}")
     print("\ndán vào .ai/credentials.env:")
     for username, _ in STUDENTS:
         print(f"  {username.replace('e2e.hs', 'E2E_HS').upper()}_USER={username}")
@@ -178,12 +205,13 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--show", action="store_true", help="print what exists, create nothing")
     parser.add_argument("--reset", action="store_true", help="delete the E2E questions and write them again")
+    parser.add_argument("--with-exam", action="store_true", help="also create the exam and give it to the test class")
     args = parser.parse_args()
     env = credentials()
     api = Api((env.get("LOCAL_URL") or "http://localhost:8088") + "/api")
     api("POST", "/auth/login", {"org_code": env.get("LOCAL_ORG", "trungtama"),
                                 "username": env.get("LOCAL_USER"), "password": env.get("LOCAL_PASSWORD")})
-    report(build(api, args.show, args.reset))
+    report(build(api, args.show, args.reset, args.with_exam))
     if args.show:
         print("\n(--show: không tạo gì)", file=sys.stderr)
 
