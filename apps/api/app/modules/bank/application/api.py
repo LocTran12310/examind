@@ -10,6 +10,7 @@ from app.modules.bank.application.dto import BankFilters, QuestionView, TriageCo
 from app.modules.bank.application.ports import QuestionReader
 from app.modules.bank.domain.entities import Question
 from app.modules.bank.domain.ports import AnswerStats, DocumentQuestions, DuplicateFinder, QuestionRepository, ReviewLog, Taxonomy
+from app.modules.bank.domain.services.review import fill_difficulty
 from app.shared.application.unit_of_work import UnitOfWork
 
 
@@ -94,6 +95,18 @@ class BankApi:
     def suggest_topic(self, question_id: uuid.UUID, topic_id: uuid.UUID, source: str, score: float) -> None:
         """The primary topic ingestion suggests (source auto | knn | ai)."""
         self.documents.add_topic(question_id, topic_id, True, source, score)
+
+    def set_difficulty(self, levels: dict[uuid.UUID, tuple[str, str]]) -> dict[str, int]:
+        """The level a machine pass worked out (source auto | ai), flushed with the caller's transaction; how many
+        took each source. A level a person set is never overwritten (difficulty-at-upload ADR-04), so a question
+        the teacher already graded simply does not appear in the counts."""
+        written: dict[str, int] = {}
+        for q in self.questions.many(None, list(levels)):
+            level, source = levels[q.id]
+            if fill_difficulty(q, level, source):
+                written[source] = written.get(source, 0) + 1
+        self.uow.flush()
+        return written
 
     def review_untagged(self, question_ids: list[uuid.UUID]) -> int:
         """Flushed with the caller's transaction (ingestion): questions nobody could place wait for a teacher."""

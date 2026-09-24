@@ -208,6 +208,11 @@ class QuestionBank(Protocol):
 
     def suggest_topic(self, question_id: uuid.UUID, topic_id: uuid.UUID, source: str, score: float) -> None: ...
 
+    def set_difficulty(self, levels: dict[uuid.UUID, tuple[str, str]]) -> dict[str, int]:
+        """{question id: (level, auto | ai)} onto those questions; how many took each source. A level a person set
+        is left alone (difficulty-at-upload ADR-04), so the answer can be smaller than what was asked for."""
+        ...
+
     def review_untagged(self, question_ids: list[uuid.UUID]) -> int:
         """topic-coverage ADR-02: questions the suggester could not place wait for a teacher; how many moved."""
         ...

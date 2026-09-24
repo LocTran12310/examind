@@ -17,14 +17,19 @@ def bank_ready(client, db):
 def test_blueprint_draws_distinct_questions_and_reports_shortfalls(client, db):
     _, t = bank_ready(client, db)
     exam = client.post("/api/exams", json={"title": "Kiểm tra 15 phút"}).json()
-    rows = [{"topic_id": t["Đại số"], "type": "mcq", "count": 6}, {"topic_id": t["Hình học"], "type": "mcq", "count": 4},
-            {"topic_id": t["Đại số"], "type": "mcq", "difficulty": "vdc", "count": 3}]
+    # a mức độ row used to find nothing at all — the pipeline never wrote one — so it was short by its whole count.
+    # Since difficulty-at-upload every parsed question carries a level, and what the row asks for is what is there
+    graded = client.post("/api/questions/search", json={"topic_id": t["Đại số"], "type": "mcq", "difficulty": "vdc",
+                                                        "status": "usable", "limit": 1}).json()["total"]
+    assert graded > 0
+    rows = [{"topic_id": t["Đại số"], "type": "mcq", "difficulty": "vdc", "count": 50},
+            {"topic_id": t["Đại số"], "type": "mcq", "count": 6}, {"topic_id": t["Hình học"], "type": "mcq", "count": 4}]
     r = client.post(f"/api/exams/{exam['id']}/blueprint", json={"rows": rows, "seed": 1}).json()
-    assert r["added"] == 10 and r["shortfalls"] == [{"row": 2, "missing": 3}]
+    assert r["added"] == graded + 10 and r["shortfalls"] == [{"row": 0, "missing": 50 - graded}]
     e = r["exam"]
     ids = [q["id"] for q in e["questions"]]
-    assert len(set(ids)) == 10 and e["total_points"] == 2.5
-    assert [q["position"] for q in e["questions"]] == list(range(1, 11))
+    assert len(set(ids)) == r["added"] and e["total_points"] == r["added"] * 0.25
+    assert [q["position"] for q in e["questions"]] == list(range(1, r["added"] + 1))
     assert all(q["section"] == "I" and q["answer"] for q in e["questions"])
 
 

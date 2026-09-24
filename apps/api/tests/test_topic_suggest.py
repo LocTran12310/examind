@@ -1,5 +1,6 @@
 import json
 import os
+import re
 
 from cryptography.fernet import Fernet
 import httpx
@@ -41,8 +42,10 @@ def test_ai_tagger_fills_questions_without_keyword_cues(client, db, monkeypatch)
         body = json.loads(request.content)
         user = body["messages"][-1]["content"]
         listing = user.split("CÂU HỎI:")[0]
+        if "CHUYÊN ĐỀ:" not in listing:
+            return _no_difficulty()
         idx = next(int(line.split(".")[0]) for line in listing.splitlines() if line.endswith("› Xác suất cổ điển"))
-        numbers = [int(x.split(":")[0].replace("Câu ", "")) for x in user.split("CÂU HỎI:")[1].strip().split("\n\n")]
+        numbers = _numbers(user.split("CÂU HỎI:")[1])
         return httpx.Response(200, json={"message": {"content": json.dumps({"results": [{"number": n, "index": idx, "confidence": 0.66} for n in numbers]})}})
 
     monkeypatch.setattr(llm, "TRANSPORT", httpx.MockTransport(handler))
@@ -60,13 +63,24 @@ def _tagger_answering(topic_name: str, with_name: str | None = None, shift: int 
     def handler(request):
         user = json.loads(request.content)["messages"][-1]["content"]
         listing, questions = user.split("CÂU HỎI:")
+        if "CHUYÊN ĐỀ:" not in listing:
+            return _no_difficulty()  # the same model is asked for mức độ too; this test is about the topics
         idx = next(int(line.split(".")[0]) for line in listing.splitlines() if line.endswith("› " + topic_name)) + shift
-        numbers = [int(x.split(":")[0].replace("Câu ", "")) for x in questions.strip().split("\n\n")]
+        numbers = _numbers(questions)
         if asked is not None:
             asked.extend(numbers)
         res = [{"number": n, "index": idx, "confidence": 0.9, **({"name": with_name} if with_name else {})} for n in numbers]
         return httpx.Response(200, json={"message": {"content": json.dumps({"results": res})}})
     return handler
+
+
+def _numbers(questions: str) -> list[int]:
+    return [int(m.group(1)) for m in re.finditer(r"^Câu (\d+):", questions, re.M)]
+
+
+def _no_difficulty():
+    """An empty answer to the difficulty request: the position rule keeps every question (difficulty-at-upload)."""
+    return httpx.Response(200, json={"message": {"content": json.dumps({"results": []})}})
 
 
 def _tag_model(client, db):

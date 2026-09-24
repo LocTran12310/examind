@@ -3,7 +3,7 @@
 # Ticket graph — 2026092404-difficulty-at-upload
 
 - Units of Work: **4**
-- Tickets: **8** (3 done)
+- Tickets: **8** (5 done)
 - Total effort: **3.1d**
 - Critical path: **1.2d** across 3 tickets
 - Theoretical minimum duration with unlimited parallelism: **1.2d**
@@ -30,8 +30,8 @@ graph LR
     T_01_03["✓ T-01-03<br/>Mọi đường của người đều ghi manual"]
   end
   subgraph UOW_02["UOW-02 · Lượt model trong pipeline tách đề"]
-    T_02_01["T-02-01<br/>Lượt model đoán mức độ"]
-    T_02_02["T-02-02<br/>Một bước mới trong pipeline"]
+    T_02_01["✓ T-02-01<br/>Lượt model đoán mức độ"]
+    T_02_02["✓ T-02-02<br/>Một bước mới trong pipeline"]
   end
   subgraph UOW_03["UOW-03 · Đo trước khi tin, rồi điền cho câu cũ"]
     T_03_01["T-03-01<br/>Báo cáo đo hai tín hiệu"]
@@ -78,8 +78,8 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-01-01 | UOW-01 | data | feature | 2h | — | AC-04 | done |
 | T-01-02 | UOW-01 | domain | feature | 3h | — | AC-02 | done |
 | T-01-03 | UOW-01 | api | feature | 3h | T-01-01 | AC-04 | done |
-| T-02-01 | UOW-02 | api | feature | 4h | T-01-02 | AC-02 | todo |
-| T-02-02 | UOW-02 | api | feature | 3h | T-02-01, T-01-01 | AC-01, AC-03 | todo |
+| T-02-01 | UOW-02 | api | feature | 4h | T-01-02 | AC-02 | done |
+| T-02-02 | UOW-02 | api | feature | 3h | T-02-01, T-01-01 | AC-01, AC-03 | done |
 | T-03-01 | UOW-03 | api | feature | 3h | T-02-01 | AC-02 | todo |
 | T-03-02 | UOW-03 | api | feature | 3h | T-02-01, T-01-03 | AC-05 | todo |
 | T-04-01 | UOW-04 | web | feature | 4h | T-01-03 | AC-06 | todo |

@@ -17,14 +17,17 @@ from app.modules.ingestion.application.commands.update_document_meta import Upda
 from app.modules.ingestion.application.commands.upload_document import UploadDocument, UploadDocumentHandler
 from app.modules.ingestion.application.image_store import document_store
 from app.modules.ingestion.application.queries.check_duplicates import CheckDuplicates, CheckDuplicatesHandler
+from app.modules.ingestion.application.run import IngestRun
 from app.modules.ingestion.application.stages.ai_split import AiSplitter
+from app.modules.ingestion.application.stages.difficulty_suggest import DifficultySuggester
 from app.modules.ingestion.application.stages.extract import Extractor
-from app.modules.ingestion.application.stages.topic_suggest import TopicSuggester
+from app.modules.ingestion.application.stages.topic_suggest import Stored, TopicSuggester
 from app.modules.ingestion.domain.entities import AiModel, SourceDocument
 from app.modules.ingestion.domain.errors import DocxError, LlmError
 from app.modules.ingestion.domain.ports import ChatResult, TopicNode
 from app.modules.ingestion.domain.services.documents import UnsupportedFile
 from app.modules.ingestion.domain.services.lines import Line
+from app.modules.ingestion.domain.services.splitter import ParsedQuestion
 from app.shared.application.actor import Actor
 from app.shared.domain.errors import Conflict, Forbidden, Invalid, NotFound
 from tests.unit.fakes import FakeAudit, FakeUow
@@ -128,6 +131,8 @@ class FakeTaxonomy:
 class FakeBank:
     def __init__(self):
         self.removed, self.added, self.topics, self.followed = [], [], [], []
+        self.difficulties: dict = {}   # question id -> (level, source), as the pipeline's difficulty pass writes it
+        self.manual: set = set()       # questions a teacher graded: the bank refuses to move those (ADR-04)
         self.kept: set = set()
         self.near: dict = {}  # question id -> [(topic id, similarity)] for the tagging queue's kNN
 
@@ -153,6 +158,15 @@ class FakeBank:
 
     def suggest_topic(self, question_id, topic_id, source, score):
         self.topics.append((question_id, topic_id, source))
+
+    def set_difficulty(self, levels):
+        written: dict = {}
+        for qid, (level, source) in levels.items():
+            if qid in self.manual:
+                continue
+            self.difficulties[qid] = (level, source)
+            written[source] = written.get(source, 0) + 1
+        return written
 
     def follow_document(self, document_id, changes, old_tag_id, new_tag_id):
         self.followed.append((document_id, changes, old_tag_id, new_tag_id))
@@ -314,13 +328,13 @@ class NoChat:
         return []
 
 
-def _pipeline(doc, docx):
+def _pipeline(doc, docx, models=None, chat=None):
     docs, bank, taxonomy, uow = FakeDocuments(doc), FakeBank(), FakeTaxonomy(), FakeUow()
-    models, chat = FakeModels(), NoChat()
+    models, chat = models or FakeModels(), chat or NoChat()
     ai = AiSplitter(models, chat, scanner=None)
     handle = IngestDocumentHandler(docs, FakeFiles(**{doc.storage_key: b"file"}), lambda d, w, s: (lambda data, page=None: None),
                                    Extractor(docx, None, None, ai), ai, taxonomy, bank, TopicSuggester(taxonomy, bank, models, chat),
-                                   lambda: "now", uow)
+                                   DifficultySuggester(bank, models, chat), lambda: "now", uow)
     return handle, bank, uow, taxonomy
 
 
@@ -329,7 +343,7 @@ def test_pipeline_parses_detects_the_header_and_hands_questions_to_the_bank():
     handle, bank, uow, taxonomy = _pipeline(doc, FakeDocx(LINES))
     handle(IngestDocument(str(doc.id)))
     assert doc.status == "parsed" and doc.question_count == 2 and doc.finished_at == "now" and uow.commits == 2
-    assert [s["step"] for s in doc.log] == ["download", "extract", "split", "persist", "triage", "suggest_topics"]
+    assert [s["step"] for s in doc.log] == ["download", "extract", "split", "persist", "triage", "suggest_topics", "suggest_difficulty"]
     assert doc.meta["subject_id"] == str(SUBJECT) and doc.meta["grade"] == 10 and doc.meta["exam_kind"] == "Giữa kỳ"
     assert bank.removed == [(doc.id, ("approved",), True)]
     drafts = [d for d, _ in bank.added]
@@ -346,6 +360,68 @@ def test_pipeline_keeps_approved_positions():
     bank.kept = {(None, 1)}
     handle(IngestDocument(str(doc.id)))
     assert [d["number"] for d, _ in bank.added] == [2] and doc.question_count == 2  # 1 new + 1 kept
+
+
+def _difficulty_doc(**config):
+    return _doc(status="queued", meta={}, processing_config={"split_mode": "rule", "threshold": 0.85, **config})
+
+
+def test_every_parsed_question_ends_with_a_level_without_any_model():
+    """AC-01: the position rule alone covers the whole paper, so the coverage does not depend on a model at all."""
+    doc = _difficulty_doc()
+    handle, bank, _, _ = _pipeline(doc, FakeDocx(LINES))
+    handle(IngestDocument(str(doc.id)))
+    assert len(bank.difficulties) == len(bank.added) == 2
+    assert set(bank.difficulties.values()) == {("nb", "auto")}  # câu 1 and 2 of a paper with no PHẦN header
+    assert doc.log[-1]["step"] == "suggest_difficulty" and doc.log[-1] == {"step": "suggest_difficulty", "ms": doc.log[-1]["ms"],
+                                                                          "rule": 2, "ai": 0}
+
+
+def test_the_model_leads_where_it_answers_and_the_rule_fills_the_rest():
+    """AC-02: the model is the only signal that reads the question, so its answer wins — and the questions it
+    skipped are not left empty."""
+    tag = AiModel(name="Qwen", provider="ollama", model="q7", organization_id=ORG)
+    chat = FakeChat(json.dumps({"results": [{"number": 1, "level": "vdc"}]}))
+    doc = _difficulty_doc(tag_model=str(tag.id))
+    handle, bank, _, _ = _pipeline(doc, FakeDocx(LINES), models=FakeModels(tag), chat=chat)
+    handle(IngestDocument(str(doc.id)))
+    assert sorted(bank.difficulties.values()) == [("nb", "auto"), ("vdc", "ai")]
+    assert "Trả về đúng 2 phần tử, cho các câu: 1, 2." in chat.calls[-1]["user"]
+    assert doc.log[-1]["rule"] == 1 and doc.log[-1]["ai"] == 1
+
+
+@pytest.mark.parametrize("failure", [LlmError("Model không trả về JSON"), LlmError("Model không phản hồi kịp (timeout)")])
+def test_a_broken_model_is_a_warning_and_the_paper_is_still_parsed(failure):
+    """AC-03: missing, disabled, slow or rambling, the model never costs the teacher the upload — the levels come
+    from the rule and the document's log says what happened."""
+    tag = AiModel(name="Qwen", provider="ollama", model="q7", organization_id=ORG)
+    doc = _difficulty_doc(tag_model=str(tag.id))
+    handle, bank, _, _ = _pipeline(doc, FakeDocx(LINES), models=FakeModels(tag), chat=FakeChat(failure))
+    handle(IngestDocument(str(doc.id)))
+    assert doc.status == "parsed" and set(bank.difficulties.values()) == {("nb", "auto")}
+    assert any("Model đoán mức độ lỗi" in w for w in doc.log[-1]["items"])
+
+
+def test_a_disabled_or_foreign_model_is_simply_not_asked():
+    off = AiModel(name="Qwen", provider="ollama", model="q7", organization_id=ORG, enabled=False)
+    doc = _difficulty_doc(tag_model=str(off.id))
+    handle, bank, _, _ = _pipeline(doc, FakeDocx(LINES), models=FakeModels(off), chat=NoChat())
+    handle(IngestDocument(str(doc.id)))
+    assert set(bank.difficulties.values()) == {("nb", "auto")} and not doc.log[-1].get("items")
+
+
+def test_a_level_a_teacher_set_is_left_where_it_is_and_each_part_gets_its_own_band():
+    """ADR-04: the bank refuses to move a `manual` level, so a re-parse cannot undo a teacher's correction. The
+    stage reads the paper's parts as the rule defines them: Phần I câu 1 is the mildest, Phần III câu 5 the hardest."""
+    doc, bank = _difficulty_doc(), FakeBank()
+    graded, fresh = uuid.uuid4(), uuid.uuid4()
+    bank.manual.add(graded)
+    rows = [(ParsedQuestion(number=1, part="1", type="mcq", stem="a"), Stored(graded, "a", [])),
+            (ParsedQuestion(number=5, part="3", type="short_answer", stem="b"), Stored(fresh, "b", []))]
+    run = IngestRun(doc)
+    DifficultySuggester(bank, FakeModels(), NoChat())(doc, rows, run)
+    assert bank.difficulties == {fresh: ("vdc", "auto")}
+    assert run.log[-1]["rule"] == 1 and run.log[-1]["ai"] == 0
 
 
 def test_pipeline_failure_fit_for_the_teacher_is_recorded():

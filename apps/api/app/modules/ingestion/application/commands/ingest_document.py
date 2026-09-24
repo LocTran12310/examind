@@ -1,4 +1,5 @@
-"""Ingestion pipeline run by the worker: extract → header → split → (AI fallback) → persist → triage → suggest (ADR-02)."""
+"""Ingestion pipeline run by the worker: extract → header → split → (AI fallback) → persist → triage → suggest topics
+→ suggest difficulty (ADR-02)."""
 from collections.abc import Callable
 from dataclasses import dataclass
 import uuid
@@ -7,6 +8,7 @@ import structlog
 
 from app.modules.ingestion.application.run import IngestRun
 from app.modules.ingestion.application.stages.ai_split import AiSplitter
+from app.modules.ingestion.application.stages.difficulty_suggest import DifficultySuggester
 from app.modules.ingestion.application.stages.extract import Extractor
 from app.modules.ingestion.application.stages.topic_suggest import Stored, TopicSuggester
 from app.modules.ingestion.domain.errors import IngestError
@@ -50,9 +52,11 @@ class IngestDocumentHandler:
     (IngestError) is recorded on the document; anything else propagates so the job queue retries."""
 
     def __init__(self, documents: DocumentRepository, files: FileStorage, images: ImageStores, extract: Extractor,
-                 ai: AiSplitter, taxonomy: Taxonomy, bank: QuestionBank, topics: TopicSuggester, clock, uow: UnitOfWork):
+                 ai: AiSplitter, taxonomy: Taxonomy, bank: QuestionBank, topics: TopicSuggester,
+                 difficulty: DifficultySuggester, clock, uow: UnitOfWork):
         self.documents, self.files, self.images, self.extract, self.ai = documents, files, images, extract, ai
-        self.taxonomy, self.bank, self.topics, self.clock, self.uow = taxonomy, bank, topics, clock, uow
+        self.taxonomy, self.bank, self.topics, self.difficulty = taxonomy, bank, topics, difficulty
+        self.clock, self.uow = clock, uow
 
     def __call__(self, cmd: IngestDocument) -> None:
         doc_id = uuid.UUID(cmd.document_id)
@@ -81,6 +85,9 @@ class IngestDocumentHandler:
             counts = self.bank.triage([q.id for _, q in rows], threshold, str(doc.id))
             run.step("triage", **counts)
             self.topics(doc, rows, run)
+            # after the topics: the same model answers both passes, and a level is worth nothing on a question that
+            # was never stored — by here every row is in the bank with its part and its number (ADR-02)
+            self.difficulty(doc, rows, run)
             doc.status = "parsed"
             doc.question_count = len(rows) + kept  # questions kept from a previous parse still belong to it
             if not rows and not kept:

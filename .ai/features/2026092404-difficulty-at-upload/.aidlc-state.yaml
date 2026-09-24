@@ -101,3 +101,68 @@ history:
     by: Loc Tran
     reason: one rule for the three human paths lives in the bank's review service; undo_batch, history and the read DTO/schema carry the trace the ticket adds
     ticket: T-01-03
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-24T16:04:14
+    by: Loc Tran
+    ticket: T-02-01
+  - gate: G4
+    action: scope
+    at: 2026-09-24T16:31:24
+    by: Loc Tran
+    ticket: T-02-01
+  - gate: G4
+    action: scope
+    at: 2026-09-24T16:31:33
+    by: Loc Tran
+    ticket: T-02-01
+  - gate: G4
+    action: scope
+    at: 2026-09-24T16:31:40
+    by: Loc Tran
+    reason: T-02-02 is built in the same working tree (the stage, its port and the wiring); the two ingestion tests now answer the difficulty request the same model is asked, and the blueprint test records the shortfall that stopped being one
+    ticket: T-02-01
+  - gate: G4
+    action: evidence
+    at: 2026-09-24T16:32:04
+    by: Loc Tran
+    ticket: T-02-01
+  - gate: G4
+    action: scope
+    at: 2026-09-24T16:33:17
+    by: Loc Tran
+    reason: T-02-02 is built in the same working tree (the stage, its port and the wiring); the two ingestion tests now answer the difficulty request the same model is asked, and the blueprint test records the shortfall that stopped being one
+    ticket: T-02-01
+  - gate: G4
+    action: evidence
+    at: 2026-09-24T16:33:40
+    by: Loc Tran
+    ticket: T-02-01
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-24T16:33:40
+    by: Loc Tran
+    reason: T-02-02 is built in the same working tree (the stage, its port and the wiring); the two ingestion tests now answer the difficulty request the same model is asked, and the blueprint test records the shortfall that stopped being one
+    ticket: T-02-01
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-24T16:34:06
+    by: Loc Tran
+    ticket: T-02-02
+  - gate: G4
+    action: scope
+    at: 2026-09-24T16:34:28
+    by: Loc Tran
+    reason: the write path the stage needs (the bank's set_difficulty, its port and the adapter) and the two tests that now answer the difficulty request of the same model
+    ticket: T-02-02
+  - gate: G4
+    action: evidence
+    at: 2026-09-24T16:35:02
+    by: Loc Tran
+    ticket: T-02-02
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-24T16:35:02
+    by: Loc Tran
+    reason: the write path the stage needs (the bank's set_difficulty, its port and the adapter) and the two tests that now answer the difficulty request of the same model
+    ticket: T-02-02

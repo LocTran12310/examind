@@ -20,6 +20,8 @@ class _BankApi(Protocol):
 
     def suggest_topic(self, question_id: uuid.UUID, topic_id: uuid.UUID, source: str, score: float) -> None: ...
 
+    def set_difficulty(self, levels: dict[uuid.UUID, tuple[str, str]]) -> dict[str, int]: ...
+
     def review_untagged(self, question_ids: list[uuid.UUID]) -> int: ...
 
     def follow_document(self, document_id: uuid.UUID, changes: dict, old_tag_id: uuid.UUID | None, new_tag_id: uuid.UUID | None) -> None: ...
@@ -52,6 +54,9 @@ class BankAdapter:
 
     def suggest_topic(self, question_id: uuid.UUID, topic_id: uuid.UUID, source: str, score: float) -> None:
         self.bank.suggest_topic(question_id, topic_id, source, score)
+
+    def set_difficulty(self, levels: dict[uuid.UUID, tuple[str, str]]) -> dict[str, int]:
+        return self.bank.set_difficulty(levels)
 
     def review_untagged(self, question_ids: list[uuid.UUID]) -> int:
         return self.bank.review_untagged(question_ids)

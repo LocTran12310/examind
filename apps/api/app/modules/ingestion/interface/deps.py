@@ -25,6 +25,7 @@ from app.modules.ingestion.application.queries.get_document import DocumentFileH
 from app.modules.ingestion.application.queries.ingestion_settings import GetIngestionSettingsHandler
 from app.modules.ingestion.application.queries.search_documents import SearchDocumentsHandler
 from app.modules.ingestion.application.stages.ai_split import AiSplitter
+from app.modules.ingestion.application.stages.difficulty_suggest import DifficultySuggester
 from app.modules.ingestion.application.stages.extract import Extractor
 from app.modules.ingestion.application.stages.topic_suggest import TopicSuggester
 from app.modules.ingestion.domain.ports import ExamDrafts, QuestionBank
@@ -101,7 +102,7 @@ def ingest_document(db: Session) -> IngestDocumentHandler:
         SqlDocumentRepository(db), S3FileStorage(),
         lambda doc, warnings, stats: document_store(store, vector, doc.organization_id, doc.id, warnings, stats),
         Extractor(PandocDocxReader(), PdfplumberReader(), scanner, ai), ai, taxonomy, bank,
-        TopicSuggester(taxonomy, bank, models, chat), utcnow, SqlUnitOfWork(db))
+        TopicSuggester(taxonomy, bank, models, chat), DifficultySuggester(bank, models, chat), utcnow, SqlUnitOfWork(db))
 
 
 def mark_ingest_failed(db: Session) -> MarkIngestFailedHandler:
