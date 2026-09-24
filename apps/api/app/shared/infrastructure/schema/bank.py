@@ -31,6 +31,7 @@ questions = Table(
     Column("answer", JSONB(none_as_null=True)),
     Column("solution", Text, nullable=False, default=""),
     Column("difficulty", String(8)),
+    Column("difficulty_source", String(8)),  # auto (position rule) | ai | manual — null for rows written before it
     Column("grade", SmallInteger),
     Column("status", String(20), nullable=False, default="draft"),
     Column("source", String(32)),  # demo | document | manual

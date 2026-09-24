@@ -3,7 +3,7 @@
 # Ticket graph — 2026092404-difficulty-at-upload
 
 - Units of Work: **4**
-- Tickets: **8** (0 done)
+- Tickets: **8** (1 done)
 - Total effort: **3.1d**
 - Critical path: **1.2d** across 3 tickets
 - Theoretical minimum duration with unlimited parallelism: **1.2d**
@@ -25,7 +25,7 @@ slice — the floor on how fast it can finish no matter how many people work on 
 ```mermaid
 graph LR
   subgraph UOW_01["UOW-01 · Quy tắc vị trí và dấu vết mức độ"]
-    T_01_01["T-01-01<br/>Cột difficulty_source"]
+    T_01_01["✓ T-01-01<br/>Cột difficulty_source"]
     T_01_02["T-01-02<br/>Quy tắc vị trí, thuần và kiểm được"]
     T_01_03["T-01-03<br/>Mọi đường của người đều ghi manual"]
   end
@@ -75,7 +75,7 @@ adding people to tickets off this path will not make the feature ship sooner.
 
 | ID | UoW | Layer | Type | Est | Depends on | Verifies | Status |
 |----|-----|-------|------|-----|-----------|----------|--------|
-| T-01-01 | UOW-01 | data | feature | 2h | — | AC-04 | todo |
+| T-01-01 | UOW-01 | data | feature | 2h | — | AC-04 | done |
 | T-01-02 | UOW-01 | domain | feature | 3h | — | AC-02 | todo |
 | T-01-03 | UOW-01 | api | feature | 3h | T-01-01 | AC-04 | todo |
 | T-02-01 | UOW-02 | api | feature | 4h | T-01-02 | AC-02 | todo |

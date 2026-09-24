@@ -64,7 +64,7 @@ ticket:
     layer: data
     type: feature
     estimate_hours: 2
-    status: todo
+    status: done
     depends_on: []
     blocks:
       - T-01-03

@@ -27,3 +27,30 @@ history:
     at: 2026-09-24T15:41:03
     by: Loc Tran
     evidence: graph valid - 4 UoW, 8 tickets, no cycles
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-24T15:47:10
+    by: Loc Tran
+    ticket: T-01-01
+  - gate: G4
+    action: scope
+    at: 2026-09-24T15:51:46
+    by: Loc Tran
+    ticket: T-01-01
+  - gate: G4
+    action: scope
+    at: 2026-09-24T15:51:54
+    by: Loc Tran
+    reason: the revision file inside the declared apps/api/migrations/versions directory
+    ticket: T-01-01
+  - gate: G4
+    action: evidence
+    at: 2026-09-24T15:52:10
+    by: Loc Tran
+    ticket: T-01-01
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-24T15:52:10
+    by: Loc Tran
+    reason: the revision file inside the declared apps/api/migrations/versions directory
+    ticket: T-01-01

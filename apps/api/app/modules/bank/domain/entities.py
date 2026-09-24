@@ -9,12 +9,14 @@ QUESTION_TYPES = ("mcq", "true_false", "short_answer", "essay")
 STATUSES = ("draft", "auto_approved", "needs_review", "approved", "rejected", "duplicate", "flagged")
 USABLE = ("auto_approved", "approved")
 DIFFICULTIES = ("nb", "th", "vd", "vdc")
+# where a difficulty came from (difficulty-at-upload ADR-01): the position rule, the model, or a person
+DIFFICULTY_SOURCES = ("auto", "ai", "manual")
 REVIEW_ACTIONS = ("approve", "reject", "restore", "edit", "answer", "topic", "tag", "skip", "spot_ok", "spot_fail", "bulk",
                   "triage", "undo")
 STATUS_KEYS = ("auto_approved", "needs_review", "approved", "rejected", "duplicate", "flagged")  # the review counts
 # what a snapshot may hold — everything the bank's bulk bar can move, so a review event is enough to put it back
-SNAPSHOT_FIELDS = ("status", "answer", "confidence", "issues", "difficulty", "grade", "subject_id", "topics",
-                   "primary_topic", "tags")
+SNAPSHOT_FIELDS = ("status", "answer", "confidence", "issues", "difficulty", "difficulty_source", "grade", "subject_id",
+                   "topics", "primary_topic", "tags")
 
 
 @dataclass(eq=False)
@@ -30,6 +32,7 @@ class Question:
     answer: dict | None = None
     solution: str = ""
     difficulty: str | None = None
+    difficulty_source: str | None = None  # auto | ai | manual (ADR-01); null while the question has no difficulty
     grade: int | None = None
     status: str = "draft"
     source: str | None = None  # demo | document | manual
@@ -65,7 +68,8 @@ class Question:
         so a caller that holds them passes them in and a caller that does not leaves those keys out: an absent key
         means "unknown here", never "was empty" — that is how events written before the snapshot widened read back."""
         snap = {"status": self.status, "answer": self.answer, "confidence": self.confidence, "issues": list(self.issues or []),
-                "difficulty": self.difficulty, "grade": self.grade, "subject_id": str(self.subject_id) if self.subject_id else None}
+                "difficulty": self.difficulty, "difficulty_source": self.difficulty_source, "grade": self.grade,
+                "subject_id": str(self.subject_id) if self.subject_id else None}
         if topics is not None:
             snap["topics"] = [str(t) for t in topics]
             snap["primary_topic"] = str(primary_topic) if primary_topic else None
