@@ -1,0 +1,29 @@
+# Managed by scripts/aidlc.py — do not edit by hand.
+# Editing this file to skip a gate defeats the point of having one.
+feature: difficulty-at-upload
+slug: 2026092404-difficulty-at-upload
+profile: none
+created: 2026-09-24T15:39:12
+ruleset: 7
+current_gate: G3
+history:
+  - gate: G0
+    action: passed
+    at: 2026-09-24T15:40:21
+    by: Loc Tran
+    evidence: architecture map verified by Loc Tran (blanket pre-approval in chat, 2026-09-22 — confirm at final review); 00-intent.md complete
+  - gate: G1
+    action: passed
+    at: 2026-09-24T15:40:21
+    by: Loc Tran
+    evidence: 7 assumptions, none blocking-and-pending; 6 acceptance criteria defined
+  - gate: G2
+    action: passed
+    at: 2026-09-24T15:41:03
+    by: Loc Tran
+    evidence: 4 ADR(s) recorded
+  - gate: G3
+    action: passed
+    at: 2026-09-24T15:41:03
+    by: Loc Tran
+    evidence: graph valid - 4 UoW, 8 tickets, no cycles
