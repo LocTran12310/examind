@@ -78,7 +78,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 4
-    status: in_progress
+    status: done
     depends_on:
       - T-01-01
     blocks:
@@ -88,7 +88,10 @@ ticket:
       - AC-03
     touches:
       - apps/web/src/components/page-components/ExamRunner/Runner/Runner.tsx   # new
+      - apps/web/src/components/page-components/ExamRunner/QuestionCard/QuestionCard.tsx   # new
+      - apps/web/src/components/page-components/ExamRunner/PaperView/PaperView.tsx   # new
       - apps/web/src/hooks/page-hooks/exam-runner/use-exam-runner.ts   # new
+      - apps/web/src/lib/page-libs/exam-runner/card-id.ts   # new
   - id: T-02-01
     uow: UOW-02
     title: 'Điều hướng theo vai trò lồng nhau'
@@ -122,7 +125,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 3
-    status: todo
+    status: in_progress
     depends_on: []
     blocks:
       - T-03-02

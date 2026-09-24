@@ -3,7 +3,7 @@
 # Ticket graph — 2026092402-exam-runner-and-roles
 
 - Units of Work: **4**
-- Tickets: **7** (2 done)
+- Tickets: **7** (3 done)
 - Total effort: **2.8d**
 - Critical path: **1.4d** across 3 tickets
 - Theoretical minimum duration with unlimited parallelism: **1.4d**
@@ -26,7 +26,7 @@ slice — the floor on how fast it can finish no matter how many people work on 
 graph LR
   subgraph UOW_01["UOW-01 · Khung làm bài đứng yên và xem được cả đề"]
     T_01_01["✓ T-01-01<br/>Khung làm bài giữ một bề rộng"]
-    T_01_02["T-01-02<br/>Chế độ Toàn đề"]
+    T_01_02["✓ T-01-02<br/>Chế độ Toàn đề"]
   end
   subgraph UOW_02["UOW-02 · Vai trò lồng nhau: HS ⊂ GV ⊂ Admin"]
     T_02_01["T-02-01<br/>Điều hướng theo vai trò lồng nhau"]
@@ -71,9 +71,9 @@ adding people to tickets off this path will not make the feature ship sooner.
 | ID | UoW | Layer | Type | Est | Depends on | Verifies | Status |
 |----|-----|-------|------|-----|-----------|----------|--------|
 | T-01-01 | UOW-01 | web | feature | 2h | — | AC-01 | done |
-| T-01-02 | UOW-01 | web | feature | 4h | T-01-01 | AC-02, AC-03 | in_progress |
+| T-01-02 | UOW-01 | web | feature | 4h | T-01-01 | AC-02, AC-03 | done |
 | T-02-01 | UOW-02 | web | feature | 2h | — | AC-06 | todo |
 | T-02-02 | UOW-02 | api | feature | 3h | — | AC-07 | done |
-| T-03-01 | UOW-03 | api | feature | 3h | — | AC-04 | todo |
+| T-03-01 | UOW-03 | api | feature | 3h | — | AC-04 | in_progress |
 | T-03-02 | UOW-03 | api | feature | 4h | T-03-01 | AC-05 | todo |
 | T-04-01 | UOW-04 | web | feature | 4h | T-01-02, T-03-02 | AC-04, AC-05 | todo |

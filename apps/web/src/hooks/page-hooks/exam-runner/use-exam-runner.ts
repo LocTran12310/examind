@@ -31,6 +31,8 @@ export function useExamRunner(view: AttemptView, onFinished: () => void) {
   const { mutateAsync: submit } = useSubmitAttemptMutation(view.id);
   const { mutateAsync: reportTabSwitch } = useTabSwitchMutation(view.id);
   const timer = useQuestionTimer(q.id, !closed);
+  /** The option an mcq currently holds; whole-paper mode needs it per question, not only for the current one. */
+  const keyOf = (x: AttemptQuestion) => (x.type === "mcq" ? (((answers[x.id] ?? {}) as { key?: string }).key ?? null) : null);
 
   const finish = useCallback(async () => {
     setClosed(true);
@@ -69,12 +71,16 @@ export function useExamRunner(view: AttemptView, onFinished: () => void) {
     [saveAnswer, onFinished, timer],
   );
 
-  function change(value: AnswerResponse) {
+  /** `questionId` is how whole-paper mode answers a question other than the one the navigator points at. */
+  function change(value: AnswerResponse, questionId?: string) {
     if (closed) return;
-    setAnswers((a) => ({ ...a, [q.id]: value }));
-    setPending((p) => ({ ...p, [q.id]: value }));
-    clearTimeout(timers.current[q.id]);
-    const qid = q.id;
+    const qid = questionId ?? q.id;
+    // the question just touched becomes the current one, so the timer, the navigator and a switch back to
+    // one-question mode all follow the student instead of the last arrow they pressed
+    if (qid !== q.id) setIndex(view.questions.findIndex((x) => x.id === qid));
+    setAnswers((a) => ({ ...a, [qid]: value }));
+    setPending((p) => ({ ...p, [qid]: value }));
+    clearTimeout(timers.current[qid]);
     timers.current[qid] = setTimeout(() => void flush(qid, value), SAVE_DEBOUNCE);
   }
 
@@ -115,9 +121,10 @@ export function useExamRunner(view: AttemptView, onFinished: () => void) {
     confirming,
     setConfirming,
     change,
+    keyOf,
     unanswered: view.questions.filter((x) => !answered(x, answers[x.id])).length,
     unsaved: Object.keys(pending).length,
-    selected: q.type === "mcq" ? (((answers[q.id] ?? {}) as { key?: string }).key ?? null) : null,
+    selected: keyOf(q),
     /** "Nộp bài" confirmed: save what is still pending, then submit. */
     submitNow: async () => {
       setConfirming(false);

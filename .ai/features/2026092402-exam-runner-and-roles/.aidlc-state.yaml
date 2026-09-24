@@ -79,3 +79,40 @@ history:
     by: Loc Tran
     reason: the three drifting paths are apps/web files of UOW-01, being written by another agent in this checkout at the same time; T-02-02 changed only its declared apps/api paths
     ticket: T-02-02
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-24T12:31:15
+    by: Loc Tran
+    ticket: T-03-01
+  - gate: G4
+    action: scope
+    at: 2026-09-24T12:31:56
+    by: Loc Tran
+    ticket: T-01-02
+  - gate: G4
+    action: scope
+    at: 2026-09-24T12:33:27
+    by: Loc Tran
+    ticket: T-01-02
+  - gate: G4
+    action: scope
+    at: 2026-09-24T12:33:49
+    by: Loc Tran
+    ticket: T-01-02
+  - gate: G4
+    action: scope
+    at: 2026-09-24T12:34:03
+    by: Loc Tran
+    reason: Các file lệch đều là việc apps/api đang chạy song song của UOW-03 (T-03-01) trong cùng cây làm việc; T-01-02 chỉ sửa apps/web và các file web đều đã khai trong touches -
+    ticket: T-01-02
+  - gate: G4
+    action: evidence
+    at: 2026-09-24T12:34:18
+    by: Loc Tran
+    ticket: T-01-02
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-24T12:34:18
+    by: Loc Tran
+    reason: Các file lệch đều là việc apps/api đang chạy song song của UOW-03 (T-03-01) trong cùng cây làm việc; T-01-02 chỉ sửa apps/web và các file web đều đã khai trong touches -
+    ticket: T-01-02

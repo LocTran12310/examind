@@ -96,6 +96,52 @@ describe("exam runner", () => {
     expect(screen.getByText(/còn 1 câu chưa làm/)).toBeInTheDocument();
   });
 
+  it("lays the whole paper out and comes back to the question the student was on (AC-02)", () => {
+    mockFetch((url, init) => (init?.method === "PUT" ? { body: {} } : undefined));
+    renderWithQuery(<Runner view={view()} onFinished={() => {}} />);
+    expect(screen.getAllByTestId("exam-question")).toHaveLength(1); // one question to begin with (ADR-03)
+    fireEvent.click(within(screen.getByTestId("navigator")).getByRole("button", { name: "Câu 3" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Toàn đề" }));
+    const cards = screen.getAllByTestId("exam-question");
+    expect(cards).toHaveLength(4);
+    expect(cards[0]).toHaveTextContent("Câu hỏi số 1");
+    expect(cards[3]).toHaveTextContent("Câu hỏi số 4");
+    // every question brings the input its type needs, not just its stem
+    expect(within(cards[2]).getByTestId("tf-input")).toBeInTheDocument();
+    expect(within(cards[3]).getByLabelText("Đáp án")).toBeInTheDocument();
+    // the timer, the saved badge and the count are the same ones in both modes
+    expect(screen.getByTestId("timer")).toBeInTheDocument();
+    expect(screen.getByText("Đã lưu")).toBeInTheDocument();
+    expect(screen.getByText(/còn 3 câu chưa làm/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("radio", { name: "Một câu" }));
+    expect(screen.getAllByTestId("exam-question")).toHaveLength(1);
+    expect(screen.getByTestId("exam-question")).toHaveTextContent("Câu hỏi số 3");
+  });
+
+  it("answers any question of the whole paper and the navigator follows (AC-03)", async () => {
+    const f = mockFetch((url, init) => (init?.method === "PUT" ? { body: {} } : undefined));
+    const scrolled = vi.spyOn(Element.prototype, "scrollIntoView").mockImplementation(() => {});
+    renderWithQuery(<Runner view={view()} onFinished={() => {}} />);
+    fireEvent.click(screen.getByRole("radio", { name: "Toàn đề" }));
+    fireEvent.click(within(screen.getAllByTestId("exam-question")[1]).getByTestId("option-B"));
+    expect(screen.getByText("Chưa lưu 1")).toBeInTheDocument();
+    await act(async () => void vi.advanceTimersByTime(600));
+    await waitFor(() => expect(screen.getByText("Đã lưu")).toBeInTheDocument());
+    expect(f.mock.calls.some((c) => c[0] === "/api/attempts/att/answers/q2")).toBe(true);
+    expect(screen.getByText(/còn 2 câu chưa làm/)).toBeInTheDocument();
+    expect(within(screen.getAllByTestId("exam-question")[1]).getByTestId("option-B")).toHaveClass("bg-primary/10");
+    // the question answered on the paper is the one a switch back to one-question mode lands on
+    const nav = () => within(screen.getByTestId("navigator"));
+    expect(nav().getByRole("button", { name: "Câu 2" })).toHaveAttribute("aria-current", "true");
+    // a navigator click still moves the current question, and on the paper it brings that card up
+    fireEvent.click(nav().getByRole("button", { name: "Câu 4" }));
+    expect(nav().getByRole("button", { name: "Câu 4" })).toHaveAttribute("aria-current", "true");
+    expect(scrolled).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("radio", { name: "Một câu" }));
+    expect(screen.getByTestId("exam-question")).toHaveTextContent("Câu hỏi số 4");
+    scrolled.mockRestore();
+  });
+
   it("the countdown follows the server clock", () => {
     mockFetch(() => ({ body: {} }));
     // the server is 2 minutes ahead: 10 minutes to the deadline on its clock are 8 here
