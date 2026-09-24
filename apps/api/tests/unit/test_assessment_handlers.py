@@ -18,6 +18,7 @@ from app.modules.assessment.application.commands.sweep_expired_attempts import S
 from app.modules.assessment.application.commands.update_exam import UpdateExam, UpdateExamHandler
 from app.modules.assessment.application.common import Grading
 from app.modules.assessment.application.queries.attempt_result import AttemptResult, AttemptResultHandler
+from app.modules.assessment.application.queries.my_assignments import MyAssignmentsHandler
 from app.modules.assessment.domain.entities import Assignment, Attempt, AttemptAnswer, Exam, ExamQuestion
 from app.modules.assessment.domain.services import assignment_rules, attempt_rules, scoring
 from app.modules.assessment.domain.value_objects import DocumentRef, QuestionRef, Snapshot
@@ -440,8 +441,8 @@ def test_start_checks_window_target_and_attempts_left():
     a = w.assignment(close_at=NOW + timedelta(minutes=20))
     with pytest.raises(NotFound):
         w.start(a, OTHER)  # not in the class
-    with pytest.raises(Forbidden):
-        w.start(a, TEACHER)
+    with pytest.raises(NotFound):
+        w.start(a, TEACHER)  # staff are not targeted, so the same answer — not a 403 on the role (ADR-02)
     att = w.start(a)
     assert w.start(a) == att  # resumed
     assert w.attempts.rows[att].deadline_at == NOW + timedelta(minutes=20)  # the window closes before the time limit
@@ -450,6 +451,16 @@ def test_start_checks_window_target_and_attempts_left():
     with pytest.raises(Conflict) as e:
         w.start(a)
     assert e.value.code == "no_attempts_left"
+
+
+def test_the_student_side_home_answers_staff_with_their_own_assignments():
+    """exam-runner AC-07: a teacher is answered, not refused — and sees their own (nothing), never the student's."""
+    w = World(mcq())
+    a = w.assignment()
+    home = MyAssignmentsHandler(w.assignments, w.attempts, w.roster, w.clock)
+    mine = home(STUDENT)
+    assert [v.assignment.id for v in mine] == [a.id] and mine[0].state == "open" and mine[0].attempts_left == 1
+    assert home(TEACHER) == []
 
 
 def test_results_visibility_follows_the_policy():

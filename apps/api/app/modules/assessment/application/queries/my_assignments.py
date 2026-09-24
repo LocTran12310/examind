@@ -3,19 +3,17 @@ from app.modules.assessment.application.dto import MyAssignmentView, attempt_bri
 from app.modules.assessment.domain.ports import AssignmentRepository, AttemptRepository, Roster
 from app.modules.assessment.domain.services import assignment_rules
 from app.shared.application.actor import Actor
-from app.shared.domain.errors import Forbidden
 
 
 class MyAssignmentsHandler:
     """A student's home: what was given to them or their classes, the window state, their attempts (scores once
-    submitted) and the attempts left."""
+    submitted) and the attempts left. Open to any member of the org, not only a student (exam-runner ADR-02): what
+    keeps it the caller's own is the filter on actor.user_id below, so staff see their own — usually nothing."""
 
     def __init__(self, assignments: AssignmentRepository, attempts: AttemptRepository, roster: Roster, clock: Clock):
         self.assignments, self.attempts, self.roster, self.clock = assignments, attempts, roster, clock
 
     def __call__(self, actor: Actor) -> list[MyAssignmentView]:
-        if actor.role != "student":
-            raise Forbidden()
         now = self.clock()
         out = []
         for a in self.assignments.for_student(actor.org_id, actor.user_id, self.roster.classes_of(actor.org_id, actor.user_id)):

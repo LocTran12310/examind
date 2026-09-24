@@ -52,3 +52,30 @@ history:
     at: 2026-09-24T12:26:43
     by: Loc Tran
     ticket: T-01-01
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-24T12:27:31
+    by: Loc Tran
+    ticket: T-01-02
+  - gate: G4
+    action: scope
+    at: 2026-09-24T12:29:42
+    by: Loc Tran
+    ticket: T-02-02
+  - gate: G4
+    action: scope
+    at: 2026-09-24T12:30:22
+    by: Loc Tran
+    reason: the three drifting paths are apps/web files of UOW-01, being written by another agent in this checkout at the same time; T-02-02 changed only its declared apps/api paths
+    ticket: T-02-02
+  - gate: G4
+    action: evidence
+    at: 2026-09-24T12:30:44
+    by: Loc Tran
+    ticket: T-02-02
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-24T12:30:44
+    by: Loc Tran
+    reason: the three drifting paths are apps/web files of UOW-01, being written by another agent in this checkout at the same time; T-02-02 changed only its declared apps/api paths
+    ticket: T-02-02

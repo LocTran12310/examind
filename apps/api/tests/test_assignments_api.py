@@ -32,6 +32,19 @@ def test_window_and_attempt_limits(client, db):
     assert r.status_code == 409 and r.json()["code"] == "no_attempts_left"
 
 
+def test_the_student_side_endpoints_answer_staff(client, db):
+    """exam-runner AC-07: roles nest, so a teacher is answered like anyone else — with their own data."""
+    admin, exam = exam_with_questions(client, db)
+    klass, _ = klass_with_student(client, db, admin)
+    a = assign(client, exam["id"], klass["id"])
+    assert client.get("/api/me/assignments").json() == []  # answered, and nothing of the student's
+    assert client.post(f"/api/assignments/{a['id']}/start").status_code == 404  # not targeted; a trial is the way in
+    s = login(client, "trungtama", "hs01")
+    home = s.get("/api/me/assignments").json()
+    assert [x["state"] for x in home] == ["open"]  # the student is untouched
+    assert s.post(f"/api/assignments/{a['id']}/start").status_code == 200
+
+
 def test_validation_and_permissions(client, db):
     admin, exam = exam_with_questions(client, db)
     klass, _ = klass_with_student(client, db, admin)

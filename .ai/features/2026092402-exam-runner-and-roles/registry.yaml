@@ -78,7 +78,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: in_progress
     depends_on:
       - T-01-01
     blocks:
@@ -108,7 +108,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 3
-    status: in_progress
+    status: done
     depends_on: []
     blocks: []
     verifies:

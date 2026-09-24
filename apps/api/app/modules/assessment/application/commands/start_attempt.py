@@ -9,7 +9,7 @@ from app.modules.assessment.domain.ports import AssignmentRepository, AttemptRep
 from app.modules.assessment.domain.services import assignment_rules, attempt_rules
 from app.shared.application.actor import Actor
 from app.shared.application.unit_of_work import UnitOfWork
-from app.shared.domain.errors import Conflict, Forbidden, NotFound
+from app.shared.domain.errors import Conflict, NotFound
 
 
 @dataclass(frozen=True)
@@ -31,7 +31,9 @@ def new_attempt(exams: ExamRepository, bank: QuestionBank, attempts: AttemptRepo
 
 class StartAttemptHandler:
     """A targeted student in an open window: the attempt in progress is resumed, else a new one while attempts are
-    left; its deadline is the time limit, never past the window's close (US-03, A-06)."""
+    left; its deadline is the time limit, never past the window's close (US-03, A-06). The role is not asked
+    (exam-runner ADR-02) — being among the assignment's students is, and only students can be targeted, so staff get
+    the same 404 an untargeted student gets. A teacher checking their own paper runs a trial instead (ADR-01)."""
 
     def __init__(self, assignments: AssignmentRepository, attempts: AttemptRepository, exams: ExamRepository, bank: QuestionBank,
                  roster: Roster, grading: Grading, clock: Clock, uow: UnitOfWork, rng: random.Random | None = None):
@@ -39,8 +41,6 @@ class StartAttemptHandler:
         self.grading, self.clock, self.uow, self.rng = grading, clock, uow, rng
 
     def __call__(self, actor: Actor, cmd: StartAttempt) -> uuid.UUID:
-        if actor.role != "student":
-            raise Forbidden()
         a = load_assignment(self.assignments, actor.org_id, cmd.assignment_id)
         if actor.user_id not in students_of(self.assignments, self.roster, a):
             raise NotFound("Không tìm thấy bài được giao")
