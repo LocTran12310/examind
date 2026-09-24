@@ -786,3 +786,28 @@ and after every run. The first version of the spec did *not* do this — it left
 per viewport — and fixing that is why the undo is pressed in the list rather than in the toast. Undoing those
 leftovers also turned up older residue from the construction runs: three questions an agent had given a
 difficulty on 2026-09-23 and never taken back. Both were restored through the product's own undo.
+
+## 26. F19 `2026092401-history-keeps-ids` (2026-09-24)
+The limit recorded in §25, which you asked to close: `review_events.question_id` carried a foreign key with
+`ON DELETE SET NULL`, so deleting a question emptied the link in every event it had ever left behind. The rows
+survived with their snapshots and no longer said whose.
+
+**What changed.** Migration `0020` drops that constraint. The column, its type and its index stay; a deletion now
+touches no row of the history. That is the whole change — no second column beside the first, because two columns
+holding the same id are two columns that will one day disagree, and no `ON DELETE RESTRICT`, because a history
+that blocks a teacher from deleting a question has taken the product hostage (ADR-01).
+
+The refusal follows for free: `questions_gone` already computed the ids it could not put back and already carried
+them in `details.fields.question_ids`; with the ids preserved that list stops being empty in exactly the case it
+was written for. `lost_question` stays, now documented as covering only rows written before `0020` — nothing new
+enters that state, and a batch holding one is still refused whole rather than half restored.
+
+**What the downgrade costs.** A foreign key can only be created when every value in the column exists in
+`questions`, so `downgrade()` first nulls the ids of questions that are gone — the very data this revision keeps.
+The docstring says so plainly. The upgrade is loss-free and backfills nothing: the ids nulled before it are not
+in the database any more and cannot be recovered.
+
+**Checks.** `alembic check` clean; the revision was rolled down and back up against the running database, and the
+foreign key came back and went away again. API **498 passed, 1 skipped**; ruff and the four import contracts
+green. No browser verification and none claimed: this is invisible on screen unless a question is deleted, and no
+verification run may delete a question from your bank — the UoW says that in place of an evidence checklist.

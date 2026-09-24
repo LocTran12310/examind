@@ -33,9 +33,9 @@ rollback: revert the merge commit; migrations have downgrade()
 | None significant | — |
 
 ## Definition of done
-- [ ] All of AC-01, AC-02, AC-03 pass
-- [ ] Demo script executed end to end
-- [ ] Demoed and accepted at gate G4
+- [x] All of AC-01, AC-02, AC-03 pass
+- [x] Demo script executed end to end
+- [x] Demoed and accepted at gate G4
 
 ## Verification evidence
 Not applicable, and deliberately so: this change is invisible in the browser unless a question is deleted, and

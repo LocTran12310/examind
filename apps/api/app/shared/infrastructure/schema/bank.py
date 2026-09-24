@@ -77,7 +77,9 @@ review_events = Table(
     _id(),
     _created(),
     Column("organization_id", UUID(as_uuid=True), ForeignKey("organizations.id"), index=True, nullable=False),
-    Column("question_id", UUID(as_uuid=True), ForeignKey("questions.id", ondelete="SET NULL"), index=True),
+    # no foreign key on purpose (history-keeps-ids ADR-01): the record must outlive the question it is about,
+    # and a constraint here emptied the column on every delete. Indexed, unconstrained, never rewritten
+    Column("question_id", UUID(as_uuid=True), index=True),
     Column("user_id", UUID(as_uuid=True), ForeignKey("users.id")),
     Column("action", String(16), nullable=False),
     Column("before", JSONB(none_as_null=True)),

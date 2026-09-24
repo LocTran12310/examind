@@ -4,8 +4,8 @@
 
 | AC | Covered by | UoW | Status |
 |----|-----------|-----|--------|
-| AC-01 | T-01-01 | UOW-01 | open |
-| AC-02 | T-01-01 | UOW-01 | open |
-| AC-03 | T-01-02 | UOW-01 | open |
+| AC-01 | T-01-01 | UOW-01 | done |
+| AC-02 | T-01-01 | UOW-01 | done |
+| AC-03 | T-01-02 | UOW-01 | done |
 
 Coverage: **3/3** acceptance criteria.

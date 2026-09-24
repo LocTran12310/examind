@@ -411,14 +411,20 @@ def test_undo_refuses_the_whole_batch_when_a_question_is_gone(ports):
     with pytest.raises(NotFound) as e:
         undo(TEACHER, UndoBatch(uuid.uuid4()))
     assert e.value.code == "batch_not_found"
-    # deleting a question empties the question of the events it left behind, so the batch is one short: it is
-    # refused all the same, and the refusal has no id to give because the history no longer holds one
+    # a row from before migration 0020, when deleting a question emptied the question of the events it had left
+    # behind: the batch is refused all the same, and that row has no id to give because none was kept
     orphaned = uuid.uuid4()
     log.record(ORG, TEACHER.user_id, None, "bulk", {"difficulty": "nb"}, {"difficulty": "vdc"}, orphaned)
     log.record(ORG, TEACHER.user_id, a.id, "bulk", {"difficulty": "nb"}, {"difficulty": "vdc"}, orphaned)
     with pytest.raises(Invalid) as e:
         undo(TEACHER, UndoBatch(orphaned))
     assert e.value.code == "questions_gone" and e.value.fields["question_ids"] == [] and "đã bị xóa" in e.value.message
+    # since 0020 a deleted question keeps its id in the history, so the same refusal can name it (AC-03)
+    named = uuid.uuid4()
+    log.record(ORG, TEACHER.user_id, uuid.uuid4(), "bulk", {"difficulty": "nb"}, {"difficulty": "vdc"}, named)
+    with pytest.raises(Invalid) as e:
+        undo(TEACHER, UndoBatch(named))
+    assert e.value.code == "questions_gone" and len(e.value.fields["question_ids"]) == 1
     # a batch's own summary line is about no question and is not one of those: it says a count and a document
     assert not lost_question(ReviewEvent(organization_id=ORG, action="bulk", before={"status": "auto_approved"},
                                          after={"status": "approved", "count": 3, "document": str(DOC)}))

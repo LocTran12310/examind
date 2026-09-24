@@ -52,10 +52,12 @@ def restore_targets(events: Iterable[ReviewEvent]) -> dict[uuid.UUID, dict]:
 
 
 def lost_question(e: ReviewEvent) -> bool:
-    """Whether this event is what a deleted question left behind. `review_events.question_id` is ON DELETE SET NULL,
-    so deleting a question empties the link without touching the row: an event that records a question's state but
-    names no question is one the batch can no longer put back, and the history cannot even say which one it was. A
-    batch's own summary line says something else — a count, a document, a threshold — and is not one of these."""
+    """Whether this event is one whose question the history can no longer name — a row written while
+    `review_events.question_id` still carried ON DELETE SET NULL, which emptied the link on every delete.
+    Migration 0020 removed that constraint, so nothing new enters this state and a deleted question is named by
+    its id like any other (history-keeps-ids ADR-01); rows from before it stay as they are, and a batch holding
+    one is still refused whole rather than half restored. A batch's own summary line says something else — a
+    count, a document, a threshold — and is not one of these."""
     before, after = e.before or {}, e.after or {}
     return e.question_id is None and any(f in before for f in SNAPSHOT_FIELDS) and not set(after) - set(SNAPSHOT_FIELDS)
 

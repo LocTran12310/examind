@@ -3,7 +3,7 @@
 # Ticket graph — 2026092401-history-keeps-ids
 
 - Units of Work: **1**
-- Tickets: **2** (0 done)
+- Tickets: **2** (2 done)
 - Total effort: **4h**
 - Critical path: **4h** across 2 tickets
 - Theoretical minimum duration with unlimited parallelism: **4h**
@@ -22,8 +22,8 @@ slice — the floor on how fast it can finish no matter how many people work on 
 ```mermaid
 graph LR
   subgraph UOW_01["UOW-01 · The history keeps the id of a deleted question, and the refusal names it"]
-    T_01_01["T-01-01<br/>Drop the foreign key on review_events.question_id"]
-    T_01_02["T-01-02<br/>The refusal names the questions it cannot put back"]
+    T_01_01["✓ T-01-01<br/>Drop the foreign key on review_events.question_id"]
+    T_01_02["✓ T-01-02<br/>The refusal names the questions it cannot put back"]
   end
   T_01_01 --> T_01_02
 ```
@@ -52,5 +52,5 @@ adding people to tickets off this path will not make the feature ship sooner.
 
 | ID | UoW | Layer | Type | Est | Depends on | Verifies | Status |
 |----|-----|-------|------|-----|-----------|----------|--------|
-| T-01-01 | UOW-01 | data | feature | 2h | — | AC-01, AC-02 | todo |
-| T-01-02 | UOW-01 | api | feature | 2h | T-01-01 | AC-03 | todo |
+| T-01-01 | UOW-01 | data | feature | 2h | — | AC-01, AC-02 | done |
+| T-01-02 | UOW-01 | api | feature | 2h | T-01-01 | AC-03 | done |

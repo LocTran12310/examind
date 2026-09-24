@@ -225,6 +225,11 @@ def test_undo_puts_a_bulk_edit_back_and_only_once(client, db):
     gone = client.post("/api/questions/bulk/undo", json={"batch_id": last})
     assert gone.status_code == 422 and gone.json()["code"] == "questions_gone", gone.text
     assert client.get(f"/api/questions/{ids[0]}").json()["difficulty"] == "nb"
+    # the deletion left the history alone, so the refusal can say which question it could not put back
+    # (history-keeps-ids AC-01, AC-03)
+    assert gone.json()["details"]["fields"]["question_ids"] == [ids[2]]
+    kept = db.execute(text("select count(*) from review_events where question_id = :q"), {"q": ids[2]}).scalar()
+    assert kept and not db.execute(text("select count(*) from questions where id = :q"), {"q": ids[2]}).scalar()
 
     # org-scoped and staff-only, like the rest of the bank
     other = client.__class__(client.app)
