@@ -54,3 +54,23 @@ history:
     by: Loc Tran
     reason: the revision file inside the declared apps/api/migrations/versions directory
     ticket: T-01-01
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-24T15:52:32
+    by: Loc Tran
+    ticket: T-01-02
+  - gate: G4
+    action: scope
+    at: 2026-09-24T15:54:01
+    by: Loc Tran
+    ticket: T-01-02
+  - gate: G4
+    action: evidence
+    at: 2026-09-24T15:54:19
+    by: Loc Tran
+    ticket: T-01-02
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-24T15:54:19
+    by: Loc Tran
+    ticket: T-01-02

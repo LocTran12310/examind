@@ -82,7 +82,7 @@ ticket:
     layer: domain
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on: []
     blocks:
       - T-02-01
