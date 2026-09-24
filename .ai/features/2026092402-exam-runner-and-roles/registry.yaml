@@ -144,7 +144,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 4
-    status: in_progress
+    status: done
     depends_on:
       - T-03-01
     blocks:
@@ -152,8 +152,12 @@ ticket:
     verifies:
       - AC-05
     touches:
-      - apps/api/app/modules/assessment/application/queries   # new
+      - apps/api/app/modules/assessment/application/queries/trial_run.py   # new
+      - apps/api/app/modules/assessment/application/queries/attempt_result.py   # now goes through result_breakdown
+      - apps/api/app/modules/assessment/application/common.py   # GradedAnswer, result_breakdown
       - apps/api/app/modules/assessment/interface/router.py   # new
+      - apps/api/app/modules/assessment/interface/deps.py   # new
+      - apps/api/app/modules/assessment/interface/schemas.py   # new
   - id: T-04-01
     uow: UOW-04
     title: 'Làm thử từ đề đã giao'

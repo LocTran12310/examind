@@ -1,6 +1,7 @@
 """Steps several assessment use cases share: loading what the caller may see, an exam's questions with their bank
 content, an assignment's students, and grading (submit, lazy close, answer facts)."""
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
 import uuid
 
@@ -20,6 +21,7 @@ from app.shared.application.actor import Actor
 from app.shared.domain.errors import Conflict, NotFound
 
 Clock = Callable[[], datetime]
+UNCLASSIFIED = "Chưa phân loại"
 
 
 def load_exam(exams: ExamRepository, org_id: uuid.UUID, exam_id: uuid.UUID) -> Exam:
@@ -66,6 +68,46 @@ def runner_question(att: Attempt | None, eq: ExamQuestion, q: QuestionRef, numbe
             "options": [{k: v for k, v in o.items() if k != "is_true"} for o in attempt_rules.display_options(att, q)],
             "number": number, "section": eq.section, "points": eq.points,
             "response": attempt_rules.to_display(att, q, response)}
+
+
+@dataclass(frozen=True)
+class GradedAnswer:
+    """One answer as a result reads it back: the key it was graded against, the response given, the points (None while
+    an essay waits for a teacher) and the teacher's note. An attempt's stored answer and a trial run's in-memory grade
+    both narrow to this, so one function shapes both results."""
+    key: dict | None = None
+    response: dict | None = None
+    points: float | None = None
+    is_correct: bool | None = None
+    comment: str | None = None
+
+
+def result_breakdown(att: Attempt | None, rows: list[tuple[ExamQuestion, QuestionRef]], views: dict[uuid.UUID, dict],
+                     answers: dict[uuid.UUID, GradedAnswer]) -> tuple[list[dict], list[dict], list[dict]]:
+    """A finished paper read back: (questions, totals per section, totals per primary topic weakest first). Each
+    question carries the bank's view, the key it was graded against and the response, both in the labels of the
+    sitting. A question with no answer scores 0 — the same as one answered wrongly, as far as the total goes.
+    `att` is None for a trial run, which goes through this function too (exam-runner ADR-04)."""
+    items, by_section, by_topic = [], {}, {}
+    for i, (eq, q) in enumerate(rows, start=1):
+        ans = answers.get(q.id) or GradedAnswer(key=q.answer, points=0, is_correct=False)
+        item = dict(views[q.id])
+        item["options"] = attempt_rules.display_options(att, q)
+        item["answer"] = attempt_rules.to_display(att, q, ans.key)
+        item.update({"number": i, "section": eq.section, "response": attempt_rules.to_display(att, q, ans.response),
+                     "points": ans.points, "max_points": eq.points, "is_correct": ans.is_correct, "comment": ans.comment})
+        items.append(item)
+        s = by_section.setdefault(eq.section, {"section": eq.section, "points": 0.0, "max_points": 0.0})
+        s["points"] += item["points"] or 0
+        s["max_points"] += eq.points
+        topic = next((t for t in views[q.id].get("topics", []) if t["is_primary"]), None)
+        t = by_topic.setdefault(topic["name"] if topic else UNCLASSIFIED,
+                                {"topic": topic["name"] if topic else UNCLASSIFIED, "points": 0.0, "max_points": 0.0, "count": 0})
+        t["points"] += item["points"] or 0
+        t["max_points"] += eq.points
+        t["count"] += 1
+    topics = sorted(by_topic.values(), key=lambda t: (t["points"] / t["max_points"]) if t["max_points"] else 1)
+    return items, list(by_section.values()), topics
 
 
 def students_of(assignments: AssignmentRepository, roster: Roster, a: Assignment) -> set[uuid.UUID]:

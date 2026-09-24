@@ -1,15 +1,13 @@
 from dataclasses import dataclass
 import uuid
 
-from app.modules.assessment.application.common import Clock, Grading, load_attempt
+from app.modules.assessment.application.common import Clock, GradedAnswer, Grading, load_attempt, result_breakdown
 from app.modules.assessment.domain.entities import STAFF_ROLES
 from app.modules.assessment.domain.ports import AssignmentRepository, AttemptRepository, ExamRepository, QuestionBank
-from app.modules.assessment.domain.services import assignment_rules, attempt_rules
+from app.modules.assessment.domain.services import assignment_rules
 from app.modules.assessment.domain.services.scoring import scaled
 from app.shared.application.actor import Actor
 from app.shared.application.unit_of_work import UnitOfWork
-
-UNCLASSIFIED = "Chưa phân loại"
 
 
 @dataclass(frozen=True)
@@ -42,26 +40,8 @@ class AttemptResultHandler:
             return {**base, **score, "hidden": True, "reason": "after_close" if when else "never", "available_at": when}
         rows = self.grading.questions(att)
         answers = {x.question_id: x for x in self.attempts.answers(att.id)}
-        views = self.bank.views(None, [q.id for _, q in rows])
-        items, by_section, by_topic = [], {}, {}
-        for i, (eq, q) in enumerate(rows, start=1):
-            ans = answers.get(q.id)
-            item = dict(views[q.id])
-            item["options"] = attempt_rules.display_options(att, q)
-            key = ans.key_snapshot if ans and ans.key_snapshot is not None else q.answer  # the key used for grading (ADR-03)
-            item["answer"] = attempt_rules.to_display(att, q, key)
-            item.update({"number": i, "section": eq.section, "response": attempt_rules.to_display(att, q, ans.response) if ans else None,
-                         "points": ans.points if ans else 0, "max_points": eq.points, "is_correct": ans.is_correct if ans else False,
-                         "comment": ans.comment if ans else None})
-            items.append(item)
-            s = by_section.setdefault(eq.section, {"section": eq.section, "points": 0.0, "max_points": 0.0})
-            s["points"] += item["points"] or 0
-            s["max_points"] += eq.points
-            topic = next((t for t in views[q.id].get("topics", []) if t["is_primary"]), None)
-            name = topic["name"] if topic else UNCLASSIFIED
-            t = by_topic.setdefault(name, {"topic": name, "points": 0.0, "max_points": 0.0, "count": 0})
-            t["points"] += item["points"] or 0
-            t["max_points"] += eq.points
-            t["count"] += 1
-        topics = sorted(by_topic.values(), key=lambda t: (t["points"] / t["max_points"]) if t["max_points"] else 1)
-        return {**base, **score, "hidden": False, "questions": items, "sections": list(by_section.values()), "topics": topics}
+        graded = {q.id: GradedAnswer(key=ans.key_snapshot if ans.key_snapshot is not None else q.answer,  # the key it was graded against (ADR-03)
+                                     response=ans.response, points=ans.points, is_correct=ans.is_correct, comment=ans.comment)
+                  for _, q in rows if (ans := answers.get(q.id)) is not None}
+        items, sections, topics = result_breakdown(att, rows, self.bank.views(None, [q.id for _, q in rows]), graded)
+        return {**base, **score, "hidden": False, "questions": items, "sections": sections, "topics": topics}

@@ -161,3 +161,18 @@ history:
     at: 2026-09-24T12:37:12
     by: Loc Tran
     ticket: T-02-01
+  - gate: G4
+    action: scope
+    at: 2026-09-24T12:44:50
+    by: Loc Tran
+    ticket: T-03-02
+  - gate: G4
+    action: evidence
+    at: 2026-09-24T12:45:15
+    by: Loc Tran
+    ticket: T-03-02
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-24T12:45:15
+    by: Loc Tran
+    ticket: T-03-02

@@ -35,6 +35,7 @@ from app.modules.assessment.application.queries.my_assignments import MyAssignme
 from app.modules.assessment.application.queries.search_assignments import SearchAssignmentsHandler
 from app.modules.assessment.application.queries.search_exam_questions import SearchExamQuestionsHandler
 from app.modules.assessment.application.queries.search_exams import SearchExamsHandler
+from app.modules.assessment.application.queries.trial_run import TrialRunHandler
 from app.modules.assessment.domain.ports import FactListener, QuestionBank, Roster, Subjects
 from app.modules.assessment.infrastructure.read_models import SqlAssignmentReader, SqlExamReader, SqlPersonalReader, SqlResultReader
 from app.modules.assessment.infrastructure.repositories import (
@@ -177,6 +178,11 @@ def my_assignments(db: Session = Depends(get_db)) -> MyAssignmentsHandler:
 def assignment_paper(db: Session = Depends(get_db)) -> AssignmentPaperHandler:
     """No UnitOfWork on purpose: a trial run has nothing to commit (exam-runner ADR-01)."""
     return AssignmentPaperHandler(SqlAssignmentRepository(db), SqlExamRepository(db), _bank_of(db))
+
+
+def assignment_trial(db: Session = Depends(get_db)) -> TrialRunHandler:
+    """No UnitOfWork either: a trial run grades in memory and has nothing to write (exam-runner ADR-01)."""
+    return TrialRunHandler(SqlAssignmentRepository(db), SqlExamRepository(db), _bank_of(db), utcnow)
 
 
 def assignment_report(db: Session = Depends(get_db)) -> AssignmentReportHandler:

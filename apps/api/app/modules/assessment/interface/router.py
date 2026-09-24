@@ -29,6 +29,7 @@ from app.modules.assessment.application.queries.my_assignments import MyAssignme
 from app.modules.assessment.application.queries.search_assignments import SearchAssignments, SearchAssignmentsHandler
 from app.modules.assessment.application.queries.search_exam_questions import SearchExamQuestions, SearchExamQuestionsHandler
 from app.modules.assessment.application.queries.search_exams import SearchExams, SearchExamsHandler
+from app.modules.assessment.application.queries.trial_run import TrialRun, TrialRunHandler
 from app.modules.assessment.interface import deps
 from app.modules.assessment.interface.schemas import (
     AnswerIn,
@@ -46,6 +47,7 @@ from app.modules.assessment.interface.schemas import (
     MyAssignmentOut,
     PointsIn,
     StartOut,
+    TrialIn,
     assignment_out,
     assignment_view_out,
     exam_out,
@@ -194,6 +196,14 @@ def assignment_paper(aid: uuid.UUID, actor: Actor = Depends(staff_actor), handle
     """The paper as a student sees it (no keys, no solutions) with no attempt behind it: no timer, no deadline, no
     attempt id — what a trial run is read from (exam-runner ADR-01)."""
     return handle(actor, AssignmentPaper(aid))
+
+
+@router.post("/assignments/{aid}/trial")
+def assignment_trial(aid: uuid.UUID, body: TrialIn, actor: Actor = Depends(staff_actor),
+                     handle: TrialRunHandler = Depends(deps.assignment_trial)):
+    """The paper graded in memory, in the shape of an attempt's result. Nothing is stored: a trial run leaves no
+    attempt, no answer fact and no mastery behind (exam-runner ADR-01)."""
+    return handle(actor, TrialRun(aid, body.responses))
 
 
 @router.get("/assignments/{aid}/report")

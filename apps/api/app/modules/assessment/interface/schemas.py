@@ -214,6 +214,11 @@ class StartOut(BaseModel):
     attempt_id: uuid.UUID
 
 
+class TrialIn(BaseModel):
+    """A trial run's answers, in the same response shapes an attempt saves: {key} · {a: bool, …} · {value} · {text}."""
+    responses: dict[uuid.UUID, dict | None] = {}
+
+
 # ------------------------------------------------------------------ attempts
 
 

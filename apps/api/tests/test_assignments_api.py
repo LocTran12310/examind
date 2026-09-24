@@ -1,9 +1,15 @@
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
-from app.modules.assessment.domain.entities import ExamQuestion
-from tests.exam_helpers import assign, exam_with_questions, klass_with_student, login
+from app.modules.analytics.domain.entities import TopicMastery
+from app.modules.assessment.domain.entities import AnswerFact, Attempt, AttemptAnswer, ExamQuestion
+from tests.exam_helpers import assign, display_key, exam_with_questions, key_of, klass_with_student, login
+
+
+def rows_written(db) -> dict:
+    """What a sitting leaves behind — the four tables a trial run must not touch (exam-runner ADR-01)."""
+    return {t.__name__: db.scalar(select(func.count()).select_from(t)) for t in (Attempt, AttemptAnswer, AnswerFact, TopicMastery)}
 
 
 def test_assign_home_and_start(client, db):
@@ -68,6 +74,56 @@ def test_the_paper_is_the_student_view_with_nothing_behind_it(client, db):
     s = login(client, "trungtama", "hs01")
     assert s.get(f"/api/assignments/{a['id']}/paper").status_code == 403  # the paper is for whoever set the exam
     assert client.get(f"/api/assignments/{uuid.uuid4()}/paper").status_code == 404
+
+
+def test_a_trial_run_is_scored_and_writes_nothing(client, db):
+    """exam-runner AC-05 / ADR-01: the teacher gets a score and the class report cannot tell it ever happened."""
+    admin, exam = exam_with_questions(client, db)
+    klass, _ = klass_with_student(client, db, admin)
+    a = assign(client, exam["id"], klass["id"])
+    s = login(client, "trungtama", "hs01")
+    att = s.post(f"/api/assignments/{a['id']}/start").json()["attempt_id"]
+    sat = next(q for q in s.get(f"/api/attempts/{att}").json()["questions"] if q["type"] == "mcq")
+    s.put(f"/api/attempts/{att}/answers/{sat['id']}", json={"response": display_key(db, sat)})
+    s.post(f"/api/attempts/{att}/submit")
+    db.expire_all()
+    before, report_before = rows_written(db), client.get(f"/api/assignments/{a['id']}/report").json()
+    assert before["Attempt"] == 1 and before["AnswerFact"] > 0  # there is something a trial could disturb
+
+    paper = client.get(f"/api/assignments/{a['id']}/paper").json()
+    responses, expected = {}, 0.0
+    for q in paper["questions"]:
+        if q["type"] == "mcq":
+            responses[q["id"]] = display_key(db, q)
+        elif q["type"] == "true_false":
+            responses[q["id"]] = key_of(db, q["id"])
+        else:
+            continue
+        expected += q["points"]
+    r = client.post(f"/api/assignments/{a['id']}/trial", json={"responses": responses}).json()
+    assert abs(r["score"] - expected) < 1e-6 and r["max_score"] == exam["total_points"]
+    assert r["id"] is None and r["status"] == "submitted" and r["hidden"] is False and r["needs_grading"] is False
+    assert r["score10"] == round(expected / exam["total_points"] * 10, 2)
+    assert all(q["answer"] for q in r["questions"]) and sum(q["max_points"] for q in r["questions"]) == exam["total_points"]
+    assert [q["number"] for q in r["questions"]] == [q["number"] for q in paper["questions"]]
+
+    db.expire_all()
+    assert rows_written(db) == before
+    assert client.get(f"/api/assignments/{a['id']}/report").json() == report_before
+
+
+def test_a_trial_run_is_staff_only_and_checks_its_answers(client, db):
+    admin, exam = exam_with_questions(client, db)
+    klass, _ = klass_with_student(client, db, admin)
+    a = assign(client, exam["id"], klass["id"])
+    mcq = next(q for q in client.get(f"/api/assignments/{a['id']}/paper").json()["questions"] if q["type"] == "mcq")
+    assert client.post(f"/api/assignments/{a['id']}/trial", json={"responses": {mcq["id"]: {"key": "Z"}}}).status_code == 422
+    empty = client.post(f"/api/assignments/{a['id']}/trial", json={}).json()
+    assert empty["score"] == 0 and len(empty["questions"]) == exam["question_count"]  # no answers is a valid trial
+    s = login(client, "trungtama", "hs01")
+    assert s.post(f"/api/assignments/{a['id']}/trial", json={"responses": {}}).status_code == 403
+    assert client.post(f"/api/assignments/{uuid.uuid4()}/trial", json={"responses": {}}).status_code == 404
+    assert rows_written(db) == {"Attempt": 0, "AttemptAnswer": 0, "AnswerFact": 0, "TopicMastery": 0}
 
 
 def test_validation_and_permissions(client, db):

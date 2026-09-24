@@ -17,8 +17,10 @@ from app.modules.assessment.application.commands.submit_attempt import SubmitAtt
 from app.modules.assessment.application.commands.sweep_expired_attempts import SweepExpiredAttemptsHandler
 from app.modules.assessment.application.commands.update_exam import UpdateExam, UpdateExamHandler
 from app.modules.assessment.application.common import Grading
+from app.modules.assessment.application.queries.assignment_paper import AssignmentPaper, AssignmentPaperHandler
 from app.modules.assessment.application.queries.attempt_result import AttemptResult, AttemptResultHandler
 from app.modules.assessment.application.queries.my_assignments import MyAssignmentsHandler
+from app.modules.assessment.application.queries.trial_run import TrialRun, TrialRunHandler
 from app.modules.assessment.domain.entities import Assignment, Attempt, AttemptAnswer, Exam, ExamQuestion
 from app.modules.assessment.domain.services import assignment_rules, attempt_rules, scoring
 from app.modules.assessment.domain.value_objects import DocumentRef, QuestionRef, Snapshot
@@ -656,6 +658,37 @@ def test_result_is_hidden_until_the_policy_allows_it():
         {"section": "I", "points": 0.25, "max_points": 0.25}]
     with pytest.raises(NotFound):
         AttemptResultHandler(w.attempts, w.assignments, w.exams, w.bank, w.grading(), w.clock, w.uow)(OTHER, AttemptResult(att_id))
+
+
+def test_a_trial_run_reads_the_paper_grades_it_and_writes_nothing():
+    """exam-runner AC-04, AC-05: the student's own paper, scored like a sitting, with not one row behind it (ADR-01)."""
+    q, t, e = mcq(key="B"), tf(), essay()
+    w = World(q, t, e)
+    w.bank.topics = {q.id: TOPIC_A}
+    a = w.assignment()
+    paper = AssignmentPaperHandler(w.assignments, w.exams, w.bank)(TEACHER, AssignmentPaper(a.id))
+    assert paper["title"] == a.title and paper["max_score"] == 2.25 and "deadline_at" not in paper
+    assert [x["id"] for x in paper["questions"]] == [q.id, t.id, e.id]  # the exam's order, never shuffled
+    assert all(x["answer"] is None and x["solution"] == "" and x["response"] is None for x in paper["questions"])
+    assert [o["label"] for o in paper["questions"][0]["options"]] == ["A", "B", "C", "D"]
+    assert all("is_true" not in o for o in paper["questions"][1]["options"])
+
+    trial = TrialRunHandler(w.assignments, w.exams, w.bank, w.clock)(
+        TEACHER, TrialRun(a.id, {q.id: {"key": "B"}, t.id: {"a": True, "b": False, "c": True, "d": False}, e.id: {"text": "Bài làm"}}))
+    assert trial["score"] == 0.25 + 0.5 and trial["max_score"] == 2.25  # 3 of 4 statements: half the true/false points
+    assert trial["id"] is None and trial["status"] == "submitted" and trial["hidden"] is False and trial["needs_grading"] is True
+    assert trial["score10"] == scoring.scaled(0.75, 2.25) and trial["submitted_at"] == NOW
+    graded = {x["id"]: x for x in trial["questions"]}
+    assert graded[q.id]["is_correct"] is True and graded[q.id]["answer"] == {"key": "B"} and graded[q.id]["response"] == {"key": "B"}
+    assert graded[e.id]["points"] is None and graded[t.id]["points"] == 0.5
+    assert [x["topic"] for x in trial["topics"]] == ["Chưa phân loại", "Đại số"]  # weakest first
+    assert trial["sections"] == [{"section": "I", "points": 0.25, "max_points": 0.25},
+                                 {"section": "II", "points": 0.5, "max_points": 1.0},
+                                 {"section": "IV", "points": 0.0, "max_points": 1.0}]
+    assert w.attempts.rows == {} and w.attempts.answer_rows == {} and w.facts.rows == {}
+    assert w.listener.facts == [] and w.uow.commits == 0
+    with pytest.raises(Invalid):
+        TrialRunHandler(w.assignments, w.exams, w.bank, w.clock)(TEACHER, TrialRun(a.id, {q.id: {"key": "Z"}}))
 
 
 def test_answer_rules_bound_what_is_stored():
