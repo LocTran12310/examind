@@ -29,7 +29,8 @@ export interface BlueprintEditorProps {
 }
 
 /** The exam matrix. One row is one line at desktop width and a deliberate two-column stack below it;
- *  each row says how many questions its topic holds, so an empty one is visible before generating.
+ *  each row says how many questions its own filters select — the pool the generator will draw from, not an
+ *  approximation of it (blueprint-truth ADR-01) — so a row that cannot be filled is visible before generating.
  *  The row names the topic itself and keeps the whole path in the tooltip — the line is narrow. */
 export function BlueprintEditor({ initial, topics, tags, subjectId, shortfalls, refusal, onEdit, onGenerate }: BlueprintEditorProps) {
   const b = useBlueprintEditor(initial, topics, subjectId, onEdit);
@@ -39,6 +40,7 @@ export function BlueprintEditor({ initial, topics, tags, subjectId, shortfalls, 
         const miss = shortfalls.find((s) => s.row === i);
         const topic = r.topic_id ? b.byId.get(r.topic_id) : undefined;
         const held = b.held(r);
+        const matching = b.matching(i);
         const empty = held === 0;
         const refused = refusal?.row === i;
         return (
@@ -52,7 +54,7 @@ export function BlueprintEditor({ initial, topics, tags, subjectId, shortfalls, 
           >
             <Button variant="outline" size="sm" className="col-span-2 min-w-0 justify-start lg:col-span-1" title={topic ? topicLabel(topic, b.byId) : undefined} onClick={() => b.setPicking(i)}>
               <span className="truncate">{topic ? topic.name : "Chọn chuyên đề…"}</span>
-              {held !== null && <span className={cn("ml-auto shrink-0 text-xs tabular-nums", empty ? "text-destructive" : "text-muted-foreground")}>{held} câu</span>}
+              {matching !== null && <span className={cn("ml-auto shrink-0 text-xs tabular-nums", empty ? "text-destructive" : "text-muted-foreground")}>{matching} câu</span>}
             </Button>
             <OptionSelect
               aria-label="Tag"

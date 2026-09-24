@@ -17,8 +17,15 @@ import { setUrl } from "./router-mock";
 vi.mock("next/navigation", async () => (await import("./router-mock")).routerMock);
 
 const topics: Topic[] = [{ id: "ds", subject_id: "s", parent_id: null, name: "Đại số", level_kind: "strand", grade: null, path: "a", depth: 1, sort: 0, child_count: 0 }];
-/** `POST /questions/facets`: the counts the pickers and the matrix rows show (ADR-01) */
+/** `POST /questions/facets`: the counts the pickers show beside a topic (pickers-builder ADR-01) */
 const facets = (t: Record<string, number>) => ({ subjects: {}, topics: t, types: {}, difficulties: {}, grades: {}, periods: {}, school_years: {}, tags: {} });
+/** `POST /questions/search`: the pool of one matrix row, keyed by the filters that row asks with — "mcq",
+ *  "true_false/nb"… (blueprint-truth ADR-01). Only `total` is read, so the page itself stays empty. */
+const rowPool = (totals: Record<string, number>) => (url: string, init?: RequestInit) => {
+  if (url !== "/api/questions/search" || (init?.method ?? "GET") !== "POST") return undefined;
+  const b = JSON.parse(String(init?.body)) as { type?: string; difficulty?: string };
+  return { body: searchPage([], totals[[b.type, b.difficulty].filter(Boolean).join("/")] ?? 0) };
+};
 const eq = (n: number, section = "I"): ExamQuestion => ({ id: `q${n}`, type: "mcq", stem: `Câu ${n}`, options: [], answer: null, solution: "", difficulty: null,
   grade: null, status: "approved", number: n, part: null, confidence: 1, issues: [], parse_method: null, parse_model: null, answer_source: null,
   subject_id: null, semester_code: null, exam_kind: null, topics: [], tags: [], position: n, section, points: 0.25, row: 0 });
@@ -42,35 +49,51 @@ beforeEach(() => setUrl("/org/exams/e1"));
 afterEach(() => vi.unstubAllGlobals());
 
 // the page loads the exam, its subject's topics and tags, the classes and the exam's assignments
-const pageRoutes = (e: Exam, counts: Record<string, number> = {}) => [
+const pageRoutes = (e: Exam, counts: Record<string, number> = {}, pool: Record<string, number> = {}) => [
   route("GET", "/api/exams/e1", e),
   route("GET", /^\/api\/topics(\?|$)/, topics),
   route("GET", "/api/taxonomy", { subjects: [{ id: "s", code: "toan", name: "Toán" }], grades: [], semesters: [] }),
   route("POST", "/api/questions/facets", facets(counts)),
+  rowPool(pool),
   route("POST", "/api/tags/search", searchPage([])),
   route("POST", "/api/classes/search", searchPage([])),
   route("POST", "/api/assignments/search", searchPage([])),
 ];
 
 describe("exam builder", () => {
-  it("blueprint rows need a topic, then generate; the row says how many questions the topic holds", async () => {
+  it("blueprint rows need a topic, then generate; the row says how many questions its own filters select", async () => {
     const onGenerate = vi.fn();
-    mockFetch(route("POST", "/api/questions/facets", facets({ ds: 12 })));
+    const f = mockFetch(rowPool({ mcq: 7 }), route("POST", "/api/questions/facets", facets({ ds: 14 })));
     renderWithQuery(<BlueprintEditor initial={[]} topics={topics} tags={[]} subjectId="s" shortfalls={[{ row: 0, missing: 2 }]} refusal={null} onEdit={vi.fn()} onGenerate={onGenerate} />);
     expect(screen.getByRole("button", { name: "Tạo đề theo ma trận" })).toBeDisabled();
     expect(screen.getByTestId("row-0")).toHaveTextContent("thiếu 2 câu");
     await userEvent.click(screen.getByRole("button", { name: "Chọn chuyên đề…" }));
-    // the picker writes questions beside a topic, not the number of child topics (AC-02, ADR-01)
-    await waitFor(() => expect(within(screen.getByRole("tree", { name: "Cây chuyên đề" })).getByTitle("12 câu hỏi")).toBeInTheDocument());
+    // the picker writes questions beside a topic, not the number of child topics (pickers-builder AC-02, ADR-01)
+    await waitFor(() => expect(within(screen.getByRole("tree", { name: "Cây chuyên đề" })).getByTitle("14 câu hỏi")).toBeInTheDocument());
     await userEvent.click(within(screen.getByRole("tree", { name: "Cây chuyên đề" })).getByText("Đại số"));
-    expect(screen.getByTestId("row-0")).toHaveTextContent("12 câu");
+    // 7, not the 14 the topic holds: the row asks with its own type, the very filter the generator draws through (AC-01)
+    await waitFor(() => expect(screen.getByTestId("row-0")).toHaveTextContent("7 câu"));
+    expect(lastBody(f, "/questions/search")).toEqual({ page: 1, limit: 1, status: "usable", topic_id: "ds", subject_id: "s", type: "mcq" });
     fireEvent.change(screen.getByLabelText("Số câu"), { target: { value: "6" } });
     await userEvent.click(screen.getByRole("button", { name: "Tạo đề theo ma trận" }));
     expect(onGenerate).toHaveBeenCalledWith([{ type: "mcq", count: 6, topic_id: "ds" }]);
   });
 
+  it("the number follows the row's own type and difficulty, without generating anything (AC-02)", async () => {
+    mockFetch(rowPool({ mcq: 7, true_false: 5, "true_false/nb": 2 }), route("POST", "/api/questions/facets", facets({ ds: 14 })));
+    const u = userEvent.setup();
+    renderWithQuery(<BlueprintEditor initial={[{ topic_id: "ds", type: "mcq", count: 10 }]} topics={topics} tags={[]} subjectId="s" shortfalls={[]} refusal={null} onEdit={vi.fn()} onGenerate={vi.fn()} />);
+    await waitFor(() => expect(screen.getByTestId("row-0")).toHaveTextContent("7 câu"));
+    await u.click(screen.getByRole("combobox", { name: "Loại câu" }));
+    await u.click(await screen.findByRole("option", { name: "Đúng/Sai" }));
+    await waitFor(() => expect(screen.getByTestId("row-0")).toHaveTextContent("5 câu"));
+    await u.click(screen.getByRole("combobox", { name: "Mức độ" }));
+    await u.click(await screen.findByRole("option", { name: "Nhận biết" }));
+    await waitFor(() => expect(screen.getByTestId("row-0")).toHaveTextContent("2 câu"));
+  });
+
   it("a topic that holds nothing is named on its row before generating", async () => {
-    mockFetch(route("POST", "/api/questions/facets", facets({ ds: 0 })));
+    mockFetch(rowPool({ mcq: 0 }), route("POST", "/api/questions/facets", facets({ ds: 0 })));
     renderWithQuery(<BlueprintEditor initial={[{ topic_id: "ds", type: "mcq", count: 6 }]} topics={topics} tags={[]} subjectId="s" shortfalls={[]} refusal={null} onEdit={vi.fn()} onGenerate={vi.fn()} />);
     await waitFor(() => expect(screen.getByTestId("row-0")).toHaveTextContent("0 câu"));
     expect(screen.getByTestId("row-0")).toHaveTextContent("Chuyên đề “Đại số” chưa có câu hỏi nào dùng được");

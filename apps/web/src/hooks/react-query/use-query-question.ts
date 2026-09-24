@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient, type UseMutationResult, type UseQueryResult } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQueries, useQuery, useQueryClient, type UseMutationResult, type UseQueryResult } from "@tanstack/react-query";
 import { NO_SUBJECT } from "@/constants/question.constant";
 import { QUESTION_EVENT_KEYS, QUESTION_KEYS, REVIEW_KEYS } from "@/constants/react-query-key.constant";
 import type { BulkQuestionsBody, BulkTopicsBody, QuestionBody, QuestionSearchBody, UpdateQuestionBody } from "@/dtos/question.dto";
@@ -40,6 +40,23 @@ export function useTopicCountsQuery(subjectId: string | null | undefined, enable
     queryKey: QUESTION_KEYS.TOPIC_COUNTS(scoped ? subjectId! : "all"),
     queryFn: async () => (await questionService.facets({ page: 1, limit: 1, ...(scoped ? { subject_id: subjectId! } : {}) })).topics,
     enabled: enabled && (scoped || allSubjects),
+  });
+}
+
+/** How many questions each of these filters holds, in the same order — the `total` of a one-row page, which the
+ *  bank counts with the very query it selects rows with (blueprint-truth ADR-01). One request per filter, so a
+ *  caller passes `null` for what it has nothing to ask about, and two identical filters share one request. The
+ *  previous number stays while a changed filter is being counted, so the row does not blink back to nothing. */
+export function useQuestionCountsQuery(bodies: (QuestionSearchBody | null)[]): (number | null)[] {
+  return useQueries({
+    queries: bodies.map((body) => ({
+      queryKey: QUESTION_KEYS.SEARCH(body ?? {}),
+      queryFn: () => questionService.search(body!),
+      enabled: body !== null,
+      placeholderData: keepPreviousData,
+      select: (page: SearchPage<ParsedQuestion>) => page.total,
+    })),
+    combine: (results) => results.map((r) => (r.data ?? null) as number | null),
   });
 }
 
