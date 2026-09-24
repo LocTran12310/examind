@@ -5,6 +5,7 @@ import rehypeKatex from "rehype-katex";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { asPhrase } from "@/lib/common/markdown";
 
 /** `asset:<uuid>` → the authenticated asset endpoint; everything else goes through the safe default. */
 export function resolveUrl(url: string): string {
@@ -12,8 +13,11 @@ export function resolveUrl(url: string): string {
   return m ? `/api/assets/${m[1]}` : defaultUrlTransform(url);
 }
 
-export function Markdown({ children, className }: { children: string; className?: string }) {
+/** `phrase` renders content that is a phrase rather than a document — an answer option, not an exercise — so a
+ *  line opening with `9.` stays the number nine instead of becoming an empty ordered list (ADR-01). */
+export function Markdown({ children, className, phrase }: { children: string; className?: string; phrase?: boolean }) {
   if (!children?.trim()) return null;
+  const source = phrase ? asPhrase(children) : children;
   return (
     <div className={`prose-question ${className ?? ""}`}>
       <ReactMarkdown
@@ -32,7 +36,7 @@ export function Markdown({ children, className }: { children: string; className?
           p: ({ children }) => <p className="my-1.5 leading-relaxed">{children}</p>,
         }}
       >
-        {children}
+        {source}
       </ReactMarkdown>
     </div>
   );

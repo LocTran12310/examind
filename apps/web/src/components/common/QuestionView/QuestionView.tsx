@@ -69,7 +69,8 @@ export function QuestionView({
                 >
                   <span className="font-semibold">{o.label}.</span>
                   <div className="min-w-0 flex-1">
-                    <Markdown>{o.content}</Markdown>
+                    {/* an option is a phrase: "9." is the number nine, not a list starting at nine (blank-options ADR-01) */}
+                    <Markdown phrase>{o.content}</Markdown>
                   </div>
                   {reveal && q.type === "true_false" && o.is_true !== undefined && (
                     <span className={cn("text-sm font-medium", o.is_true ? "text-emerald-700 dark:text-emerald-400" : "text-destructive")}>{o.is_true ? "Đúng" : "Sai"}</span>

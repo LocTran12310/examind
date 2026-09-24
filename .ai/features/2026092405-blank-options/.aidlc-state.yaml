@@ -1,0 +1,78 @@
+# Managed by scripts/aidlc.py — do not edit by hand.
+# Editing this file to skip a gate defeats the point of having one.
+feature: blank-options
+slug: 2026092405-blank-options
+profile: none
+created: 2026-09-24T16:19:53
+ruleset: 7
+current_gate: G3
+history:
+  - gate: G0
+    action: passed
+    at: 2026-09-24T16:19:53
+    by: Loc Tran
+    evidence: architecture map verified by Loc Tran (blanket pre-approval in chat, 2026-09-22 — confirm at final review); 00-intent.md complete
+  - gate: G1
+    action: passed
+    at: 2026-09-24T16:20:18
+    by: Loc Tran
+    evidence: 3 assumptions, none blocking-and-pending; 3 acceptance criteria defined
+  - gate: G2
+    action: passed
+    at: 2026-09-24T16:20:18
+    by: Loc Tran
+    evidence: 2 ADR(s) recorded
+  - gate: G3
+    action: passed
+    at: 2026-09-24T16:20:38
+    by: Loc Tran
+    evidence: graph valid - 1 UoW, 2 tickets, no cycles
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-24T16:21:00
+    by: Loc Tran
+    ticket: T-01-01
+  - gate: G4
+    action: scope
+    at: 2026-09-24T16:21:51
+    by: Loc Tran
+    ticket: T-01-01
+  - gate: G4
+    action: scope
+    at: 2026-09-24T16:22:08
+    by: Loc Tran
+    reason: apps/api files in flight belong to F22's T-02-01, running in parallel; this ticket touches only apps/web
+    ticket: T-01-01
+  - gate: G4
+    action: evidence
+    at: 2026-09-24T16:22:10
+    by: Loc Tran
+    ticket: T-01-01
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-24T16:22:10
+    by: Loc Tran
+    reason: apps/api files in flight belong to F22's T-02-01, running in parallel; this ticket touches only apps/web
+    ticket: T-01-01
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-24T16:22:10
+    by: Loc Tran
+    ticket: T-01-02
+  - gate: G4
+    action: scope
+    at: 2026-09-24T16:23:35
+    by: Loc Tran
+    reason: apps/api files in flight belong to F22, running in parallel
+    ticket: T-01-02
+  - gate: G4
+    action: evidence
+    at: 2026-09-24T16:23:37
+    by: Loc Tran
+    ticket: T-01-02
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-24T16:23:37
+    by: Loc Tran
+    reason: apps/api files in flight belong to F22, running in parallel
+    ticket: T-01-02
