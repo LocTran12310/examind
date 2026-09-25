@@ -8,7 +8,9 @@ import { QuestionView } from "@/components/common/QuestionView/QuestionView";
 import { TopicPicker } from "@/components/common/TopicPicker/TopicPicker";
 import { FlagPanel } from "@/components/page-components/ReviewDocument/FlagPanel/FlagPanel";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Kbd } from "@/components/ui/kbd";
+import { DIFFICULTY_LABEL, DIFFICULTY_SOURCE_LABEL } from "@/constants/question.constant";
 import { SPOT_GROUP, SPOT_LABEL } from "@/constants/review.constant";
 import { useReviewQueue } from "@/hooks/page-hooks/review-document/use-review-queue";
 import type { SourceDocument } from "@/interfaces/document.interface";
@@ -97,6 +99,23 @@ export function ReviewQueue({
             {primary ? primary.name : "Chọn chuyên đề"}
             {primary?.source && primary.source !== "manual" ? ` · gợi ý ${primary.score ? Math.round(primary.score * 100) + "%" : ""}` : ""}
           </Button>
+          <span className="text-muted-foreground">Mức độ:</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button type="button" size="xs" variant="secondary" className="bg-primary/10 font-normal text-primary hover:bg-primary/20" data-testid="difficulty-button">
+                {q.difficulty ? (DIFFICULTY_LABEL[q.difficulty] ?? q.difficulty) : "Chọn mức độ"}
+                {q.difficulty && DIFFICULTY_SOURCE_LABEL[q.difficulty_source ?? ""] ? ` · ${DIFFICULTY_SOURCE_LABEL[q.difficulty_source ?? ""]}` : ""}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuLabel>Đặt mức độ cho câu này</DropdownMenuLabel>
+              {Object.entries(DIFFICULTY_LABEL).map(([k, v]) => (
+                <DropdownMenuItem key={k} onSelect={() => r.pickDifficulty(k)} data-testid={`difficulty-${k}`}>
+                  {v}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           <div className="ml-auto flex gap-2">
             <Button variant="outline" size="sm" onClick={r.prev}>
               ← K

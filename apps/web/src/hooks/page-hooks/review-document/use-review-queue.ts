@@ -73,6 +73,14 @@ export function useReviewQueue({ initial, hasEditor, onChange }: { initial: Pars
     if (r) replace(r);
   }
 
+  /** A teacher sets the level. The answer carries `difficulty_source: "manual"` back, so the card stops offering
+   * the machine's guess without the hook having to decide that for itself. */
+  async function pickDifficulty(level: string) {
+    if (!q) return;
+    const r = await run(() => update({ id: q.id, body: { difficulty: level } }));
+    if (r) replace(r);
+  }
+
   const choosable = !!q && ["mcq", "true_false"].includes(q.type);
   const labelFor = (n: number) => (q?.type === "true_false" ? "abcd" : "ABCD")[n - 1];
   const prev = () => setIndex((i) => Math.max(i - 1, 0));
@@ -109,6 +117,7 @@ export function useReviewQueue({ initial, hasEditor, onChange }: { initial: Pars
     action: (kind: ReviewAction) => void action(kind),
     setAnswer: (label: string) => void setAnswer(label),
     pickTopic: (t: Topic) => void pickTopic(t),
+    pickDifficulty: (level: string) => void pickDifficulty(level),
     saved: (r: ParsedQuestion) => {
       replace(r);
       setEditing(false);

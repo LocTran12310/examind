@@ -159,7 +159,7 @@ describe("documents", () => {
     const q: ParsedQuestion = {
       id: "q", type: "mcq", stem: "Đề", options: [{ label: "A", content: "1" }], answer: null, solution: "", difficulty: null, grade: 10,
       status: "draft", number: 7, part: "1", confidence: 0.4, issues: ["thiếu phương án", "thiếu đáp án"], parse_method: "rule",
-      parse_model: null, answer_source: null, subject_id: null, semester_code: null, exam_kind: null, topics: [], tags: [],
+      parse_model: null, answer_source: null, difficulty_source: null, subject_id: null, semester_code: null, exam_kind: null, topics: [], tags: [],
     };
     render(<ParsedQuestionCard q={q} />);
     const card = screen.getByTestId("pq-1-7");

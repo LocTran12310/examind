@@ -11,6 +11,8 @@ export const STATUS_LABEL: Record<QuestionStatus, string> = {
 };
 
 export const DIFFICULTY_LABEL: Record<string, string> = { nb: "Nhận biết", th: "Thông hiểu", vd: "Vận dụng", vdc: "Vận dụng cao" };
+/** Where a level came from. A teacher's own choice says nothing: it is theirs, and no machine will change it. */
+export const DIFFICULTY_SOURCE_LABEL: Record<string, string> = { auto: "theo vị trí trong đề", ai: "model gợi ý", manual: "" };
 export const TYPE_LABEL: Record<QuestionType, string> = { mcq: "Trắc nghiệm", true_false: "Đúng/Sai", short_answer: "Trả lời ngắn", essay: "Tự luận" };
 
 /** where a suggested topic came from (topic-coverage AC-02) */

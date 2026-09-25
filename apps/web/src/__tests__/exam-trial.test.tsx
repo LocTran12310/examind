@@ -23,7 +23,7 @@ const assignment = (o: Partial<Assignment> = {}): Assignment => ({
 });
 const rq = (o: Partial<ResultQuestion>): ResultQuestion => ({
   id: "q1", type: "mcq", stem: "Câu hỏi số 1", options: opts, answer: { key: "B" }, solution: "Lời giải", difficulty: null, grade: null, status: "approved",
-  number: 1, part: null, confidence: 1, issues: [], parse_method: null, parse_model: null, answer_source: null, subject_id: null, semester_code: null,
+  number: 1, part: null, confidence: 1, issues: [], parse_method: null, parse_model: null, answer_source: null, difficulty_source: null, subject_id: null, semester_code: null,
   exam_kind: null, topics: [], tags: [], section: "I", response: { key: "B" }, points: 0.25, max_points: 0.25, is_correct: true, comment: null, ...o,
 });
 const essay = rq({ id: "e1", type: "essay", options: [], answer: { text: "mẫu" }, response: { text: "Bài làm thử" }, points: null, max_points: 1, is_correct: null });

@@ -106,15 +106,15 @@ def correct_rates(db, org_id):
     return {r.question_id: (float(r.ratio), int(r.n)) for r in rows}
 
 
-def ask_model(passer, rows):
+def ask_model(passer, rows, size=DIFFICULTY_BATCH):
     """{question id: level} the model gave, plus how long each batch took and how many failed.
 
     The numbering is no longer this script's business: `DifficultyModelPass.ask` assigns it by position in the
     batch, so this measures exactly what the pipeline sends (T-02-04).
     """
     answers, seconds, failed, asked = {}, [], 0, 0
-    for start in range(0, len(rows), DIFFICULTY_BATCH):
-        chunk = rows[start:start + DIFFICULTY_BATCH]
+    for start in range(0, len(rows), size):
+        chunk = rows[start:start + size]
         batch = list(chunk)
         asked += len(batch)
         began = time.monotonic()
@@ -122,7 +122,7 @@ def ask_model(passer, rows):
             answers.update(passer.ask(batch))
         except LlmError as exc:
             failed += 1
-            print(f"  lô {start // DIFFICULTY_BATCH + 1} lỗi: {exc}", file=sys.stderr)
+            print(f"  lô {start // size + 1} lỗi: {exc}", file=sys.stderr)
         seconds.append(round(time.monotonic() - began, 1))
         print(f"  … {asked}/{len(rows)}", end="\r", file=sys.stderr, flush=True)
     return answers, seconds, failed, asked
@@ -133,6 +133,10 @@ def main() -> None:
     ap.add_argument("--limit", type=int, default=400)
     ap.add_argument("--org", default=None, help="mã tổ chức; mặc định: tổ chức thật đầu tiên")
     ap.add_argument("--json", dest="out", default=None)
+    # asking one question at a time is the only way its level stops depending on the nine questions beside it —
+    # measured at 58% per-question agreement between two batchings of the same bank. This is how the cost of that
+    # is measured rather than guessed at.
+    ap.add_argument("--batch", type=int, default=DIFFICULTY_BATCH, help="số câu mỗi lần hỏi model")
     args = ap.parse_args()
 
     dbmod.configure()
@@ -158,7 +162,7 @@ def main() -> None:
         if model is not None:
             answers, seconds, failed, asked = ask_model(
                 DifficultyModelPass(HttpChatModels(), model),
-                [(r.id, question_text(r.stem, r.type, r.options)) for r in rows])
+                [(r.id, question_text(r.stem, r.type, r.options)) for r in rows], args.batch)
 
         report = {"org": org.code, "questions": len(rows), "model": model.model if model else None}
 
@@ -168,7 +172,7 @@ def main() -> None:
         else:
             print(f"  hỏi {asked}, đọc được {pct(len(answers), asked)}" + (f" · {failed} lô lỗi" if failed else ""))
             if seconds:
-                print(f"  mỗi lô {DIFFICULTY_BATCH} câu: {min(seconds)}s – {max(seconds)}s,"
+                print(f"  mỗi lô {args.batch} câu: {min(seconds)}s – {max(seconds)}s,"
                       f" giữa {statistics.median(seconds)}s · cả lượt {round(sum(seconds))}s")
         report["coverage"] = {"asked": asked, "read": len(answers), "failed_batches": failed}
 

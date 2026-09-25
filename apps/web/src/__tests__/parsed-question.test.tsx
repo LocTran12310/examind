@@ -5,7 +5,7 @@ import type { ParsedQuestion } from "@/interfaces/question.interface";
 
 const q = (o: Partial<ParsedQuestion> = {}): ParsedQuestion => ({
   id: "q", type: "mcq", stem: "Tọa độ đỉnh parabol", options: [], answer: { key: "A" }, solution: "x", difficulty: null, grade: 10,
-  status: "draft", number: 1, part: null, confidence: 1, issues: [], parse_method: "rule", parse_model: null, answer_source: "inline",
+  status: "draft", number: 1, part: null, confidence: 1, issues: [], parse_method: "rule", parse_model: null, answer_source: "inline", difficulty_source: null,
   subject_id: "s", semester_code: "hk1", exam_kind: "Giữa kỳ", tags: [{ id: "t", group: "source", name: "THPT A" }],
   topics: [{ id: "tp", name: "Tìm đỉnh và trục đối xứng parabol", is_primary: true, source: "auto", score: 0.8 }], ...o,
 });

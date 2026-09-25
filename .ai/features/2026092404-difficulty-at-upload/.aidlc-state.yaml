@@ -270,3 +270,30 @@ history:
     by: Loc Tran
     reason: scripts/dev_rebuild.py là công cụ dựng lại stack dev, không thuộc bản sửa này; đã commit riêng ở e54c92f
     ticket: T-02-04
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-25T11:52:53
+    by: Loc Tran
+    ticket: T-04-01
+  - gate: G4
+    action: scope
+    at: 2026-09-25T11:52:54
+    by: Loc Tran
+    ticket: T-04-01
+  - gate: G4
+    action: scope
+    at: 2026-09-25T11:53:11
+    by: Loc Tran
+    reason: apps/api/scripts/difficulty_report.py là cờ --batch của việc đo (T-03-01), không thuộc ticket web này
+    ticket: T-04-01
+  - gate: G4
+    action: evidence
+    at: 2026-09-25T11:53:19
+    by: Loc Tran
+    ticket: T-04-01
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-25T11:53:19
+    by: Loc Tran
+    reason: apps/api/scripts/difficulty_report.py là cờ --batch của việc đo (T-03-01), không thuộc ticket web này
+    ticket: T-04-01

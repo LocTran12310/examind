@@ -1,3 +1,4 @@
+import userEvent from "@testing-library/user-event";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { mockFetch, renderWithQuery as render, route } from "@/__tests__/helpers";
@@ -8,7 +9,7 @@ import { ReviewQueue } from "./ReviewQueue";
 const opts = ["A", "B", "C", "D"].map((l) => ({ label: l, content: l.toLowerCase() }));
 const pq = (id: string, n: number, o: Partial<ParsedQuestion> = {}): ParsedQuestion => ({
   id, type: "mcq", stem: `Câu hỏi ${n}`, options: opts, answer: null, solution: "", difficulty: null, grade: 10, status: "needs_review",
-  number: n, part: null, confidence: 0.8, issues: ["thiếu đáp án"], parse_method: "rule", parse_model: null, answer_source: null,
+  number: n, part: null, confidence: 0.8, issues: ["thiếu đáp án"], parse_method: "rule", parse_model: null, answer_source: null, difficulty_source: null,
   subject_id: null, semester_code: null, exam_kind: null, topics: [], tags: [], page: 1, group: "thiếu đáp án", ...o,
 });
 const topics: Topic[] = [
@@ -73,5 +74,37 @@ describe("review queue", () => {
     press("2");
     await waitFor(() => expect(f).toHaveBeenCalled());
     expect(JSON.parse(String(f.mock.calls[0][1]?.body))).toEqual({ answer: { a: false, b: true, c: false, d: false } });
+  });
+
+  it("shows where a level came from, and a teacher's choice replaces it", async () => {
+    // AC-06. The provenance is the point: 396 of the owner's questions carry a level no person chose, and a
+    // teacher who cannot tell the machine's guess from their own colleague's has no reason to trust either.
+    const machine = pq("q1", 1, { difficulty: "vd", difficulty_source: "ai" });
+    const f = mockFetch((url, init) => (url === "/api/questions/q1" && init?.method === "PATCH"
+      ? { body: pq("q1", 1, { difficulty: "nb", difficulty_source: "manual" }) } : undefined));
+    render(<ReviewQueue doc={{ id: "d", mime: "x" }} initial={[machine]} topics={topics} />);
+
+    expect(screen.getByTestId("difficulty-button")).toHaveTextContent("Vận dụng · model gợi ý");
+    // Radix opens on a real pointer sequence, not a bare click event
+    const u = userEvent.setup();
+    await u.click(screen.getByTestId("difficulty-button"));
+    await u.click(await screen.findByTestId("difficulty-nb"));
+
+    await waitFor(() => expect(screen.getByTestId("difficulty-button")).toHaveTextContent("Nhận biết"));
+    expect(JSON.parse(String(f.mock.calls.at(-1)?.[1]?.body))).toEqual({ difficulty: "nb" });
+    // a level the teacher set says nothing about where it came from: it is theirs, and no machine pass will move it
+    expect(screen.getByTestId("difficulty-button")).not.toHaveTextContent("gợi ý");
+  });
+
+  it("says a question has no level rather than showing a blank", async () => {
+    render(<ReviewQueue doc={{ id: "d", mime: "x" }} initial={[pq("q1", 1)]} topics={topics} />);
+    expect(screen.getByTestId("difficulty-button")).toHaveTextContent("Chọn mức độ");
+  });
+
+  it("names the position rule as the source when that is what filled the level", async () => {
+    // `auto` is a convention about where the question sits in the paper, not a reading of it — a teacher deciding
+    // whether to check the level needs to know which of the two they are looking at.
+    render(<ReviewQueue doc={{ id: "d", mime: "x" }} initial={[pq("q1", 1, { difficulty: "th", difficulty_source: "auto" })]} topics={topics} />);
+    expect(screen.getByTestId("difficulty-button")).toHaveTextContent("Thông hiểu · theo vị trí trong đề");
   });
 });

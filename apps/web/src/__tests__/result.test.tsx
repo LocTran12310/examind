@@ -10,7 +10,7 @@ import { lastBody, me, mockFetch, renderWithQuery, route } from "./helpers";
 const opts = ["A", "B", "C", "D"].map((l) => ({ label: l, content: `pa ${l}` }));
 const rq = (o: Partial<ResultQuestion>): ResultQuestion => ({
   id: "q", type: "mcq", stem: "Đề", options: opts, answer: { key: "B" }, solution: "Lời giải", difficulty: null, grade: null, status: "approved",
-  number: 1, part: null, confidence: 1, issues: [], parse_method: null, parse_model: null, answer_source: null, subject_id: null, semester_code: null,
+  number: 1, part: null, confidence: 1, issues: [], parse_method: null, parse_model: null, answer_source: null, difficulty_source: null, subject_id: null, semester_code: null,
   exam_kind: null, topics: [], tags: [], section: "I", response: { key: "C" }, points: 0, max_points: 0.25, is_correct: false, comment: null, ...o,
 });
 const result = (o: Partial<AttemptResult> = {}): AttemptResult => ({

@@ -27,7 +27,7 @@ const rowPool = (totals: Record<string, number>) => (url: string, init?: Request
   return { body: searchPage([], totals[[b.type, b.difficulty].filter(Boolean).join("/")] ?? 0) };
 };
 const eq = (n: number, section = "I"): ExamQuestion => ({ id: `q${n}`, type: "mcq", stem: `Câu ${n}`, options: [], answer: null, solution: "", difficulty: null,
-  grade: null, status: "approved", number: n, part: null, confidence: 1, issues: [], parse_method: null, parse_model: null, answer_source: null,
+  grade: null, status: "approved", number: n, part: null, confidence: 1, issues: [], parse_method: null, parse_model: null, answer_source: null, difficulty_source: null,
   subject_id: null, semester_code: null, exam_kind: null, topics: [], tags: [], position: n, section, points: 0.25, row: 0 });
 const exam = (o: Partial<Exam> = {}): Exam => ({
   id: "e1", title: "Kiểm tra 15 phút", subject_id: null, grade: 10, description: "",

@@ -44,6 +44,8 @@ export interface ParsedQuestion extends Question {
   parse_method: string | null;
   parse_model: string | null;
   answer_source: string | null;
+  /** who put the level there: auto (the question's place in the paper) · ai (the org's model) · manual (a teacher) */
+  difficulty_source: string | null;
   subject_id: string | null;
   semester_code: string | null;
   exam_kind: string | null;

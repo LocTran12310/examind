@@ -15,7 +15,7 @@ vi.mock("next/navigation", async () => (await import("./router-mock")).routerMoc
 const opts = ["A", "B", "C", "D"].map((l) => ({ label: l, content: l.toLowerCase() }));
 const pq = (id: string, n: number, o: Partial<ParsedQuestion> = {}): ParsedQuestion => ({
   id, type: "mcq", stem: `Câu hỏi ${n}`, options: opts, answer: { key: "A" }, solution: "", difficulty: null, grade: 10, status: "needs_review",
-  number: n, part: null, confidence: 0.8, issues: [], parse_method: "rule", parse_model: null, answer_source: null,
+  number: n, part: null, confidence: 0.8, issues: [], parse_method: "rule", parse_model: null, answer_source: null, difficulty_source: null,
   subject_id: "s", semester_code: null, exam_kind: null, topics: [], tags: [], page: 1, group: "thiếu đáp án", ...o,
 });
 const doc: ReviewDocument = {

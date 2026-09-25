@@ -9,7 +9,7 @@ import { QuestionEditor } from "./QuestionEditor";
 const q: ParsedQuestion = {
   id: "q1", type: "essay", stem: "Giá trị của $2^1$? Các lựa chọn: 1; 2; 3; 4.", options: [], answer: null, solution: "", difficulty: null,
   grade: 10, status: "needs_review", number: 1, part: null, confidence: 0.4, issues: ["không nhận ra phương án"], parse_method: "rule",
-  parse_model: null, answer_source: null, subject_id: null, semester_code: null, exam_kind: null, topics: [], tags: [],
+  parse_model: null, answer_source: null, difficulty_source: null, subject_id: null, semester_code: null, exam_kind: null, topics: [], tags: [],
 };
 
 afterEach(() => vi.unstubAllGlobals());

@@ -24,7 +24,7 @@ const topicCounts = { gt: 7, nh: 7, tp: 0 };
 
 const question = (id: string, stem: string): ParsedQuestion => ({
   id, type: "mcq", stem, options: [], answer: null, solution: "", difficulty: null, grade: 12, status: "auto_approved",
-  number: 1, part: null, confidence: null, issues: [], parse_method: null, parse_model: null, answer_source: null,
+  number: 1, part: null, confidence: null, issues: [], parse_method: null, parse_model: null, answer_source: null, difficulty_source: null,
   subject_id: "s", semester_code: null, exam_kind: null, topics: [], tags: [], source_document_id: "d1",
 });
 const suggestion = (topic_id: string, name: string, score: number, source: TopicSuggestion["source"]): TopicSuggestion => ({ topic_id, name, path: `Giải tích › ${name}`, score, source });

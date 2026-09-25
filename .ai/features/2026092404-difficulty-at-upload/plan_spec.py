@@ -121,8 +121,16 @@ t(id="T-03-02", uow="UOW-03", title="Lệnh điền cho câu chưa có mức đ�
   done_when=["Chỉ điền câu rỗng", "Chạy lại không đổi gì", "Báo số câu theo từng tín hiệu"])
 t(id="T-04-01", uow="UOW-04", title="Mức độ trên thẻ duyệt", layer="web", estimate="4h",
   depends_on=["T-01-03"], verifies=["AC-06"], assumptions=["A-07"],
-  tests=[f"{S}/__tests__/review-document.test.tsx"],
+  # difficulty_source is required on the interface, so every fixture that builds a ParsedQuestion had to name it
+  tests=[f"{S}/components/page-components/ReviewDocument/ReviewQueue/ReviewQueue.test.tsx",
+         f"{S}/components/page-components/ReviewDocument/QuestionEditor/QuestionEditor.test.tsx",
+         f"{S}/__tests__/review-document.test.tsx", f"{S}/__tests__/tagging-queue.test.tsx",
+         f"{S}/__tests__/documents.test.tsx", f"{S}/__tests__/exam-builder.test.tsx",
+         f"{S}/__tests__/exam-trial.test.tsx", f"{S}/__tests__/parsed-question.test.tsx",
+         f"{S}/__tests__/result.test.tsx"],
   touches=[f"{S}/components/page-components/ReviewDocument/ReviewQueue/ReviewQueue.tsx",
+           f"{S}/hooks/page-hooks/review-document/use-review-queue.ts",
+           f"{S}/constants/question.constant.ts",
            f"{S}/interfaces/question.interface.ts"],
   context="Chuyên đề đã hiện nguồn kiểu 'gợi ý 60%' — mức độ soi theo đúng cách đó.",
   done_when=["Hiện mức độ và nguồn", "Sửa được ngay tại thẻ", "Sửa xong thì nguồn thành người đặt"])
