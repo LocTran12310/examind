@@ -16,6 +16,13 @@ describe("QuestionView", () => {
     for (const { content } of opts) expect(screen.getByText(content)).toBeInTheDocument();
   });
 
+  it("shows it in the mode a student sits the paper in, not only in review (AC-01)", () => {
+    // the same call site serves both screens, and that is exactly why the defect reached the exam page: nobody
+    // rendering an option chose a mode. A test in one mode would have been satisfied by the broken build too.
+    render(<QuestionView question={q({ options: [{ label: "B", content: "171." }] })} mode="exam" number={1} onSelect={() => {}} />);
+    expect(screen.getByText("171.")).toBeInTheDocument();
+  });
+
   it("keeps a real numbered list in the stem a list (AC-03)", () => {
     const { container } = render(<QuestionView question={q({ stem: "Xét các mệnh đề:\n\n1. một\n2. hai" })} mode="review" number={1} />);
     expect(container.querySelectorAll("ol li")).toHaveLength(2);

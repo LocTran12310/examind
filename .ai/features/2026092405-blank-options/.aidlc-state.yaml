@@ -5,7 +5,7 @@ slug: 2026092405-blank-options
 profile: none
 created: 2026-09-24T16:19:53
 ruleset: 7
-current_gate: G3
+current_gate: G5
 history:
   - gate: G0
     action: passed
@@ -76,3 +76,13 @@ history:
     by: Loc Tran
     reason: apps/api files in flight belong to F22, running in parallel
     ticket: T-01-02
+  - gate: G4
+    action: passed
+    at: 2026-09-25T21:31:29
+    by: Loc Tran
+    evidence: every done ticket has a passing verification run; all 2 tickets done, all UoW checklists ticked
+  - gate: G5
+    action: passed
+    at: 2026-09-25T21:31:36
+    by: Loc Tran
+    evidence: assumptions resolved, ADRs settled, graph valid

@@ -55,13 +55,14 @@ The other 29 imported students still have temporary passwords (reset them from "
 
 | Item | Status | What is needed |
 | --- | --- | --- |
-| Real exam files golden set | Only generated samples (`samples/exams/`) | 10–20 of your real .docx/.pdf/scans; I will add them to the golden tests and tune the splitter |
+| Real exam files golden set | **Done 2026-09-22**: 18 đề chính thức trong `tests/golden/official_expected.json`, khớp theo SHA-256 nên tên file không quan trọng. `make golden EXAMIN_DIR=…` | Bộ này **không chạy trong CI** và không chạy trong `make test`: file đề nằm ngoài repo, thiếu `EXAMIN_DIR` là cả module skip. Muốn nó gác được thì phải quyết định để đề ở đâu cho máy khác đọc |
 | Local LLM | **Done 2026-09-22**: native Ollama (Homebrew, Metal) with `qwen2.5:7b` on the M2 Pro; stack reaches it at `http://host.docker.internal:11434` (`OLLAMA_URL`, `LLM_TIMEOUT_SECONDS=180` in `.env`). AI-only split of `de-kho.docx`: 8/8 correct, ~4.7 s per question, 0 failures (1.5B model disabled) | On the Oracle VM (CPU only) expect it to be much slower — keep rule-based as the main path there |
 | Oracle VM deployment | Documented in the plan; not executed | An Oracle account, a VM, and a domain (or use sslip.io) |
-| Backup scripts (`pg_dump` + `mc mirror` cron) | Not written | Decide the backup target (R2 or your machine) |
-| CI (GitHub Actions), Sentry | Not set up | A GitHub repo; a Sentry DSN (optional) |
+| Backup scripts (`pg_dump` + `mc mirror` cron) | Một nửa: `make backup` có thật và đã dùng thật (5 file trong `backups/`, gồm bản chụp trước lần seed trung tâm). Không có cron, không có bản nào rời khỏi máy này, và **MinIO chưa từng được sao lưu** — ảnh câu hỏi chỉ có một bản | Quyết định đích sao lưu (R2 hay máy anh). Một bản duy nhất nằm cùng ổ với dữ liệu gốc thì không phải bản sao lưu |
+| CI (GitHub Actions) | `.github/workflows/ci.yml` có thật: hai job (API ruff + layers + pytest, web tsc + eslint + vitest + build) | **Chưa từng chạy một lần nào** — repo không có remote (`git remote -v` rỗng), nên file này là một bản dự thảo chưa được máy nào xác nhận. Cần một repo GitHub; lần chạy đầu gần như chắc sẽ đỏ vài chỗ |
+| Sentry | Not set up | A Sentry DSN (optional) |
 | Google OAuth, printable exam export (.docx/.pdf, multiple versions), PWA | Post-MVP by plan | — |
-| Legacy dev data | Questions parsed before later fixes keep old artefacts (e.g. `n⃗` glyph box in one PDF, docx + PDF copies both usable) | Re-parse those documents or reset the dev DB |
+| Legacy dev data | **Hết 2026-09-25**: DB và MinIO đã xóa sạch rồi dựng lại từ bước setup, nên mọi câu hỏi hiện có đều đi qua đường parse mới nhất | — |
 
 No ticket was ever `aidlc block`-ed.
 
@@ -1027,3 +1028,93 @@ tại — đúng cả trước lẫn sau khi đổi thứ tự — và còn đ�
 **Kiểm chứng.** API 572 → **579 passed**, web 245 → **258 passed**, ruff, 4 import contract và tsc xanh. Trình
 duyệt: 5 bước × 2 viewport, **10/10**, đọc từng ảnh. Thêm một verb `hover` cho gói kiểm chứng — không có nó thì
 một tính năng mà hành vi **chính là** thứ hiện ra khi rê chuột không cách nào kiểm được trên trình duyệt.
+
+## 32. Duyệt cả bản (2026-09-25)
+
+Anh bảo duyệt bản này. Tôi đi lại §1–§31, và việc đầu tiên rút ra là **phần lớn bản này không phải thứ để duyệt**:
+nó là hồ sơ những việc đã làm và đã kiểm, mỗi mục đã kèm con số của lần chạy thật. Thứ thật sự cần anh chỉ có hai
+loại — **dòng đã hết đúng** (tôi sửa được, và đã sửa) và **quyết định** (tôi không duyệt thay anh được).
+
+**Bốn dòng ở §4 đã hết đúng, đã sửa tại chỗ — cả bốn theo hướng "xong rồi", nên bảng ấy đang bi quan hơn thực tế:**
+
+| Dòng | Trước | Nay |
+| --- | --- | --- |
+| Bộ đề chuẩn | "chỉ có đề sinh tự động" | 18 đề chính thức, khớp theo SHA-256. **Nhưng không chạy trong CI cũng không trong `make test`** — thiếu `EXAMIN_DIR` là cả module skip |
+| Sao lưu | "chưa viết" | `make backup` có thật và đã dùng thật (5 file, gồm bản chụp ngay trước lần seed trung tâm). Không cron, **không bản nào rời khỏi máy này**, và **MinIO chưa từng được sao lưu** |
+| CI | "chưa dựng" | `ci.yml` có hai job đầy đủ — **và chưa từng chạy một lần nào**, vì repo không có remote |
+| Dữ liệu dev cũ | "còn vết parse cũ" | Hết, vì DB và MinIO đã xóa sạch rồi dựng lại từ bước setup |
+
+Hai dòng giữa đáng đọc lại: cả hai đều là **thứ tồn tại nhưng chưa từng được chứng minh là chạy**. Một file CI chưa
+chạy lần nào gần như chắc chắn đỏ ở lần đầu, và một bản `pg_dump` nằm cùng ổ với dữ liệu gốc thì chưa phải bản sao
+lưu. Tôi để nguyên chúng ở §4 thay vì nâng lên "xong", vì nâng lên là đúng cái lỗi bản này nhiều lần tự bắt: gọi
+một thứ chưa kiểm là xanh.
+
+**Một thứ hỏng thật, sửa luôn trong lúc duyệt.** `make lint-api` chết trên máy này kể từ lần đổi tên thư mục dự án:
+`.venv/bin/*` giữ shebang trỏ tới đường dẫn cũ không còn tồn tại, nên `uv run lint-imports` báo "No such file or
+directory" — thông báo trỏ vào chính lệnh, không vào cái python đã mất, nên nó dễ bị đọc thành "chưa cài". Đã viết
+lại shebang cho các script trong venv: **4 contract kept, ruff passed**. Đây là lỗi máy, không phải lỗi mã: cùng
+lúc ấy `scripts/verify.sh` vẫn chạy contract trong docker và vẫn xanh, nên nó không hề chặn gate nào — và đó cũng
+là lý do nó nằm im nhiều phiên mà không ai đụng.
+
+**Năm thứ tôi không duyệt thay anh được**, vì cả năm là lựa chọn chứ không phải sự thật cần kiểm:
+
+1. **Đích sao lưu** — R2 hay máy anh, và có sao lưu MinIO hay không. Ảnh câu hỏi đang có đúng một bản.
+2. **Một repo GitHub**, để CI chạy lần đầu và để bộ 18 đề có chỗ đứng cho máy khác đọc.
+3. **Một giáo viên đọc thử mẫu nhãn `ai`** (F22). Mục 4 của báo cáo mức độ có **mẫu 0 câu**, và trên `trungtama`
+   thì vĩnh viễn không đo lại được vì đã trộn bài làm bịa — cái giá anh đã chọn khi cho seed vào org thật. Con
+   người đọc một mẫu là đường duy nhất còn lại ở org này.
+4. **Hai chỗ lạ của attempt từ F13** — mở lại một lượt đã hết giờ thì lượt tự nộp bị lùi kèm lỗi "đã đóng"; sửa
+   một bài giao trả về `students: 0`. Cả hai có từ trước lần tái cấu trúc và được giữ nguyên có chủ đích.
+5. **Bảy dòng ở §3** — chỗ bản dựng lệch khỏi kế hoạch trong chat (LiteLLM, PaddleOCR, Docling, pgvector, Redis,
+   cổng, BKT/IRT). Mỗi dòng có một ADR; đổi lại được, nhưng phải là anh quyết.
+
+Ngoài ra còn một việc nhỏ đã ghi ở §25 và vẫn đúng: **danh sách "Thay đổi gần đây" chưa có bố cục cho điện thoại**
+— ở 390px phải kéo ngang mới tới nút hoàn tác. Ghim cột đã thử và đã bỏ, vì một ô ghim 176px vẽ đè lên hàng 390px.
+
+**Và lần duyệt này tìm ra một thứ tôi không biết là mình đang giấu.** Tôi định viết "mọi feature đều ở G5" thì
+dừng lại để đếm thật — chạy `aidlc status` trên cả 24 thư mục thay vì tin trí nhớ. **Một cái không ở G5**:
+`2026092405-blank-options` đứng ở **G3** suốt từ 24-09, và nó là bug nặng nhất từng ghi trong file này — phương án
+là một con số thì **học sinh đang thi thấy ô trống**. Mã đã sửa và đã commit từ hôm ấy (`229ce08`); thứ chưa làm
+là **đóng gate**: không có `07-verification.md`, không một tấm ảnh nào, bảy ô chưa tích. Nếu chỉ đọc lướt thì nó
+trông y hệt một feature đã xong. Chi tiết ở §33.
+
+Ngoài nó ra thì không còn gì chờ: 23 feature kia đều ở G5, không assumption nào pending, không ADR nào còn
+`proposed`, và mỗi UoW có bằng chứng trình duyệt hoặc một dòng nói rõ vì sao không dựng được bằng chứng ấy mà không
+bịa dữ liệu.
+
+## 33. F24 `2026092405-blank-options` — đóng nốt cái gate bị bỏ quên (2026-09-25)
+
+Feature này được lập kế hoạch và **viết mã xong** ngày 24-09, rồi bị bỏ lại ở G3 khi phiên chuyển sang việc khác.
+Mã sửa nằm trong `229ce08` và đang chạy thật; cái thiếu là bằng chứng.
+
+**Lỗi.** `9.` ở đầu một dòng là cú pháp danh sách đánh số của Markdown. Bộ render biến nó thành `<ol start="9">`
+rỗng — số bị ăn làm dấu đầu dòng, chấm bị ăn làm dấu phân cách, không còn chữ nào để hiện. Phương án bắt đầu bằng
+`$` sống sót, nên lỗi **trông như ngẫu nhiên**. Đo lại hôm nay trên ngân hàng đã dựng lại: **106 phương án** vẫn
+thuộc loại này. Và vì phương án chỉ có **một** chỗ gọi render, lỗi đi thẳng sang màn làm bài.
+
+**Cách sửa** (ADR-01): thoát dấu mở đầu cấu trúc khối cho nội dung là **một cụm chứ không phải một tài liệu**.
+`asPhrase` là hàm thuần, chạy theo từng dòng, chèn một dấu `\` mà Markdown hiện ra thành không gì cả — đổi cách
+bộ phân tích **đọc** dòng ấy, không đổi một ký tự nào người đọc **thấy**. Đề bài và lời giải giữ đường cũ, vì ở
+đó một danh sách đánh số là thứ hợp lệ và có thật.
+
+**Kiểm chứng hôm nay.** `make verify` — **4/4**, hai viewport, đọc từng ảnh. Câu dùng để kiểm được chọn vì bốn
+phương án của nó chia đúng hai nửa: **A. 171π. · B. 171. · C. 18π. · D. 18.** B và D là hai ô từng trống trơn, A
+và C chứng minh công thức không bị chế độ cụm làm hỏng — cả hai nhánh trên cùng một khung hình, nên không thể sửa
+nửa này bằng cách làm hỏng nửa kia mà ảnh vẫn xanh. S2 quét cả đề "Chuyên đề Hình học · 12A1" (15 câu).
+
+**Khẳng định phân biệt được hai bản dựng.** `count … ol = 0` đọc ra **2** trên bản hỏng và **0** trên bản đã sửa.
+Một khẳng định kiểu "trang không có lỗi" thì đúng cả khi bốn ô trống rỗng — và đó đúng là cách một bước kiểm trở
+thành ô xanh vô nghĩa, thứ file này đã ghi hai lần.
+
+**Thêm một test cho `mode="exam"`** — chế độ học sinh ngồi làm. Bộ test cũ chỉ kiểm `mode="review"`, và lý do phải
+kiểm cả hai dù chỉ có một chỗ gọi chính là nguyên nhân của lỗi này: **vì chỉ có một chỗ gọi nên nó lan sang màn
+thi**, và một test ở một chế độ thì bản hỏng cũng thoả. Web 259 passed, tsc và ESLint xanh.
+
+**AC-03 không có ảnh, và nói thẳng vì sao**: trong ngân hàng thật có **0 câu** với đề bài và **0 câu** với lời
+giải chứa danh sách đánh số thật. Soạn một câu như thế chỉ để chụp ảnh là thêm một câu bịa vào ngân hàng của anh.
+`evidence_check` vì vậy vẫn báo FAIL ở AC-03 — **và tôi để nguyên nó đỏ**, không tích ô nào tương ứng: bộ test có
+một test đối chứng chứng minh bản cũ đỏ, còn ô xanh ở đây sẽ là một lời nói dối có chữ ký.
+
+**Bài học không nằm ở đoạn mã.** Gate là thứ duy nhất phân biệt "đã sửa" với "đã chứng minh là sửa", và một
+feature ở G3 với mã đã commit thì **trông hệt như đã xong** từ mọi phía trừ `aidlc status`. Chạy trên cả cây thư
+mục, không chỉ trên feature đang làm, là cách duy nhất thấy được.
