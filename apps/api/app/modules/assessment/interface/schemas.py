@@ -172,6 +172,25 @@ class AssignmentOut(BaseModel):
     classes: list[str] = []
 
 
+class AttemptHistoryOut(BaseModel):
+    """One sitting in a student's history. `minutes` is wall-clock from start to hand-in — not the sum of the
+    per-question seconds, which measures something else (class-overview-and-subjects ADR-02)."""
+    attempt_id: uuid.UUID
+    exam_title: str
+    assignment_title: str | None
+    started_at: datetime
+    submitted_at: datetime | None
+    minutes: int | None
+    score: float | None
+    max_score: float
+    score10: float | None
+    status: str
+    auto_submitted: bool
+    student_id: uuid.UUID
+    student_name: str
+    username: str
+
+
 class AttemptBriefOut(BaseModel):
     id: uuid.UUID
     status: str

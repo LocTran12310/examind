@@ -7,6 +7,7 @@ from app.modules.analytics.application.commands.rebuild_mastery import RebuildMa
 from app.modules.analytics.application.commands.start_practice import StartPractice, StartPracticeHandler
 from app.modules.analytics.application.dto import ReportFilters
 from app.modules.analytics.application.queries.class_overview import ClassOverview, ClassOverviewHandler
+from app.modules.analytics.application.queries.class_summary import ClassSummary, ClassSummaryHandler
 from app.modules.analytics.application.queries.group_stats import GroupStats, GroupStatsHandler
 from app.modules.analytics.application.queries.heatmap import Heatmap, HeatmapHandler
 from app.modules.analytics.application.queries.my_mastery import MyMasteryHandler
@@ -78,6 +79,14 @@ def student_weekly_mastery(student_id: uuid.UUID, actor: Actor = Depends(staff_a
 def rebuild_mastery(actor: Actor = Depends(current_actor), handle: RebuildMasteryHandler = Depends(deps.rebuild_mastery)):
     """An org admin replays their organisation's answer facts: {students, topics, facts}."""
     return vars(handle(actor, RebuildMastery()))
+
+
+@router.get("/classes/{class_id}/summary")
+def class_summary(class_id: uuid.UUID, actor: Actor = Depends(staff_actor), handle: ClassSummaryHandler = Depends(deps.class_summary)):
+    """Cả lớp trong một lời gọi: số bài giao, số lượt đã nộp, điểm trung bình trên thang 10 theo tỉ lệ đúng, phổ
+    điểm mười cột, và năm chuyên đề lớp yếu nhất. Lớp chưa ai nộp trả `average: null` và phổ điểm toàn 0 — rỗng
+    có cấu trúc, để màn hình phân biệt được "chưa đo" với "đo rồi và bằng 0"."""
+    return handle(actor, ClassSummary(class_id))
 
 
 @router.get("/classes/{class_id}/overview")

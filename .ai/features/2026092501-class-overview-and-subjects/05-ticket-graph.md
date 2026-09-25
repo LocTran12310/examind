@@ -3,7 +3,7 @@
 # Ticket graph — 2026092501-class-overview-and-subjects
 
 - Units of Work: **3**
-- Tickets: **6** (0 done)
+- Tickets: **6** (1 done)
 - Total effort: **2.5d**
 - Critical path: **1.0d** across 2 tickets
 - Theoretical minimum duration with unlimited parallelism: **1.0d**
@@ -24,7 +24,7 @@ slice — the floor on how fast it can finish no matter how many people work on 
 ```mermaid
 graph LR
   subgraph UOW_01["UOW-01 · Một học sinh đã làm gì, lúc nào, mất bao lâu"]
-    T_01_01["T-01-01<br/>Read model liệt kê lượt làm bài"]
+    T_01_01["✓ T-01-01<br/>Read model liệt kê lượt làm bài"]
     T_01_02["T-01-02<br/>Lịch sử làm bài trên hồ sơ học sinh"]
   end
   subgraph UOW_02["UOW-02 · Nhìn được cả lớp ngay trên trang lớp"]
@@ -63,7 +63,7 @@ adding people to tickets off this path will not make the feature ship sooner.
 
 | ID | UoW | Layer | Type | Est | Depends on | Verifies | Status |
 |----|-----|-------|------|-----|-----------|----------|--------|
-| T-01-01 | UOW-01 | api | feature | 4h | — | AC-01, AC-02 | todo |
+| T-01-01 | UOW-01 | api | feature | 4h | — | AC-01, AC-02 | done |
 | T-01-02 | UOW-01 | web | feature | 3h | T-01-01 | AC-01, AC-02 | todo |
 | T-02-01 | UOW-02 | api | feature | 4h | — | AC-03, AC-04 | todo |
 | T-02-02 | UOW-02 | web | feature | 4h | T-02-01 | AC-03, AC-04 | todo |

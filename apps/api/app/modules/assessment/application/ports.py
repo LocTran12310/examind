@@ -4,6 +4,7 @@ import uuid
 
 from app.modules.assessment.application.dto import (
     AssignmentRow,
+    AttemptRow,
     ExamQuestionRow,
     ExamSummary,
     Person,
@@ -22,6 +23,14 @@ class ExamReader(Protocol):
 
     def questions(self, exam_id: uuid.UUID, req: SearchRequest) -> Page[ExamQuestionRow]:
         """One exam's questions, by position. Filters: stem (text) · type, section (enum) · position, points (number)."""
+        ...
+
+
+class AttemptHistoryReader(Protocol):
+    """Sittings of the organisation, newest first. Filters: student_id, assignment_id, exam_id (uuid) ·
+    status (enum in_progress | submitted) · started_at, submitted_at (date) · score (number) · exam_title (text)."""
+
+    def search(self, org_id: uuid.UUID, req: SearchRequest) -> Page[AttemptRow]:
         ...
 
 

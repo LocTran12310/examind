@@ -1,3 +1,4 @@
+from datetime import timedelta
 import uuid
 
 from sqlalchemy import func, select
@@ -142,3 +143,81 @@ def test_validation_and_permissions(client, db):
     o = login(client, "trungtama", "hs02")
     assert o.post(f"/api/assignments/{a['id']}/start").status_code == 404
     assert outsider  # member of another class only
+
+
+def _sit(session, assignment_id, db, minutes_late=None):
+    """Start, answer one multiple-choice question, submit — optionally backdating the start so the sitting has a
+    duration to report. Backdating is the only way to give it one: `started_at` is written server-side."""
+    attempt = session.post(f"/api/assignments/{assignment_id}/start").json()["attempt_id"]
+    if minutes_late is not None:
+        row = db.get(Attempt, uuid.UUID(attempt))
+        row.started_at = row.started_at - timedelta(minutes=minutes_late)
+        db.commit()
+    view = session.get(f"/api/attempts/{attempt}").json()
+    q = next(x for x in view["questions"] if x["type"] == "mcq")
+    session.put(f"/api/attempts/{attempt}/answers/{q['id']}", json={"response": display_key(db, q)})
+    session.post(f"/api/attempts/{attempt}/submit")
+    return attempt
+
+
+def test_attempt_history_says_which_paper_when_and_how_long(client, db):
+    """AC-01. `minutes` is the wall clock of the whole sitting — `submitted_at - started_at` — and not the sum of
+    the per-question seconds, which measures a different thing and is clamped to this same window (F14 ADR-01)."""
+    admin, exam = exam_with_questions(client, db)
+    klass, student = klass_with_student(client, db, admin)
+    a = assign(client, exam["id"], klass["id"])
+    s = login(client, "trungtama", "hs01")
+    _sit(s, a["id"], db, minutes_late=25)
+
+    rows = client.post("/api/attempts/search", json={"filters": {"student_id": {"value": str(student.id)}}}).json()
+    assert rows["total"] == 1
+    row = rows["data"][0]
+    assert row["exam_title"] == exam["title"] and row["assignment_title"] == a["title"]
+    assert row["username"] == "hs01" and row["student_name"] == "Học Sinh"
+    assert row["status"] == "submitted" and row["auto_submitted"] is False
+    assert row["minutes"] == 25, "số phút là hiệu giờ treo tường của cả lượt"
+    assert row["submitted_at"] is not None and row["score10"] is not None
+
+
+def test_a_sitting_still_open_has_no_duration_yet(client, db):
+    """`minutes` and `submitted_at` are null while the paper is still being sat — a zero there would read as
+    "finished instantly" and that is a different claim."""
+    admin, exam = exam_with_questions(client, db)
+    klass, _ = klass_with_student(client, db, admin)
+    a = assign(client, exam["id"], klass["id"])
+    login(client, "trungtama", "hs01").post(f"/api/assignments/{a['id']}/start")
+
+    row = client.post("/api/attempts/search", json={}).json()["data"][0]
+    assert row["status"] == "in_progress" and row["submitted_at"] is None and row["minutes"] is None
+
+
+def test_a_sitting_the_system_closed_is_marked_as_such(client, db):
+    """AC-02. Hiding it would make the duration column lie about exactly the sittings worth looking at."""
+    admin, exam = exam_with_questions(client, db)
+    klass, _ = klass_with_student(client, db, admin)
+    a = assign(client, exam["id"], klass["id"])
+    s = login(client, "trungtama", "hs01")
+    attempt = _sit(s, a["id"], db)
+    row = db.get(Attempt, uuid.UUID(attempt))
+    row.submitted_at = row.deadline_at + timedelta(seconds=30)  # what the expiry sweep writes
+    db.commit()
+
+    got = client.post("/api/attempts/search", json={}).json()["data"][0]
+    assert got["auto_submitted"] is True
+
+
+def test_a_student_reads_only_their_own_sittings(client, db):
+    """The scope comes from the caller, never from the body. F20 is why this is a test and not a comment: a page
+    called "của tôi" once answered with the whole organisation's numbers."""
+    admin, exam = exam_with_questions(client, db)
+    klass, mine = klass_with_student(client, db, admin, username="hs01")
+    other_class, other = klass_with_student(client, db, admin, username="hs02")
+    for c, u in ((klass, mine), (other_class, other)):
+        a = assign(client, exam["id"], c["id"])
+        _sit(login(client, "trungtama", u.username), a["id"], db)
+
+    assert client.post("/api/attempts/search", json={}).json()["total"] == 2  # staff see the organisation
+    s = login(client, "trungtama", "hs01")
+    asked_for_the_other = s.post("/api/attempts/search", json={"filters": {"student_id": {"value": str(other.id)}}}).json()
+    assert asked_for_the_other["total"] == 1
+    assert {r["username"] for r in asked_for_the_other["data"]} == {"hs01"}, "yêu cầu bị ép về chính người gọi"

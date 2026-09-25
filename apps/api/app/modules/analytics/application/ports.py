@@ -40,6 +40,10 @@ class ReportReader(Protocol):
         """{student_id, topic_id, name, path, p, m, n} per student and topic of that level, by path."""
         ...
 
+    def class_summary(self, org_id: uuid.UUID, class_id: uuid.UUID) -> dict:
+        """Bài giao, lượt đã nộp, điểm trung bình trên thang 10 theo tỉ lệ đúng, và phổ điểm mười cột."""
+        ...
+
     def class_students(self, org_id: uuid.UUID, class_id: uuid.UUID) -> list[dict]:
         """{id, full_name, username} of the class's active student members, by name."""
         ...

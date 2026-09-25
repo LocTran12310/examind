@@ -88,3 +88,45 @@ def test_report_query_speed(client, db):
     assert client.get("/api/stats/topics").status_code == 200
     assert client.get("/api/stats/groups", params={"by": "type"}).status_code == 200
     assert time.perf_counter() - t < 1.0
+
+
+def test_class_summary_counts_the_class_and_names_where_it_is_weakest(client, db):
+    """AC-03. Một lời gọi trả cả bốn nhóm số; các chuyên đề đi qua đúng phép tính của Báo cáo nên hai màn hình
+    không thể lệch nhau."""
+    admin, exam, klass, a = two_students(client, db)
+    got = client.get(f"/api/classes/{klass['id']}/summary").json()
+
+    assert got["assignments"] == 1 and got["sittings"] == 2
+    assert got["average"] is not None and 0 <= got["average"] <= 10
+    assert len(got["distribution"]) == 10 and sum(got["distribution"]) == 2
+    # hai em rơi vào hai cột khác nhau: điều đáng chứng minh là phổ TRẢI RA, không phải cột nào cụ thể.
+    # Không em nào đạt 10: helper chỉ trả lời câu trắc nghiệm và bỏ câu đúng/sai, nên em "làm đúng" vẫn mất
+    # điểm phần ấy — ghim một cột cụ thể ở đây là ghim một chi tiết của helper, không phải của tính năng.
+    assert len([b for b in got["distribution"] if b]) == 2
+    assert got["weakest"], "lớp có dữ liệu thì phải nêu được chỗ yếu"
+    assert all(w["ratio"] is not None and w["answered"] > 0 for w in got["weakest"])
+    assert got["weakest"] == sorted(got["weakest"], key=lambda w: w["ratio"]), "thấp trước"
+
+
+def test_a_class_nobody_has_sat_says_so_instead_of_showing_zero(client, db):
+    """AC-04. `average: null` chứ không phải 0: màn hình phải phân biệt được "chưa đo" với "đo rồi và bằng 0"."""
+    admin, exam = exam_with_questions(client, db, mcq=2, tf=0, short=0)
+    klass, _ = klass_with_student(client, db, admin, "hs09")
+    assign(client, exam["id"], klass["id"])
+
+    got = client.get(f"/api/classes/{klass['id']}/summary").json()
+    assert got["assignments"] == 1 and got["sittings"] == 0
+    assert got["average"] is None
+    assert got["distribution"] == [0] * 10 and got["weakest"] == []
+
+
+def test_class_summary_counts_only_its_own_class(client, db):
+    """`assignment_targets` nối theo lớp, nên bài giao của lớp khác không lọt vào — đúng chỗ script dọn e2e đã
+    suýt sai khi tin một bộ lọc mà endpoint không có."""
+    admin, exam, klass, _ = two_students(client, db)
+    other, _ = klass_with_student(client, db, admin, "hs08")
+    assign(client, exam["id"], other["id"])
+
+    assert client.get(f"/api/classes/{klass['id']}/summary").json()["assignments"] == 1
+    theirs = client.get(f"/api/classes/{other['id']}/summary").json()
+    assert theirs["assignments"] == 1 and theirs["sittings"] == 0

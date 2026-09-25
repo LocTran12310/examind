@@ -33,6 +33,7 @@ t(id="T-01-01", uow="UOW-01", title="Read model liệt kê lượt làm bài", l
   tests=[f"{API}/tests/test_assignments_api.py", f"{API}/tests/unit/test_assessment_handlers.py"],
   touches=[f"{M}/assessment/infrastructure/read_models.py",
            f"{M}/assessment/application/queries/search_attempts.py",
+           f"{M}/assessment/application/ports.py",
            f"{M}/assessment/application/dto.py",
            f"{M}/assessment/interface/schemas.py",
            f"{M}/assessment/interface/deps.py",
@@ -54,11 +55,10 @@ t(id="T-01-02", uow="UOW-01", title="Lịch sử làm bài trên hồ sơ học 
   done_when=["Bảng có đề, bắt đầu, nộp, số phút, điểm", "Lượt tự nộp nhìn ra được", "Chưa có lượt nào thì nói rõ"])
 t(id="T-02-01", uow="UOW-02", title="Read model tổng quan một lớp", layer="api", estimate="4h",
   verifies=["AC-03", "AC-04"], assumptions=["A-05"],
-  tests=[f"{API}/tests/test_analytics_api.py", f"{API}/tests/unit/test_analytics_handlers.py"],
+  tests=[f"{API}/tests/test_stats_api.py"],
   touches=[f"{M}/analytics/infrastructure/read_models.py",
            f"{M}/analytics/application/queries/class_summary.py",
-           f"{M}/analytics/application/dto.py",
-           f"{M}/analytics/interface/schemas.py",
+           f"{M}/analytics/application/ports.py",
            f"{M}/analytics/interface/deps.py",
            f"{M}/analytics/interface/router.py"],
   context="ADR-03. Một lời gọi thay vì N+1; phổ điểm đúng mười cột như báo cáo bài giao để hai màn hình không vẽ "

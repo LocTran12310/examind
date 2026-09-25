@@ -13,6 +13,7 @@ from app.modules.analytics.application.commands.start_practice import StartPract
 from app.modules.analytics.application.common import PracticePlanner
 from app.modules.analytics.application.ports import Roster
 from app.modules.analytics.application.queries.class_overview import ClassOverviewHandler
+from app.modules.analytics.application.queries.class_summary import ClassSummaryHandler
 from app.modules.analytics.application.queries.group_stats import GroupStatsHandler
 from app.modules.analytics.application.queries.heatmap import HeatmapHandler
 from app.modules.analytics.application.queries.my_mastery import MyMasteryHandler
@@ -94,6 +95,10 @@ def my_mastery(db: Session = Depends(get_db)) -> MyMasteryHandler:
 
 def student_mastery(db: Session = Depends(get_db)) -> StudentMasteryHandler:
     return StudentMasteryHandler(SqlMasteryRepository(db), SqlTopics(db), _roster_of(db), utcnow)
+
+
+def class_summary(db: Session = Depends(get_db)) -> ClassSummaryHandler:
+    return ClassSummaryHandler(SqlReportReader(db))
 
 
 def class_overview(db: Session = Depends(get_db)) -> ClassOverviewHandler:

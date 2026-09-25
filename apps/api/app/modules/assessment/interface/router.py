@@ -27,6 +27,7 @@ from app.modules.assessment.application.queries.get_attempt import GetAttempt, G
 from app.modules.assessment.application.queries.get_exam import GetExam, GetExamHandler
 from app.modules.assessment.application.queries.my_assignments import MyAssignmentsHandler
 from app.modules.assessment.application.queries.search_assignments import SearchAssignments, SearchAssignmentsHandler
+from app.modules.assessment.application.queries.search_attempts import SearchAttempts, SearchAttemptsHandler
 from app.modules.assessment.application.queries.search_exam_questions import SearchExamQuestions, SearchExamQuestionsHandler
 from app.modules.assessment.application.queries.search_exams import SearchExams, SearchExamsHandler
 from app.modules.assessment.application.queries.trial_run import TrialRun, TrialRunHandler
@@ -36,6 +37,7 @@ from app.modules.assessment.interface.schemas import (
     AssignmentIn,
     AssignmentOut,
     AssignmentPatch,
+    AttemptHistoryOut,
     BlueprintIn,
     BlueprintOut,
     ExamIn,
@@ -157,6 +159,17 @@ def set_points(exam_id: uuid.UUID, qid: uuid.UUID, body: PointsIn, actor: Actor 
 
 
 # ------------------------------------------------------------------ assignments
+
+
+@router.post("/attempts/search", response_model=PageOut[AttemptHistoryOut])
+def search_attempts(body: SearchBody, actor: Actor = Depends(current_actor),
+                    handle: SearchAttemptsHandler = Depends(deps.search_attempts)):
+    """Lượt làm bài, mới nhất trước. Filters: student_id, assignment_id, exam_id (uuid) · status (enum) ·
+    started_at, submitted_at (date) · score (number) · exam_title (text).
+
+    `minutes` là thời gian từ lúc bắt đầu tới lúc nộp, **không** phải tổng thời gian từng câu. A student's own
+    request is narrowed to themselves whatever the body says; staff read their organisation."""
+    return _page(handle(actor, SearchAttempts(body.to_request())), lambda r: AttemptHistoryOut(**vars(r)))
 
 
 @router.post("/assignments/search", response_model=PageOut[AssignmentOut])

@@ -33,11 +33,12 @@ from app.modules.assessment.application.queries.get_attempt import GetAttemptHan
 from app.modules.assessment.application.queries.get_exam import GetExamHandler
 from app.modules.assessment.application.queries.my_assignments import MyAssignmentsHandler
 from app.modules.assessment.application.queries.search_assignments import SearchAssignmentsHandler
+from app.modules.assessment.application.queries.search_attempts import SearchAttemptsHandler
 from app.modules.assessment.application.queries.search_exam_questions import SearchExamQuestionsHandler
 from app.modules.assessment.application.queries.search_exams import SearchExamsHandler
 from app.modules.assessment.application.queries.trial_run import TrialRunHandler
 from app.modules.assessment.domain.ports import FactListener, QuestionBank, Roster, Subjects
-from app.modules.assessment.infrastructure.read_models import SqlAssignmentReader, SqlExamReader, SqlPersonalReader, SqlResultReader
+from app.modules.assessment.infrastructure.read_models import SqlAssignmentReader, SqlAttemptHistoryReader, SqlExamReader, SqlPersonalReader, SqlResultReader
 from app.modules.assessment.infrastructure.repositories import (
     SqlAnswerFacts,
     SqlAssignmentRepository,
@@ -150,6 +151,10 @@ def set_question_points(db: Session = Depends(get_db)) -> SetQuestionPointsHandl
 
 
 # ------------------------------------------------------------------ assignments
+
+def search_attempts(db: Session = Depends(get_db)) -> SearchAttemptsHandler:
+    return SearchAttemptsHandler(SqlAttemptHistoryReader(db))
+
 
 def search_assignments(db: Session = Depends(get_db)) -> SearchAssignmentsHandler:
     return SearchAssignmentsHandler(SqlAssignmentReader(db), SqlAssignmentRepository(db), _roster_of(db))

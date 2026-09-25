@@ -57,6 +57,31 @@ class AssignmentView:
 
 
 @dataclass(frozen=True)
+class AttemptRow:
+    """One sitting in a student's history (class-overview-and-subjects AC-01).
+
+    `minutes` is wall-clock over the whole sitting — `submitted_at - started_at` — and is **not** the sum of the
+    per-question `seconds_spent`, which measures time a question was on screen and is clamped to the sitting's
+    window (learning-telemetry ADR-01). Two numbers, two questions; the screen has to say which one it shows.
+    `None` while the sitting is still open.
+    """
+    attempt_id: uuid.UUID
+    exam_title: str
+    assignment_title: str | None
+    started_at: datetime
+    submitted_at: datetime | None
+    minutes: int | None
+    score: float | None
+    max_score: float
+    score10: float | None
+    status: str
+    auto_submitted: bool
+    student_id: uuid.UUID
+    student_name: str
+    username: str
+
+
+@dataclass(frozen=True)
 class AttemptBrief:
     id: uuid.UUID
     status: str

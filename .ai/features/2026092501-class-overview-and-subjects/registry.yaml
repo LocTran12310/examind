@@ -52,7 +52,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on: []
     blocks:
       - T-01-02
@@ -62,6 +62,7 @@ ticket:
     touches:
       - apps/api/app/modules/assessment/infrastructure/read_models.py   # new
       - apps/api/app/modules/assessment/application/queries/search_attempts.py   # new
+      - apps/api/app/modules/assessment/application/ports.py   # new
       - apps/api/app/modules/assessment/application/dto.py   # new
       - apps/api/app/modules/assessment/interface/schemas.py   # new
       - apps/api/app/modules/assessment/interface/deps.py   # new

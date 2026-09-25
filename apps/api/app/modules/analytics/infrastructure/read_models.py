@@ -86,6 +86,43 @@ class SqlReportReader:
              where {where} {subject}
              group by f.student_id, t.id order by t.path"""), params).mappings().all()]
 
+    def class_summary(self, org_id: uuid.UUID, class_id: uuid.UUID) -> dict:
+        """Bài giao, lượt đã nộp, điểm trung bình và phổ điểm của một lớp, trong một lời gọi (ADR-03).
+
+        Điểm quy về **thang 10 theo tỉ lệ đúng** (`score / max_score * 10`), không theo `scale_to` của từng đề.
+        Một lớp làm nhiều đề, và nếu hai đề đặt thang khác nhau thì trục duy nhất chung được là tỉ lệ. Báo cáo
+        một bài giao thì ngược lại — nó chỉ có một đề nên dùng đúng thang của đề ấy. Hai màn hình trả lời hai
+        câu hỏi khác nhau, và chỗ này nói ra điều đó thay vì để hai con số lệch nhau trong im lặng.
+
+        Mười cột phổ điểm, cùng số cột với báo cáo bài giao, để hai hình đọc được cạnh nhau.
+        """
+        row = self.session.execute(text(
+            "with sat as ("
+            "  select a.assignment_id, a.student_id,"
+            "         max(a.score / nullif(a.max_score, 0)) * 10 as s10"
+            "  from attempts a"
+            "  join assignment_targets t on t.assignment_id = a.assignment_id and t.class_id = :k"
+            "  where a.organization_id = :org and a.status = 'submitted' and a.max_score > 0"
+            "  group by a.assignment_id, a.student_id)"
+            " select count(*) as sittings, avg(s10) as average from sat"), {"k": class_id, "org": org_id}).mappings().one()
+        buckets = [0] * 10
+        for b, n in self.session.execute(text(
+            "with sat as ("
+            "  select a.assignment_id, a.student_id,"
+            "         max(a.score / nullif(a.max_score, 0)) * 10 as s10"
+            "  from attempts a"
+            "  join assignment_targets t on t.assignment_id = a.assignment_id and t.class_id = :k"
+            "  where a.organization_id = :org and a.status = 'submitted' and a.max_score > 0"
+            "  group by a.assignment_id, a.student_id)"
+            " select least(9, floor(s10)::int) as b, count(*) from sat group by 1"), {"k": class_id, "org": org_id}):
+            buckets[b] = n
+        assigned = self.session.execute(text(
+            "select count(*) from assignment_targets t join assignments s on s.id = t.assignment_id"
+            " where t.class_id = :k and s.organization_id = :org"), {"k": class_id, "org": org_id}).scalar_one()
+        return {"assignments": int(assigned), "sittings": int(row["sittings"] or 0),
+                "average": round(float(row["average"]), 2) if row["average"] is not None else None,
+                "distribution": buckets}
+
     def class_students(self, org_id: uuid.UUID, class_id: uuid.UUID) -> list[dict]:
         return [dict(r) for r in self.session.execute(text(
             "select u.id, u.full_name, u.username from users u join class_members cm on cm.user_id = u.id "
