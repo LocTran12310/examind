@@ -7,9 +7,11 @@ import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { Panel } from "@/components/common/Panel/Panel";
 import { MemberManager } from "@/components/page-components/Classes/MemberManager/MemberManager";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useClassDetailPage } from "@/hooks/page-hooks/class-detail/use-class-detail-page";
 import { ClassAdaptiveDialog } from "./ClassAdaptiveDialog/ClassAdaptiveDialog";
 import { ClassOverview } from "./ClassOverview/ClassOverview";
+import { ClassSummary } from "./ClassSummary/ClassSummary";
 
 export function ClassDetailPage({ id }: { id: string }) {
   const p = useClassDetailPage(id);
@@ -27,14 +29,25 @@ export function ClassDetailPage({ id }: { id: string }) {
       <FormDialog open={p.adaptive} title="Giao đề ôn cá nhân cho cả lớp" onOpenChange={(o) => !o && p.setAdaptive(false)}>
         <ClassAdaptiveDialog classId={id} onDone={p.assigned} />
       </FormDialog>
-      {p.overview && p.overview.length > 0 && (
-        <Panel className="mb-6">
-          <h2 className="mb-3 font-medium">Tình hình học tập</h2>
-          <ClassOverview rows={p.overview} />
-        </Panel>
-      )}
-      <h2 className="mb-2 font-medium">Học sinh</h2>
-      <MemberManager classId={id} />
+      <Tabs defaultValue="overview">
+        <TabsList aria-label="Xem lớp" className="mb-4">
+          <TabsTrigger value="overview">Tổng quan</TabsTrigger>
+          <TabsTrigger value="students">Học sinh</TabsTrigger>
+        </TabsList>
+        {/* AC-03: cả lớp trước, từng em sau — người dạy hỏi "lớp thế nào" trước khi hỏi "em nào" */}
+        <TabsContent value="overview">
+          {p.summary && <ClassSummary data={p.summary} />}
+          {p.overview && p.overview.length > 0 && (
+            <Panel className="mt-4">
+              <h2 className="mb-3 font-medium">Tình hình học tập</h2>
+              <ClassOverview rows={p.overview} />
+            </Panel>
+          )}
+        </TabsContent>
+        <TabsContent value="students">
+          <MemberManager classId={id} />
+        </TabsContent>
+      </Tabs>
     </>
   );
 }

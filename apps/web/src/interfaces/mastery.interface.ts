@@ -22,3 +22,13 @@ export interface ClassOverviewRow {
   weakest: { name: string; mastery: number; answers: number }[];
   review: { assignment_id: string; title: string; status: string } | null;
 }
+
+/** Cả lớp trong một lời gọi (class-overview-and-subjects AC-03). `average` là `null` khi chưa ai nộp — khác hẳn
+ * 0, vốn có nghĩa là đã đo và bằng không. */
+export interface ClassSummary {
+  assignments: number;
+  sittings: number;
+  average: number | null;
+  distribution: number[];
+  weakest: { name: string; ratio: number; answered: number }[];
+}

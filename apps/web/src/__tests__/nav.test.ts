@@ -55,3 +55,11 @@ describe("nested roles (AC-06, ADR-02)", () => {
     expect(activeItem("org_admin", "/me/stats")?.label).toBe("Tiến độ của tôi");
   });
 });
+
+describe("thứ tự nhóm Lớp & học sinh", () => {
+  it("đi theo trình tự làm việc: năm học, cơ cấu, lớp, rồi người", () => {
+    // AC-07. Lập lớp trước rồi mới xếp người vào, nên Lớp học đứng trước Người dùng.
+    const group = groupsFor("org_admin").find((g) => g.label === "Lớp & học sinh");
+    expect(group?.items.map((i) => i.label)).toEqual(["Năm học", "Cơ cấu trường", "Lớp học", "Người dùng"]);
+  });
+});

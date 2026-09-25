@@ -73,7 +73,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on:
       - T-01-01
     blocks: []
@@ -84,6 +84,7 @@ ticket:
       - apps/web/src/components/page-components/StudentRecord/AttemptHistory/AttemptHistory.tsx   # new
       - apps/web/src/components/page-components/StudentRecord/StudentRecordPage.tsx   # new
       - apps/web/src/hooks/react-query/use-query-attempts.ts   # new
+      - apps/web/src/constants/react-query-key.constant.ts   # new
       - apps/web/src/services/attempt.service.ts   # new
       - apps/web/src/interfaces/attempt.interface.ts   # new
   - id: T-02-01
@@ -92,7 +93,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on: []
     blocks:
       - T-02-02
@@ -102,8 +103,7 @@ ticket:
     touches:
       - apps/api/app/modules/analytics/infrastructure/read_models.py   # new
       - apps/api/app/modules/analytics/application/queries/class_summary.py   # new
-      - apps/api/app/modules/analytics/application/dto.py   # new
-      - apps/api/app/modules/analytics/interface/schemas.py   # new
+      - apps/api/app/modules/analytics/application/ports.py   # new
       - apps/api/app/modules/analytics/interface/deps.py   # new
       - apps/api/app/modules/analytics/interface/router.py   # new
   - id: T-02-02
@@ -112,7 +112,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on:
       - T-02-01
     blocks: []
@@ -123,13 +123,17 @@ ticket:
       - apps/web/src/components/page-components/ClassDetail/ClassSummary/ClassSummary.tsx   # new
       - apps/web/src/components/page-components/ClassDetail/ClassDetailPage.tsx   # new
       - apps/web/src/hooks/page-hooks/class-detail/use-class-detail-page.ts   # new
+      - apps/web/src/hooks/react-query/use-query-class.ts   # new
+      - apps/web/src/constants/react-query-key.constant.ts   # new
+      - apps/web/src/services/class.service.ts   # new
+      - apps/web/src/interfaces/mastery.interface.ts   # new
   - id: T-02-03
     uow: UOW-02
     title: 'Thứ tự menu Lớp & học sinh'
     layer: web
     type: chore
     estimate_hours: 1
-    status: todo
+    status: done
     depends_on: []
     blocks: []
     verifies:
@@ -142,7 +146,7 @@ ticket:
     layer: web
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on: []
     blocks: []
     verifies:
@@ -150,5 +154,8 @@ ticket:
       - AC-06
     touches:
       - apps/web/src/components/page-components/Reports/ReportsPage.tsx   # new
-      - apps/web/src/components/page-components/Reports/TopicStatsTree/TopicStatsTree.tsx   # new
+      - apps/web/src/components/common/TopicStatsTree/TopicStatsTree.tsx   # new
       - apps/web/src/hooks/page-hooks/reports/use-reports-page.ts   # new
+      - apps/web/src/interfaces/stats.interface.ts   # new
+      - apps/api/app/modules/analytics/infrastructure/read_models.py   # new
+      - apps/api/app/modules/analytics/application/queries/topic_stats.py   # new

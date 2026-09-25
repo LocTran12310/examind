@@ -6,6 +6,8 @@ export interface TopicStat {
   path: string;
   depth: number;
   level_kind: string;
+  /** null for the "Chưa phân loại" row: it has no topic, so it has no subject to claim */
+  subject_id: string | null;
   points: number;
   max_points: number;
   answered: number;

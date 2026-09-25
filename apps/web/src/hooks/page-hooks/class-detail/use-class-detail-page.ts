@@ -1,17 +1,19 @@
 import { useState } from "react";
 import { ApiError } from "@/lib/common/http";
-import { useClassOverviewQuery, useClassQuery } from "@/hooks/react-query/use-query-class";
+import { useClassOverviewQuery, useClassQuery, useClassSummaryQuery } from "@/hooks/react-query/use-query-class";
 
-/** One class: header, learning overview and the personal-review dialog. */
+/** One class: header, the whole-class summary, the per-student overview and the personal-review dialog. */
 export function useClassDetailPage(id: string) {
   const klass = useClassQuery(id);
   const { data: overview } = useClassOverviewQuery(id);
+  const { data: summary } = useClassSummaryQuery(id);
   const [adaptive, setAdaptive] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   return {
     data: klass.data,
     error: klass.error ? (klass.error instanceof ApiError ? klass.error.message : "Không tải được dữ liệu") : null,
     overview,
+    summary,
     adaptive,
     setAdaptive,
     notice,

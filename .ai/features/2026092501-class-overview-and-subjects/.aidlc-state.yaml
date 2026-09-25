@@ -62,3 +62,111 @@ history:
     at: 2026-09-25T20:15:17
     by: Loc Tran
     ticket: T-02-01
+  - gate: G4
+    action: scope
+    at: 2026-09-25T20:15:39
+    by: Loc Tran
+    ticket: T-02-01
+  - gate: G4
+    action: scope
+    at: 2026-09-25T20:15:54
+    by: Loc Tran
+    reason: các file assessment/* là của T-01-01, đã done và đã commit; bộ kiểm so với toàn diff nhánh nên mọi ticket sau ticket đầu đều thấy chúng
+    ticket: T-02-01
+  - gate: G4
+    action: evidence
+    at: 2026-09-25T20:16:12
+    by: Loc Tran
+    ticket: T-02-01
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-25T20:16:12
+    by: Loc Tran
+    reason: các file assessment/* là của T-01-01, đã done và đã commit; bộ kiểm so với toàn diff nhánh nên mọi ticket sau ticket đầu đều thấy chúng
+    ticket: T-02-01
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-25T20:16:22
+    by: Loc Tran
+    ticket: T-02-03
+  - gate: G4
+    action: scope
+    at: 2026-09-25T20:17:04
+    by: Loc Tran
+    ticket: T-02-03
+  - gate: G4
+    action: evidence
+    at: 2026-09-25T20:17:06
+    by: Loc Tran
+    ticket: T-02-03
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-25T20:17:06
+    by: Loc Tran
+    ticket: T-02-03
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-25T20:17:06
+    by: Loc Tran
+    ticket: T-02-02
+  - gate: G4
+    action: scope
+    at: 2026-09-25T20:19:51
+    by: Loc Tran
+    reason: các file api và nav là của T-01-01, T-02-01, T-02-03 đã done; bộ kiểm so với toàn diff nhánh
+    ticket: T-02-02
+  - gate: G4
+    action: evidence
+    at: 2026-09-25T20:19:54
+    by: Loc Tran
+    ticket: T-02-02
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-25T20:19:54
+    by: Loc Tran
+    reason: các file api và nav là của T-01-01, T-02-01, T-02-03 đã done; bộ kiểm so với toàn diff nhánh
+    ticket: T-02-02
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-25T20:20:06
+    by: Loc Tran
+    ticket: T-03-01
+  - gate: G4
+    action: scope
+    at: 2026-09-25T20:24:55
+    by: Loc Tran
+    reason: file của T-01-01, T-02-01, T-02-02, T-02-03 đã done; bộ kiểm so với toàn diff nhánh
+    ticket: T-03-01
+  - gate: G4
+    action: evidence
+    at: 2026-09-25T20:24:57
+    by: Loc Tran
+    ticket: T-03-01
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-25T20:24:57
+    by: Loc Tran
+    reason: file của T-01-01, T-02-01, T-02-02, T-02-03 đã done; bộ kiểm so với toàn diff nhánh
+    ticket: T-03-01
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-25T20:24:57
+    by: Loc Tran
+    ticket: T-01-02
+  - gate: G4
+    action: scope
+    at: 2026-09-25T20:38:16
+    by: Loc Tran
+    reason: file của năm ticket đã done trước đó; bộ kiểm so với toàn diff nhánh
+    ticket: T-01-02
+  - gate: G4
+    action: evidence
+    at: 2026-09-25T20:38:19
+    by: Loc Tran
+    ticket: T-01-02
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-25T20:38:19
+    by: Loc Tran
+    reason: file của năm ticket đã done trước đó; bộ kiểm so với toàn diff nhánh
+    ticket: T-01-02

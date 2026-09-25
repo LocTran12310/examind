@@ -18,6 +18,7 @@ export function ReportsPage() {
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <OptionSelect aria-label="Học kỳ" className="w-36" value={p.term} onValueChange={p.setTerm} emptyLabel="Cả năm" options={[{ value: "hk1", label: "Học kỳ 1" }, { value: "hk2", label: "Học kỳ 2" }]} />
         <OptionSelect aria-label="Lớp" className="w-56" value={p.classId} onValueChange={p.setClassId} emptyLabel="Cả trung tâm" options={p.classOptions} />
+        <OptionSelect aria-label="Môn" className="w-40" value={p.subjectId} onValueChange={p.setSubjectId} emptyLabel="Mọi môn" options={p.subjectOptions} />
         <div className="flex flex-wrap gap-1" role="tablist">
           {REPORT_TABS.map(([k, label]) => (
             <Button
@@ -35,7 +36,7 @@ export function ReportsPage() {
         </div>
       </div>
       <Panel>
-        {p.tab === "topics" && p.topics && <TopicStatsTree rows={p.topics} />}
+        {p.tab === "topics" && p.topics && <TopicStatsTree rows={p.topics} subjects={p.subjectId ? undefined : p.subjectNames} />}
         {p.isGroup && p.groups && <GroupStats by={p.tab} rows={p.groups} />}
         {p.tab === "heatmap" && (
           <>

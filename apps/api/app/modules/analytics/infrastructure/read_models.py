@@ -60,6 +60,7 @@ class SqlReportReader:
         subject = _subject(params, subject_id)
         return [dict(r) for r in self.session.execute(text(f"""
             select t.id, t.parent_id, t.name, t.path::text as path, nlevel(t.path) as depth, t.level_kind,
+                   t.subject_id,
                    coalesce(sum(f.points), 0) as points, coalesce(sum(f.max_points), 0) as max_points, count(f.id) as answered
               from topics t
               join answer_facts f on f.topic_path <@ t.path and {where}

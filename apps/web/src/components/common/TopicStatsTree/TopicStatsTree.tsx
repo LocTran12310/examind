@@ -26,8 +26,18 @@ export function statTree(rows: TopicStat[]): Node[] {
   return roots;
 }
 
-export function TopicStatsTree({ rows }: { rows: TopicStat[] }) {
+/** `subjects` groups the strands under the subject they belong to. Passed only when the report is showing every
+ *  subject: with one subject picked there is nothing to tell apart, and a heading naming it would just be noise.
+ *  Flat is fine while a centre teaches one subject and unreadable the day it teaches two — which is the whole
+ *  reason this exists (class-overview-and-subjects ADR-04). */
+export function TopicStatsTree({ rows, subjects }: { rows: TopicStat[]; subjects?: Map<string, string> }) {
   const roots = useMemo(() => statTree(rows), [rows]);
+  const grouped = useMemo(() => {
+    if (!subjects || subjects.size < 2) return null;
+    const out = new Map<string, Node[]>();
+    for (const r of roots) out.set(r.subject_id ?? "", [...(out.get(r.subject_id ?? "") ?? []), r]);
+    return [...out].map(([id, nodes]) => ({ id, label: subjects.get(id) ?? "Chưa phân môn", nodes }));
+  }, [roots, subjects]);
   const [open, setOpen] = useState<Set<string>>(() => new Set(roots.map((r) => r.path)));
   const toggle = (p: string) =>
     setOpen((s) => {
@@ -56,6 +66,18 @@ export function TopicStatsTree({ rows }: { rows: TopicStat[] }) {
   }
 
   if (!rows.length) return <p className="text-sm text-muted-foreground">Chưa có dữ liệu làm bài.</p>;
+  if (grouped) {
+    return (
+      <div className="space-y-4" data-testid="topic-stats">
+        {grouped.map((g) => (
+          <section key={g.id} data-testid={`subject-${g.label}`}>
+            <h3 className="mb-1 border-b pb-1 text-sm font-semibold text-muted-foreground">{g.label}</h3>
+            <ul>{g.nodes.map((r) => row(r, 0))}</ul>
+          </section>
+        ))}
+      </div>
+    );
+  }
   return <ul data-testid="topic-stats">{roots.map((r) => row(r, 0))}</ul>;
 }
 

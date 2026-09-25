@@ -68,3 +68,23 @@ export interface GradeResult {
   score: number;
   needs_grading: boolean;
 }
+
+/** Một lượt làm bài trong lịch sử của học sinh (class-overview-and-subjects AC-01).
+ *  `minutes` là thời gian từ lúc bắt đầu tới lúc nộp — **không** phải tổng thời gian từng câu, vốn đo thứ khác
+ *  và bị kẹp theo cửa sổ của chính lượt ấy. `null` khi lượt còn đang làm dở. */
+export interface AttemptHistoryRow {
+  attempt_id: string;
+  exam_title: string;
+  assignment_title: string | null;
+  started_at: string;
+  submitted_at: string | null;
+  minutes: number | null;
+  score: number | null;
+  max_score: number;
+  score10: number | null;
+  status: string;
+  auto_submitted: boolean;
+  student_id: string;
+  student_name: string;
+  username: string;
+}

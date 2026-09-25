@@ -383,8 +383,9 @@ def test_students_only_ever_read_their_own_facts():
     rows = TopicStatsHandler(reader)(STUDENT, TopicStats(ReportFilters(student_id=uuid.uuid4())))
     assert reader.scopes[0].filters.student_id == STUDENT.user_id and reader.scopes[0].org_id == ORG
     assert rows[0]["ratio"] == 0.75
+    # subject_id là None: hàng này gom đúng những câu không có chuyên đề, nên nó không có môn nào để nhận
     assert rows[-1] == {"id": None, "parent_id": None, "name": "Chưa phân loại", "path": "", "depth": 1, "level_kind": "strand",
-                        "points": 0.25, "max_points": 1.0, "answered": 4, "ratio": 0.25}
+                        "subject_id": None, "points": 0.25, "max_points": 1.0, "answered": 4, "ratio": 0.25}
     with pytest.raises(Forbidden):
         TopicStatsHandler(reader)(Actor(uuid.uuid4(), ORG, "super_admin"), TopicStats())
 

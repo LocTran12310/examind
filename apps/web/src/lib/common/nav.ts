@@ -67,8 +67,8 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/org/school-years", label: "Năm học", roles: STAFF, icon: CalendarRange },
       { href: "/org/structure", label: "Cơ cấu trường", roles: STAFF, icon: School },
-      { href: "/org/users", label: "Người dùng", roles: STAFF, icon: Users },
       { href: "/org/classes", label: "Lớp học", roles: STAFF, icon: GraduationCap },
+      { href: "/org/users", label: "Người dùng", roles: STAFF, icon: Users },
     ],
   },
   { label: "Báo cáo", items: [{ href: "/org/reports", label: "Kết quả theo chuyên đề", roles: STAFF, icon: BarChart3 }] },

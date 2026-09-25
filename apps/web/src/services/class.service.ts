@@ -2,7 +2,7 @@ import type { ClassBody } from "@/dtos/class.dto";
 import type { SearchBody } from "@/dtos/search.dto";
 import type { ClassDetail, SchoolClass } from "@/interfaces/class.interface";
 import type { SearchPage } from "@/interfaces/search-page.interface";
-import type { ClassOverviewRow } from "@/interfaces/mastery.interface";
+import type { ClassOverviewRow, ClassSummary } from "@/interfaces/mastery.interface";
 import { http } from "@/lib/common/http";
 
 export const classService = {
@@ -15,4 +15,5 @@ export const classService = {
   removeMember: (id: string, userId: string) => http<void>(`/classes/${id}/members/${userId}`, { method: "DELETE" }),
   /** Tình hình học tập: weakest topics and the latest personal review per student. */
   overview: (id: string) => http<ClassOverviewRow[]>(`/classes/${id}/overview`),
+  summary: (id: string) => http<ClassSummary>(`/classes/${id}/summary`),
 };

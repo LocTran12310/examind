@@ -28,6 +28,7 @@ export const CLASS_KEYS = {
   SEARCH: (body: unknown) => ["classes", "search", body] as const,
   OPTIONS: (yearId: string | null) => ["classes", "options", yearId] as const,
   DETAIL: (id: string) => ["classes", "detail", id] as const,
+  SUMMARY: (id: string) => ["classes", "summary", id] as const,
   OVERVIEW: (id: string) => ["classes", "overview", id] as const,
 };
 
@@ -150,6 +151,7 @@ export const ATTEMPT_KEYS = {
   ALL: ["attempts"] as const,
   DETAIL: (id: string) => ["attempts", "detail", id] as const,
   RESULT: (id: string) => ["attempts", "result", id] as const,
+  SEARCH: (body: unknown) => ["attempts", "search", body] as const,
 };
 
 /** Reports over the graded answers. */

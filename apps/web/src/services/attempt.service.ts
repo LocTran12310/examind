@@ -1,8 +1,12 @@
 import type { GradeAnswerBody, SaveAnswerBody } from "@/dtos/attempt.dto";
-import type { AttemptResult, AttemptView, GradeResult } from "@/interfaces/attempt.interface";
+import type { SearchBody } from "@/dtos/search.dto";
+import type { AttemptHistoryRow, AttemptResult, AttemptView, GradeResult } from "@/interfaces/attempt.interface";
+import type { SearchPage } from "@/interfaces/search-page.interface";
 import { http } from "@/lib/common/http";
 
 export const attemptService = {
+  /** Lượt làm bài, mới nhất trước. Phạm vi do phiên quyết: học sinh chỉ đọc được của chính mình. */
+  search: (body: SearchBody) => http<SearchPage<AttemptHistoryRow>>("/attempts/search", { method: "POST", body }),
   get: (id: string) => http<AttemptView>(`/attempts/${id}`),
   /** One answer plus the time it took; the answer is stored, the timing accumulated. */
   saveAnswer: (id: string, questionId: string, body: SaveAnswerBody) => http<unknown>(`/attempts/${id}/answers/${questionId}`, { method: "PUT", body }),

@@ -26,5 +26,6 @@ class TopicStatsHandler:
         unc = self.reader.unclassified(scope)
         if unc["n"]:
             out.append({"id": None, "parent_id": None, "name": UNCLASSIFIED, "path": "", "depth": 1, "level_kind": "strand",
+                        "subject_id": None,  # it has no topic, so it has no subject either — the row must not claim one
                         "points": unc["p"], "max_points": unc["m"], "answered": unc["n"], "ratio": ratio(unc["p"], unc["m"])})
         return out

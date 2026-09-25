@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useYear } from "@/hooks/common/use-year";
 import { useClassOptionsQuery } from "@/hooks/react-query/use-query-class";
+import { useTaxonomyQuery } from "@/hooks/react-query/use-query-taxonomy";
 import { useGroupStatsQuery, useHeatmapQuery, useTopicStatsQuery } from "@/hooks/react-query/use-query-stats";
 import type { StatsParams } from "@/dtos/stats.dto";
 
@@ -21,11 +22,16 @@ export function useReportsPage() {
   const [classId, setClassId] = useState("");
   const [level, setLevel] = useState("1");
   const [term, setTerm] = useState("");
+  // "" nghĩa là mọi môn — đúng thứ báo cáo trả lời hôm nay. Đổi mặc định sang một môn là đổi NGHĨA
+  // của con số mà không ai được báo (ADR-04).
+  const [subjectId, setSubjectId] = useState("");
   const { year } = useYear();
   const { data: classes } = useClassOptionsQuery(year?.id ?? null);
+  const { data: taxonomy } = useTaxonomyQuery();
   const scope = useMemo<StatsParams>(
-    () => ({ class_id: classId || undefined, school_year_id: classId ? undefined : year?.id, term_code: term || undefined }),
-    [classId, year?.id, term],
+    () => ({ class_id: classId || undefined, school_year_id: classId ? undefined : year?.id, term_code: term || undefined,
+              subject_id: subjectId || undefined }),
+    [classId, year?.id, term, subjectId],
   );
   const isGroup = GROUP_TABS.includes(tab);
   const { data: topics } = useTopicStatsQuery(scope, tab === "topics");
@@ -38,5 +44,8 @@ export function useReportsPage() {
         .map((c) => ({ value: c.id, label: `${c.name} (${c.school_year})`, group: c.grade ? `Khối ${c.grade}` : "Chưa xếp khối" })),
     [classes],
   );
-  return { tab, setTab, isGroup, classId, setClassId, level, setLevel, term, setTerm, year, classOptions, topics, groups, heat };
+  const subjectOptions = useMemo(() => (taxonomy?.subjects ?? []).map((s) => ({ value: s.id, label: s.name })), [taxonomy]);
+  const subjectNames = useMemo(() => new Map((taxonomy?.subjects ?? []).map((s) => [s.id, s.name])), [taxonomy]);
+  return { tab, setTab, isGroup, classId, setClassId, level, setLevel, term, setTerm, subjectId, setSubjectId,
+           year, classOptions, subjectOptions, subjectNames, topics, groups, heat };
 }

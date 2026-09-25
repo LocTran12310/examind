@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { YEAR_STATUS_LABEL } from "@/constants/school-year.constant";
 import { useStudentRecordPage } from "@/hooks/page-hooks/student-record/use-student-record-page";
+import { AttemptHistory } from "./AttemptHistory/AttemptHistory";
 
 const pct = (r: number | null) => (r === null ? "—" : `${Math.round(r * 100)}%`);
 
@@ -87,6 +88,7 @@ export function StudentRecordPage({ id }: { id: string }) {
           </li>
         ))}
       </ol>
+      <AttemptHistory studentId={id} />
       <FormDialog open={history} onOpenChange={setHistory} title={`Lịch sử · ${data.student.full_name}`} wide>
         <HistoryPanel related={data.student.id} />
       </FormDialog>

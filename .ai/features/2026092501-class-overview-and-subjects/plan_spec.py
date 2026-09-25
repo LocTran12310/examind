@@ -48,6 +48,7 @@ t(id="T-01-02", uow="UOW-01", title="Lịch sử làm bài trên hồ sơ học 
   touches=[f"{S}/components/page-components/StudentRecord/AttemptHistory/AttemptHistory.tsx",
            f"{S}/components/page-components/StudentRecord/StudentRecordPage.tsx",
            f"{S}/hooks/react-query/use-query-attempts.ts",
+           f"{S}/constants/react-query-key.constant.ts",
            f"{S}/services/attempt.service.ts",
            f"{S}/interfaces/attempt.interface.ts"],
   context="Cột thời gian nói rõ là 'từ lúc bắt đầu đến lúc nộp', không phải tổng thời gian từng câu. "
@@ -70,7 +71,11 @@ t(id="T-02-02", uow="UOW-02", title="Tab Học sinh và Tổng quan trên trang 
   tests=[f"{S}/__tests__/class-detail.test.tsx"],
   touches=[f"{S}/components/page-components/ClassDetail/ClassSummary/ClassSummary.tsx",
            f"{S}/components/page-components/ClassDetail/ClassDetailPage.tsx",
-           f"{S}/hooks/page-hooks/class-detail/use-class-detail-page.ts"],
+           f"{S}/hooks/page-hooks/class-detail/use-class-detail-page.ts",
+           f"{S}/hooks/react-query/use-query-class.ts",
+           f"{S}/constants/react-query-key.constant.ts",
+           f"{S}/services/class.service.ts",
+           f"{S}/interfaces/mastery.interface.ts"],
   context="A-04: tab thứ hai cạnh danh sách học sinh, không phải trang mới.",
   done_when=["Chuyển được giữa hai tab", "Tổng quan hiện đủ bốn nhóm số", "Lớp rỗng nói chưa có dữ liệu"])
 t(id="T-02-03", uow="UOW-02", title="Thứ tự menu Lớp & học sinh", layer="web", type="chore", estimate="1h",
@@ -81,10 +86,13 @@ t(id="T-02-03", uow="UOW-02", title="Thứ tự menu Lớp & học sinh", layer=
   done_when=["Đúng thứ tự", "Có test ghim thứ tự"])
 t(id="T-03-01", uow="UOW-03", title="Chọn môn ở báo cáo, mặc định không đổi", layer="web", estimate="4h",
   verifies=["AC-05", "AC-06"], assumptions=["A-06", "A-07"],
-  tests=[f"{S}/__tests__/reports.test.tsx"],
+  tests=[f"{S}/__tests__/reports.test.tsx", f"{S}/__tests__/report-views.test.tsx"],
   touches=[f"{S}/components/page-components/Reports/ReportsPage.tsx",
-           f"{S}/components/page-components/Reports/TopicStatsTree/TopicStatsTree.tsx",
-           f"{S}/hooks/page-hooks/reports/use-reports-page.ts"],
+           f"{S}/components/common/TopicStatsTree/TopicStatsTree.tsx",
+           f"{S}/hooks/page-hooks/reports/use-reports-page.ts",
+           f"{S}/interfaces/stats.interface.ts",
+           f"{API}/app/modules/analytics/infrastructure/read_models.py",
+           f"{API}/app/modules/analytics/application/queries/topic_stats.py"],
   context="ADR-04. API đã nhận subject_id từ lâu; web chưa bao giờ gửi. Mặc định giữ 'Mọi môn' vì đổi mặc định là "
           "đổi nghĩa con số mà không ai được báo. Danh sách môn lấy từ /api/taxonomy, cùng chỗ ngân hàng lấy.",
   done_when=["Mặc định vẫn là mọi môn", "Chọn một môn thì chỉ còn môn ấy",

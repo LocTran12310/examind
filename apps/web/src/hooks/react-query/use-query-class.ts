@@ -5,7 +5,7 @@ import type { SearchBody } from "@/dtos/search.dto";
 import type { ClassDetail, SchoolClass } from "@/interfaces/class.interface";
 import type { RowsQueryOptions, SearchPage } from "@/interfaces/search-page.interface";
 import { LIMIT_ALL } from "@/lib/common/search-body";
-import type { ClassOverviewRow } from "@/interfaces/mastery.interface";
+import type { ClassOverviewRow, ClassSummary } from "@/interfaces/mastery.interface";
 import { classService } from "@/services/class.service";
 import { invalidate } from "@/lib/common/query-client";
 import { useSearchQuery } from "./use-search-query";
@@ -32,6 +32,10 @@ export function useClassQuery(id: string): UseQueryResult<ClassDetail, Error> {
 
 export function useClassOverviewQuery(id: string): UseQueryResult<ClassOverviewRow[], Error> {
   return useQuery<ClassOverviewRow[], Error>({ queryKey: CLASS_KEYS.OVERVIEW(id), queryFn: () => classService.overview(id) });
+}
+
+export function useClassSummaryQuery(id: string): UseQueryResult<ClassSummary, Error> {
+  return useQuery<ClassSummary, Error>({ queryKey: CLASS_KEYS.SUMMARY(id), queryFn: () => classService.summary(id) });
 }
 
 export function useSaveClassMutation(): UseMutationResult<SchoolClass, Error, { id?: string; body: ClassBody }> {

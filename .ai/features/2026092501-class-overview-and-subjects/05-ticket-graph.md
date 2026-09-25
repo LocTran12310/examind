@@ -3,7 +3,7 @@
 # Ticket graph — 2026092501-class-overview-and-subjects
 
 - Units of Work: **3**
-- Tickets: **6** (1 done)
+- Tickets: **6** (6 done)
 - Total effort: **2.5d**
 - Critical path: **1.0d** across 2 tickets
 - Theoretical minimum duration with unlimited parallelism: **1.0d**
@@ -25,15 +25,15 @@ slice — the floor on how fast it can finish no matter how many people work on 
 graph LR
   subgraph UOW_01["UOW-01 · Một học sinh đã làm gì, lúc nào, mất bao lâu"]
     T_01_01["✓ T-01-01<br/>Read model liệt kê lượt làm bài"]
-    T_01_02["T-01-02<br/>Lịch sử làm bài trên hồ sơ học sinh"]
+    T_01_02["✓ T-01-02<br/>Lịch sử làm bài trên hồ sơ học sinh"]
   end
   subgraph UOW_02["UOW-02 · Nhìn được cả lớp ngay trên trang lớp"]
-    T_02_01["T-02-01<br/>Read model tổng quan một lớp"]
-    T_02_02["T-02-02<br/>Tab Học sinh và Tổng quan trên trang lớp"]
-    T_02_03["T-02-03<br/>Thứ tự menu Lớp & học sinh"]
+    T_02_01["✓ T-02-01<br/>Read model tổng quan một lớp"]
+    T_02_02["✓ T-02-02<br/>Tab Học sinh và Tổng quan trên trang lớp"]
+    T_02_03["✓ T-02-03<br/>Thứ tự menu Lớp & học sinh"]
   end
   subgraph UOW_03["UOW-03 · Báo cáo còn đọc được khi có nhiều môn"]
-    T_03_01["T-03-01<br/>Chọn môn ở báo cáo, mặc định không đổi"]
+    T_03_01["✓ T-03-01<br/>Chọn môn ở báo cáo, mặc định không đổi"]
   end
   T_01_01 --> T_01_02
   T_02_01 --> T_02_02
@@ -50,7 +50,14 @@ Tickets in the same wave have no dependency between them and can run in parallel
 
 ## Write-conflict hazards
 
-None: every pair that writes a shared path is ordered by a dependency.
+These pairs have no ordering constraint, so a scheduler may run them at the
+same time — and they write the same path. Sequential execution is safe;
+parallel agents will lose one side's work.
+
+| A | B | Contested path |
+|---|---|---|
+| T-01-02 | T-02-02 | `apps/web/src/constants/react-query-key.constant.ts` |
+| T-02-01 | T-03-01 | `apps/api/app/modules/analytics/infrastructure/read_models.py` |
 
 ## Critical path
 
@@ -64,8 +71,8 @@ adding people to tickets off this path will not make the feature ship sooner.
 | ID | UoW | Layer | Type | Est | Depends on | Verifies | Status |
 |----|-----|-------|------|-----|-----------|----------|--------|
 | T-01-01 | UOW-01 | api | feature | 4h | — | AC-01, AC-02 | done |
-| T-01-02 | UOW-01 | web | feature | 3h | T-01-01 | AC-01, AC-02 | todo |
-| T-02-01 | UOW-02 | api | feature | 4h | — | AC-03, AC-04 | todo |
-| T-02-02 | UOW-02 | web | feature | 4h | T-02-01 | AC-03, AC-04 | todo |
-| T-02-03 | UOW-02 | web | chore | 1h | — | AC-07 | todo |
-| T-03-01 | UOW-03 | web | feature | 4h | — | AC-05, AC-06 | todo |
+| T-01-02 | UOW-01 | web | feature | 3h | T-01-01 | AC-01, AC-02 | done |
+| T-02-01 | UOW-02 | api | feature | 4h | — | AC-03, AC-04 | done |
+| T-02-02 | UOW-02 | web | feature | 4h | T-02-01 | AC-03, AC-04 | done |
+| T-02-03 | UOW-02 | web | chore | 1h | — | AC-07 | done |
+| T-03-01 | UOW-03 | web | feature | 4h | — | AC-05, AC-06 | done |
