@@ -83,6 +83,11 @@ không tự xác nhận nhãn mức độ (xem phần đầu).
 Ba điều kịch bản này **không** thể làm cho có thật, nói rõ ngay:
 - **Tỉ lệ làm đúng không đo được độ khó.** Xem phần đầu.
 - **Độ phân biệt câu hỏi** (`discrimination`) sẽ là artefact của θ do script bốc, không phải của câu hỏi.
+- **Thời gian làm bài: luôn 0 giây, và đó là sản phẩm đúng.** Server kẹp `seconds_spent` vào khoảng thời gian
+  đã thực sự trôi qua của lượt làm (`attempt_rules.py:123-125`, thiết kế F14). Script trả lời cả bài trong chưa
+  tới một giây, nên mọi con số nó khai bị kẹp về 0 — "Thời gian trung vị 0 giây" trên màn thống kê câu hỏi là màn
+  hình **nói thật về dữ liệu bịa**, không phải lỗi. Muốn cột ấy có nghĩa thì phải ngủ thật giữa các câu, và 16 000
+  câu trả lời × vài chục giây là hàng ngày trời.
 - **"Nghi sai đáp án"** (key audit) có thể nổ oan: nếu θ thấp làm 60% nhóm giỏi chọn cùng một phương án sai thì
   công cụ sẽ gắn cờ một câu có đáp án đúng. Không phải lỗi sản phẩm — là hệ quả của dữ liệu bịa.
 
