@@ -308,6 +308,35 @@ def sit(student: Api, assignment_id: str, keys: dict, topic_of: dict, ability: f
     return student.get(f"/attempts/{attempt['id']}/result", quiet=True)
 
 
+def adaptive_for(teacher: Api, klass: dict) -> int:
+    """"Đề ôn cá nhân": one personal revision paper per student of the class, drawn from their own weak topics.
+
+    Without it the last column of "Tình hình học tập" is a column of dashes — the screen works, but the feature it
+    is there to show never happened.
+    """
+    now = time.time()
+    r = teacher.post(f"/classes/{klass['id']}/adaptive-assignments", {
+        "open_at": time.strftime("%Y-%m-%dT%H:%M:%S+00:00", time.gmtime(now - 3600)),
+        "close_at": time.strftime("%Y-%m-%dT%H:%M:%S+00:00", time.gmtime(now + 20 * 86400)),
+        "count": 15, "duration_minutes": 30, "title": f"Ôn cá nhân · {klass['name']}"}, quiet=True)
+    return 0 if "__error__" in r else int(r.get("created", 0))
+
+
+def practise(student: Api, keys: dict, ability: float, rng: random.Random) -> bool:
+    """A practice round a student started themselves: it is the only thing "Lịch sử ôn tập" reads, because that
+    list is attempts with no assignment behind them."""
+    made = student.post("/me/practice", {"count": 10}, quiet=True)
+    if "__error__" in made:
+        return False
+    attempt = student.get(f"/attempts/{made['attempt_id']}")
+    for q in attempt["questions"]:
+        key = keys.get(q["id"])
+        body = right_response(q, key) if rng.random() < ability else wrong_response(q, key, rng)
+        student.put(f"/attempts/{attempt['id']}/answers/{q['id']}", {"response": body, "seconds_spent": 60})
+    student.post(f"/attempts/{attempt['id']}/submit")
+    return True
+
+
 # ----------------------------------------------------------------- self-check
 
 
@@ -320,16 +349,17 @@ def self_check(admin: Api, org_code: str) -> None:
     assignments = page(admin, "/assignments/search", {})
     print(f"  lớp {len(classes)} · đề {len(exams)} · bài giao {len(assignments)}")
 
-    enough, thin = 0, 0
-    for a in assignments:
+    # personal revision papers target one student each, so they can never reach twenty and counting them here
+    # would turn a healthy seed into a number that reads like a failure
+    personal = [a for a in assignments if not a.get("classes")]
+    whole_class = [a for a in assignments if a.get("classes")]
+    enough = 0
+    for a in whole_class:
         report = admin.get(f"/assignments/{a['id']}/report", quiet=True)
-        if "__error__" in report:
-            continue
-        if report.get("submitted", 0) >= SUBMITS_FOR_A_SPREAD:
+        if "__error__" not in report and report.get("submitted", 0) >= SUBMITS_FOR_A_SPREAD:
             enough += 1
-        else:
-            thin += 1
-    print(f"  bài giao có ≥{SUBMITS_FOR_A_SPREAD} bài nộp (phổ điểm ra hình): {enough}/{enough + thin}")
+    print(f"  bài giao cả lớp có ≥{SUBMITS_FOR_A_SPREAD} bài nộp (phổ điểm ra hình): {enough}/{len(whole_class)}")
+    print(f"  đề ôn cá nhân (mỗi đề một học sinh, không tính ngưỡng trên): {len(personal)}")
 
     weak_seen, checked = 0, 0
     for k in classes:
@@ -485,6 +515,19 @@ def main() -> None:
                     done += 1
             print(f"   {done} lượt nộp · {round(time.monotonic() - began)}s", end="\r", flush=True)
     print(f"\n   {done} lượt nộp" + (f" · {failed} lượt không mở được" if failed else ""))
+
+    print("8. đề ôn cá nhân và lượt tự ôn")
+    made = sum(adaptive_for(sessions[i % len(sessions)], k) for i, k in enumerate(classes[:2]))
+    print(f"   {made} đề ôn cá nhân")
+    practised = 0
+    for k in classes[:2]:
+        for st in roster[k["id"]][:10]:
+            sess = Api(ip=f"10.3.0.{practised + 1}")
+            sess.login(org, st["username"], SEED_PASSWORD)
+            if practise(sess, keys, min(0.9, max(0.2, rng.gauss(0.6, 0.15))), rng):
+                practised += 1
+            print(f"   {practised} lượt tự ôn", end="\r", flush=True)
+    print(f"   {practised} lượt tự ôn")
 
     print(f"\nxong trong {round(time.monotonic() - began)}s")
     self_check(admin, org)
