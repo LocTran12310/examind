@@ -5,7 +5,7 @@ slug: 2026092501-class-overview-and-subjects
 profile: none
 created: 2026-09-25T19:57:21
 ruleset: 7
-current_gate: G3
+current_gate: G5
 history:
   - gate: G0
     action: passed
@@ -170,3 +170,13 @@ history:
     by: Loc Tran
     reason: file của năm ticket đã done trước đó; bộ kiểm so với toàn diff nhánh
     ticket: T-01-02
+  - gate: G4
+    action: passed
+    at: 2026-09-25T20:55:09
+    by: Loc Tran
+    evidence: every done ticket has a passing verification run; all 6 tickets done, all UoW checklists ticked
+  - gate: G5
+    action: passed
+    at: 2026-09-25T20:55:39
+    by: Loc Tran
+    evidence: assumptions resolved, ADRs settled, graph valid

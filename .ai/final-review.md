@@ -984,3 +984,46 @@ quyết định của anh, ghi trong `.ai/e2e/centre/PLAN.md` cùng cái giá c�
 số. Trình duyệt cho UOW-04: 2 bước × 2 viewport, **4/4**, đọc từng ảnh — S1 ở 390px hiện "Nhận biết · model gợi ý",
 S2 hiện "Vận dụng cao" không kèm nguồn sau khi đặt tay. Ba UoW còn lại không đổi màn hình nào và được kiểm ở nơi
 kiểm được, như `uow.md` của chúng ghi.
+
+## 31. F23 `2026092501-class-overview-and-subjects` (2026-09-25)
+
+Bốn việc anh nêu sau khi xem trung tâm 150 học sinh chạy thật. Ba trong bốn là **phơi ra thứ đã có**: `attempts`
+đã có `started_at`/`submitted_at`, `answer_facts` đã có `class_ids`, và `/stats/*` đã nhận `subject_id` từ lâu mà
+web chưa bao giờ gửi. Không migration, không cột mới, không con số nào đang có bị đổi.
+
+**Đã làm.** `POST /attempts/search` trả lịch sử làm bài (đề · bắt đầu · nộp · số phút · điểm) và hiện trên hồ sơ
+học sinh. `GET /classes/{id}/summary` gộp cả lớp trong một lời gọi, hiện ở tab "Tổng quan" — tab mặc định của
+trang lớp. Báo cáo thêm bộ chọn Môn. Menu đổi thành Năm học · Cơ cấu trường · Lớp học · Người dùng.
+
+**Bốn chỗ chọn khác cách hiển nhiên, vì cách hiển nhiên sẽ nói dối:**
+
+1. **`average: null` chứ không phải 0** khi lớp chưa ai nộp. "Chưa đo" và "đo rồi bằng không" là hai điều khác
+   nhau, và một bảng toàn 0 trông y hệt một lớp làm bài mà không ai được điểm nào.
+2. **Bộ chọn môn THÊM lựa chọn, không đổi mặc định** (ADR-04). Đổi mặc định sang một môn là đổi **nghĩa** của con
+   số trang báo cáo mà không ai được báo: "62%" hôm nay là của cả trung tâm, ngày mai là của Toán. Cái sửa cho
+   vấn đề nằm ở cách bày — ở "Mọi môn" các mạch nhóm dưới môn của chúng, và trung tâm một môn nhìn y như trước.
+3. **Số phút tính lúc đọc, không lưu** (ADR-02): nó là hiệu của hai cột đã có, lưu lại là tạo nguồn sự thật thứ
+   hai sẽ lệch vào ngày ai đó sửa `submitted_at`.
+4. **Chuyên đề yếu của lớp đi qua đúng phép tính của Báo cáo** (ADR-03), không phải một phép tính thứ hai. Hai
+   chỗ tính cùng một thứ là hai chỗ sẽ lệch, và người đọc không có cách nào biết bên nào đúng.
+
+**Phổ điểm: tooltip, và một khuyết tật cả hai biểu đồ cùng có.** Anh yêu cầu hover hiện chi tiết hơn. Làm xong thì
+thấy vùng hover là **cái thanh**, mà chiều cao thanh tỉ lệ với số bài — nên một khoảng điểm **không ai đạt** có
+thanh cao 0 và không cách nào rê vào, đúng thứ người dạy muốn hỏi nhất. Giờ vùng hover là cả cột, và hai màn hình
+dùng chung một `ScoreHistogram`.
+
+**`auto_submitted` là suy ra, không phải được lưu.** Schema không có cờ nào; suy từ `submitted_at > deadline_at`
+vì worker đóng lượt hết giờ ở hạn cộng thời gian ân hạn. Lý do ấy nằm ngay cạnh biểu thức — nếu một ngày có
+đường submit khác ghi mốc muộn hơn vì lý do khác thì suy luận này sai.
+
+**Cột thời gian tự chứng minh nó đo thật, và đó là may.** Ảnh S4 có lượt "Ôn cá nhân · 12A1" hiện **1 phút** —
+đúng lượt tôi làm thử qua trình duyệt — cạnh sáu lượt seed hiện **0 phút**, vì script trả lời cả bài trong chưa
+tới một giây. Hai trường hợp nằm cạnh nhau, nên cột ấy không phải một cột luôn in 0.
+
+**Một bước kiểm của tôi đã bị bỏ vì nó không kiểm được điều nó nói.** Bước cho AC-07 khẳng định ba link menu tồn
+tại — đúng cả trước lẫn sau khi đổi thứ tự — và còn đỏ ở 390px vì thanh bên thu thành sheet, đúng cái bẫy
+`AGENTS.md` đã ghi mà tôi vẫn đâm vào. Thứ tự được ghim ở `nav.test.ts`, nơi so được cả mảng.
+
+**Kiểm chứng.** API 572 → **579 passed**, web 245 → **258 passed**, ruff, 4 import contract và tsc xanh. Trình
+duyệt: 5 bước × 2 viewport, **10/10**, đọc từng ảnh. Thêm một verb `hover` cho gói kiểm chứng — không có nó thì
+một tính năng mà hành vi **chính là** thứ hiện ra khi rê chuột không cách nào kiểm được trên trình duyệt.

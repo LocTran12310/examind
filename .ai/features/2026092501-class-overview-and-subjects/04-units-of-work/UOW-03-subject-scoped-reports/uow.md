@@ -31,6 +31,17 @@ rollback: revert the merge commit; migrations have downgrade()
 | None significant | — |
 
 ## Definition of done
-- [ ] All of AC-05, AC-06 pass
-- [ ] Demo script executed end to end
-- [ ] Demoed and accepted at gate G4
+- [x] All of AC-05, AC-06 pass
+- [x] Demo script executed end to end
+- [x] Demoed and accepted at gate G4
+
+## Verification evidence
+
+`make verify` — **10/10**, ảnh đã đọc. S5 cho thấy bộ chọn "Môn" với mặc định **"Mọi môn"**, và cây chuyên đề
+vẫn có dữ liệu như trước.
+
+**AC-06 (nhóm theo môn) không có ảnh, và không nên có.** Trung tâm này dạy đúng một môn, và với một môn thì màn
+hình **cố tình** nhìn y như cũ — không tiêu đề môn nào, vì một tiêu đề lặp lại trên mọi hàng chỉ là tiếng ồn.
+Thêm môn thứ hai vào ngân hàng thật chỉ để chụp một tiêu đề là bịa dữ liệu để lấy bằng chứng. Nó được chứng minh
+ở `reports.test.tsx`, nơi hai môn dựng được trong ba dòng: ba test cho mặc định không gửi `subject_id`, hai môn
+thì nhóm, một môn thì không.
