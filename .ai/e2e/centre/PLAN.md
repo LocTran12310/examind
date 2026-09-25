@@ -18,14 +18,25 @@ Nếu bài làm giả được sinh ra *có* dùng mức độ làm đầu vào 
 trông y như bằng chứng. Nếu sinh ra *không* dùng mức độ thì mục 4 sẽ báo "không có quan hệ" và trông như bằng
 chứng rằng model vô dụng. **Cả hai đều là lời nói dối**, chỉ khác chiều.
 
-Nên: **kịch bản chạy trên một tổ chức riêng.** `trungtama` giữ nguyên là ngân hàng thật, nơi một ngày nào đó có
-lượt làm bài thật để đo mục 4. Tổ chức `trungtamdemo` mang toàn bộ phần bịa. Giá: upload lại 18 đề lần nữa (~14
-phút, `dev_rebuild.py --papers` đã làm được), vì câu hỏi không dùng chung được giữa hai tổ chức.
+Đã đề xuất chạy trên một tổ chức riêng để `trungtama` còn đo được thật về sau.
 
-| | chạy trên `trungtama` | **chạy trên tổ chức riêng** |
+**Chủ dự án chốt: chạy ngay trên `trungtama`** (2026-09-25). Quyết định được ghi lại cùng cái giá của nó, vì cái
+giá ấy không nhìn thấy được ở thời điểm trả nó:
+
+> Từ lúc kịch bản này chạy, **mục 4 của `difficulty_report.py` trên `trungtama` không còn là bằng chứng về bất cứ
+> điều gì.** Tỉ lệ làm đúng ở đó là tỉ lệ do script bốc ra, không phải do học sinh làm. Ai đọc con số ấy về sau —
+> kể cả tôi ở một phiên khác — sẽ thấy một cột số đầy đặn trông hệt như dữ liệu thật.
+>
+> Muốn đo lại độ chính xác của mức độ thì phải xoá cơ sở dữ liệu và dựng lại (`dev_rebuild.py`), hoặc dựng một tổ
+> chức thứ hai lúc ấy. Đây là điều dễ nhất để quên và đắt nhất khi quên.
+
+Vì lý do đó, `scripts/seed_centre.py` **in cảnh báo ấy ra ngay trước khi ghi dòng đầu tiên** và đòi cờ `--yes`.
+Một quyết định đã cân nhắc thì vẫn nên khó bấm nhầm lần thứ hai.
+
+| | **chạy trên `trungtama`** (đã chọn) | chạy trên tổ chức riêng |
 | --- | --- | --- |
 | Thấy dashboard đầy dữ liệu | có | có |
-| Còn đo được độ chính xác mức độ về sau | **không, vĩnh viễn** | có |
+| Còn đo được độ chính xác mức độ về sau | **không, cho tới khi xoá DB** | có |
 | Giá | 0 | ~14 phút upload lại |
 
 ## Hình dạng trung tâm, và lý do của từng con số

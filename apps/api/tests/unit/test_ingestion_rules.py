@@ -194,11 +194,14 @@ def test_the_pass_asks_in_batches_and_maps_each_answer_back_to_its_question():
     model = AiModel(organization_id=None, name="m", provider="ollama", model="m:1", base_url="http://m")
     pass_ = DifficultyModelPass(chat, model)
     batches = list(pass_.batches(rows))
-    assert [len(b) for b in batches] == [DIFFICULTY_BATCH, DIFFICULTY_BATCH, 5]
+    # the sizes follow the constant rather than a number typed in here: it is 1 today (a level asked alongside nine
+    # other questions is not a property of the question — T-02-04) and the split has to stay right if it moves
+    full, rest = divmod(len(rows), DIFFICULTY_BATCH)
+    assert [len(b) for b in batches] == [DIFFICULTY_BATCH] * full + ([rest] if rest else [])
     got = {}
     for batch in batches:
         got.update(pass_.ask(batch))
-    assert got == {f"q{i}": "th" for i in range(1, 26)} and len(chat.asked) == 3
+    assert got == {f"q{i}": "th" for i in range(1, 26)} and len(chat.asked) == len(batches)
 
 
 def test_two_questions_with_the_same_paper_number_both_get_their_level(monkeypatch):

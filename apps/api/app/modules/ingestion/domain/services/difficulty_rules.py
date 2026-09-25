@@ -69,7 +69,12 @@ Số phần tử trong "results" phải bằng đúng số câu hỏi được h
 không chắc thì vẫn chọn mức gần nhất. Trả về DUY NHẤT JSON:
 {"results": [{"number": 1, "level": "nb"}, {"number": 2, "level": "vd"}]}."""
 
-DIFFICULTY_BATCH = 10        # questions per model call, as the tagging pass sizes it: what a 7B model still reads whole
+# One question per call, because a level asked in a batch of ten is not a property of the question. Measured on
+# the owner's 376-question bank: two runs of the same batching agree on 99% of questions, two *different* batchings
+# on 58% — the model compares the ten questions in front of it and converges on the middle label (vd 52% of the
+# bank). Asked one at a time it agrees with itself on 100%, uses all four bands (vdc 6% → 28%), and the systematic
+# per-part bias disappears (Phần III two-band disagreement 16% → 1%). It costs ~45% more time over the whole bank.
+DIFFICULTY_BATCH = 1
 DIFFICULTY_TEXT_CHARS = 1200  # of each question, stem and options together — see `question_text`
 
 # The types whose options are part of the question rather than a listing beside it. For everything else the stem

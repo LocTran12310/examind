@@ -386,7 +386,10 @@ def test_the_model_leads_where_it_answers_and_the_rule_fills_the_rest():
     handle, bank, _, _ = _pipeline(doc, FakeDocx(LINES), models=FakeModels(tag), chat=chat)
     handle(IngestDocument(str(doc.id)))
     assert sorted(bank.difficulties.values()) == [("nb", "auto"), ("vdc", "ai")]
-    assert "Trả về đúng 2 phần tử, cho các câu: 1, 2." in chat.calls[-1]["user"]
+    # one call per question: a batch is one question, so that a level stops depending on the nine beside it
+    # (T-02-04). The scripted reply covers the first; the second falls through to the position rule.
+    assert len(chat.calls) == 2
+    assert all("Trả về đúng 1 phần tử, cho các câu: 1." in c["user"] for c in chat.calls)
     assert doc.log[-1]["rule"] == 1 and doc.log[-1]["ai"] == 1
 
 

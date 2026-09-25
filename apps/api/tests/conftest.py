@@ -41,6 +41,20 @@ def _database():
     yield
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _bucket():
+    """The suite owns its object store the way it owns its database.
+
+    `S3_BUCKET` above points the tests at `examind-test`, which is not the bucket the running stack creates — and
+    `storage.put` does not create a missing bucket. So after the MinIO volume is ever removed, the whole suite fails
+    with 54 `NoSuchBucket` errors that look nothing like a missing bucket and everything like broken code.
+    """
+    from app.shared.infrastructure import storage
+
+    storage.ensure_bucket()
+    yield
+
+
 @pytest.fixture(autouse=True)
 def _clean(_database):
     eng = dbmod.engine()
