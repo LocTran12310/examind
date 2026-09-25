@@ -24,6 +24,10 @@ Chỉ một environment và một viewport: đây là kiểm chứng rằng **c�
 | S6 | Một lớp: từng học sinh có chuyên đề cần ôn | `/org/classes` | `settle 4000; click td:has-text("12A1"); settle 2500; click a:has-text("Mở trang lớp"); settle 4000; scroll h2:has-text("Tình hình học tập"); settle 1500` | data | `text=Tình hình học tập`; `count [data-testid^="ov-"] = 25` | local |
 | S7 | Đề đã giao: danh sách bài giao có số đã nộp | `/org/exams` | `settle 4000; fill [aria-label="Lọc Đề"] = Thi thử 12A1 lần 1; settle 2500; click td:has-text("Thi thử 12A1 lần 1"); settle 3000; click a:has-text("Soạn đề & giao bài"); settle 4000; scroll [data-testid=assigned]; settle 1500` | data | `text=đã nộp`; `no-text=Có lỗi xảy ra` | local |
 | S8 | Một câu hỏi của ngân hàng mở được và hiện mức độ | `/org/bank` | `settle 4500; click [data-testid^="bank-"] a >> nth=0; settle 4000; settle 1500` | data | `count h1 = 1`; `no-text=Có lỗi xảy ra`; `no-text=Không tải được` | local |
+| S9 | Báo cáo bài giao: phổ điểm và từng học sinh | `/org/exams` | `settle 4000; fill [aria-label="Lọc Đề"] = Thi thử 12A1 lần 1; settle 2500; click td:has-text("Thi thử 12A1 lần 1"); settle 3000; click a:has-text("Soạn đề & giao bài"); settle 4000; click [data-testid=assigned] a >> nth=0; settle 4000; settle 1500` | data | `text=Đã nộp`; `no-text=Có lỗi xảy ra` | local |
+| S10 | Hồ sơ một học sinh theo năm học | `/org/classes` | `settle 4000; click td:has-text("12A1"); settle 2500; click a:has-text("Học sinh 001"); settle 4000; settle 1500` | data | `text=Hồ sơ`; `no-text=Có lỗi xảy ra` | local |
+| S11 | Theo tag: nhãn nguồn từ 18 đề có số | `/org/reports` | `settle 4000; click [role=tab]:has-text("Theo tag"); settle 2500` | data | `no-text=Chưa có dữ liệu`; `no-text=Có lỗi xảy ra` | local |
+| S12 | Cơ cấu trường: hai khối, sáu lớp, 150 học sinh | `/org/structure` | `settle 4000; settle 1500` | data | `text=THPT`; `no-text=Chưa có lớp`; `no-text=Có lỗi xảy ra` | local |
 
 ## Không kiểm ở đây
 

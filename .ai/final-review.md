@@ -930,3 +930,57 @@ mức độ lúc tách đề lại sau; từ nay ít nhất màn hình nói th�
 **Kiểm chứng.** Web 231 → **234 passed** (54 file), lint xanh. Trình duyệt: 4 bước × 2 vai × 2 viewport, 8/8, đọc
 từng ảnh. Không bước nào bấm "Tạo đề theo ma trận", nên ma trận chỉ nằm trong state của trang và không một dòng
 nào được ghi.
+
+## 30. F22 `2026092404-difficulty-at-upload` (2026-09-25)
+
+**Vấn đề.** 379 trong 381 câu dùng được không có mức độ nào, nên mọi dòng ma trận đòi một mức độ đều trả về thiếu
+câu — đúng cái anh gặp ở F21: "14 câu, cần 10, chỉ tạo được 7".
+
+**Đã làm.** Mỗi câu nhận mức độ ngay lúc tách đề: model của trung tâm đọc câu hỏi và trả lời, quy tắc vị trí lấp
+phần model không đọc được, nên **không câu nào còn trống**. Mức do giáo viên đặt mang dấu `manual` và không lượt
+máy nào chạm tới. Thẻ duyệt hiện mức kèm nguồn ("model gợi ý" / "theo vị trí trong đề") và sửa được tại chỗ. Thêm
+`POST /questions/backfill-difficulty` cho câu cũ và `scripts/difficulty_report.py` để đo.
+
+**Ba lỗi thật tìm được, và cả ba chỉ lộ ra khi đo trên stack thật:**
+
+1. **Image `examind-worker` cũ 34 giờ.** Mỗi lần build lại tôi chỉ build `api`, mà worker mới là thứ chạy pipeline.
+   Nên bước gán mức độ **chưa từng chạy** dù code đã merge. Bằng chứng: xoá DB, upload lại 18 đề không sửa gì →
+   396/397 câu không có mức nào. Về sau còn dính lại với `examind-web` khi kiểm UOW-04.
+2. **Số câu THPT lặp lại theo phần** (Phần I 1–12, Phần II 1–4, Phần III 1–6) trong khi `ask` ghép trả lời bằng
+   `{số: khoá}` — nên trong một lô, Phần III ghi đè Phần II và **đúng 72 câu** (4 × 18 đề) mất câu trả lời của
+   model mà không một cảnh báo nào. Cùng lỗi ở lượt chuyên đề, nhưng ở đó quy tắc dẫn nên bị che. Sửa bằng cách để
+   `ask` tự đánh số theo vị trí trong lô: va chạm thành **không biểu diễn được**, không chỉ được tránh.
+3. **`conftest` trỏ test vào bucket riêng `examind-test`** mà không gì tạo lại nó, nên sau mỗi lần xoá volume MinIO
+   cả suite đỏ 54 lỗi trông y như code hỏng. Suite giờ tự tạo bucket như đã tự tạo database.
+
+**Quyết định đáng kể nhất: `DIFFICULTY_BATCH` 10 → 1.** Đo từng câu trên 376 câu thật:
+
+| Hai lượt được so | Giống nhau từng câu |
+| --- | --- |
+| lô 10, cùng cấu hình | 99% |
+| lô 10, khác cách chia lô | 58% |
+| **lô 1** | **100%** |
+
+Hỏi mười câu một lúc thì model so chúng với nhau và tụ về nhãn giữa (`vd` 52% ngân hàng); hỏi từng câu thì nó dùng
+cả bốn bậc (`vdc` 6% → 28%) và thiên lệch theo Phần biến mất (Phần III lệch hai bậc 16% → 1%). Giá +45% thời gian.
+Nghĩa là mức độ trở thành **thuộc tính của câu hỏi**, không của lô nó tình cờ nằm trong.
+
+Sau khi tách lại toàn bộ với nhãn lô-1: **396/396 câu `ai`, 0 `auto`**. Mức trung bình theo phần trên thang
+nb=0…vdc=3: **0,68 → 1,69 → 2,87**, trong khi prompt **không** cho model biết vị trí câu trong đề — nó đọc nội
+dung và tự dựng lại thứ tự khó dần của đề. Đây là bằng chứng thật đầu tiên cho "model dẫn"; trước đó chỉ có lập
+luận.
+
+**Ba lần tôi kết luận sai, ghi đủ trong ADR-03:** (1) phương án là nguyên nhân lệch ở Phần I — sai, thêm phương án
+rồi số không giảm; (2) số câu trong prompt chỉ là nhãn để ghép — sai, đổi riêng nó làm 77 câu đổi mức; (3) dựa vào
+**phân bố tổng** để kết luận đánh số vô hại — sai phương pháp, và chính chốt kiểm soát của tôi bắt được: phân bố
+`vd` ổn định 51–52% qua ba lượt trong khi từng câu đổi tới một nửa.
+
+**Điều chưa chứng minh được, và phải nói rõ.** Mục 4 của báo cáo — đối chiếu mức độ với tỉ lệ làm đúng thật — có
+**mẫu 0 câu** suốt quá trình. Mọi con số trên là *hai tín hiệu nói gì*, không phải *ai đúng*. Và từ khi
+`scripts/seed_centre.py` chạy, cột ấy trên `trungtama` **vĩnh viễn không còn đo được** vì đã trộn bài làm bịa —
+quyết định của anh, ghi trong `.ai/e2e/centre/PLAN.md` cùng cái giá của nó. Muốn đo thật thì phải dựng lại DB.
+
+**Kiểm chứng.** API **572 passed**, web **245 passed**, 4 import contract giữ nguyên, 18 đề chuẩn không đổi một con
+số. Trình duyệt cho UOW-04: 2 bước × 2 viewport, **4/4**, đọc từng ảnh — S1 ở 390px hiện "Nhận biết · model gợi ý",
+S2 hiện "Vận dụng cao" không kèm nguồn sau khi đặt tay. Ba UoW còn lại không đổi màn hình nào và được kiểm ở nơi
+kiểm được, như `uow.md` của chúng ghi.
