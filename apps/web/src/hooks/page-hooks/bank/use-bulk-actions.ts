@@ -30,6 +30,10 @@ export function useBulkActions({ ids, subjectId, onDone, onClear }: { ids: strin
       // the toast is the only moment the teacher still remembers what was selected, so the way back rides on it
       // (AC-01); an edit found later goes back through "Thay đổi gần đây", which reads the same batches.
       toast.success(`${label}: ${r.updated} câu`, { action: { label: "Hoàn tác", onClick: () => void undo.run(r.batch_id) } });
+      // the selection is what is *being worked on*, and after the edit it no longer is: a subject change moves
+      // those questions out of the tab they were picked in, so the toolbar went on saying "Đã chọn 21" over an
+      // empty list. Undo does not need it — it rides on the batch id in the toast, not on what is ticked.
+      onClear();
       onDone?.();
     } catch (e) {
       const conflicts = subjectTopicConflicts(e);

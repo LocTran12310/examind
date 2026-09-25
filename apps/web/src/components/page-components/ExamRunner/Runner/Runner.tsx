@@ -104,7 +104,11 @@ export function Runner({ view, trial, onFinished }: { view: RunnerPaper; trial?:
         ) : (
           <PaperView questions={view.questions} answers={r.answers} keyOf={r.keyOf} closed={r.closed} onChange={r.change} />
         )}
-        <aside className="rounded-xl border border-border bg-card p-3">
+        {/* `self-start` is load-bearing: a grid item stretches to the row by default, which leaves `sticky`
+            nothing to travel inside and it silently does nothing. Sticky only from `md`, where the navigator sits
+            beside the paper — below that it is under the questions, and pinning it there would cover them.
+            `top-14` clears the bar above it, which is sticky too. */}
+        <aside className="self-start rounded-xl border border-border bg-card p-3 md:sticky md:top-14 md:max-h-[calc(100vh-4.5rem)] md:overflow-auto">
           <div className="mb-2 text-xs text-muted-foreground">Bảng câu · còn {r.unanswered} câu chưa làm</div>
           <div className="grid grid-cols-6 gap-1 md:grid-cols-5" data-testid="navigator">
             {view.questions.map((x, i) => (

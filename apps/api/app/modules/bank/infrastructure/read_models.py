@@ -341,6 +341,11 @@ def _review_doc_cols(s) -> dict[str, Col]:
         "total": Col(c.total, filterable=False),
         "needs_review": Col(c.needs_review, filterable=False),
         "pending": Col(pending, "number"),
+        # the same ratio the row draws as a bar, as an expression the sort can order by. A document with no
+        # question at all reads 1.0 here exactly as `_out` reports it — the two must not disagree, or the list
+        # would sort by a number nobody can see. Not filterable: "documents above 80%" is not a question anyone
+        # asks, and a float filter on a ratio invites 0.9499 problems.
+        "progress": Col(case((c.total > 0, decided * 1.0 / c.total), else_=1.0), "number", filterable=False),
         "review_state": Col(case((pending > 0, "pending"), (decided >= c.total, "done"), else_="in_progress"),
                             "enum", values=REVIEW_STATES),
     }

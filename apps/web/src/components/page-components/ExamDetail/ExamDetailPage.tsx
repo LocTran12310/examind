@@ -1,7 +1,6 @@
 "use client";
 
 import { BackLink } from "@/components/common/BackLink/BackLink";
-import { FormAlert } from "@/components/common/FormAlert/FormAlert";
 import { FormDialog } from "@/components/common/FormDialog/FormDialog";
 import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { Panel } from "@/components/common/Panel/Panel";
@@ -41,11 +40,6 @@ export function ExamDetailPage({ id }: { id: string }) {
           </>
         }
       />
-      {p.error && (
-        <div className="mb-3">
-          <FormAlert>{p.error}</FormAlert>
-        </div>
-      )}
       <div className="grid gap-6 xl:grid-cols-[3fr_2fr]">
         <div className="min-w-0 space-y-4">
           <ExamWeighting exam={exam} />

@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { Toaster } from "sonner";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BlueprintEditor } from "@/components/page-components/ExamDetail/BlueprintEditor/BlueprintEditor";
 import { ExamDetailPage } from "@/components/page-components/ExamDetail/ExamDetailPage";
@@ -108,6 +109,42 @@ describe("exam builder", () => {
     await waitFor(() => expect(screen.getByTestId("row-0")).toHaveTextContent("0 câu"));
     expect(screen.getByTestId("row-0")).toHaveTextContent("Chuyên đề “Đại số” chưa có câu hỏi nào dùng được");
     expect(screen.getByRole("button", { name: "Tạo đề theo ma trận" })).toBeEnabled(); // the server is the authority
+  });
+
+  it("a row that draws from every type says so, and the matrix says which part each type fills", async () => {
+    // the reported confusion: the seeded exams carry rows with no `type` — the endpoint has always allowed that —
+    // and the select rendered blank, so the matrix showed one row of 15 beside a scoring table of three parts and
+    // the two looked like they disagreed. Nothing on the screen said the part is read off the question's type.
+    const onGenerate = vi.fn();
+    const f = mockFetch(rowPool({ "": 14 }), route("POST", "/api/questions/facets", facets({ ds: 14 })));
+    renderWithQuery(<BlueprintEditor initial={[{ topic_id: "ds", count: 15 }]} topics={topics} tags={[]} subjectId="s" shortfalls={[]} refusal={null} onEdit={vi.fn()} onGenerate={onGenerate} />);
+    expect(screen.getByRole("combobox", { name: "Loại câu" })).toHaveTextContent("Mọi loại");
+    expect(screen.getByTestId("blueprint-parts")).toHaveTextContent("Trắc nghiệm → Phần I · Đúng/Sai → Phần II · Trả lời ngắn → Phần III");
+    // and it draws from every type: the count asks without one, exactly as the generator will
+    await waitFor(() => expect(lastBody(f, "/questions/search")).toEqual({ page: 1, limit: 1, status: "usable", topic_id: "ds", subject_id: "s" }));
+    await userEvent.click(screen.getByRole("button", { name: "Tạo đề theo ma trận" }));
+    expect(onGenerate).toHaveBeenCalledWith([{ topic_id: "ds", count: 15 }]);
+  });
+
+  it("a refused action is said in a toast, not at the top of a page whose controls are all below the fold", async () => {
+    // "Đề đã có học sinh làm" was printed above the matrix; the button that earns it is far below, so the
+    // teacher clicked and saw nothing happen. The toaster is fixed bottom-right, in view wherever the click was.
+    const message = "Đề đã có học sinh làm — hãy tạo bản sao để sửa";
+    mockFetch(
+      route("POST", "/api/exams/e1/blueprint", { code: "exam_in_use", message, details: { fields: {} } }, 409),
+      ...pageRoutes(exam({ subject_id: "s", blueprint: [{ topic_id: "ds", type: "mcq", count: 6 }] }), { ds: 9 }, { mcq: 9 }),
+    );
+    const u = userEvent.setup();
+    renderWithQuery(
+      <>
+        <ExamDetailPage id="e1" />
+        <Toaster />
+      </>,
+    );
+    await u.click(await screen.findByRole("button", { name: "Tạo đề theo ma trận" }));
+    expect(await screen.findByText(message)).toBeInTheDocument();
+    // and it is the toast that carries it, not a line the page scrolled past
+    expect(screen.getByText(message).closest("[data-sonner-toast]")).not.toBeNull();
   });
 
   it("the page shows the server's empty-topic refusal, naming the row and the topic", async () => {

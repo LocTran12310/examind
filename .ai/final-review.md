@@ -1025,7 +1025,7 @@ tới một giây. Hai trường hợp nằm cạnh nhau, nên cột ấy không
 tại — đúng cả trước lẫn sau khi đổi thứ tự — và còn đỏ ở 390px vì thanh bên thu thành sheet, đúng cái bẫy
 `AGENTS.md` đã ghi mà tôi vẫn đâm vào. Thứ tự được ghim ở `nav.test.ts`, nơi so được cả mảng.
 
-**Kiểm chứng.** API 572 → **579 passed**, web 245 → **258 passed**, ruff, 4 import contract và tsc xanh. Trình
+**Kiểm chứng.** API 572 → **578 passed, 1 skipped**, web 245 → **258 passed**, ruff, 4 import contract và tsc xanh. Trình
 duyệt: 5 bước × 2 viewport, **10/10**, đọc từng ảnh. Thêm một verb `hover` cho gói kiểm chứng — không có nó thì
 một tính năng mà hành vi **chính là** thứ hiện ra khi rê chuột không cách nào kiểm được trên trình duyệt.
 
@@ -1118,3 +1118,52 @@ một test đối chứng chứng minh bản cũ đỏ, còn ô xanh ở đây s
 **Bài học không nằm ở đoạn mã.** Gate là thứ duy nhất phân biệt "đã sửa" với "đã chứng minh là sửa", và một
 feature ở G3 với mã đã commit thì **trông hệt như đã xong** từ mọi phía trừ `aidlc status`. Chạy trên cả cây thư
 mục, không chỉ trên feature đang làm, là cách duy nhất thấy được.
+
+## 34. Năm chỗ sửa sau lần anh đi một vòng (2026-09-26)
+
+Anh gửi sáu ảnh chụp và năm nhận xét. Bốn là chỗ sửa, một là **câu hỏi** — và câu hỏi ấy hoá ra chỉ ra lỗi nặng
+nhất trong năm cái.
+
+**"Ma trận đề và Thang điểm của đề không giống nhau?"** Không phải hai cách nhìn một thứ, và chúng không mâu
+thuẫn: **Ma trận** nói *bốc gì* (chuyên đề/tag · loại · mức độ · số câu), còn **Thang điểm** nói *đề đã thành
+cái gì*. **Phần không phải một lựa chọn** — nó đọc ra từ **loại câu**: trắc nghiệm → Phần I, đúng/sai → Phần II,
+trả lời ngắn → Phần III, tự luận → Phần IV. Nên muốn đề có ba phần thì **ba dòng**, mỗi loại một dòng; đề trong
+ảnh có **một** dòng 15 câu không đặt loại, nên nó bốc lẫn và rơi ra 3/7/5. Không phải trộn đề.
+
+**Và đây là chỗ hỏng thật.** Dòng ấy không đặt loại vì **API vẫn luôn cho phép** (`row.get("type") or None`),
+nhưng kiểu TypeScript của web khai `type` là **bắt buộc** — một lời khai sai về chính hợp đồng của mình. Hậu quả:
+ô "Loại câu" của dòng ấy render **trống trơn**, không đọc được và không tạo lại được, trong khi màn hình bên cạnh
+trưng ba phần. Anh nhìn thấy hai con số cãi nhau mà không có gì trên màn giải thích. Đã sửa: kiểu thành
+`type?: QuestionType | null`, ô hiện **"Mọi loại"**, và ma trận có thêm một dòng nói phần đến từ loại câu — dựng
+từ **chính cái map máy chủ chia phần**, nên nó không thể lệch khỏi việc tạo đề thật sự làm.
+
+**Bốn chỗ còn lại.** Cột "Tiến độ" sắp xếp được (cùng một tỉ lệ cái thanh đang vẽ, viết thành biểu thức SQL — hai
+chỗ phải không được nói khác nhau); sửa hàng loạt xong thì **buông lựa chọn** (đổi môn đẩy 21 câu ra khỏi chính
+tab vừa chọn, nên thanh công cụ ngồi đếm thứ nó không còn giữ — hoàn tác không cần lựa chọn, nó bám `batch_id`
+trong toast); lỗi ở trang soạn đề đi vào **toast góc phải dưới** thay vì một dòng đầu trang mà người ta đã cuộn
+qua; và **Bảng câu bám màn hình** từ `md` trở lên.
+
+**`self-start` là thứ làm cho sticky chạy.** Một grid item mặc định kéo giãn hết hàng, nên `sticky` không còn
+khoảng nào để trượt và **im lặng không làm gì** — không lỗi, không cảnh báo. Dưới `md` thì cố tình **không** bám:
+ở đó bảng câu nằm *dưới* các câu hỏi, ghim lại là phủ lên chính bài đang làm.
+
+**Một cái bẫy mới, trả giá bằng một lượt chạy đỏ.** Bước kiểm sắp xếp khẳng định hàng đầu là `CHUYÊN ĐHKHTN`,
+đỏ với `found 0`, trong khi ảnh chụp hiện đúng dòng ấy ở hàng đầu. Tên tệp đến từ macOS nên nằm trong cơ sở dữ
+liệu ở dạng **NFD** (`CHUYÊN` = `C H U Y E U+0302 N`), còn chuỗi tôi gõ là NFC, và Playwright so khớp chữ **không
+chuẩn hoá Unicode**: hai chuỗi giống hệt trên màn hình mà không khớp nhau. Mọi khẳng định trên một **tên tài
+liệu** đều dính; chữ do ứng dụng tự viết thì không. Ghi vào `07-verification.md` để lần sau không mất một lượt
+chạy nữa.
+
+**Kiểm chứng.** API **578 passed, 1 skipped**; web 259 → **264 passed** (5 test mới, mỗi chỗ sửa một cái, gồm
+một test khẳng định lựa chọn **không** bị buông khi máy chủ từ chối). Trình duyệt: 6 bước × 2 viewport,
+**10/12**, đọc từng ảnh.
+
+**Hai bước đỏ là S6, và tôi giữ nguyên chúng đỏ.** Ảnh chụp cho thấy đúng thứ cần thấy — toast đỏ ở góc phải
+dưới, đầu trang sạch — nhưng một lần từ chối của máy chủ là phản hồi không-2xx, trình duyệt ghi `console.error`,
+và `console_errors` là failure signal của repo. Anh đã quyết ngày 24-09: **giữ tín hiệu, chấp nhận bước đỏ**, vì
+bỏ nó thì mất luôn `pageerror` ở mọi feature. Xoá bước đi sẽ có một lượt chạy xanh chứng minh ít hơn, nên tôi để
+nó đỏ và ghi lý do ngay cạnh. Hành vi được chốt bằng test ở `exam-builder.test.tsx`.
+
+**Dữ liệu thật.** Bước kiểm lựa chọn **ghi vào ngân hàng thật** — đặt mức độ cho một câu — rồi tự lấy lại ngay
+trong cùng lượt, qua chính "Thay đổi gần đây" của sản phẩm. Hai viewport nghĩa là hai cặp sửa–hoàn tác khép kín;
+ảnh S3 cho thấy cả hai lượt đều đã được đánh dấu đã hoàn tác.

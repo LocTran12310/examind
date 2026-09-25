@@ -20,7 +20,7 @@ export function rowPoolBody(subjectId: string | null | undefined, row: Blueprint
 
 /** What a row narrows its topic down to, in the words of its own two selects. */
 function rowFilterLabel(row: BlueprintRow): string {
-  return [TYPE_LABEL[row.type], row.difficulty ? DIFFICULTY_LABEL[row.difficulty] : null].filter(Boolean).join(" · ");
+  return [row.type ? TYPE_LABEL[row.type] : null, row.difficulty ? DIFFICULTY_LABEL[row.difficulty] : null].filter(Boolean).join(" · ");
 }
 
 /** Why a row cannot be filled, said with both numbers it has (AC-03): what its topic holds altogether and what

@@ -199,4 +199,28 @@ describe("bulk actions", () => {
     await waitFor(() => expect(within(tree).getAllByRole("treeitem").map((x) => x.textContent)).toEqual(["Vectơ4", "Đường tròn0"]));
     expect(JSON.parse(String(f.mock.calls[0][1]?.body))).toMatchObject({ subject_id: "s" });
   });
+
+  it("a finished bulk edit lets the selection go, so the toolbar stops counting questions it no longer holds", async () => {
+    // the reported case: after "Môn" on the "Chưa phân môn" tab those 21 questions leave the tab, and the
+    // toolbar went on saying "Đã chọn 21" over an empty list. Undo rides on the batch id in the toast, not on
+    // what is ticked, so nothing is lost by clearing.
+    mockFetch(route("POST", "/api/questions/bulk", { updated: 2, batch_id: "batch-11" }));
+    const cleared = vi.fn();
+    const u = userEvent.setup();
+    render(<BulkActions ids={["a", "b"]} topics={topics} tags={[]} taxonomy={taxonomy} onDone={() => {}} onClear={cleared} />);
+    await u.click(screen.getByRole("button", { name: /Môn/ }));
+    await u.click(await screen.findByRole("menuitem", { name: "Vật lý" }));
+    await waitFor(() => expect(cleared).toHaveBeenCalledTimes(1));
+  });
+
+  it("a refused bulk edit keeps the selection: nothing changed, so there is nothing to let go of", async () => {
+    mockFetch((url, init) => (String(url) === "/api/questions/bulk" && init?.method === "POST" ? { status: 422, body: conflictBody } : undefined));
+    const cleared = vi.fn();
+    const u = userEvent.setup();
+    render(<BulkActions ids={["a", "b"]} topics={topics} tags={[]} taxonomy={taxonomy} questions={onPage} onDone={() => {}} onClear={cleared} />);
+    await u.click(screen.getByRole("button", { name: /Môn/ }));
+    await u.click(await screen.findByRole("menuitem", { name: "Vật lý" }));
+    await screen.findByTestId("subject-conflict");
+    expect(cleared).not.toHaveBeenCalled();
+  });
 });

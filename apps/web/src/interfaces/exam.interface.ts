@@ -1,10 +1,14 @@
 import type { ParsedQuestion, QuestionType } from "@/interfaces/question.interface";
 
-/** One row of the exam matrix: a topic or a tag, a question type, an optional difficulty and a count. */
+/** One row of the exam matrix: a topic or a tag, an optional question type and difficulty, and a count.
+ *
+ *  `type` is optional because the endpoint has always treated it that way (`row.get("type") or None` — a row
+ *  without one draws from every type). Declaring it required here made such a row — the seeded exams have
+ *  them — render as a blank select nobody could read or reproduce. */
 export interface BlueprintRow {
   topic_id?: string | null;
   tag_id?: string | null;
-  type: QuestionType;
+  type?: QuestionType | null;
   difficulty?: string | null;
   count: number;
 }

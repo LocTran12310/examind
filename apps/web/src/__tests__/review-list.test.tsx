@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MeProvider } from "@/hooks/common/use-me";
@@ -47,6 +47,17 @@ describe("review list", () => {
     expect(screen.getByRole("link", { name: "Duyệt 6 câu" })).toHaveAttribute("href", "/org/review/d1");
     // and the list opens on the papers that still need work
     await waitFor(() => expect(lastBody(fetch, "/review/documents/search").filters).toEqual({ review_state: { value: "pending" } }));
+  });
+
+  it("the progress bar sorts, so the papers nearly finished and the untouched ones are one click apart", async () => {
+    // every row of a real queue reads "95%" at a glance; the column was the only one in the list a teacher
+    // could not order by, which is precisely the one worth ordering by
+    const fetch = mockFetch(route("POST", "/api/review/documents/search", searchPage([reviewRow()])));
+    const u = userEvent.setup();
+    renderPage("teacher");
+    await screen.findByTestId("rev-de-kho.docx");
+    await u.click(within(screen.getByRole("columnheader", { name: /Tiến độ/ })).getByRole("button"));
+    await waitFor(() => expect(lastBody(fetch, "/review/documents/search").sort).toEqual([{ field: "progress" }]));
   });
 
   it("the state filter goes to the server and the URL", async () => {

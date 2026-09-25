@@ -61,7 +61,9 @@ export function useReviewPage() {
         cell: ({ row }) => <ReviewStateCell r={row.original} />,
         meta: { filter: { kind: "select", options: REVIEW_STATE_OPTIONS }, sort: "review_state" },
       },
-      { id: "progress", header: "Tiến độ", cell: ({ row }) => <Progress value={row.original.progress} /> },
+      // sorted by the same ratio the bar draws, so "what is nearly done" and "what has not been started" are one
+      // click apart on a list where every row otherwise looks alike at a glance
+      { id: "progress", header: "Tiến độ", cell: ({ row }) => <Progress value={row.original.progress} />, meta: { sort: "progress" } },
       {
         id: "assigned_to",
         header: "Người duyệt",

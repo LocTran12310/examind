@@ -9,9 +9,11 @@ import { topicLabel } from "@/lib/common/topic-tree";
 import { shortfallReason } from "@/lib/page-libs/exam-detail/blueprint";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SECTION_LABEL, SECTION_OF_TYPE } from "@/constants/exam.constant";
 import { DIFFICULTY_LABEL, TYPE_LABEL } from "@/constants/question.constant";
 import { useBlueprintEditor } from "@/hooks/page-hooks/exam-detail/use-blueprint-editor";
 import type { BlueprintRefusal, BlueprintRow, BlueprintShortfall } from "@/interfaces/exam.interface";
+import type { QuestionType } from "@/interfaces/question.interface";
 import type { Tag } from "@/interfaces/tag.interface";
 import type { Topic } from "@/interfaces/topic.interface";
 import { cn } from "@/lib/utils";
@@ -37,6 +39,14 @@ export function BlueprintEditor({ initial, topics, tags, subjectId, shortfalls, 
   const b = useBlueprintEditor(initial, topics, subjectId, onEdit);
   return (
     <div className="space-y-3" data-testid="blueprint">
+      {/* The part is not a choice in this matrix — it is read off each question's type — so a paper with three
+          parts is three rows. Said here because the screen otherwise shows only the consequence: "Thang điểm của
+          đề" listing three parts beside a matrix of one row, which reads as two numbers that disagree. Built from
+          the same map the server sections by, so it cannot drift from what generating actually does. */}
+      <p className="text-sm text-muted-foreground" data-testid="blueprint-parts">
+        Phần của đề theo loại câu: {(Object.keys(TYPE_LABEL) as QuestionType[]).map((t) => `${TYPE_LABEL[t]} → ${SECTION_LABEL[SECTION_OF_TYPE[t]]}`).join(" · ")}. Đề nhiều
+        phần thì mỗi loại một dòng; dòng “Mọi loại” bốc lẫn các loại.
+      </p>
       {b.rows.map((r, i) => {
         const miss = shortfalls.find((s) => s.row === i);
         const topic = r.topic_id ? b.byId.get(r.topic_id) : undefined;
@@ -70,8 +80,9 @@ export function BlueprintEditor({ initial, topics, tags, subjectId, shortfalls, 
             />
             <OptionSelect
               aria-label="Loại câu"
-              value={r.type}
-              onValueChange={(v) => b.set(i, { type: v as BlueprintRow["type"] })}
+              value={r.type ?? ""}
+              onValueChange={(v) => b.set(i, { type: (v || null) as BlueprintRow["type"] })}
+              emptyLabel="Mọi loại"
               options={Object.entries(TYPE_LABEL).map(([k, v]) => ({ value: k, label: v }))}
             />
             <OptionSelect

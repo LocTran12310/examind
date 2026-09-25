@@ -59,6 +59,13 @@ def test_review_state_and_pending_are_search_columns(client, db):
     assert names(s(filters={"pending": {"from": 0, "to": 0}})) == ["k.docx"]
     assert names(s(sort=[{"field": "review_state"}])) == ["k.docx", "m.docx"]  # done, in_progress, pending
     assert names(s(sort=[{"field": "pending", "desc": True}])) == ["m.docx", "k.docx"]
+    # the progress bar is sortable too: k.docx is finished (1.0), m.docx is part-way. A list where every row
+    # reads "95%" at a glance is exactly where sorting by the bar earns its place.
+    assert names(s(sort=[{"field": "progress"}])) == ["m.docx", "k.docx"]
+    assert names(s(sort=[{"field": "progress", "desc": True}])) == ["k.docx", "m.docx"]
+    # but not filterable — a float ratio is not something anyone types a bound for
+    bad = s(filters={"progress": {"operator": ">", "value": 0.5}})
+    assert bad.status_code == 422 and bad.json()["code"] == "bad_filter"
     r = s(filters={"review_state": {"value": "xong"}})
     assert r.status_code == 422 and r.json()["code"] == "bad_filter" and "xong" in r.json()["message"]
 

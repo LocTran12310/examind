@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import type { BlueprintRefusal, BlueprintRow, BlueprintShortfall } from "@/interfaces/exam.interface";
 import type { QuestionType } from "@/interfaces/question.interface";
 import { useExamAssignmentsQuery } from "@/hooks/react-query/use-query-assignment";
@@ -37,7 +38,6 @@ export function useExamDetailPage(id: string) {
   const [query, setQuery] = useState("");
   const { data: found } = useQuestionSearchQuery({ page: 1, limit: 10, q: query }, { enabled: !!query });
   const [preview, setPreview] = useState<ExamPreviewMode>(null);
-  const [error, setError] = useState<string | null>(null);
   const [assigning, setAssigning] = useState(false);
   const [swapping, setSwapping] = useState<string | null>(null);
 
@@ -49,13 +49,16 @@ export function useExamDetailPage(id: string) {
   const update = useUpdateExamMutation(id);
   const add = useAddExamQuestionsMutation(id);
 
-  /** `handled` may take an error the screen shows its own way (the empty-topic refusal). */
+  /** `handled` may take an error the screen shows its own way (the empty-topic refusal).
+   *
+   *  Everything else goes to a toast, not to a line at the top of the page: the matrix, the question list and the
+   *  points are all below the fold on this screen, so an error printed above them is an error the teacher clicks
+   *  and never sees. The toaster is fixed bottom-right, which is in view wherever the click happened. */
   async function run<R>(fn: () => Promise<R>, handled?: (e: unknown) => boolean): Promise<R | undefined> {
-    setError(null);
     try {
       return await fn();
     } catch (e) {
-      if (!handled?.(e)) setError(e instanceof ApiError ? e.message : "Có lỗi xảy ra");
+      if (!handled?.(e)) toast.error(e instanceof ApiError ? e.message : "Có lỗi xảy ra");
       return undefined;
     }
   }
@@ -71,7 +74,6 @@ export function useExamDetailPage(id: string) {
     shortfalls,
     refusal,
     clearRefusal: () => setRefusal(null),
-    error,
     preview,
     setPreview,
     assigning,
