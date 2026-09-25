@@ -138,10 +138,29 @@ Và một sai sót về phương pháp đáng ghi lại: khoảng cách này su�
 lượt (`vd` 51–52% ở cả ba) trong khi từng câu thì đổi tới 20–51%. Đã dựa vào phân bố để kết luận "đánh số vô hại",
 và kết luận ấy sai. Đây là lần thứ tư trong dự án này một con số tổng nói dối về thứ nó tổng hợp.
 
-**Chưa chốt, cần chủ dự án quyết:** lô 10 câu thì nhanh nhưng mức của một câu phụ thuộc láng giềng; hỏi từng câu
-một thì mức là thuộc tính của chính câu ấy nhưng đắt hơn. 379 nhãn đang nằm trong ngân hàng là sản phẩm của một
-cách chia lô tuỳ tiện, nên không lặp lại được — chúng nên bị xoá và gán lại sau khi chốt, và chỉ những nhãn
-`difficulty_source = 'ai'` bị chạm tới.
+**Đo lần ba, 2026-09-25, sau khi dựng lại toàn bộ từ cơ sở dữ liệu trắng: hai lỗi thật, và hai lý do tôi đã viết
+sai ở trên.**
+
+Việc xoá sạch rồi upload lại 18 đề làm lộ hai thứ mà không phép đo nào trước đó thấy được:
+
+1. **Image `examind-worker` cũ 34 giờ, và worker mới là thứ chạy pipeline.** Mỗi lần build lại chỉ build `api`.
+   Nên bước gán mức độ **chưa từng chạy** trong stack thật. Bằng chứng: xoá DB, upload lại 18 đề mà không sửa gì →
+   396/397 câu không có mức nào, kể cả quy tắc vị trí. Vậy câu "379 câu trống mức vì pipeline chỉ gán cho thứ nó
+   tách" ở trên là **sai lý do**: chúng trống vì worker không có code gán mức.
+2. **Số câu THPT lặp lại theo phần, và `ask` ghép trả lời bằng `{số: khoá}`.** Phần I là câu 1–12, Phần II là
+   1–4, Phần III là 1–6 trong cùng một đề. Một lô gồm Phần I 11,12 + Phần II 1–4 + Phần III 1–4 thì Phần III ghi
+   đè Phần II, và prompt còn tự hỏi "cho các câu: 11, 12, 1, 2, 3, 4, 1, 2, 3, 4". Sau lượt tách đầu tiên chạy
+   thật: `ai` 322, `auto` 74 — và **toàn bộ 72 câu Phần II đều `auto`**, đúng 4 câu × 18 đề. Cùng lỗi ở lượt
+   chuyên đề (`TopicModelPass.ask`), nhưng ở đó quy tắc dẫn nên nó bị che: Phần II vẫn có chuyên đề 97%.
+
+Sửa ở T-02-04: `ask` tự đánh số theo vị trí trong lô, và `Row` không còn mang số — va chạm trở thành **không biểu
+diễn được** chứ không chỉ được tránh. Test hồi quy đã được xem đỏ trên code cũ trước khi xanh: `{'1': 2, '2': 4}`
+trên một đề 22 câu.
+
+**Và điều này bác bỏ lập luận tôi dùng để đề xuất "hỏi từng câu một".** Ở trên có viết rằng lệch 49% giữa báo cáo
+và lệnh điền là do "câu nào nằm cùng lô". Một phần của nó thật ra là **lỗi mất câu trả lời** vừa nêu, không phải
+hiệu ứng láng giềng. Chưa đo lại được phần nào là hiệu ứng láng giềng thật sau khi sửa, nên **chưa chốt** chuyện
+lô 10 câu so với từng câu một, và không được dựa vào con số 49% ấy nữa.
 
 ### ADR-04 — `manual` là bất khả xâm phạm
 **Status:** accepted

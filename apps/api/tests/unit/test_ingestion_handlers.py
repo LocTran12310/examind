@@ -625,7 +625,9 @@ def test_a_garbage_answer_degrades_to_the_rules():
 
 
 def test_one_bad_batch_does_not_lose_the_others():
-    chat = FakeChat(LlmError("HTTP 500: overloaded"), _reply((11, 2, "Đạo hàm", 0.8)))
+    # the eleventh question is the only one in the second batch, so the prompt asks about it as "câu 1": `ask`
+    # numbers each batch from one, which is what stops two questions sharing a number (T-02-04)
+    chat = FakeChat(LlmError("HTTP 500: overloaded"), _reply((1, 2, "Đạo hàm", 0.8)))
     api, taxonomy, _ = _queue(chat)
     items = [(uuid.uuid4(), BLANK) for _ in range(11)]
     got = api.suggest_for(ORG, SUBJECT, items)

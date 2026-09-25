@@ -179,7 +179,7 @@ def test_the_request_restates_the_count_and_the_numbers():
 
 
 def test_the_pass_asks_in_batches_and_maps_each_answer_back_to_its_question():
-    rows = [(f"q{i}", i, f"Câu {i}") for i in range(1, 26)]
+    rows = [(f"q{i}", f"Câu {i}") for i in range(1, 26)]
 
     class Chat:
         def __init__(self):
@@ -199,3 +199,33 @@ def test_the_pass_asks_in_batches_and_maps_each_answer_back_to_its_question():
     for batch in batches:
         got.update(pass_.ask(batch))
     assert got == {f"q{i}": "th" for i in range(1, 26)} and len(chat.asked) == 3
+
+
+def test_two_questions_with_the_same_paper_number_both_get_their_level(monkeypatch):
+    """T-02-04, the bug this test exists for. A THPT paper numbers each phần from 1, so one document holds a câu 1
+    in Phần I, in Phần II and in Phần III. While the caller chose the prompt's numbers, a batch holding two of them
+    asked about "câu 1" twice and the reply's `number: 1` mapped to whichever the dict kept — on the owner's bank
+    that silently cost every Phần II question its level, 72 of them across 18 papers, all quietly falling back to
+    the position rule with nothing logged.
+
+    So the number is no longer the caller's to give: `ask` assigns it by position, and duplicate paper numbers are
+    unrepresentable rather than merely avoided.
+    """
+    seen = {}
+
+    class Chat:
+        def chat(self, model, system, user, images=None, json_mode=True, timeout=None, schema=None):
+            body = user.split("CÂU HỎI:")[1].strip()
+            for chunk in body.split("\n\n"):
+                number, _, text = chunk.partition(": ")
+                seen[int(number.replace("Câu ", ""))] = text
+            return ChatResult(json.dumps({"results": [{"number": n, "level": lv}
+                                                      for n, lv in zip(sorted(seen), ("nb", "th", "vd"))]}), 1, "m")
+
+    model = AiModel(organization_id=None, name="m", provider="ollama", model="m:1", base_url="http://m")
+    # three questions a real document holds at once, all numbered 1 by their own phần
+    batch = [("phan1-cau1", "Đạo hàm của x^2"), ("phan2-cau1", "Cho hàm số f(x)"), ("phan3-cau1", "Tính tích phân")]
+    got = DifficultyModelPass(Chat(), model).ask(batch)
+
+    assert sorted(seen) == [1, 2, 3], "mỗi câu trong lô phải được hỏi bằng một số riêng"
+    assert got == {"phan1-cau1": "nb", "phan2-cau1": "th", "phan3-cau1": "vd"}

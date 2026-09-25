@@ -34,7 +34,7 @@ class DifficultySuggester:
             return {}
         model = DifficultyModelPass(self.chat, m)
         out: dict[uuid.UUID, str] = {}
-        for batch in model.batches([(q.id, p.number, question_text(q.stem, p.type, q.options)) for p, q in rows]):
+        for batch in model.batches([(q.id, question_text(q.stem, p.type, q.options)) for p, q in rows]):
             try:
                 out.update(model.ask(batch))
             except LlmError as exc:

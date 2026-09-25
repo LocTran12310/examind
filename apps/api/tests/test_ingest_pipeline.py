@@ -37,15 +37,24 @@ def _questions(client, name="de-mau-toan10.docx", config=None):
     return doc, client.get(f"/api/documents/{doc_id}/questions").json()
 
 
-def _answering(levels: dict, on_topics=None):
+def _answering(levels: dict, on_topics=None, only_first_batch: bool = False):
     """A model that answers the difficulty request for the numbers in `levels`; a topic request is answered
-    separately (it names the tree) so one registered model can serve both passes."""
+    separately (it names the tree) so one registered model can serve both passes.
+
+    The numbers are the prompt's, and the prompt numbers each batch from one (T-02-04) — so `{1: …}` means "the
+    first question of every batch" unless `only_first_batch` narrows it to one call. Before that fix the caller
+    passed the paper's own numbers, which is exactly the confusion that let two questions share a number.
+    """
+    calls = []
+
     def handler(request):
         user = json.loads(request.content)["messages"][-1]["content"]
         if "CHUYÊN ĐỀ:" in user:
             return httpx.Response(200, json={"message": {"content": json.dumps({"results": on_topics or []})}})
+        calls.append(user)
         numbers = [int(m.group(1)) for m in re.finditer(r"^Câu (\d+):", user.split("CÂU HỎI:")[1], re.M)]
-        results = [{"number": n, "level": levels[n]} for n in numbers if n in levels]
+        answer = levels if not only_first_batch or len(calls) == 1 else {}
+        results = [{"number": n, "level": answer[n]} for n in numbers if n in answer]
         return httpx.Response(200, json={"message": {"content": json.dumps({"results": results})}})
     return handler
 
@@ -79,7 +88,8 @@ def test_the_parts_of_a_thpt_paper_each_get_their_own_band(client, db):
 def test_the_model_leads_where_it_answers_and_the_rule_keeps_the_rest(client, db, monkeypatch):
     """AC-02: the model is the only signal that reads the question, so it wins where it replies — and the questions
     it skipped are filled by the rule rather than left empty."""
-    monkeypatch.setattr(llm, "TRANSPORT", httpx.MockTransport(_answering({1: "vdc", 2: "vd", 3: "không rõ"})))
+    monkeypatch.setattr(llm, "TRANSPORT",
+                        httpx.MockTransport(_answering({1: "vdc", 2: "vd", 3: "không rõ"}, only_first_batch=True)))
     mid = _model(client, db)
     _, qs = _questions(client, config={"tag_model": mid})
     by_number = {q["number"]: q for q in qs}
@@ -88,6 +98,22 @@ def test_the_model_leads_where_it_answers_and_the_rule_keeps_the_rest(client, db
     # an answer outside the four levels is dropped, and câu 3 keeps the level its position implies
     assert (by_number[3]["difficulty"], by_number[3]["difficulty_source"]) == ("nb", "auto")
     assert all(q["difficulty"] for q in qs) and Counter(q["difficulty_source"] for q in qs) == {"auto": 38, "ai": 2}
+
+
+def test_every_part_of_a_thpt_paper_gets_the_model_answer_meant_for_it(client, db, monkeypatch):
+    """T-02-04, on the paper the bug needed. THPT numbering restarts at each phần, so this document holds a câu 1
+    three times over; a batch spanning two of them used to ask about "câu 1" twice and keep one answer, and Phần II
+    lost its level in all 18 of the owner's papers without a single warning.
+
+    The model here answers every question it is asked, so anything still `auto` is an answer that was thrown away.
+    """
+    monkeypatch.setattr(llm, "TRANSPORT", httpx.MockTransport(_answering({n: "vdc" for n in range(1, 11)})))
+    mid = _model(client, db)
+    _, qs = _questions(client, "de-thpt2025-toan.docx", config={"tag_model": mid})
+
+    by_part = Counter(q["part"] for q in qs if q["difficulty_source"] == "auto")
+    assert by_part == {}, f"câu bị bỏ mất câu trả lời của model, theo phần: {dict(by_part)}"
+    assert {q["difficulty_source"] for q in qs} == {"ai"} and len(qs) == 22
 
 
 @pytest.mark.parametrize("reply", [httpx.Response(200, json={"message": {"content": "Câu 1 là nhận biết."}}),

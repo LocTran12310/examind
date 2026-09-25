@@ -106,18 +106,16 @@ def correct_rates(db, org_id):
     return {r.question_id: (float(r.ratio), int(r.n)) for r in rows}
 
 
-def ask_model(passer, rows, numbering="batch"):
+def ask_model(passer, rows):
     """{question id: level} the model gave, plus how long each batch took and how many failed.
 
-    Numbered 1..n inside each batch, the way a paper numbers its own questions: the number in the prompt is only
-    the label the reply refers back to, and a global counter would both drift from what the pipeline sends and
-    collide whenever two papers use the same number.
+    The numbering is no longer this script's business: `DifficultyModelPass.ask` assigns it by position in the
+    batch, so this measures exactly what the pipeline sends (T-02-04).
     """
     answers, seconds, failed, asked = {}, [], 0, 0
     for start in range(0, len(rows), DIFFICULTY_BATCH):
         chunk = rows[start:start + DIFFICULTY_BATCH]
-        batch = [(qid, (i + 1 if numbering == "batch" else start + i + 1), stem)
-                 for i, (qid, stem) in enumerate(chunk)]
+        batch = list(chunk)
         asked += len(batch)
         began = time.monotonic()
         try:
@@ -135,10 +133,6 @@ def main() -> None:
     ap.add_argument("--limit", type=int, default=400)
     ap.add_argument("--org", default=None, help="mã tổ chức; mặc định: tổ chức thật đầu tiên")
     ap.add_argument("--json", dest="out", default=None)
-    # the number the prompt gives a question was assumed to be a pairing label only. It is not: the same questions
-    # asked as "Câu 1..10" per batch and as "Câu 1..381" across the run come back with different levels, so this
-    # flag is how that is re-measured rather than argued about.
-    ap.add_argument("--numbering", choices=("batch", "global"), default="batch")
     args = ap.parse_args()
 
     dbmod.configure()
@@ -164,7 +158,7 @@ def main() -> None:
         if model is not None:
             answers, seconds, failed, asked = ask_model(
                 DifficultyModelPass(HttpChatModels(), model),
-                [(r.id, question_text(r.stem, r.type, r.options)) for r in rows], args.numbering)
+                [(r.id, question_text(r.stem, r.type, r.options)) for r in rows])
 
         report = {"org": org.code, "questions": len(rows), "model": model.model if model else None}
 

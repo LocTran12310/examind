@@ -79,6 +79,23 @@ t(id="T-02-03", uow="UOW-02", title="Câu trắc nghiệm và đúng/sai gửi k
           "không gửi: nó nói mức độ không còn là mức độ nữa.",
   done_when=["Phương án nằm trong prompt, is_true thì không", "Câu không có phương án giữ nguyên hình cũ",
              "Chạy lại báo cáo và ghi lại con số mới"])
+t(id="T-02-04", uow="UOW-02", title="Số câu trong prompt do lượt model tự đặt", layer="api", type="fix", estimate="3h",
+  depends_on=["T-02-03"], verifies=["AC-01", "AC-02"], assumptions=["A-02"],
+  tests=[f"{API}/tests/unit/test_ingestion_rules.py", f"{API}/tests/unit/test_ingestion_handlers.py",
+         f"{API}/tests/test_ingest_pipeline.py"],
+  touches=[f"{M}/ingestion/application/difficulty.py",
+           f"{M}/ingestion/application/tagging.py",
+           f"{M}/ingestion/application/stages/difficulty_suggest.py",
+           f"{M}/ingestion/application/stages/topic_suggest.py",
+           f"{M}/ingestion/application/api.py",
+           f"{API}/scripts/difficulty_report.py"],
+  context="Lỗi đo được trên stack thật: số câu THPT lặp lại theo phần (Phần I 1-12, Phần II 1-4, Phần III 1-6), "
+          "mà `ask` ghép trả lời bằng {số: khoá} — nên trong một lô, Phần III đè lên Phần II và cả 72 câu Phần II "
+          "của 18 đề rơi về quy tắc vị trí. Cùng lỗi ở lượt chuyên đề, nhưng ở đó quy tắc dẫn nên bị che. "
+          "Sửa bằng cách để `ask` tự đánh số theo vị trí trong lô, và bỏ số khỏi Row để không caller nào tạo lại "
+          "được va chạm — đồng thời thôi rò vị trí câu trong đề vào prompt (ADR-03).",
+  done_when=["Row không còn mang số", "Một lô có số câu trùng vẫn nhận đủ trả lời",
+             "Phần II nhận mức từ model sau khi tách lại"])
 t(id="T-03-01", uow="UOW-03", title="Báo cáo đo hai tín hiệu", layer="api", estimate="3h",
   depends_on=["T-02-01"], verifies=["AC-02"], assumptions=["A-05"],
   tests=[f"{API}/tests/unit/test_ingestion_rules.py"],

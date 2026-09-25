@@ -92,8 +92,7 @@ class IngestionApi:
         if m is None:
             return Levels(rule, False)
         model = DifficultyModelPass(self.chat, m, timeout=self.timeout)
-        rows = [(qid, i + 1, question_text(stem, qtype, options))
-                for i, (qid, _, _, qtype, stem, options) in enumerate(items)]
+        rows = [(qid, question_text(stem, qtype, options)) for qid, _, _, qtype, stem, options in items]
         answered = False
         for batch in model.batches(rows):
             try:
@@ -124,7 +123,7 @@ class IngestionApi:
             return False
         model = TopicModelPass(self.chat, m, topics, timeout=self.timeout)
         answered = False
-        for batch in model.batches([(qid, i + 1, text) for i, (qid, text) in enumerate(weak)]):
+        for batch in model.batches(list(weak)):
             try:
                 chosen = model.ask(batch)
             except Exception:  # noqa: BLE001 — the queue never fails because a model did; the other batches still count

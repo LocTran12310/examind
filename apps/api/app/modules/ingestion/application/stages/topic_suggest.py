@@ -50,7 +50,7 @@ class TopicSuggester:
             return {}
         model = TopicModelPass(self.chat, m, topics)
         out: dict = {}
-        for batch in model.batches([(q.id, p.number, q.stem) for p, q in rows]):
+        for batch in model.batches([(q.id, q.stem) for p, q in rows]):
             try:
                 found = model.ask(batch)
             except LlmError as exc:

@@ -11,7 +11,11 @@ from app.modules.ingestion.domain.entities import AiModel
 from app.modules.ingestion.domain.ports import ChatModels, TopicNode
 from app.modules.ingestion.domain.services.topic_rules import TAG_BATCH, TAG_SYSTEM, read_tag_reply, tag_listing, tag_request
 
-Row = tuple[Any, int, str]  # (caller key, the number the prompt gives the question, its text)
+#: (caller key, the question's text). The number the prompt uses is **not** the caller's to choose: `ask` assigns
+#: it by position in the batch. A caller that passed the paper's own number produced a prompt asking about "câu 1"
+#: twice — THPT numbering restarts at each phần — and the reply's numbers then mapped to one question instead of
+#: two, so 72 of 18 papers' Phần II questions silently lost their level (difficulty-at-upload T-02-04).
+Row = tuple[Any, str]
 
 
 class TopicModelPass:
@@ -27,6 +31,6 @@ class TopicModelPass:
 
     def ask(self, batch: list[Row]) -> dict[Any, tuple[TopicNode, float]]:
         """{caller key: (topic, confidence)} for one batch; raises LlmError when the model fails or rambles."""
-        reply = self.chat.chat(self.model, TAG_SYSTEM, tag_request(self.listing, [(n, t) for _, n, t in batch]),
-                               timeout=self.timeout)
-        return read_tag_reply(reply.text, self.topics, {n: key for key, n, _ in batch})
+        numbered = [(i + 1, text) for i, (_, text) in enumerate(batch)]
+        reply = self.chat.chat(self.model, TAG_SYSTEM, tag_request(self.listing, numbered), timeout=self.timeout)
+        return read_tag_reply(reply.text, self.topics, {i + 1: key for i, (key, _) in enumerate(batch)})
