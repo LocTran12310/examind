@@ -1,0 +1,232 @@
+{
+  "schema": 1,
+  "tool": "aidlc_verify 0.3.1",
+  "ruleset": 7,
+  "feature": "screens",
+  "status": "pass",
+  "started_at": "2026-09-25T12:47:00+00:00",
+  "finished_at": "2026-09-25T12:48:16+00:00",
+  "browser": "chromium 151.0.7922.34",
+  "commit": "480eb9b",
+  "branch": "main",
+  "dirty": true,
+  "environments": [
+    {
+      "name": "local",
+      "url": "http://localhost:8088",
+      "required": true,
+      "writes": true,
+      "recipe": "form",
+      "warmup": {
+        "ok": true,
+        "attempts": 1,
+        "duration_ms": 187,
+        "status": 200,
+        "message": ""
+      },
+      "login": "ok",
+      "message": ""
+    }
+  ],
+  "viewports": [
+    {
+      "name": "desktop",
+      "width": 1440,
+      "height": 900,
+      "isMobile": false,
+      "deviceScaleFactor": 1.0
+    }
+  ],
+  "steps": [
+    {
+      "id": "S1",
+      "title": "\u0110\u1ec1 \u0111\u00e3 t\u1ea3i l\u00ean: 18 \u0111\u1ec1, tr\u1ea1ng th\u00e1i \u0111\u00e3 t\u00e1ch",
+      "path": "/org/documents",
+      "verifies": [
+        "DATA"
+      ]
+    },
+    {
+      "id": "S2",
+      "title": "Ch\u01b0a g\u1eafn chuy\u00ean \u0111\u1ec1",
+      "path": "/org/review/untagged",
+      "verifies": [
+        "DATA"
+      ]
+    },
+    {
+      "id": "S3",
+      "title": "N\u0103m h\u1ecdc: n\u0103m \u0111ang ho\u1ea1t \u0111\u1ed9ng v\u00e0 hai h\u1ecdc k\u1ef3",
+      "path": "/org/school-years",
+      "verifies": [
+        "DATA"
+      ]
+    },
+    {
+      "id": "S4",
+      "title": "C\u01a1 c\u1ea5u tr\u01b0\u1eddng: hai kh\u1ed1i, s\u00e1u l\u1edbp",
+      "path": "/org/structure",
+      "verifies": [
+        "DATA"
+      ]
+    },
+    {
+      "id": "S5",
+      "title": "Ng\u01b0\u1eddi d\u00f9ng: 4 gi\u00e1o vi\u00ean v\u00e0 150 h\u1ecdc sinh",
+      "path": "/org/users",
+      "verifies": [
+        "DATA"
+      ]
+    },
+    {
+      "id": "S6",
+      "title": "Chuy\u00ean \u0111\u1ec1: c\u00e2y To\u00e1n \u0111\u00e3 seed",
+      "path": "/org/topics",
+      "verifies": [
+        "DATA"
+      ]
+    },
+    {
+      "id": "S7",
+      "title": "Tags: nh\u00e3n ngu\u1ed3n c\u1ee7a 18 \u0111\u1ec1",
+      "path": "/org/tags",
+      "verifies": [
+        "DATA"
+      ]
+    },
+    {
+      "id": "S8",
+      "title": "Model AI: model ph\u00e2n lo\u1ea1i \u0111ang b\u1eadt",
+      "path": "/org/ai-models",
+      "verifies": [
+        "DATA"
+      ]
+    },
+    {
+      "id": "S9",
+      "title": "C\u1ea5u h\u00ecnh t\u00e1ch \u0111\u1ec1",
+      "path": "/org/settings/ingestion",
+      "verifies": [
+        "DATA"
+      ]
+    },
+    {
+      "id": "S10",
+      "title": "H\u1ed3 s\u01a1 m\u1ed9t h\u1ecdc sinh theo n\u0103m h\u1ecdc v\u00e0 h\u1ecdc k\u1ef3",
+      "path": "/org/users",
+      "verifies": [
+        "DATA"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "env": "local",
+      "viewport": "desktop",
+      "step": "S1",
+      "verdict": "pass",
+      "duration_ms": 6826,
+      "url": "http://localhost:8088/org/documents",
+      "screenshot": "local/desktop/S1.png",
+      "messages": []
+    },
+    {
+      "env": "local",
+      "viewport": "desktop",
+      "step": "S2",
+      "verdict": "pass",
+      "duration_ms": 6777,
+      "url": "http://localhost:8088/org/review/untagged",
+      "screenshot": "local/desktop/S2.png",
+      "messages": []
+    },
+    {
+      "env": "local",
+      "viewport": "desktop",
+      "step": "S3",
+      "verdict": "pass",
+      "duration_ms": 6755,
+      "url": "http://localhost:8088/org/school-years",
+      "screenshot": "local/desktop/S3.png",
+      "messages": []
+    },
+    {
+      "env": "local",
+      "viewport": "desktop",
+      "step": "S4",
+      "verdict": "pass",
+      "duration_ms": 6772,
+      "url": "http://localhost:8088/org/structure",
+      "screenshot": "local/desktop/S4.png",
+      "messages": []
+    },
+    {
+      "env": "local",
+      "viewport": "desktop",
+      "step": "S5",
+      "verdict": "pass",
+      "duration_ms": 6800,
+      "url": "http://localhost:8088/org/users",
+      "screenshot": "local/desktop/S5.png",
+      "messages": []
+    },
+    {
+      "env": "local",
+      "viewport": "desktop",
+      "step": "S6",
+      "verdict": "pass",
+      "duration_ms": 6732,
+      "url": "http://localhost:8088/org/topics",
+      "screenshot": "local/desktop/S6.png",
+      "messages": []
+    },
+    {
+      "env": "local",
+      "viewport": "desktop",
+      "step": "S7",
+      "verdict": "pass",
+      "duration_ms": 6828,
+      "url": "http://localhost:8088/org/tags",
+      "screenshot": "local/desktop/S7.png",
+      "messages": []
+    },
+    {
+      "env": "local",
+      "viewport": "desktop",
+      "step": "S8",
+      "verdict": "pass",
+      "duration_ms": 6789,
+      "url": "http://localhost:8088/org/ai-models",
+      "screenshot": "local/desktop/S8.png",
+      "messages": []
+    },
+    {
+      "env": "local",
+      "viewport": "desktop",
+      "step": "S9",
+      "verdict": "pass",
+      "duration_ms": 6703,
+      "url": "http://localhost:8088/org/settings/ingestion",
+      "screenshot": "local/desktop/S9.png",
+      "messages": []
+    },
+    {
+      "env": "local",
+      "viewport": "desktop",
+      "step": "S10",
+      "verdict": "pass",
+      "duration_ms": 11768,
+      "url": "http://localhost:8088/org/students/67a604bc-45b1-4602-b453-dfca9178dafb",
+      "screenshot": "local/desktop/S10.png",
+      "messages": []
+    }
+  ],
+  "contact_sheets": {
+    "local": "contact-sheet-local.png"
+  },
+  "counts": {
+    "pass": 10,
+    "fail": 0,
+    "total": 10
+  }
+}
