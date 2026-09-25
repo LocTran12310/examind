@@ -188,8 +188,38 @@ lô** (báo cáo xếp theo `part, number` xuyên các đề; pipeline xếp the
 
 Nên lỗi đánh số chỉ giải thích 9 điểm trong khoảng 49% → 58%. Phần còn lại là chính hiệu ứng láng giềng: **chín
 câu tình cờ nằm cùng lô đổi mức của một câu trong khoảng 42% trường hợp.** Muốn mức độ là thuộc tính của câu hỏi
-thì lô phải là một câu. Giá của điều đó **chưa đo**, và lần này không được đoán: lô 10 câu hiện tốn ~0,8s/câu, còn
-một lô một câu có chi phí cố định riêng nên có thể nhanh hơn hoặc chậm hơn nhiều.
+thì lô phải là một câu.
+
+**Đo lô một câu, cùng ngày. `DIFFICULTY_BATCH` chốt về 1.**
+
+| | lô 10 câu | **lô 1 câu** |
+| --- | --- | --- |
+| Hai lượt cùng cấu hình giống nhau từng câu | 99% | **100%** (376/376) |
+| Trùng khớp quy tắc vị trí | 36% | 41% |
+| Lệch ≥ hai bậc | 18% | 11% |
+| Phân bố model | nb 19 · th 20 · **vd 56** · vdc 6 | nb 29 · th 26 · **vd 18** · vdc 28 |
+| Phần III lệch ≥2 bậc | 16%, một chiều 16/16 | **1%** (1 câu) |
+| Cả ngân hàng | ~320s | 464s (**+45%**) |
+
+Ba điều, và điều thứ nhất là điều quyết định:
+
+1. **Tất định hoàn toàn, và mức độ trở thành thuộc tính của câu hỏi.** Prompt chỉ chứa câu ấy, nên không còn gì để
+   phụ thuộc vào. 100% là đo hai lượt, không phải suy ra từ việc prompt giống nhau.
+2. **Việc model dồn 56% vào `vd` là artefact của việc chia lô, không phải của model.** Hỏi mười câu một lúc thì nó
+   so chúng với nhau và tụ về nhãn giữa; hỏi từng câu thì nó dùng cả bốn bậc (`vdc` 6% → 28%). Một tín hiệu dùng
+   hết thang đo mang nhiều thông tin hơn một tín hiệu nói `vd` cho nửa ngân hàng — lập luận này không cần biết ai
+   đúng.
+3. **Thiên lệch hệ thống theo Phần biến mất.** Phần III từ 16 câu lệch **cùng một chiều** xuống còn 1 câu; Phần I
+   thành đối xứng (16 lên, 16 xuống), tức chỉ còn nhiễu.
+
+**Prompt không được đổi một chữ.** Con số 100% ở trên đo đúng `DIFFICULTY_SYSTEM` hiện tại; sửa lời prompt là làm
+phép đo ấy hết giá trị.
+
+**Tách lại toàn bộ 18 đề với nhãn lô-1 (2026-09-25):** 396/396 câu có mức, **`ai` 396 / `auto` 0** — lần đầu tiên
+không câu nào phải rơi về quy tắc. Phân bố pipeline nb 29% · th 25% · vd 17% · vdc 29%, **khớp phép đo của
+`difficulty_report.py`** (29/26/18/28) vì hai đường giờ dùng chung một cách hỏi. Mức trung bình theo phần trên
+thang nb=0…vdc=3: **Phần I 0,68 → Phần II 1,69 → Phần III 2,87**, dốc hơn hẳn lô 10 (1,05 → 1,94 → 2,14) — và
+model vẫn không được cho biết vị trí câu trong đề.
 
 ### ADR-04 — `manual` là bất khả xâm phạm
 **Status:** accepted

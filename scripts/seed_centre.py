@@ -38,6 +38,7 @@ MIN_ANSWERS_PER_TOPIC = 5               # analytics/domain/services/mastery.py:1
 WEAK_BELOW = 0.6                        # analytics/domain/services/mastery.py:15
 MIN_OBSERVATIONS = 10                   # bank/domain/services/item_stats.py:6
 SUBMITS_FOR_A_SPREAD = 20               # assignment_report.py:50-52 buckets ten columns
+LOGIN_WAIT, LOGIN_TRIES = 6, 20         # the login limiter is a sliding minute; waiting a little self-paces it
 
 TRIAL_MATRIX = [("mcq", 12), ("true_false", 4), ("short_answer", 6)]   # the THPT 2025 shape
 TOPIC_PAPER_COUNT = 15
@@ -55,8 +56,15 @@ def env_file(path: pathlib.Path) -> dict:
 
 
 class Api:
-    """One signed-in identity. `ip` is sent as X-Forwarded-For so that signing in 150 students does not trip the
-    login limiter, which counts 30 a minute against one address (identity/interface/deps.py:154)."""
+    """One signed-in identity.
+
+    Logins are limited to 30 a minute per client address (`login_ip_per_minute`), and the address is the first
+    value of `X-Forwarded-For` (identity/interface/deps.py:154). Sending a different one per student looks like it
+    would sidestep that, and it does not: Caddy replaces an untrusted `X-Forwarded-For` rather than appending to
+    it, so through `:8088` every login counts against one key — measured, after a seed died on the 30th login.
+    The header is still sent because it does work when this points straight at the api (`EXAMIND_URL`), and the
+    real handling is `LOGIN_WAIT` below: the limit is respected, not dodged.
+    """
 
     def __init__(self, ip: str = "127.0.0.1"):
         self.cookies: dict[str, str] = {}
@@ -100,7 +108,16 @@ class Api:
         return self.request("PUT", path, body, quiet=quiet)
 
     def login(self, org: str, user: str, password: str):
-        return self.post("/auth/login", {"org_code": org, "username": user, "password": password})
+        """Waits out the login limiter instead of failing on it: 150 students is five times its per-minute budget."""
+        body = {"org_code": org, "username": user, "password": password}
+        for _ in range(LOGIN_TRIES):
+            r = self.post("/auth/login", body, quiet=True)
+            if "__error__" not in r:
+                return r
+            if r["__error__"] != 429:
+                sys.exit(f"đăng nhập {user} lỗi {r['__error__']}: {r['detail']}")
+            time.sleep(LOGIN_WAIT)
+        sys.exit(f"đăng nhập {user}: vẫn bị giới hạn sau {LOGIN_TRIES} lần thử")
 
 
 def page(api: Api, path: str, body: dict) -> list:
@@ -177,6 +194,17 @@ def strand_pool(admin: Api, topics: list[dict]) -> list[tuple[dict, int]]:
         n = admin.post("/questions/search", {"page": 1, "limit": 1, "topic_id": t["id"]})["total"]
         out.append((t, n))
     return sorted(out, key=lambda p: -p[1])
+
+
+def existing(admin: Api) -> tuple[dict, dict]:
+    """{exam title: exam} and {exam id: assignment}, so a second run adds nothing.
+
+    Exam titles carry no uniqueness constraint, so without this a re-run quietly builds a second set of 36 papers
+    and 36 assignments — and every report then averages over twice the work nobody did.
+    """
+    exams = {e["title"]: e for e in page(admin, "/exams/search", {})}
+    assignments = {a["exam_id"]: a for a in page(admin, "/assignments/search", {})}
+    return exams, assignments
 
 
 def trial_paper(teacher: Api, title: str, subject_id: str, strands: list[tuple[dict, int]], seed: int) -> dict:
@@ -399,20 +427,41 @@ def main() -> None:
         print(f"   {k['name']}: {len(roster[k['id']])}")
 
     print("5. đề và bài giao")
+    have_exams, have_assignments = existing(admin)
     plan: list[tuple[dict, dict]] = []   # (assignment, class)
     wide = [t for t, n in strands if n >= TOPIC_PAPER_COUNT]
+    reused = 0
+
+    def paper(teacher: Api, title: str, build, days_ago: int, minutes: int, klass: dict) -> None:
+        nonlocal reused
+        exam = have_exams.get(title)
+        if exam is None:
+            exam = build()
+            have_exams[title] = exam
+        else:
+            reused += 1
+        a = have_assignments.get(exam["id"]) or assign(teacher, exam, klass, days_ago, minutes)
+        have_assignments[exam["id"]] = a
+        plan.append((a, klass))
+
     for ci, k in enumerate(classes):
         teacher = sessions[ci % len(sessions)]
         for j in range(args.papers):
-            exam = trial_paper(teacher, f"Thi thử {k['name']} lần {j + 1}", subject["id"], strands,
-                               args.seed + ci * 100 + j)
-            plan.append((assign(teacher, exam, k, days_ago=14 - j * 4), k))
+            title = f"Thi thử {k['name']} lần {j + 1}"
+            paper(teacher, title,
+                  lambda tc=teacher, t=title, s=args.seed + ci * 100 + j:
+                      trial_paper(tc, t, subject["id"], strands, s),
+                  days_ago=14 - j * 4, minutes=90, klass=k)
         for j in range(args.topic_papers):
             strand = wide[(ci + j) % len(wide)]
-            exam = topic_paper(teacher, f"Chuyên đề {strand['name']} · {k['name']}", subject["id"], strand,
-                               args.seed + 500 + ci * 100 + j)
-            plan.append((assign(teacher, exam, k, days_ago=10 - j * 3, minutes=45), k))
+            title = f"Chuyên đề {strand['name']} · {k['name']}"
+            paper(teacher, title,
+                  lambda tc=teacher, t=title, st=strand, s=args.seed + 500 + ci * 100 + j:
+                      topic_paper(tc, t, subject["id"], st, s),
+                  days_ago=10 - j * 3, minutes=45, klass=k)
         print(f"   {k['name']}: {args.papers} thi thử + {args.topic_papers} chuyên đề")
+    if reused:
+        print(f"   ({reused} đề đã có từ lượt trước, dùng lại chứ không tạo thêm)")
 
     print("6. đọc đáp án của ngân hàng (để biết trước đúng/sai)")
     bank = page(admin, "/questions/search", {"status": "usable"})
