@@ -1,0 +1,160 @@
+{
+  "schema": 1,
+  "tool": "aidlc_verify 0.3.1",
+  "ruleset": 7,
+  "feature": "student",
+  "status": "pass",
+  "started_at": "2026-09-25T12:38:01+00:00",
+  "finished_at": "2026-09-25T12:39:16+00:00",
+  "browser": "chromium 151.0.7922.34",
+  "commit": "448a169",
+  "branch": "main",
+  "dirty": true,
+  "environments": [
+    {
+      "name": "e2e-hs01",
+      "url": "http://localhost:8088",
+      "required": false,
+      "writes": true,
+      "recipe": "form",
+      "warmup": {
+        "ok": true,
+        "attempts": 1,
+        "duration_ms": 265,
+        "status": 200,
+        "message": ""
+      },
+      "login": "ok",
+      "message": ""
+    }
+  ],
+  "viewports": [
+    {
+      "name": "desktop",
+      "width": 1440,
+      "height": 900,
+      "isMobile": false,
+      "deviceScaleFactor": 1.0
+    }
+  ],
+  "steps": [
+    {
+      "id": "S1",
+      "title": "B\u00e0i \u0111\u01b0\u1ee3c giao: \u0111\u00e3 l\u00e0m 6, c\u00f2n m\u1ed9t b\u00e0i \u00f4n \u0111ang m\u1edf",
+      "path": "/home",
+      "verifies": [
+        "DATA"
+      ]
+    },
+    {
+      "id": "S2",
+      "title": "Ti\u1ebfn \u0111\u1ed9 c\u1ee7a t\u00f4i: m\u1ee9c n\u1eafm v\u1eefng c\u1ee7a ch\u00ednh em",
+      "path": "/me/stats",
+      "verifies": [
+        "DATA"
+      ]
+    },
+    {
+      "id": "S3",
+      "title": "M\u1edf b\u00e0i \u00f4n c\u00e1 nh\u00e2n, khung l\u00e0m b\u00e0i hi\u1ec7n ra",
+      "path": "/home",
+      "verifies": [
+        "DATA"
+      ]
+    },
+    {
+      "id": "S4",
+      "title": "Xem to\u00e0n \u0111\u1ec1 thay v\u00ec t\u1eebng c\u00e2u",
+      "path": "/home",
+      "verifies": [
+        "DATA"
+      ]
+    },
+    {
+      "id": "S5",
+      "title": "Tr\u1ea3 l\u1eddi v\u00e0i c\u00e2u r\u1ed3i n\u1ed9p",
+      "path": "/home",
+      "verifies": [
+        "DATA"
+      ]
+    },
+    {
+      "id": "S6",
+      "title": "K\u1ebft qu\u1ea3: \u0111i\u1ec3m, t\u1eebng c\u00e2u, chuy\u00ean \u0111\u1ec1 y\u1ebfu c\u1ee7a b\u00e0i \u1ea5y",
+      "path": "/home",
+      "verifies": [
+        "DATA"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "env": "e2e-hs01",
+      "viewport": "desktop",
+      "step": "S1",
+      "verdict": "pass",
+      "duration_ms": 6226,
+      "url": "http://localhost:8088/home",
+      "screenshot": "e2e-hs01/desktop/S1.png",
+      "messages": []
+    },
+    {
+      "env": "e2e-hs01",
+      "viewport": "desktop",
+      "step": "S2",
+      "verdict": "pass",
+      "duration_ms": 7731,
+      "url": "http://localhost:8088/me/stats",
+      "screenshot": "e2e-hs01/desktop/S2.png",
+      "messages": []
+    },
+    {
+      "env": "e2e-hs01",
+      "viewport": "desktop",
+      "step": "S3",
+      "verdict": "pass",
+      "duration_ms": 10728,
+      "url": "http://localhost:8088/exam/ed0a3105-e74a-42a8-9c8c-2399de68b0c0",
+      "screenshot": "e2e-hs01/desktop/S3.png",
+      "messages": []
+    },
+    {
+      "env": "e2e-hs01",
+      "viewport": "desktop",
+      "step": "S4",
+      "verdict": "pass",
+      "duration_ms": 13839,
+      "url": "http://localhost:8088/exam/ed0a3105-e74a-42a8-9c8c-2399de68b0c0",
+      "screenshot": "e2e-hs01/desktop/S4.png",
+      "messages": []
+    },
+    {
+      "env": "e2e-hs01",
+      "viewport": "desktop",
+      "step": "S5",
+      "verdict": "pass",
+      "duration_ms": 23924,
+      "url": "http://localhost:8088/results/ed0a3105-e74a-42a8-9c8c-2399de68b0c0",
+      "screenshot": "e2e-hs01/desktop/S5.png",
+      "messages": []
+    },
+    {
+      "env": "e2e-hs01",
+      "viewport": "desktop",
+      "step": "S6",
+      "verdict": "pass",
+      "duration_ms": 11309,
+      "url": "http://localhost:8088/results/e16d4f1a-8f8a-4481-9b65-d71ffb52758d",
+      "screenshot": "e2e-hs01/desktop/S6.png",
+      "messages": []
+    }
+  ],
+  "contact_sheets": {
+    "e2e-hs01": "contact-sheet-e2e-hs01.png"
+  },
+  "counts": {
+    "pass": 6,
+    "fail": 0,
+    "total": 6
+  }
+}
