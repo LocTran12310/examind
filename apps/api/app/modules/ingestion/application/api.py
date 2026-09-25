@@ -1,10 +1,13 @@
-"""What other contexts may ask the ingestion context (architecture-refactor ADR-01): the topic classifier, on demand."""
+"""What other contexts may ask the ingestion context (architecture-refactor ADR-01): the topic classifier and the
+difficulty classifier, on demand."""
 from dataclasses import dataclass
 import uuid
 
+from app.modules.ingestion.application.difficulty import DifficultyModelPass
 from app.modules.ingestion.application.models import usable_model
 from app.modules.ingestion.application.tagging import TopicModelPass
 from app.modules.ingestion.domain.ports import AiModelRepository, ChatModels, OrgSettings, QuestionBank, Taxonomy, TopicNode
+from app.modules.ingestion.domain.services.difficulty_rules import difficulty_for, question_text
 from app.modules.ingestion.domain.services.processing import org_defaults
 from app.modules.ingestion.domain.services.topic_rules import KNN_MIN_SIMILARITY, WEAK_KEYWORD, keyword_candidates
 
@@ -24,6 +27,17 @@ class TopicSuggestion:
 class Suggestions:
     """Candidates per question, and whether the tagging model actually answered (topic-coverage AC-07)."""
     by_question: dict[uuid.UUID, list[TopicSuggestion]]
+    model_used: bool
+
+
+#: one question to be levelled: (id, part, number, type, stem, options) — everything both signals read
+NeedsLevel = tuple[uuid.UUID, str | None, int | None, str, str, list]
+
+
+@dataclass(frozen=True)
+class Levels:
+    """`{question id: (level, source)}` and whether the model answered at all (difficulty-at-upload AC-05)."""
+    by_question: dict[uuid.UUID, tuple[str, str]]
     model_used: bool
 
 
@@ -63,6 +77,33 @@ class IngestionApi:
         for candidates in found.values():
             candidates.sort(key=lambda c: (SOURCE_ORDER[c.source], -c.score))
         return Suggestions({qid: _shortlist(cs) for qid, cs in found.items()}, model_used)
+
+    def levels_for(self, org_id: uuid.UUID, items: list[NeedsLevel], use_model: bool = True) -> Levels:
+        """The level of each question, decided the way the pipeline decides it (difficulty-at-upload ADR-02): the
+        position rule answers every one of them, then the org's classification model replaces what it can read.
+
+        Same division of labour as `suggest_for`, and the opposite lead. There the rules lead because they are
+        deterministic and checkable; here the rule is a *convention about where a question sits in a paper* and
+        carries no information the caller does not already have — `difficulty_for` is a pure function of part,
+        number and type. The model's answer is the only one that read the question, so it leads (ADR-03).
+        """
+        rule = {qid: (difficulty_for(part, number, qtype), "auto") for qid, part, number, qtype, _, _ in items}
+        m = self._tagging_model(org_id) if use_model and items else None
+        if m is None:
+            return Levels(rule, False)
+        model = DifficultyModelPass(self.chat, m, timeout=self.timeout)
+        rows = [(qid, i + 1, question_text(stem, qtype, options))
+                for i, (qid, _, _, qtype, stem, options) in enumerate(items)]
+        answered = False
+        for batch in model.batches(rows):
+            try:
+                got = model.ask(batch)
+            except Exception:  # noqa: BLE001 — a failed batch leaves the rule's answer standing, like the pipeline's
+                continue
+            answered = True
+            for qid, level in got.items():
+                rule[qid] = (level, "ai")
+        return Levels(rule, answered)
 
     def _rule_candidates(self, org_id: uuid.UUID, subject_id: uuid.UUID | None, question_id: uuid.UUID, text: str,
                          topics: list[TopicNode]) -> list[TopicSuggestion]:

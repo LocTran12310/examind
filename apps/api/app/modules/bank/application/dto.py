@@ -193,6 +193,20 @@ class BulkResult:
 
 
 @dataclass(frozen=True)
+class BackfillResult:
+    """What one bounded run of the difficulty backfill did (difficulty-at-upload AC-05).
+
+    `by_source` counts per signal rather than one total, because "379 câu đã điền" does not say whether a model
+    read them or a convention about their position guessed. `remaining` is what is still empty afterwards, which
+    is how the caller knows to run again and how it sees a second run change nothing.
+    """
+    filled: int
+    by_source: dict[str, int]
+    remaining: int
+    model_used: bool
+
+
+@dataclass(frozen=True)
 class BulkTopicsResult:
     updated: int
     skipped: list[SkippedPair]

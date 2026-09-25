@@ -120,6 +120,18 @@ class BulkOut(BaseModel):
     batch_id: uuid.UUID
 
 
+class BackfillDifficultyIn(BaseModel):
+    limit: int = 200
+    use_model: bool = False
+
+
+class BackfillDifficultyOut(BaseModel):
+    filled: int
+    by_source: dict[str, int]
+    remaining: int
+    model_used: bool
+
+
 class UndoIn(BaseModel):
     batch_id: uuid.UUID
 

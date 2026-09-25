@@ -5,7 +5,7 @@ from sqlalchemy import select, text
 
 from app.modules.bank.domain.entities import ReviewEvent
 from app.modules.taxonomy.domain.topics import Topic
-from tests.factories import make_org, make_user
+from tests.factories import login_as, make_org, make_user
 from tests.test_documents_api import run_jobs, sample, upload
 from tests.test_review_api import setup_admin
 
@@ -339,3 +339,90 @@ def test_bulk_sets_subject_and_grade_and_refuses_a_topic_of_another_subject(clie
     assert r.json()["details"]["fields"]["conflicts"] == [{"question_id": ids[0], "topic_id": topic["id"], "topic_name": "Dao động điều hòa"}]
     assert "Dao động điều hòa" in r.json()["message"]
     assert client.get(f"/api/questions/{ids[1]}").json()["grade"] == 11  # nothing was applied
+
+
+def _strip_levels(db, org_id, keep: int = 0):
+    """The bank as it stood before difficulty-at-upload existed: parsed questions carrying no level at all.
+
+    379 of the owner's 381 usable questions looked exactly like this, which is why the backfill exists — the
+    pipeline only levels what it parses, and nothing re-parses a paper that is already approved.
+    """
+    ids = [q for (q,) in db.execute(text(
+        "select id from questions where organization_id = :o and status in ('approved','auto_approved')"
+        " order by created_at, id offset :k"), {"o": str(org_id), "k": keep})]
+    db.execute(text("update questions set difficulty = null, difficulty_source = null where id = any(:ids)"),
+               {"ids": ids})
+    db.commit()
+    return ids
+
+
+def test_backfill_only_fills_empty_levels_and_says_by_which_signal(client, db):
+    """AC-05. The count is split by signal because "đã điền 40 câu" does not say whether a model read them or a
+    convention about their position guessed, and those are not worth the same."""
+    admin, _ = loaded(client, db)
+    emptied = _strip_levels(db, admin.organization_id)
+    assert emptied, "the upload produced no usable questions to empty"
+
+    r = client.post("/api/questions/backfill-difficulty", json={}).json()
+    assert r["filled"] == len(emptied) and r["remaining"] == 0
+    assert r["by_source"] == {"auto": len(emptied)}  # no model registered in tests: the position rule answers
+    assert r["model_used"] is False
+    levels = {d for (d,) in db.execute(text("select distinct difficulty from questions where id = any(:ids)"),
+                                       {"ids": emptied})}
+    assert levels and levels <= {"nb", "th", "vd", "vdc"} and None not in levels
+    sources = {s for (s,) in db.execute(text("select distinct difficulty_source from questions where id = any(:ids)"),
+                                        {"ids": emptied})}
+    assert sources == {"auto"}
+
+
+def test_backfill_run_twice_changes_nothing_the_second_time(client, db):
+    """The half of AC-05 that makes the command safe to hand to an org admin: "chạy lại lần nữa không đổi gì thêm".
+    Asserted on the stored rows, not only on the reported count — a command that re-levels every question and
+    reports zero would pass a count-only check while quietly overwriting the bank on every run."""
+    admin, _ = loaded(client, db)
+    emptied = _strip_levels(db, admin.organization_id)
+    client.post("/api/questions/backfill-difficulty", json={})
+    before = dict(db.execute(text("select id, difficulty from questions where id = any(:ids)"), {"ids": emptied}).all())
+
+    again = client.post("/api/questions/backfill-difficulty", json={}).json()
+    assert again["filled"] == 0 and again["by_source"] == {} and again["remaining"] == 0
+    after = dict(db.execute(text("select id, difficulty from questions where id = any(:ids)"), {"ids": emptied}).all())
+    assert after == before
+
+
+def test_backfill_never_touches_a_level_a_teacher_set(client, db):
+    """A-03 / ADR-04, guarded twice over: such a question is not empty so it is never selected, and
+    `fill_difficulty` would refuse it even if it were."""
+    admin, _ = loaded(client, db)
+    emptied = _strip_levels(db, admin.organization_id)
+    mine = emptied[0]
+    client.patch(f"/api/questions/{mine}", json={"difficulty": "vdc"})
+    assert db.execute(text("select difficulty_source from questions where id = :i"), {"i": mine}).scalar() == "manual"
+
+    r = client.post("/api/questions/backfill-difficulty", json={}).json()
+    assert r["filled"] == len(emptied) - 1
+    row = db.execute(text("select difficulty, difficulty_source from questions where id = :i"), {"i": mine}).one()
+    assert row == ("vdc", "manual")
+
+
+def test_backfill_is_bounded_per_run_and_reports_what_is_left(client, db):
+    """A bounded run is what keeps the model option usable at all: measured at ~0.9s a question, the whole backlog
+    in one request is minutes. `remaining` is the only thing telling the caller to go again."""
+    admin, _ = loaded(client, db)
+    emptied = _strip_levels(db, admin.organization_id)
+    assert len(emptied) > 3
+
+    r = client.post("/api/questions/backfill-difficulty", json={"limit": 3}).json()
+    assert r["filled"] == 3 and r["remaining"] == len(emptied) - 3
+    assert client.post("/api/questions/backfill-difficulty", json={"limit": 0}).json()["code"] == "validation_error"
+    assert client.post("/api/questions/backfill-difficulty", json={"limit": 501}).json()["code"] == "validation_error"
+    # with the model on the ceiling is lower, and 200 is under the other one
+    assert client.post("/api/questions/backfill-difficulty",
+                       json={"limit": 200, "use_model": True}).json()["code"] == "validation_error"
+
+
+def test_backfill_is_for_the_org_admin_only(client, db):
+    admin, _ = loaded(client, db)
+    _strip_levels(db, admin.organization_id)
+    login_as(client, db, "teacher", org=admin.organization, username="gv9")  # creates and logs in, replacing the session
+    assert client.post("/api/questions/backfill-difficulty", json={}).status_code == 403

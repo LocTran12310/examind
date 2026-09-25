@@ -89,8 +89,18 @@ t(id="T-03-02", uow="UOW-03", title="Lệnh điền cho câu chưa có mức đ�
   depends_on=["T-02-01", "T-01-03"], verifies=["AC-05"], assumptions=["A-06", "A-03"],
   tests=[f"{API}/tests/test_bank_api.py"],
   touches=[f"{M}/bank/application/commands/backfill_difficulty.py",
-           f"{M}/bank/interface/router.py"],
-  context="Chỉ chạm difficulty IS NULL; chạy lại được; org admin.",
+           f"{M}/bank/application/dto.py",
+           f"{M}/bank/domain/ports.py",
+           f"{M}/bank/infrastructure/adapters/suggestions.py",
+           f"{M}/bank/infrastructure/repositories.py",
+           f"{M}/bank/interface/deps.py",
+           f"{M}/bank/interface/schemas.py",
+           f"{M}/bank/interface/router.py",
+           f"{M}/ingestion/application/api.py",
+           f"{API}/app/main.py"],
+  context="Chỉ chạm difficulty IS NULL; chạy lại được; org admin. Bán kính thật rộng hơn bản kế hoạch đầu đoán: "
+          "quy tắc mức độ sống trong ingestion, nên bank phải hỏi qua application/api.py của nó — thêm một port, "
+          "một adapter và một chỗ đăng ký ở composition root, đúng như đường chuyên đề đã đi.",
   done_when=["Chỉ điền câu rỗng", "Chạy lại không đổi gì", "Báo số câu theo từng tín hiệu"])
 t(id="T-04-01", uow="UOW-04", title="Mức độ trên thẻ duyệt", layer="web", estimate="4h",
   depends_on=["T-01-03"], verifies=["AC-06"], assumptions=["A-07"],

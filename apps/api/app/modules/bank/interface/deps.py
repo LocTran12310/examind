@@ -11,6 +11,7 @@ from app.modules.bank.application.commands.apply_answer_key import ApplyAnswerKe
 from app.modules.bank.application.commands.approve_confident import ApproveConfidentHandler
 from app.modules.bank.application.commands.assign_reviewer import AssignReviewerHandler
 from app.modules.bank.application.commands.audit_keys import AuditKeysHandler
+from app.modules.bank.application.commands.backfill_difficulty import BackfillDifficultyHandler
 from app.modules.bank.application.commands.bulk_set_topics import BulkSetTopicsHandler
 from app.modules.bank.application.commands.bulk_update_questions import BulkUpdateQuestionsHandler
 from app.modules.bank.application.commands.create_question import CreateQuestionHandler
@@ -31,7 +32,7 @@ from app.modules.bank.application.queries.search_question_events import SearchQu
 from app.modules.bank.application.queries.search_questions import SearchQuestionsHandler
 from app.modules.bank.application.queries.search_review_documents import SearchReviewDocumentsHandler
 from app.modules.bank.application.queries.suggest_topics import SuggestTopicsHandler
-from app.modules.bank.domain.ports import StaffDirectory, Taxonomy, TopicSuggestions
+from app.modules.bank.domain.ports import DifficultyLevels, StaffDirectory, Taxonomy, TopicSuggestions
 from app.modules.bank.infrastructure.adapters.sql import SqlReviewDocuments, SqlReviewSettings
 from app.modules.bank.infrastructure.read_models import SqlEventReader, SqlItemStatsReader, SqlQuestionReader, SqlReviewReader
 from app.modules.bank.infrastructure.repositories import (
@@ -47,6 +48,7 @@ from app.shared.infrastructure.sql_unit_of_work import SqlUnitOfWork
 _taxonomy: Callable[[Session], Taxonomy] | None = None
 _staff: Callable[[Session], StaffDirectory] | None = None
 _suggestions: Callable[[Session], TopicSuggestions] | None = None
+_levels: Callable[[Session], DifficultyLevels] | None = None
 
 
 def register_taxonomy(factory: Callable[[Session], Taxonomy]) -> None:
@@ -63,6 +65,12 @@ def register_topic_suggestions(factory: Callable[[Session], TopicSuggestions]) -
     """The classifier of the ingestion context (topic-coverage ADR-03)."""
     global _suggestions
     _suggestions = factory
+
+
+def register_difficulty_levels(factory: Callable[[Session], DifficultyLevels]) -> None:
+    """The difficulty classifier of the ingestion context (difficulty-at-upload ADR-02)."""
+    global _levels
+    _levels = factory
 
 
 class _RegisteredTaxonomy:
@@ -105,6 +113,12 @@ def _topic_suggestions(db: Session) -> TopicSuggestions:
     if _suggestions is None:
         raise RuntimeError("no topic suggestions registered")
     return _suggestions(db)
+
+
+def _difficulty_levels(db: Session) -> DifficultyLevels:
+    if _levels is None:
+        raise RuntimeError("no difficulty levels registered")
+    return _levels(db)
 
 
 def bank_api(db: Session) -> BankApi:
@@ -154,6 +168,10 @@ def delete_question(db: Session = Depends(get_db)) -> DeleteQuestionHandler:
 
 def bulk_update_questions(db: Session = Depends(get_db)) -> BulkUpdateQuestionsHandler:
     return BulkUpdateQuestionsHandler(SqlQuestionRepository(db), _RegisteredTaxonomy(db), SqlReviewLog(db), SqlUnitOfWork(db))
+
+
+def backfill_difficulty(db: Session = Depends(get_db)) -> BackfillDifficultyHandler:
+    return BackfillDifficultyHandler(SqlQuestionRepository(db), _difficulty_levels(db), SqlUnitOfWork(db))
 
 
 def bulk_set_topics(db: Session = Depends(get_db)) -> BulkSetTopicsHandler:

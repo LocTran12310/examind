@@ -184,7 +184,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 3
-    status: todo
+    status: done
     depends_on:
       - T-02-01
       - T-01-03
@@ -193,7 +193,15 @@ ticket:
       - AC-05
     touches:
       - apps/api/app/modules/bank/application/commands/backfill_difficulty.py   # new
+      - apps/api/app/modules/bank/application/dto.py   # new
+      - apps/api/app/modules/bank/domain/ports.py   # new
+      - apps/api/app/modules/bank/infrastructure/adapters/suggestions.py   # new
+      - apps/api/app/modules/bank/infrastructure/repositories.py   # new
+      - apps/api/app/modules/bank/interface/deps.py   # new
+      - apps/api/app/modules/bank/interface/schemas.py   # new
       - apps/api/app/modules/bank/interface/router.py   # new
+      - apps/api/app/modules/ingestion/application/api.py   # new
+      - apps/api/app/main.py   # new
   - id: T-04-01
     uow: UOW-04
     title: 'Mức độ trên thẻ duyệt'

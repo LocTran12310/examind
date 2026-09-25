@@ -3,7 +3,7 @@
 # Ticket graph — 2026092404-difficulty-at-upload
 
 - Units of Work: **4**
-- Tickets: **9** (7 done)
+- Tickets: **9** (8 done)
 - Total effort: **3.5d**
 - Critical path: **1.6d** across 4 tickets
 - Theoretical minimum duration with unlimited parallelism: **1.6d**
@@ -36,7 +36,7 @@ graph LR
   end
   subgraph UOW_03["UOW-03 · Đo trước khi tin, rồi điền cho câu cũ"]
     T_03_01["✓ T-03-01<br/>Báo cáo đo hai tín hiệu"]
-    T_03_02["T-03-02<br/>Lệnh điền cho câu chưa có mức độ"]
+    T_03_02["✓ T-03-02<br/>Lệnh điền cho câu chưa có mức độ"]
   end
   subgraph UOW_04["UOW-04 · Thấy và sửa được mức độ ngay chỗ đang duyệt"]
     T_04_01["T-04-01<br/>Mức độ trên thẻ duyệt"]
@@ -91,5 +91,5 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-02-02 | UOW-02 | api | feature | 3h | T-02-01, T-01-01 | AC-01, AC-03 | done |
 | T-02-03 | UOW-02 | api | feature | 3h | T-03-01 | AC-02 | done |
 | T-03-01 | UOW-03 | api | feature | 3h | T-02-01 | AC-02 | done |
-| T-03-02 | UOW-03 | api | feature | 3h | T-02-01, T-01-03 | AC-05 | todo |
+| T-03-02 | UOW-03 | api | feature | 3h | T-02-01, T-01-03 | AC-05 | done |
 | T-04-01 | UOW-04 | web | feature | 4h | T-01-03 | AC-06 | todo |

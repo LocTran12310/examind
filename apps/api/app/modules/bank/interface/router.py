@@ -6,6 +6,7 @@ from app.modules.bank.application.commands.apply_answer_key import ApplyAnswerKe
 from app.modules.bank.application.commands.approve_confident import ApproveConfident, ApproveConfidentHandler
 from app.modules.bank.application.commands.assign_reviewer import AssignReviewer, AssignReviewerHandler
 from app.modules.bank.application.commands.audit_keys import AuditKeys, AuditKeysHandler
+from app.modules.bank.application.commands.backfill_difficulty import BackfillDifficulty, BackfillDifficultyHandler
 from app.modules.bank.application.commands.bulk_set_topics import BulkSetTopics, BulkSetTopicsHandler
 from app.modules.bank.application.commands.bulk_update_questions import BulkUpdateQuestions, BulkUpdateQuestionsHandler
 from app.modules.bank.application.commands.create_question import CreateQuestion, CreateQuestionHandler
@@ -33,6 +34,8 @@ from app.modules.bank.interface.schemas import (
     AnswerKeyOut,
     ApprovedOut,
     AssignIn,
+    BackfillDifficultyIn,
+    BackfillDifficultyOut,
     BulkIn,
     BulkOut,
     BulkTopicsIn,
@@ -114,6 +117,18 @@ def bulk_questions(body: BulkIn, actor: Actor = Depends(staff_actor), handle: Bu
     r = handle(actor, BulkUpdateQuestions(body.ids, s.status, s.difficulty, s.primary_topic_id, s.add_tag_ids,
                                           s.subject_id, s.grade))
     return BulkOut(updated=r.updated, batch_id=r.batch_id)
+
+
+@router.post("/questions/backfill-difficulty", response_model=BackfillDifficultyOut)
+def backfill_difficulty(body: BackfillDifficultyIn, actor: Actor = Depends(staff_actor),
+                        handle: BackfillDifficultyHandler = Depends(deps.backfill_difficulty)):
+    """Give a level to questions that have none (difficulty-at-upload AC-05). Only questions whose `difficulty` is
+    empty are touched, so running it again is safe and answers `filled: 0`; a level a teacher set is never reached.
+    `by_source` splits the count into `auto` (the question's place in the paper) and `ai` (the org's model read it).
+    Bounded per run — `remaining` says how much is left — and `use_model: true` costs about a second a question,
+    so it is capped tighter. Quản trị viên only."""
+    r = handle(actor, BackfillDifficulty(body.limit, body.use_model))
+    return BackfillDifficultyOut(filled=r.filled, by_source=r.by_source, remaining=r.remaining, model_used=r.model_used)
 
 
 @router.post("/questions/bulk/topics", response_model=BulkTopicsOut)

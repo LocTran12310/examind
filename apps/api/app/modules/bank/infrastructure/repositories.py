@@ -55,6 +55,16 @@ class SqlQuestionRepository:
     def with_status(self, status: str) -> list[Question]:
         return list(self.session.scalars(select(Question).where(qc.status == status)))
 
+    def without_difficulty(self, org_id: uuid.UUID, limit: int) -> list[Question]:
+        return list(self.session.scalars(
+            select(Question).where(qc.organization_id == org_id, qc.difficulty.is_(None), qc.status.in_(USABLE))
+            .order_by(qc.created_at, qc.id).limit(limit)))
+
+    def count_without_difficulty(self, org_id: uuid.UUID) -> int:
+        return int(self.session.scalar(
+            select(func.count()).select_from(questions)
+            .where(qc.organization_id == org_id, qc.difficulty.is_(None), qc.status.in_(USABLE))) or 0)
+
     def add(self, q: Question) -> None:
         self.session.add(q)
         self.session.flush()

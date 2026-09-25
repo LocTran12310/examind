@@ -24,6 +24,18 @@ class QuestionRepository(Protocol):
         """Every question of every org in that status (maintenance passes)."""
         ...
 
+    def without_difficulty(self, org_id: uuid.UUID, limit: int) -> list[Question]:
+        """Usable questions of the org that carry no level yet, oldest first — what the backfill has left to do.
+
+        Oldest first so that re-running the command walks the backlog instead of circling the same page, and only
+        usable ones because a rejected or duplicate question is not what an empty blueprint row is short of.
+        """
+        ...
+
+    def count_without_difficulty(self, org_id: uuid.UUID) -> int:
+        """How many of those there are, so a bounded run can say what is left (AC-05)."""
+        ...
+
     def add(self, q: Question) -> None: ...
 
     def remove(self, q: Question) -> None: ...
@@ -106,6 +118,21 @@ class TopicSuggestions(Protocol):
                     use_model: bool = True) -> tuple[dict[uuid.UUID, list[tuple[uuid.UUID, float, str]]], bool]:
         """({question id: [(topic id, score, source)]}, whether the tagging model answered) — at most three
         candidates, best first; source `keyword` | `similar` | `ai` (topic-coverage ADR-04)."""
+        ...
+
+
+#: one question to be levelled, as the bank hands it over: (id, part, number, type, stem, options)
+NeedsLevel = tuple[uuid.UUID, str | None, int | None, str, str, list]
+
+
+class DifficultyLevels(Protocol):
+    """The ingestion context's difficulty classifier, seen from the bank (difficulty-at-upload ADR-02): the level a
+    question's place in the paper implies, with the org's model over it where the model can read the question."""
+
+    def levels_for(self, org_id: uuid.UUID, items: list[NeedsLevel],
+                   use_model: bool = True) -> tuple[dict[uuid.UUID, tuple[str, str]], bool]:
+        """({question id: (level, source)}, whether the model answered). `source` is `auto` for the position rule
+        and `ai` for the model; every question asked about comes back with a level."""
         ...
 
 
