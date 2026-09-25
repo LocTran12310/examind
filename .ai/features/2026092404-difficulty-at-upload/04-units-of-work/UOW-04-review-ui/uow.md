@@ -36,8 +36,16 @@ rollback: revert the merge commit; migrations have downgrade()
 - [x] Demoed and accepted at gate G4
 
 ## Verification evidence
-- [x] `make verify f=.ai/features/2026092404-difficulty-at-upload` green on local, the only required environment
-- [x] Evidence exists for AC-06 at both viewports
-- [x] `08-evidence.md` regenerated and its commit sha matches HEAD
-- [x] Every screenshot read: S1 ở 390px hiện "Mức độ: Nhận biết · model gợi ý", S2 hiện "Vận dụng cao" không kèm
-      nguồn sau khi giáo viên đặt — hai nửa của AC-06, đọc bằng mắt chứ không chỉ đếm assertion
+
+`make verify f=.ai/features/2026092404-difficulty-at-upload` — **4/4** trên `local`, hai viewport, và từng ảnh đã
+được đọc chứ không chỉ đếm assertion:
+
+- **S1 ở 390px**: "Mức độ: Nhận biết · model gợi ý" — nửa đầu AC-06, mức và nguồn cùng một chỗ.
+- **S2**: "Vận dụng cao" **không kèm nguồn** sau khi giáo viên đặt — nửa sau, mức của người thì không còn nói của ai.
+
+**Không viết khối ô tick ở đây, và đây là lý do.** `evidence_check.py` đòi **mọi** acceptance criterion của feature
+phải có ảnh ở mọi environment bắt buộc. Ba UoW kia không đổi một màn hình nào, nên AC-01…AC-05 không cách nào có
+ảnh và công cụ báo đỏ đúng như thiết kế. Tick một ô mà chính công cụ ấy phản bác là kiểu nói dối nó sinh ra để chặn.
+
+⚠ `scripts/gen_plan.py` dựng lại `uow.md` từ `plan_spec.py`, nên nó **xoá cả phần này lẫn mọi ô đã tick**. Chạy
+`gen_plan` trước, tick sau.

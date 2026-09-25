@@ -5,7 +5,7 @@ slug: 2026092404-difficulty-at-upload
 profile: none
 created: 2026-09-24T15:39:12
 ruleset: 7
-current_gate: G3
+current_gate: G5
 history:
   - gate: G0
     action: passed
@@ -297,3 +297,13 @@ history:
     by: Loc Tran
     reason: apps/api/scripts/difficulty_report.py là cờ --batch của việc đo (T-03-01), không thuộc ticket web này
     ticket: T-04-01
+  - gate: G4
+    action: passed
+    at: 2026-09-25T15:03:18
+    by: Loc Tran
+    evidence: every done ticket has a passing verification run; all 10 tickets done, all UoW checklists ticked
+  - gate: G5
+    action: passed
+    at: 2026-09-25T15:04:21
+    by: Loc Tran
+    evidence: assumptions resolved, ADRs settled, graph valid
