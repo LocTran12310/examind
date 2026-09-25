@@ -63,7 +63,7 @@ class Api:
         self.ip = ip
         self.calls = 0
 
-    def request(self, method: str, path: str, body=None, quiet: bool = False):
+    def request(self, method: str, path: str, body=None, quiet: bool = False, retry: bool = True):
         headers = {"x-forwarded-for": self.ip}
         payload = None
         if body is not None:
@@ -82,6 +82,10 @@ class Api:
                 return json.loads(raw) if raw else None
         except urllib.error.HTTPError as e:
             detail = e.read().decode("utf-8", "replace")[:300]
+            # the access cookie lives 15 minutes; the admin session here runs far longer than that
+            if e.code == 401 and retry and path != "/auth/refresh":
+                self.request("POST", "/auth/refresh", retry=False, quiet=True)
+                return self.request(method, path, body, quiet=quiet, retry=False)
             if quiet:
                 return {"__error__": e.code, "detail": detail}
             raise SystemExit(f"{method} {path} → {e.code}\n  {detail}") from None

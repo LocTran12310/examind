@@ -55,7 +55,9 @@ class Api:
     def __init__(self, base: str):
         self.base, self.cookies = base, {}
 
-    def _request(self, method: str, path: str, body=None, files=None):
+    def _request(self, method: str, path: str, body=None, files=None, retry: bool = True):
+        """One retry through `/auth/refresh` on a 401: the access cookie lives 15 minutes and waiting for 18 papers
+        outlives it, which used to end a 15-minute ingest run with `unauthenticated` two papers from the finish."""
         url = f"{self.base}{path}"
         headers = {}
         if files is not None:
@@ -84,6 +86,9 @@ class Api:
                 return json.loads(raw) if raw else None
         except urllib.error.HTTPError as e:
             detail = e.read().decode("utf-8", "replace")[:400]
+            if e.code == 401 and retry and path != "/api/auth/refresh":
+                self._request("POST", "/api/auth/refresh", retry=False)
+                return self._request(method, path, body, files, retry=False)
             raise SystemExit(f"{method} {path} → {e.code}\n  {detail}") from None
 
     def get(self, path):
