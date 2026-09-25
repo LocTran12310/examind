@@ -162,6 +162,35 @@ và lệnh điền là do "câu nào nằm cùng lô". Một phần của nó th
 hiệu ứng láng giềng. Chưa đo lại được phần nào là hiệu ứng láng giềng thật sau khi sửa, nên **chưa chốt** chuyện
 lô 10 câu so với từng câu một, và không được dựa vào con số 49% ấy nữa.
 
+**Đo sau khi sửa, cùng ngày, trên ngân hàng vừa dựng lại.** Lượt tách chạy đúng lần đầu tiên:
+
+| | trước bản sửa | sau bản sửa |
+| --- | --- | --- |
+| câu có mức | 396/397 | **396/396** |
+| `ai` / `auto` | 322 / 74 | **396 / 0** |
+| Phần II nhận mức từ model | **0/72** | **72/72** |
+
+Phân bố pipeline tạo ra: nb 63 (16%) · th 112 (28%) · vd 179 (45%) · vdc 43 (11%). Mức trung bình theo phần, trên
+thang nb=0…vdc=3: **Phần I 1,05 → Phần II 1,94 → Phần III 2,14**.
+
+Con số cuối ấy là **bằng chứng thật đầu tiên cho ADR-03**, thay cho lập luận. Bản sửa đã bỏ số câu khỏi prompt,
+nên model không còn biết câu nằm đâu trong đề — vậy mà nó vẫn tự xếp Phần III khó hơn Phần I, đúng thứ tự mà quy
+ước đề ngụ ý. Nó đọc nội dung, không đọc vị trí. (Vẫn không nói được nó **đúng** ở từng câu: mục 4 vẫn mẫu 0.)
+
+**Và câu hỏi còn treo đã có số: hiệu ứng láng giềng là thật, và lớn.** So từng câu giữa nhãn pipeline đã ghi và
+một lượt báo cáo trên cùng ngân hàng — hai đường giờ dùng prompt giống nhau hoàn toàn, chỉ khác **câu nào nằm cùng
+lô** (báo cáo xếp theo `part, number` xuyên các đề; pipeline xếp theo từng đề):
+
+| Hai lượt được so | Giống nhau từng câu |
+| --- | --- |
+| cùng cấu hình hoàn toàn | 99% |
+| khác cách chia lô (sau khi sửa) | **58%** |
+
+Nên lỗi đánh số chỉ giải thích 9 điểm trong khoảng 49% → 58%. Phần còn lại là chính hiệu ứng láng giềng: **chín
+câu tình cờ nằm cùng lô đổi mức của một câu trong khoảng 42% trường hợp.** Muốn mức độ là thuộc tính của câu hỏi
+thì lô phải là một câu. Giá của điều đó **chưa đo**, và lần này không được đoán: lô 10 câu hiện tốn ~0,8s/câu, còn
+một lô một câu có chi phí cố định riêng nên có thể nhanh hơn hoặc chậm hơn nhiều.
+
 ### ADR-04 — `manual` là bất khả xâm phạm
 **Status:** accepted
 Không lượt tách lại, không lệnh điền, không lượt model nào được đổi một mức độ mang dấu `manual`. Một giáo viên
