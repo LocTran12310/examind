@@ -6,10 +6,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { REPORT_STATUS_LABEL } from "@/constants/assignment.constant";
 import { TYPE_LABEL } from "@/constants/question.constant";
 import type { AssignmentReport } from "@/interfaces/assignment.interface";
+import { ScoreHistogram } from "@/components/common/ScoreHistogram/ScoreHistogram";
 import { pct } from "@/lib/page-libs/assignment-report/pct";
 
 export function ReportView({ report }: { report: AssignmentReport }) {
-  const maxBucket = Math.max(1, ...report.distribution.map((b) => b.count));
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-3">
@@ -27,14 +27,7 @@ export function ReportView({ report }: { report: AssignmentReport }) {
         </Panel>
         <Panel>
           <div className="mb-1 text-sm text-muted-foreground">Phổ điểm</div>
-          <div className="flex h-16 items-end gap-1" data-testid="distribution">
-            {report.distribution.map((b) => (
-              <div key={b.from} className="flex-1" title={`${b.from}–${b.to}: ${b.count}`}>
-                <div className="rounded-t bg-primary" style={{ height: `${(b.count / maxBucket) * 56}px` }} />
-                <div className="text-center text-[10px] text-muted-foreground/70">{b.from}</div>
-              </div>
-            ))}
-          </div>
+          <ScoreHistogram buckets={report.distribution} total={report.submitted} />
         </Panel>
       </div>
       <Panel>

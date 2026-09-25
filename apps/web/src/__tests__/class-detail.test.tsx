@@ -61,3 +61,28 @@ describe("trang lớp: tổng quan cả lớp và từng học sinh", () => {
     expect(screen.queryByTestId("cs-distribution")).not.toBeInTheDocument();
   });
 });
+
+describe("phổ điểm: rê chuột vào một cột", () => {
+  it("nói khoảng điểm, bao nhiêu bài, và chiếm bao nhiêu phần", async () => {
+    mount(summary());
+    render(<ClassDetailPage id="c1" />);
+    await screen.findByTestId("cs-distribution");
+
+    await userEvent.hover(screen.getByTestId("bucket-6"));
+    const tip = await screen.findByRole("tooltip");
+    expect(tip).toHaveTextContent("6–7 điểm");
+    expect(tip).toHaveTextContent("40 bài");
+    expect(tip).toHaveTextContent("27% của 150 bài đã nộp");
+  });
+
+  it("một khoảng không ai đạt vẫn rê được, và nói là không có bài nào", async () => {
+    // Bản đầu đặt tooltip lên chính cái thanh, mà chiều cao thanh tỉ lệ với số bài — nên cột 0 lượt cao 0 và
+    // không cách nào rê vào. Đúng những khoảng trống ấy mới là thứ người dạy muốn hỏi: "không em nào được 0–1 à?"
+    mount(summary());
+    render(<ClassDetailPage id="c1" />);
+    await screen.findByTestId("cs-distribution");
+
+    await userEvent.hover(screen.getByTestId("bucket-0"));
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Không có bài nào");
+  });
+});

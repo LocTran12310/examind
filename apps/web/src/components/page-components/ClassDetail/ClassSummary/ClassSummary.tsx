@@ -2,6 +2,7 @@
 
 import { EmptyState } from "@/components/common/EmptyState/EmptyState";
 import { Panel } from "@/components/common/Panel/Panel";
+import { ScoreHistogram } from "@/components/common/ScoreHistogram/ScoreHistogram";
 import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import type { ClassSummary as Summary } from "@/interfaces/mastery.interface";
 
@@ -17,7 +18,6 @@ export function ClassSummary({ data }: { data: Summary }) {
       </EmptyState>
     );
   }
-  const most = Math.max(...data.distribution, 1);
   return (
     <div className="grid gap-4 lg:grid-cols-3">
       <Panel>
@@ -32,14 +32,11 @@ export function ClassSummary({ data }: { data: Summary }) {
       </Panel>
       <Panel>
         <p className="mb-2 text-sm text-muted-foreground">Phổ điểm</p>
-        <div className="flex h-16 items-end gap-1" data-testid="cs-distribution">
-          {data.distribution.map((n, i) => (
-            <div key={i} className="flex-1 self-stretch" title={`${i}–${i + 1} điểm: ${n} lượt`}>
-              <div className="mt-auto w-full rounded-t bg-primary/70" style={{ height: `${(n / most) * 100}%` }} />
-            </div>
-          ))}
-        </div>
-        <div className="mt-1 flex justify-between text-xs text-muted-foreground"><span>0</span><span>10</span></div>
+        <ScoreHistogram
+          testId="cs-distribution"
+          total={data.sittings}
+          buckets={data.distribution.map((count, i) => ({ from: i, to: i + 1, count }))}
+        />
       </Panel>
       <Panel className="lg:col-span-3">
         <h3 className="mb-2 font-medium">Chuyên đề lớp còn yếu (tỉ lệ thấp trước)</h3>
