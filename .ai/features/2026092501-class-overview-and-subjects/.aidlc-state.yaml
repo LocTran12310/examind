@@ -1,0 +1,29 @@
+# Managed by scripts/aidlc.py — do not edit by hand.
+# Editing this file to skip a gate defeats the point of having one.
+feature: class-overview-and-subjects
+slug: 2026092501-class-overview-and-subjects
+profile: none
+created: 2026-09-25T19:57:21
+ruleset: 7
+current_gate: G3
+history:
+  - gate: G0
+    action: passed
+    at: 2026-09-25T20:00:05
+    by: Loc Tran
+    evidence: architecture map verified by Loc Tran (blanket pre-approval in chat, 2026-09-22 — confirm at final review); 00-intent.md complete
+  - gate: G1
+    action: passed
+    at: 2026-09-25T20:00:05
+    by: Loc Tran
+    evidence: 9 assumptions, none blocking-and-pending; 7 acceptance criteria defined
+  - gate: G2
+    action: passed
+    at: 2026-09-25T20:00:05
+    by: Loc Tran
+    evidence: 4 ADR(s) recorded
+  - gate: G3
+    action: passed
+    at: 2026-09-25T20:01:23
+    by: Loc Tran
+    evidence: graph valid - 3 UoW, 6 tickets, no cycles
