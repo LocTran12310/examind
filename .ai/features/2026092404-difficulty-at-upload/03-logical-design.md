@@ -108,6 +108,41 @@ có **mẫu 0 câu**. Cả cơ sở dữ liệu có 1 dòng `answer_facts`. Đ�
 cùng sai một kiểu vẫn cho đồng thuận cao. Phải đo lại khi học sinh đã làm bài thật, và việc phải theo dõi là
 model dồn về `vd` ngày một đậm (46% → 51%); script tự cảnh báo ở ngưỡng 70%.
 
+**Đo lần hai, 2026-09-25, sau khi lệnh điền chạy thật: mức độ model gán KHÔNG phải thuộc tính của câu hỏi.**
+
+Lệnh điền đã gán `ai` cho cả 379 câu (4 lượt × 100, lượt thứ năm báo `filled: 0`). Nhưng phân bố nó tạo ra lệch
+hẳn so với phân bố báo cáo đã đo một giờ trước — `vdc` 47 so với 18–22. Truy bằng bốn lượt, mỗi lượt đổi **một**
+biến, và so **từng câu** chứ không so phân bố:
+
+| Hai lượt được so | Giống nhau từng câu |
+| --- | --- |
+| cùng cấu hình hoàn toàn | **99%** (376/381) |
+| chỉ đổi cách đánh số câu trong prompt | **80%** (304/381) |
+| báo cáo so với đường lệnh điền | **49%** (184/379) |
+
+Đọc ra ba điều, và điều thứ ba là điều đắt nhất:
+
+1. **Model gần như tất định.** 99% ở lượt đối chứng. Mọi biến động còn lại là do prompt khác nhau, không do model.
+2. **Số câu trong prompt là một tín hiệu thật, không phải nhãn để ghép.** Đổi riêng nó làm 77 câu đổi mức. Trước
+   đó đã khẳng định ngược lại — "prompt's number chỉ là nhãn để ghép" — và đó là một khẳng định sai, dựa trên việc
+   đọc prompt chứ không phải đo nó.
+3. **Phần còn lại của khoảng cách (80% → 49%) đến từ việc câu nào nằm cùng lô.** Báo cáo xếp theo `part, number`
+   nên một lô là mười câu cùng phần; lệnh điền xếp theo `created_at` nên một lô trộn các phần. Model được hỏi mười
+   câu một lúc thì nó **so chúng với nhau**, nên mức của một câu phụ thuộc vào láng giềng của nó.
+
+Hệ quả cho ADR-03: lập luận "model dẫn vì nó là tín hiệu duy nhất đã đọc câu hỏi" **yếu hơn** những gì đã viết ở
+trên. Model đọc câu hỏi, *và* số thứ tự tuỳ tiện gán cho nó, *và* chín câu tình cờ nằm cùng lô. Chỉ một trong ba
+thứ đó là thuộc tính của câu hỏi.
+
+Và một sai sót về phương pháp đáng ghi lại: khoảng cách này suýt bị bỏ qua vì **phân bố tổng vẫn ổn định** qua các
+lượt (`vd` 51–52% ở cả ba) trong khi từng câu thì đổi tới 20–51%. Đã dựa vào phân bố để kết luận "đánh số vô hại",
+và kết luận ấy sai. Đây là lần thứ tư trong dự án này một con số tổng nói dối về thứ nó tổng hợp.
+
+**Chưa chốt, cần chủ dự án quyết:** lô 10 câu thì nhanh nhưng mức của một câu phụ thuộc láng giềng; hỏi từng câu
+một thì mức là thuộc tính của chính câu ấy nhưng đắt hơn. 379 nhãn đang nằm trong ngân hàng là sản phẩm của một
+cách chia lô tuỳ tiện, nên không lặp lại được — chúng nên bị xoá và gán lại sau khi chốt, và chỉ những nhãn
+`difficulty_source = 'ai'` bị chạm tới.
+
 ### ADR-04 — `manual` là bất khả xâm phạm
 **Status:** accepted
 Không lượt tách lại, không lệnh điền, không lượt model nào được đổi một mức độ mang dấu `manual`. Một giáo viên
