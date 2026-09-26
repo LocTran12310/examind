@@ -60,3 +60,8 @@ gần đây" của sản phẩm. Hoàn tác đi qua danh sách chứ không qua 
 bước và toast không sống qua lần nạp ấy — bài học đã trả giá ở `.ai/features/2026092305-bulk-safety`.
 
 Chạy ở hai viewport nghĩa là S2/S3 chạy **hai lần**, mỗi lần một cặp sửa–hoàn tác khép kín.
+
+Và thực tế còn nhẹ hơn thế: câu đầu ngân hàng **vốn đã là "Nhận biết"**, nên phần lớn lượt chạy ghi một lượt sửa
+**không đổi trường nào** — cột "Đã đổi" trong "Thay đổi gần đây" hiện `—`. Chỉ một lượt (02:19) thật sự đổi mức
+độ của một câu, và nó cũng đã được hoàn tác. Đừng dựa vào điều đó: nó đúng vì thứ tự mặc định của ngân hàng hôm
+nay, không phải vì bước kiểm được thiết kế thế — bước vẫn phải tự hoàn tác.
