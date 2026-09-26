@@ -8,6 +8,7 @@ const message = (e: unknown, fallback: string) => (e ? (e instanceof ApiError ? 
 
 /** File → checked rows → create the valid ones → download the temporary passwords (shown only once). */
 export function useImportWizard(orgCode: string) {
+  const [file, setFile] = useState<File | null>(null);
   const [skipErrors, setSkipErrors] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
   const preview = useImportPreviewMutation();
@@ -16,6 +17,7 @@ export function useImportWizard(orgCode: string) {
   const created = commit.data?.created ?? null;
   const hasErrors = !!rows?.error_count;
   return {
+    file,
     preview: rows,
     created,
     downloaded,
@@ -25,10 +27,11 @@ export function useImportWizard(orgCode: string) {
     canCommit: !!rows && rows.valid_count > 0 && (!hasErrors || skipErrors),
     busy: preview.isPending || commit.isPending,
     error: message(preview.error, "Không đọc được file") ?? message(commit.error, "Có lỗi xảy ra"),
-    onFile: (file: File | undefined) => {
-      if (!file) return;
+    onFile: (chosen: File | null) => {
+      setFile(chosen);
       commit.reset();
-      preview.mutate(file);
+      if (chosen) preview.mutate(chosen);
+      else preview.reset();
     },
     commit: () => rows && commit.mutate(rows.rows.filter((r) => !r.errors.length)),
     download: () => {

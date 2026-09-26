@@ -6,17 +6,21 @@ import Link from "next/link";
 import { FormAlert } from "@/components/common/FormAlert/FormAlert";
 import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import { Button } from "@/components/ui/button";
-import { FormField } from "@/components/common/FormField/FormField";
-import { Input } from "@/components/ui/input";
+import { Download } from "lucide-react";
+import { FileDropField } from "@/components/common/FileDropField/FileDropField";
 import { Label } from "@/components/ui/label";
 import { Panel } from "@/components/common/Panel/Panel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ROLE_LABEL } from "@/constants/role.constant";
 import { useImportWizard } from "@/hooks/page-hooks/user-import/use-import-wizard";
 
+const IMPORT_ACCEPT = ".csv,.xlsx";
+/** Static template in `public/`, its header being the columns the importer reads. */
+const TEMPLATE_HREF = "/mau-nhap-tai-khoan.csv";
+
 /** Upload a CSV/Excel file, check every row, create the valid accounts. */
 export function ImportWizard({ orgCode }: { orgCode: string }) {
-  const { preview, created, downloaded, skipErrors, setSkipErrors, hasErrors, canCommit, busy, error, onFile, commit, download } = useImportWizard(orgCode);
+  const { file, preview, created, downloaded, skipErrors, setSkipErrors, hasErrors, canCommit, busy, error, onFile, commit, download } = useImportWizard(orgCode);
 
   if (created) {
     return (
@@ -41,9 +45,19 @@ export function ImportWizard({ orgCode }: { orgCode: string }) {
   return (
     <div className="space-y-4">
       <Panel>
-        <FormField label="Chọn file">
-          <Input data-testid="file" type="file" accept=".csv,.xlsx" className="max-w-sm" onChange={(e) => onFile(e.target.files?.[0])} />
-        </FormField>
+        <FileDropField
+          label="Chọn file danh sách tài khoản"
+          accept={IMPORT_ACCEPT}
+          value={file}
+          onChange={onFile}
+          disabled={busy}
+          testId="file"
+          hint="Cột: full_name (bắt buộc), username, role, class. Bỏ trống username để hệ thống tự tạo; role nhận student, teacher hoặc org_admin."
+        >
+          <a href={TEMPLATE_HREF} download className="inline-flex items-center gap-1 font-medium text-primary underline underline-offset-2">
+            <Download className="size-3.5" /> Tải file mẫu (.csv)
+          </a>
+        </FileDropField>
         {busy && <p className="mt-2 text-sm text-muted-foreground">Đang xử lý…</p>}
       </Panel>
       {error && <FormAlert>{error}</FormAlert>}

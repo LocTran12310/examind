@@ -1,5 +1,7 @@
 import { fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ImportWizard } from "@/components/page-components/UserImport/ImportWizard/ImportWizard";
 import { mockFetch, renderWithQuery as render, route } from "./helpers";
@@ -47,5 +49,56 @@ describe("import wizard", () => {
     await userEvent.click(await screen.findByRole("button", { name: /Tải danh sách mật khẩu/ }));
     expect(createObjectURL).toHaveBeenCalled();
     expect(await screen.findByText("Đã tải file.")).toBeInTheDocument();
+  });
+});
+
+const preview = () => route("POST", "/api/users/import/preview", { rows: [row(2)], valid_count: 1, error_count: 0 });
+const csv = (name = "ds.csv", body = "x".repeat(2048)) => new File([body], name);
+
+/** The drop zone can only be checked for behaviour here: jsdom has no layout, so "looks like a drop zone" is not testable. */
+describe("file drop field on the import screen", () => {
+  it("shows the chosen file with its size and previews it", async () => {
+    mockFetch(preview());
+    render(<ImportWizard orgCode="trungtama" />);
+    fireEvent.change(screen.getByTestId("file"), { target: { files: [csv()] } });
+    expect(await screen.findByTestId("row-2")).toBeInTheDocument();
+    expect(screen.getByTestId("file-chosen")).toHaveTextContent("ds.csv");
+    expect(screen.getByTestId("file-chosen")).toHaveTextContent("2,0 KB");
+  });
+
+  it("takes a file dropped on the zone", async () => {
+    mockFetch(preview());
+    render(<ImportWizard orgCode="trungtama" />);
+    fireEvent.drop(screen.getByTestId("file-zone"), { dataTransfer: { files: [csv("keo-tha.csv")] } });
+    expect(await screen.findByTestId("row-2")).toBeInTheDocument();
+    expect(screen.getByTestId("file-chosen")).toHaveTextContent("keo-tha.csv");
+  });
+
+  it("refuses a wrong extension and sends nothing", async () => {
+    const fetchMock = mockFetch(preview());
+    render(<ImportWizard orgCode="trungtama" />);
+    fireEvent.drop(screen.getByTestId("file-zone"), { dataTransfer: { files: [csv("danh-sach.pdf")] } });
+    expect(await screen.findByText(/Chỉ nhận file \.csv, \.xlsx/)).toHaveTextContent("danh-sach.pdf");
+    expect(screen.queryByTestId("file-chosen")).not.toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("clears the file and the preview it produced", async () => {
+    mockFetch(preview());
+    render(<ImportWizard orgCode="trungtama" />);
+    fireEvent.change(screen.getByTestId("file"), { target: { files: [csv()] } });
+    await userEvent.click(await screen.findByRole("button", { name: "Bỏ file ds.csv" }));
+    expect(screen.queryByTestId("file-chosen")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("row-2")).not.toBeInTheDocument();
+  });
+
+  it("links to the template kept in public/, whose header is the columns the importer reads", () => {
+    mockFetch(preview());
+    render(<ImportWizard orgCode="trungtama" />);
+    const href = screen.getByRole("link", { name: /Tải file mẫu/ }).getAttribute("href")!;
+    const template = readFileSync(path.join(process.cwd(), "public", href), "utf8").replace(/^﻿/, "").trim().split("\n");
+    expect(template[0]).toBe("full_name,username,role,class");
+    expect(template.length).toBeGreaterThan(1);
+    expect(screen.getByText(/Cột: full_name/)).toHaveTextContent("username, role, class");
   });
 });

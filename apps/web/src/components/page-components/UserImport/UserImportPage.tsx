@@ -8,7 +8,7 @@ export function UserImportPage() {
   const me = useMe();
   return (
     <>
-      <PageHeader title="Nhập tài khoản từ file" description="CSV hoặc Excel: cột full_name (bắt buộc), username, role, class" />
+      <PageHeader title="Nhập tài khoản từ file" description="CSV hoặc Excel: tải file mẫu, điền danh sách rồi tải lên" />
       <ImportWizard orgCode={me.org.code} />
     </>
   );
