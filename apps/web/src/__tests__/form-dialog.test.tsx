@@ -36,4 +36,18 @@ describe("FormDialog", () => {
     expect(dialog.style.width).toBe("400px");
     expect(dialog.style.height).toBe("180px"); // clamped to the minimum
   });
+
+  it("tall đặt một chiều cao cho hộp thoại, kéo cạnh vẫn thắng", () => {
+    // jsdom không có layout: kiểm được rằng chiều cao có mặt từ đầu (thay vì đo theo nội dung) và rằng một lần
+    // kéo cạnh vẫn đè lên nó — còn việc hộp thoại không nhảy khi nội dung dài ra thì phải xem trên trình duyệt
+    render(<FormDialog open onOpenChange={() => {}} title="Thêm tag" tall><p>nội dung</p></FormDialog>);
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.className).toContain("h-[min(85svh,44rem)]");
+    expect(dialog.style.height).toBe("");
+    const bottom = dialog.querySelector('[data-resize="dưới"]')!;
+    fireEvent.pointerDown(bottom, { clientX: 500, clientY: 300, pointerId: 1 });
+    fireEvent.pointerMove(window, { clientX: 500, clientY: 400 });
+    fireEvent.pointerUp(window);
+    expect(dialog.style.height).toBe("200px"); // hai lần khoảng kéo, vì hộp thoại nằm giữa
+  });
 });

@@ -30,6 +30,7 @@ export function FormDialog({
   title,
   description,
   wide,
+  tall,
   children,
 }: {
   open: boolean;
@@ -37,6 +38,12 @@ export function FormDialog({
   title: string;
   description?: React.ReactNode;
   wide?: boolean;
+  /** one height from the start instead of one that follows the content: a dialog whose body grows a row taller
+   *  re-centres itself, which walks the footer out from under the cursor. The height belongs here rather than in
+   *  each caller because it is the frame that also resizes, maximises and holds the scroll box — a caller could
+   *  only fake it with a second height inside this one. The body is then a flex column: it gets `h-full` and
+   *  decides for itself which part of it scrolls. An explicit resize or "Phóng to" still wins (inline style). */
+  tall?: boolean;
   children: React.ReactNode;
 }) {
   const [maximized, setMaximized] = useState(false);
@@ -88,7 +95,7 @@ export function FormDialog({
         ref={box}
         style={style}
         data-maximized={maximized || undefined}
-        className={cn("flex max-h-[90svh] flex-col gap-0 p-0", wide ? "sm:max-w-3xl" : "sm:max-w-lg", (maximized || size) && "sm:max-w-none")}
+        className={cn("flex max-h-[90svh] flex-col gap-0 p-0", wide ? "sm:max-w-3xl" : "sm:max-w-lg", tall && "h-[min(85svh,44rem)]", (maximized || size) && "sm:max-w-none")}
       >
         <DialogHeader className="shrink-0 px-4 pt-4 pr-20 pb-3" onDoubleClick={() => setMaximized((m) => !m)}>
           <DialogTitle className="select-none">{title}</DialogTitle>

@@ -51,7 +51,7 @@ export function MemberManager({ classId, prefix = "m." }: MemberManagerProps) {
         )}
         emptyText="Lớp chưa có học sinh."
       />
-      <FormDialog open={m.adding} onOpenChange={m.setAdding} title="Thêm học sinh vào lớp" wide>
+      <FormDialog open={m.adding} onOpenChange={m.setAdding} title="Thêm học sinh vào lớp" wide tall>
         {/* the draft list of who is about to be added, typed name by name in its own row input; the magnifier in
             that row opens the picker over this dialog for the other way round — whole old classes, ticked — and
             what it brings back lands here as rows, not as a second save. */}

@@ -1329,3 +1329,45 @@ hộp "Chọn học sinh" chồng lên, bảng lớp mở ra 25 em của 11A1, f
 **Và bản kiểm chứng của chính tôi đã lạc hậu trong lúc ấy.** Agent phụ báo lại rằng hai bước trong
 `.ai/e2e/owner-walk-2` còn trỏ vào nút và testid đã bị xoá — đúng, và nó không tự sửa vì file ấy ngoài phạm vi
 được giao. Tôi sửa rồi chạy lại. Một kịch bản kiểm chứng cũng là mã: nó mục đi cùng tốc độ với màn hình nó kiểm.
+
+## 39. Bảng dùng chung trong hộp thoại, và chỗ cắt chữ ở 390px (2026-09-26)
+
+Bốn thứ anh nêu: dùng chung component table, sticky header và footer, chiều cao mặc định cho hộp thoại, và
+không nhảy UI theo chiều cao.
+
+**`DialogTable` (`components/common/`) — cố tình KHÔNG phải `DataTable`.** `DataTable` ôm URL state, phân trang
+phía máy chủ, bộ lọc theo cột; một hộp chọn không cần thứ nào trong đó và sẽ phải chống lại tất cả. Cái chung
+thật sự giữa hai hộp thoại nhỏ hơn nhiều: một hàng tiêu đề dính, một khung cuộn, hàng có thể gập ra hàng con, và
+một cột checkbox ở đầu. Gộp bừa vào `DataTable` là cách một component dùng chung biến thành một component không
+ai dám sửa.
+
+**`tall` đặt ở `FormDialog`, không ở hai màn hình gọi nó.** Khung mới là thứ đang sở hữu chiều cao — nó kéo giãn
+được, phóng to được, và kẹp ở `90svh`; một `style.height` do người dùng kéo phải tiếp tục thắng cái mặc định, và
+inline style thắng class là đúng thứ tự ấy. Màn hình gọi chỉ có thể giả lập bằng một chiều cao **bên trong**
+chiều cao của hộp, và mọi hộp cao sau này lại phải tự nghĩ lại.
+
+**Chỗ cắt chữ ở 390px có hai nguyên nhân, không phải một.** Ảnh kiểm chứng cho thấy "Học sinh 101" hiện thành
+"c sinh 101": (1) ô nhập nằm trong bảng và trải hết bốn cột, nên focus vào nó làm khung cuộn ngang trôi sang
+phải và cột đầu ra khỏi mép trái; (2) ba cột chữ cộng một nút không vừa ~326px. Sửa: ô nhập ra khỏi bảng, và
+dưới `sm` thì tên đăng nhập với lớp hiện tại **xuống dòng thứ hai ngay dưới tên** thay vì mỗi thứ một cột —
+không mất gì, chỉ chuyển chỗ. Không chọn cuộn ngang: trên điện thoại, phải tự phát hiện ra một thanh cuộn mới
+đọc được cái tên là một màn hình hỏng.
+
+**Chỗ bản dựng lệch khỏi chữ anh viết, nói rõ:** anh viết "table với row input", còn ô nhập nay **nằm trên**
+bảng. Lý do: ở trong bảng nó trôi xuống theo mỗi em được thêm, và danh sách gợi ý bị chính khung cuộn cắt mất —
+đúng hai thứ anh bảo phải hết. Đưa lại vào bảng dưới dạng một hàng dính đáy là làm được; chờ anh nói.
+
+**`sticky` và "không nhảy" không có test nào**, và agent phụ nói thẳng điều đó thay vì viết một test trông như
+đang kiểm. jsdom không có layout: `position: sticky`, `overflow` và một hộp thoại tự canh giữa đều không tạo ra
+khác biệt đo được ở đó. Test chỉ kiểm **cấu trúc** mà những thuộc tính ấy cần (phần nào cuộn, cái gì nằm ngoài
+nó); phần còn lại là việc của trình duyệt, và đó là lý do bản kiểm chứng chạy ở 390px.
+
+**Kiểm chứng.** Web 288 → **292 passed**, tsc và ESLint xanh. Trình duyệt: `.ai/e2e/add-student-flow` **8/8** hai
+viewport, đọc từng ảnh — ảnh mobile cho thấy tên đọc được đủ, dòng phụ `hs101 · Lớp 11A1`, nút bỏ còn bấm được,
+footer dính đáy và hộp thoại giữ nguyên chiều cao khi danh sách ngắn.
+
+**Hai bước kiểm của tôi đỏ vì chính thay đổi này, và một trong hai dạy được điều mới.** Bước khẳng định
+`text=Lớp 11A1` đỏ **ở desktop** trong khi màn hình hiện chữ ấy rõ ràng: cùng một chuỗi nay có mặt **hai lần**
+trong DOM (một bản cho điện thoại, một bản cho cột), mỗi bản ẩn ở một bề rộng, và `text=` của Playwright lấy
+phần tử khớp đầu tiên rồi đợi nó **hiện ra** — ở desktop đó đúng là bản đang `display:none`. Mọi khẳng định trên
+một dữ liệu được lặp lại cho responsive phải giới hạn vào đúng chỗ muốn kiểm.

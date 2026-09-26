@@ -300,4 +300,46 @@ describe("thêm học sinh vào lớp", () => {
     await u.type(await screen.findByRole("textbox", { name: "Tìm học sinh" }), "hs");
     expect(await screen.findByText(/Còn 50 kết quả nữa/)).toBeInTheDocument();
   });
+
+  // jsdom không có layout: ở đây chỉ kiểm được cái khung mà header dính và footer cố định dựa vào — phần nào cuộn
+  // và cái gì nằm ngoài nó. Còn việc header dính thật, và không có gì nhảy khi danh sách dài ra, là chuyện của
+  // trình duyệt, thuộc về kịch bản kiểm chứng chứ không phải test này.
+  it("cả hai hộp thoại dựng bảng bằng cùng một component, nút nằm ngoài vùng cuộn", async () => {
+    mockFetch(classes(target, klass({ id: "c0", name: "11A1", member_count: 1 })), users({ c1: [], c0: [student("hs01", ["c0"])] }, [student("hs01", ["c0"])]));
+    const u = userEvent.setup();
+    await openDialog(u);
+    const stagedBox = staged().closest("[data-slot=dialog-table]")!;
+    expect(stagedBox).not.toBeNull();
+    expect(within(stagedBox as HTMLElement).getByText("Tên đăng nhập")).toBeInTheDocument(); // header ở trong vùng cuộn
+    expect(stagedBox.contains(screen.getByRole("button", { name: "Thêm 0 học sinh" }))).toBe(false);
+    expect(stagedBox.contains(screen.getByRole("textbox", { name: "Tìm học sinh để thêm" }))).toBe(false);
+    await openPicker(u);
+    const sourceBox = (await screen.findByTestId("source-classes")).closest("[data-slot=dialog-table]")!;
+    expect(sourceBox).not.toBeNull();
+    expect(sourceBox.contains(screen.getByRole("button", { name: "Chọn 0 học sinh" }))).toBe(false);
+    expect(sourceBox.contains(screen.getByRole("button", { name: "Hủy" }))).toBe(false);
+    expect(sourceBox.contains(screen.getByRole("textbox", { name: "Tìm học sinh" }))).toBe(false);
+  });
+
+  it("trên điện thoại hai cột phụ nhường chỗ, tên mang theo chúng trong một dòng riêng", async () => {
+    // 390 px không đủ cho ba cột chữ cộng nút bỏ: bảng tràn ngang và cắt mất đầu tên học sinh
+    mockFetch(classes(target, klass({ id: "c0", name: "11A1", member_count: 1 })), users({ c1: [] }, [student("hs01", ["c0"])]));
+    const u = userEvent.setup();
+    const box = await openDialog(u);
+    await u.type(box, "hs");
+    await u.click(await screen.findByRole("button", { name: /HS01/ }));
+    const cells = [...within(staged()).getByText("HS01").closest("tr")!.querySelectorAll("td")];
+    expect(cells[0].className).not.toContain("hidden"); // tên không bao giờ bị bỏ
+    expect(cells[1].className).toContain("max-sm:hidden"); // tên đăng nhập
+    expect(cells[2].className).toContain("max-sm:hidden"); // lớp hiện tại
+    expect(cells[0].querySelector(".sm\\:hidden")?.textContent).toBe("hs01 · Lớp 11A1"); // nhắc lại dưới tên
+    expect(within(staged()).getByRole("button", { name: "Bỏ HS01" })).toBeInTheDocument(); // nút bỏ vẫn bấm được
+  });
+
+  it("danh sách chờ rỗng thì một dòng trải hết bảng nói phải làm gì", async () => {
+    mockFetch(classes(target), users({ c1: [] }));
+    const u = userEvent.setup();
+    await openDialog(u);
+    expect(within(staged()).getByText(/Chưa có em nào trong danh sách/)).toHaveAttribute("colspan", "4");
+  });
 });
