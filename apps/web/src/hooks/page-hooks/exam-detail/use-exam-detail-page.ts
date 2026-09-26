@@ -126,6 +126,9 @@ export function useExamDetailPage(id: string) {
     remove: (qid: string) => void run(() => remove.mutateAsync(qid)),
     setPoints: (qid: string, value: number) => void run(() => points.mutateAsync({ questionId: qid, points: value })),
     setTypePoints: (type: QuestionType, value: number) => void run(() => update.mutateAsync({ settings: { points_by_type: { [type]: value } } })),
+    /** the exam's subject and grade (AC-02): saved on choice, and the matrix re-scopes itself because the topics
+     *  and tags above are asked for with the exam's own subject */
+    setLabels: (changes: { subject_id?: string | null; grade?: number | null }) => void run(() => update.mutateAsync(changes)),
     addQuestion: (qid: string) => void run(() => add.mutateAsync([qid])),
     // the new assignment shows up in "Đã giao" through the invalidated assignments query
     doneAssigning: () => setAssigning(false),

@@ -12,6 +12,7 @@ import { useExamDetailPage } from "@/hooks/page-hooks/exam-detail/use-exam-detai
 import { AssignDialog } from "./AssignDialog/AssignDialog";
 import { AssignedList } from "./AssignedList/AssignedList";
 import { BankSearch } from "./BankSearch/BankSearch";
+import { ExamLabels } from "./ExamLabels/ExamLabels";
 import { BlueprintEditor } from "./BlueprintEditor/BlueprintEditor";
 import { ExamQuestions } from "./ExamQuestions/ExamQuestions";
 import { ExamWeighting } from "./ExamWeighting/ExamWeighting";
@@ -67,6 +68,7 @@ export function ExamDetailPage({ id }: { id: string }) {
         </div>
         <div className="min-w-0 space-y-4">
           <AssignedList assigned={p.assigned} />
+          <ExamLabels exam={exam} onChange={p.setLabels} />
           <PointsByType settings={exam.settings} onChange={p.setTypePoints} />
           <BankSearch search={p.search} onSearchChange={p.setSearch} onFind={p.findInBank} found={p.found} inExam={p.inExam} onAdd={p.addQuestion} />
         </div>

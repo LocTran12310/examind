@@ -163,6 +163,32 @@ describe("exam builder", () => {
     await waitFor(() => expect(screen.queryByTestId("blueprint-refusal")).not.toBeInTheDocument());
   });
 
+  it("the exam says which subject and grade it is for, and saves on choice (AC-02)", async () => {
+    // 0 of 131 exams had a grade: the API has taken both since day one and no screen ever asked. The subject is
+    // not decoration — it is what scopes the matrix's topic picker.
+    const f = mockFetch(
+      route("GET", "/api/taxonomy", { subjects: [{ id: "s", code: "toan", name: "Toán" }], grades: [{ id: "g11", level: 11, name: "Lớp 11" }], semesters: [] }),
+      route("PATCH", "/api/exams/e1", exam({ subject_id: "s", grade: 11 })),
+      ...pageRoutes(exam({ subject_id: null, grade: null })),
+    );
+    const u = userEvent.setup();
+    renderWithQuery(<ExamDetailPage id="e1" />);
+    await u.click(await screen.findByRole("combobox", { name: "Môn của đề" }));
+    await u.click(await screen.findByRole("option", { name: "Toán" }));
+    await waitFor(() => expect(sent(f, "PATCH", "/api/exams/e1")).toEqual({ subject_id: "s" }));
+    await u.click(screen.getByRole("combobox", { name: "Lớp của đề" }));
+    await u.click(await screen.findByRole("option", { name: "Lớp 11" }));
+    await waitFor(() => expect(sent(f, "PATCH", "/api/exams/e1")).toEqual({ grade: 11 }));
+  });
+
+  it("an exam that already holds questions says what changing its subject does, instead of refusing (AC-03)", async () => {
+    // ADR-03: the questions stay and the data is not wrong — reports read the subject off the question, not off
+    // the exam — so this is a sentence, not a guard that would also forbid the harmless cases
+    mockFetch(...pageRoutes(exam({ subject_id: "s", question_count: 3 })));
+    renderWithQuery(<ExamDetailPage id="e1" />);
+    expect(await screen.findByTestId("labels-hint")).toHaveTextContent("Đổi môn không đụng tới câu đã có trong đề");
+  });
+
   it("question list: sections, swap, remove, points", async () => {
     const onSaveOrder = vi.fn(), onSwap = vi.fn(), onRemove = vi.fn(), onPoints = vi.fn();
     render(<ExamQuestions questions={[eq(1), eq(2), eq(3, "II")]} onSaveOrder={onSaveOrder} onSwap={onSwap} onRemove={onRemove} onPoints={onPoints} />);

@@ -3,7 +3,7 @@
 # Ticket graph — 2026092601-exam-labels-and-roster-fill
 
 - Units of Work: **3**
-- Tickets: **5** (1 done)
+- Tickets: **5** (2 done)
 - Total effort: **2.1d**
 - Critical path: **7h** across 2 tickets
 - Theoretical minimum duration with unlimited parallelism: **7h**
@@ -25,7 +25,7 @@ slice — the floor on how fast it can finish no matter how many people work on 
 graph LR
   subgraph UOW_01["UOW-01 · Đề nói được nó thuộc môn nào, khối nào"]
     T_01_01["✓ T-01-01<br/>Môn và Lớp ở form tạo đề"]
-    T_01_02["T-01-02<br/>Sửa môn và khối tại chỗ trên trang soạn đề"]
+    T_01_02["✓ T-01-02<br/>Sửa môn và khối tại chỗ trên trang soạn đề"]
   end
   subgraph UOW_02["UOW-02 · Ô đề ôn cá nhân nói đủ: đề nào, bao giờ, còn hạn không, mấy đề"]
     T_02_01["T-02-01<br/>Read model trả ngày giao, hạn và số lượt ôn cá nhân"]
@@ -62,7 +62,7 @@ adding people to tickets off this path will not make the feature ship sooner.
 | ID | UoW | Layer | Type | Est | Depends on | Verifies | Status |
 |----|-----|-------|------|-----|-----------|----------|--------|
 | T-01-01 | UOW-01 | web | feature | 3h | — | AC-01 | done |
-| T-01-02 | UOW-01 | web | feature | 3h | — | AC-02, AC-03 | todo |
+| T-01-02 | UOW-01 | web | feature | 3h | — | AC-02, AC-03 | done |
 | T-02-01 | UOW-02 | api | feature | 4h | — | AC-04, AC-05, AC-06, AC-07 | todo |
 | T-02-02 | UOW-02 | web | feature | 3h | T-02-01 | AC-04, AC-05, AC-06, AC-07 | todo |
 | T-03-01 | UOW-03 | web | feature | 4h | — | AC-08, AC-09, AC-10, AC-11 | todo |
