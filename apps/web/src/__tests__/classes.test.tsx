@@ -162,3 +162,40 @@ describe("thêm cả một lớp cũ", () => {
     expect(await screen.findByRole("link", { name: /Chuyển năm học/ })).toHaveAttribute("href", "/org/school-years");
   });
 });
+
+describe("tìm nâng cao khi thêm học sinh", () => {
+  const found = (users: User[], total = users.length) => (url: string, init?: RequestInit) => {
+    if (url !== "/api/users/search" || init?.method !== "POST") return undefined;
+    const body = JSON.parse(String(init.body));
+    return { body: body.class_id === "c1" ? searchPage([]) : searchPage(users, total) };
+  };
+
+  it("nút kính lúp mở bảng tìm rộng: lọc theo lớp, tích nhiều em, thêm một lần", async () => {
+    // ô tìm cũ chỉ thêm được từng em một, và không nói được "những em chưa có lớp nào"
+    const f = mockFetch(
+      route("POST", "/api/classes/search", searchPage([klass({ id: "c1" }), klass({ id: "c0", name: "11A1" })])),
+      found([student("hs01"), student("hs02")]),
+      route("POST", "/api/classes/c1/members", undefined, 204),
+    );
+    const u = userEvent.setup();
+    render(<MemberManager classId="c1" />);
+    await u.click(await screen.findByRole("button", { name: "Thêm học sinh" }));
+    await u.click(await screen.findByRole("tab", { name: "Tìm từng em" }));
+    await u.click(screen.getByRole("button", { name: "Tìm nâng cao" }));
+    await u.click(await screen.findByRole("checkbox", { name: "Chọn tất cả" }));
+    await u.click(screen.getByRole("button", { name: "Thêm 2 học sinh" }));
+    await waitFor(() => expect(lastBody(f, "/classes/c1/members")).toEqual({ user_ids: ["hs01", "hs02"] }));
+    expect(f.mock.calls.filter((c) => c[0] === "/api/classes/c1/members")).toHaveLength(1);
+  });
+
+  it("nói ra khi còn kết quả ngoài trang đang xem", async () => {
+    // một danh sách bị cắt mà không nói gì là cách một giáo viên kết luận rằng học sinh ấy không tồn tại
+    mockFetch(route("POST", "/api/classes/search", searchPage([klass({ id: "c1" })])), found([student("hs01")], 51));
+    const u = userEvent.setup();
+    render(<MemberManager classId="c1" />);
+    await u.click(await screen.findByRole("button", { name: "Thêm học sinh" }));
+    await u.click(await screen.findByRole("tab", { name: "Tìm từng em" }));
+    await u.click(screen.getByRole("button", { name: "Tìm nâng cao" }));
+    expect(await screen.findByText(/Còn 50 kết quả nữa/)).toBeInTheDocument();
+  });
+});

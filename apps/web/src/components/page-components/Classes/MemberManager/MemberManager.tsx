@@ -3,17 +3,15 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { UserPlus } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 import { FormDialog } from "@/components/common/FormDialog/FormDialog";
 import { ToolbarButton } from "@/components/common/DataTable/Toolbar";
 import { DataTable } from "@/components/common/DataTable/DataTable";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useMemberManager, useStudentSearch } from "@/hooks/page-hooks/classes/use-member-manager";
+import { useMemberManager } from "@/hooks/page-hooks/classes/use-member-manager";
 import { useUserSearchQuery } from "@/hooks/react-query/use-query-user";
 import type { User } from "@/interfaces/user.interface";
 import { FromClass } from "../FromClass/FromClass";
+import { StudentPicker } from "../StudentPicker/StudentPicker";
 
 const COLUMNS: ColumnDef<User, unknown>[] = [
   {
@@ -28,31 +26,6 @@ const COLUMNS: ColumnDef<User, unknown>[] = [
   },
   { accessorKey: "username", header: "Tên đăng nhập", cell: ({ row }) => <span className="font-mono">{row.original.username}</span>, meta: { filter: { kind: "text" }, sort: "username" } },
 ];
-
-function AddStudents({ classId, onAdd }: { classId: string; onAdd: (userId: string) => Promise<boolean> }) {
-  const [q, setQ] = useState("");
-  const [added, setAdded] = useState<Set<string>>(new Set());
-  const students = useStudentSearch(q);
-  return (
-    <div className="grid gap-3">
-      <Input autoFocus aria-label="Tìm học sinh" placeholder="Tìm tên hoặc tên đăng nhập (≥ 2 ký tự)" value={q} onChange={(e) => setQ(e.target.value)} />
-      <ul className="max-h-80 divide-y overflow-y-auto">
-        {students
-          ?.filter((u) => !u.class_ids.includes(classId) && !added.has(u.id))
-          .map((u) => (
-            <li key={u.id} className="flex items-center justify-between py-2 text-sm">
-              <span>
-                {u.full_name} <span className="font-mono text-muted-foreground">{u.username}</span>
-              </span>
-              <Button size="sm" variant="outline" onClick={async () => (await onAdd(u.id)) && setAdded((s) => new Set(s).add(u.id))}>
-                Thêm
-              </Button>
-            </li>
-          ))}
-      </ul>
-    </div>
-  );
-}
 
 export interface MemberManagerProps {
   classId: string;
@@ -96,7 +69,15 @@ export function MemberManager({ classId, prefix = "m." }: MemberManagerProps) {
             }} />
           </TabsContent>
           <TabsContent value="search">
-            <AddStudents classId={classId} onAdd={m.addStudent} />
+            <StudentPicker
+              classId={classId}
+              onAdd={m.addStudent}
+              onAddMany={async (ids) => {
+                const ok = await m.addStudents(ids);
+                if (ok) m.setAdding(false);
+                return ok;
+              }}
+            />
           </TabsContent>
         </Tabs>
       </FormDialog>
