@@ -51,8 +51,9 @@ tổ chức. Mọi `click td:has-text("E2E · vòng dạy học")` và mọi `[d
 khớp hai phần tử, và Playwright lấy cái **đầu tiên** — bước vẫn xanh, nhưng xanh trên cái đề nó không định nói
 tới. Đã xoá đề đặt nhầm ấy (chưa em nào làm) và dựng lại dưới tên riêng.
 
-**`count h3 = 0` giả định sandbox chỉ có bài của fixture.** Đề mà `teaching-loop` dựng qua màn hình **không mang
-môn** (bước S4 chưa chọn Môn), nên nếu chạy bản này ngay sau một vòng dạy học chưa dọn, mục "Đang mở" có hai môn
-khác nhau — một Toán, một trống — và tiêu đề nhóm sẽ hiện đúng như thiết kế, làm bước này đỏ vì dữ liệu chứ không
-vì sản phẩm. Chạy nó trên sandbox sạch (sau `make e2e-teardown`), hoặc thêm bước chọn Môn vào S4 của vòng ấy khi
-nào chạy lại cả vòng.
+**Cửa sổ duy nhất làm bước này đỏ vì dữ liệu.** Đề mà `teaching-loop` dựng qua màn hình **không mang môn** (S4 của
+vòng ấy chưa chọn Môn), nhưng nhóm là **theo từng mục**, không theo cả trang — nên sau khi vòng chạy xong, bài mẫu
+nằm ở "Đang mở" còn đề vòng đã nộp nằm ở "Đã làm", mỗi mục một trạng thái môn, và `h3 = 0` vẫn đúng. Ảnh của lượt
+mới nhất cho thấy đúng cảnh ấy: hai mục, không tiêu đề nào. Chỉ có khoảng giữa **giao xong mà chưa nộp** là cả hai
+cùng ở "Đang mở" với hai trạng thái môn khác nhau — lúc ấy tiêu đề hiện đúng như thiết kế và bước này sẽ đỏ vì dữ
+liệu. Đừng chạy bản này trong lúc vòng dạy học đang dở; hoặc thêm bước chọn Môn vào S4 của vòng khi nào chạy lại.

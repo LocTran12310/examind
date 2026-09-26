@@ -1574,3 +1574,42 @@ theo **tiền tố** thay vì đúng một tiêu đề, nên không bỏ sót đ
 
 **Kiểm chứng.** Trình duyệt: 1 bước × 2 viewport, **2/2**, đọc cả hai ảnh. Không đụng mã sản phẩm, nên không
 chạy lại bộ test — thay đổi nằm ở `scripts/e2e_fixture.py`, `scripts/e2e_teardown.py`, `Makefile` và hai bản spec.
+
+## 46. Chạy cả vòng dạy học, và một lỗi vận hành của chính tôi (2026-09-26)
+
+Anh bảo chạy thử cả vòng. Lượt đầu tôi chạy nền với `| tail -45` — mà `tail` chỉ nhả chữ khi cả đường ống kết
+thúc, nên log trống. Tôi đọc log trống, kết luận nó chết, và chạy **lượt thứ hai**. Hai vòng cùng đi một kịch bản
+trên một tổ chức.
+
+**Hỏng theo đúng kiểu file này đi săn cả tháng: xanh mà nói dối.** Kết quả 18/20, và ba trong số các bước xanh có
+ảnh chụp **nói ngược lại điều chúng khẳng định** — S10, S12, S14 khẳng định "còn 0 câu chưa làm · Đã lưu" nhưng
+ảnh là trang chủ đã nộp bài, vì lượt sau ghi đè file của lượt trước. Hai bước đỏ thì ngược lại: S7 đỏ vì bấm
+"Giao bài" hết giờ, nhưng ảnh của nó lại cho thấy "Đã giao · 0/4 đã nộp" — thành quả của lượt kia. Dấu vết rõ
+nhất nằm ở giờ sửa file: S14 lúc 22:42 trong khi S15 lúc 22:40, thứ tự không thể có trong một lượt chạy. Và ở
+ảnh S3: lịch sử "Thay đổi gần đây" có **hai** cặp Duyệt + Hoàn tác thay vì một.
+
+Hai đề trùng tên `E2E · vòng dạy học` cùng tồn tại — đúng cái bẫy §45 vừa ghi, lần này do hai lượt chứ không do
+đặt tên. Đã xoá đề mồ côi, rồi `make e2e-teardown ARGS=--yes` (anh đồng ý) gỡ 4 bài làm và dựng lại mastery:
+`answer_facts` về đúng 16 872, bằng số trước khi chạy.
+
+**Lượt sạch: 20/20.** Ảnh ghi theo đúng thứ tự S1→S20 trong 5 phút, một lượt duy nhất. Đối chiếu số:
+`attempts` 924 → 928 (+4), `answer_facts` 16 872 → 16 912 (+40 = 4 em × 10 câu), `exams` +1 (**một** đề, không
+phải hai), `assignments` +1, câu chưa duyệt 396 → 396 (duyệt rồi hoàn tác, về đúng chỗ). Điểm: thô 5,00 / 4,00 /
+2,00 / 0,55 trên thang 5,5 → **9.09 · 7.27 · 3.64 · 1.00**, đúng bốn con số kịch bản dự đoán từ mẫu trả lời.
+Bản đồ nhiệt bốn màu 91% · 73% · 36% · 10%. "Hay chọn sai: B" hiện ở câu 2, 3, 4 — hai em cùng chọn sai một câu,
+đúng thứ mẫu hs03/hs04 được thiết kế để tạo ra.
+
+**Đọc ảnh vẫn tìm ra một chỗ yếu, dù 20/20 xanh.** S16, S17 và S18 ra **ba khung hình giống hệt nhau**: `scroll
+text=Theo câu hỏi` không làm gì cả vì tiêu đề ấy đã nằm trong khung sẵn, nên bước nói về bảng "Theo câu hỏi" lại
+chụp phần đầu trang. Đổi thành `scroll [data-testid=qs-10]` và thêm `count [data-testid^=qs-] = 10`; chạy lại
+riêng vai báo cáo (chỉ đọc) — giờ khung hình có đủ mười câu với tỉ lệ đúng của từng câu. Đúng câu trong
+`AGENTS.md`: một khẳng định thoả được không phải là một tấm ảnh có ích.
+
+**Hai điều đọc được mà không phải lỗi.** Hàng đợi duyệt đổi thành phần giữa hai lượt (17 rồi 16 đề) vì nó là
+**mẫu ngẫu nhiên 5%** — nên không bao giờ được khẳng định một con số ở đó. Và đề của vòng dạy học vẫn "Môn: Chưa
+chọn"; nhóm theo môn là **theo từng mục** nên trang chủ học sinh vẫn không tiêu đề, chỉ khoảng giữa giao-xong và
+chưa-nộp là hai trạng thái môn gặp nhau trong cùng mục "Đang mở". Đã ghi vào bản spec của trang chủ học sinh.
+
+**Kiểm chứng.** `make e2e` **20/20**, đọc cả 20 ảnh; vai báo cáo chạy lại 5/5 sau khi sửa S18; `student-home`
+2/2 sau khi dựng lại bài mẫu. Sandbox hiện để lại: lớp thử, 4 tài khoản, 10 câu, `E2E · bài mẫu` (chưa ai làm),
+`E2E · vòng dạy học` với 4 bài đã nộp — gỡ bằng `make e2e-teardown ARGS=--yes`.
