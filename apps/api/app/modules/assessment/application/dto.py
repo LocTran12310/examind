@@ -100,6 +100,8 @@ class MyAssignmentView:
     state: str
     attempts: list[AttemptBrief]
     attempts_left: int
+    #: the subject of the exam behind it, so a student's home can group by it; None when the exam has none
+    subject_id: uuid.UUID | None = None
 
 
 @dataclass(frozen=True)

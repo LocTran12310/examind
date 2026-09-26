@@ -20,8 +20,13 @@ export function StudentAssignments() {
         {h.open.length === 0 ? (
           <EmptyState>Không có bài nào đang mở.</EmptyState>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {h.open.map((x) => {
+          h.groups(h.open).map((g) => (
+          <div key={g.key} className="mb-4 last:mb-0">
+            {/* the subject heading appears only when the section holds more than one, so a centre teaching one
+                sees exactly the list it saw before */}
+            {g.name && <h3 className="mb-2 text-sm font-medium text-muted-foreground">{g.name}</h3>}
+            <div className="grid gap-3 sm:grid-cols-2">
+            {g.rows.map((x) => {
               const inProgress = x.attempts.find((a) => a.status === "in_progress");
               return (
                 <Panel key={x.assignment.id} data-testid={`open-${x.assignment.title}`}>
@@ -35,26 +40,36 @@ export function StudentAssignments() {
                 </Panel>
               );
             })}
+            </div>
           </div>
+          ))
         )}
       </section>
       {h.upcoming.length > 0 && (
         <section>
           <h2 className="mb-2 font-medium">Sắp tới</h2>
-          <ul className="space-y-1 text-sm">
-            {h.upcoming.map((x) => (
-              <li key={x.assignment.id} data-testid={`upcoming-${x.assignment.title}`}>
-                {x.assignment.title} · mở lúc {formatDateTime(x.assignment.open_at)}
-              </li>
-            ))}
-          </ul>
+          {h.groups(h.upcoming).map((g) => (
+            <div key={g.key} className="mb-3 last:mb-0">
+              {g.name && <h3 className="mb-1 text-sm font-medium text-muted-foreground">{g.name}</h3>}
+              <ul className="space-y-1 text-sm">
+                {g.rows.map((x) => (
+                  <li key={x.assignment.id} data-testid={`upcoming-${x.assignment.title}`}>
+                    {x.assignment.title} · mở lúc {formatDateTime(x.assignment.open_at)}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </section>
       )}
       {h.done.length > 0 && (
         <section>
           <h2 className="mb-2 font-medium">Đã làm</h2>
+          {h.groups(h.done).map((g) => (
+          <div key={g.key} className="mb-3 last:mb-0">
+            {g.name && <h3 className="mb-1 text-sm font-medium text-muted-foreground">{g.name}</h3>}
           <ul className="divide-y divide-border rounded-xl border border-border bg-card">
-            {h.done.flatMap((x) =>
+            {g.rows.flatMap((x) =>
               x.attempts
                 .filter((a) => a.status === "submitted")
                 .map((a) => (
@@ -73,6 +88,8 @@ export function StudentAssignments() {
                 )),
             )}
           </ul>
+          </div>
+          ))}
         </section>
       )}
     </div>

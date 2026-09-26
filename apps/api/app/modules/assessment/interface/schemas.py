@@ -226,6 +226,7 @@ class MyAssignmentOut(BaseModel):
     state: str
     attempts: list[AttemptBriefOut]
     attempts_left: int
+    subject_id: uuid.UUID | None = None
 
 
 def assignment_out(a: Assignment, students: int = 0, submitted: int = 0, classes: list[str] | None = None) -> AssignmentOut:
@@ -244,7 +245,7 @@ def brief_out(b: AttemptBrief) -> AttemptBriefOut:
 
 def my_assignment_out(v: MyAssignmentView) -> MyAssignmentOut:
     return MyAssignmentOut(assignment=assignment_out(v.assignment), state=v.state, attempts=[brief_out(b) for b in v.attempts],
-                           attempts_left=v.attempts_left)
+                           attempts_left=v.attempts_left, subject_id=v.subject_id)
 
 
 class StartOut(BaseModel):

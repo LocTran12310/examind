@@ -73,6 +73,9 @@ class FakeExams:
     def get_any(self, exam_id):
         return self.rows.get(exam_id)
 
+    def subjects_of(self, exam_ids):
+        return {i: getattr(self.rows.get(i), "subject_id", None) for i in exam_ids}
+
     def add(self, exam):
         self.rows[exam.id] = exam
 
@@ -459,10 +462,14 @@ def test_the_student_side_home_answers_staff_with_their_own_assignments():
     """exam-runner AC-07: a teacher is answered, not refused — and sees their own (nothing), never the student's."""
     w = World(mcq())
     a = w.assignment()
-    home = MyAssignmentsHandler(w.assignments, w.attempts, w.roster, w.clock)
+    home = MyAssignmentsHandler(w.assignments, w.attempts, w.exams, w.roster, w.clock)
     mine = home(STUDENT)
     assert [v.assignment.id for v in mine] == [a.id] and mine[0].state == "open" and mine[0].attempts_left == 1
     assert home(TEACHER) == []
+    # the home screen groups by subject, so each row carries the subject of the exam behind it (none here)
+    assert mine[0].subject_id is None
+    w.exam.subject_id = uuid.uuid4()
+    assert home(STUDENT)[0].subject_id == w.exam.subject_id
 
 
 def test_results_visibility_follows_the_policy():

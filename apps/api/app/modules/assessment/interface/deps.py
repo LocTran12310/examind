@@ -181,7 +181,7 @@ def delete_assignment(db: Session = Depends(get_db)) -> DeleteAssignmentHandler:
 
 
 def my_assignments(db: Session = Depends(get_db)) -> MyAssignmentsHandler:
-    return MyAssignmentsHandler(SqlAssignmentRepository(db), SqlAttemptRepository(db), _roster_of(db), utcnow)
+    return MyAssignmentsHandler(SqlAssignmentRepository(db), SqlAttemptRepository(db), SqlExamRepository(db), _roster_of(db), utcnow)
 
 
 def assignment_paper(db: Session = Depends(get_db)) -> AssignmentPaperHandler:

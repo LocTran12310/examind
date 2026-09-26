@@ -17,7 +17,7 @@ const klass: SchoolClass = { id: "c1", name: "10A1", grade: 10, school_year: "20
 const base: Assignment = { id: "a1", exam_id: "e1", title: "Kiểm tra", open_at: "2026-09-22T00:00:00Z", close_at: "2026-09-29T00:00:00Z", duration_minutes: 45,
   max_attempts: 1, shuffle_questions: true, shuffle_options: true, results_policy: "after_submit", students: 30, submitted: 12, classes: ["10A1", "10A2"] };
 const assignment = (title: string, o: Partial<MyAssignment> = {}): MyAssignment => ({
-  assignment: { ...base, id: title, exam_id: "e", title, submitted: 0, classes: [] }, state: "open", attempts: [], attempts_left: 1, ...o,
+  assignment: { ...base, id: title, exam_id: "e", title, submitted: 0, classes: [] }, state: "open", attempts: [], attempts_left: 1, subject_id: null, ...o,
 });
 const exam: Exam = { id: "e1", title: "Kiểm tra 15 phút", subject_id: null, grade: 10, description: "",
   settings: { points_by_type: { mcq: 0.25, true_false: 1, short_answer: 0.5, essay: 1 }, scale_to: 10 },
@@ -86,5 +86,36 @@ describe("assign and student home", () => {
     expect(screen.getByRole("link", { name: "Xem kết quả" })).toHaveAttribute("href", "/results/t1");
     await userEvent.click(screen.getByRole("button", { name: "Bắt đầu" }));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/exam/att1"));
+  });
+});
+
+describe("bài được giao nhóm theo môn", () => {
+  const taxonomy = (...subjects: { id: string; code: string; name: string }[]) =>
+    route("GET", "/api/taxonomy", { subjects, grades: [], semesters: [] });
+
+  it("một môn thì danh sách phẳng như cũ — tiêu đề môn lặp trên mọi nhóm không phân biệt được gì", async () => {
+    mockFetch(
+      taxonomy({ id: "s1", code: "toan", name: "Toán" }),
+      route("GET", "/api/me/assignments", [assignment("Bài A", { subject_id: "s1" }), assignment("Bài B", { subject_id: "s1" })]),
+    );
+    renderWithQuery(<StudentAssignments />);
+    await screen.findByTestId("open-Bài A");
+    expect(screen.queryByRole("heading", { name: "Toán" })).not.toBeInTheDocument();
+  });
+
+  it("nhiều môn thì mỗi môn một nhóm, và bài chưa rõ môn đứng riêng ở cuối", async () => {
+    mockFetch(
+      taxonomy({ id: "s1", code: "toan", name: "Toán" }, { id: "s2", code: "ly", name: "Vật lý" }),
+      route("GET", "/api/me/assignments", [
+        assignment("Bài Toán", { subject_id: "s1" }),
+        assignment("Bài Lý", { subject_id: "s2" }),
+        assignment("Bài cũ", { subject_id: null }),
+      ]),
+    );
+    renderWithQuery(<StudentAssignments />);
+    await screen.findByTestId("open-Bài Toán");
+    const headings = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
+    // bài không có môn không bị nhận vào môn đứng đầu; nó có nhóm của riêng nó, nói rõ là chưa rõ môn
+    expect(headings).toEqual(["Toán", "Vật lý", "Chưa rõ môn"]);
   });
 });

@@ -21,6 +21,7 @@ from app.shared.infrastructure.schema.assessment import (
     attempt_answers,
     attempts,
     exam_questions,
+    exams,
 )
 
 eq_c, at_c, t_c, f_c = exam_questions.c, attempts.c, assignment_targets.c, answer_facts.c
@@ -41,6 +42,12 @@ class SqlExamRepository(_Repo):
 
     def get_any(self, exam_id: uuid.UUID) -> Exam | None:
         return self.session.get(Exam, exam_id)
+
+    def subjects_of(self, exam_ids: list[uuid.UUID]) -> dict[uuid.UUID, uuid.UUID | None]:
+        if not exam_ids:
+            return {}
+        rows = self.session.execute(select(exams.c.id, exams.c.subject_id).where(exams.c.id.in_(set(exam_ids)))).all()
+        return {i: s for i, s in rows}
 
     def add(self, exam: Exam) -> None:
         self.session.add(exam)

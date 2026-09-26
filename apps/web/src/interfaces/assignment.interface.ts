@@ -38,6 +38,8 @@ export interface MyAssignment {
   state: AssignmentState;
   attempts: AttemptBrief[];
   attempts_left: number;
+  /** the subject of the exam behind it, so the home screen can group by it; null when the exam has none */
+  subject_id: string | null;
 }
 
 /** `GET /assignments/{id}/report`. */
