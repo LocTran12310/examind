@@ -73,7 +73,31 @@ describe("exams list", () => {
     await u.type(await screen.findByLabelText("Tên đề"), "Đề mới");
     await u.click(screen.getByRole("button", { name: "Tạo và soạn đề" }));
     await waitFor(() => expect(currentUrl()).toBe("/org/exams/e9"));
-    expect(lastBody(fetch, "/exams")).toEqual({ title: "Đề mới" });
+    // both labels are optional (A-02): left alone they go as null rather than being dropped, so the server is
+    // told "no subject" instead of "unchanged"
+    expect(lastBody(fetch, "/exams")).toEqual({ title: "Đề mới", subject_id: null, grade: null });
+  });
+
+  it("creates it with the subject and the grade, so the list can classify it at all (AC-01)", async () => {
+    // the reported hole: 0 of 131 exams had a grade because this form only ever asked for a title, and the
+    // "Lớp" column of the list was empty on every single row
+    const fetch = mockFetch(
+      route("POST", "/api/exams/search", searchPage([exam()])),
+      route("GET", "/api/taxonomy", { subjects: [{ id: "s1", code: "toan", name: "Toán" }], grades: [{ id: "g11", level: 11, name: "Lớp 11" }], semesters: [] }),
+      route("POST", "/api/exams", exam({ id: "e9", title: "Đề mới", subject_id: "s1", grade: 11 }), 201),
+    );
+    const u = userEvent.setup();
+    renderWithQuery(<ExamsRoute />);
+    await screen.findByRole("button", { name: "Kiểm tra 15 phút" });
+    await u.click(screen.getByRole("button", { name: /Tạo đề/ }));
+    await u.type(await screen.findByLabelText("Tên đề"), "Đề mới");
+    await u.click(screen.getByRole("combobox", { name: "Môn" }));
+    await u.click(await screen.findByRole("option", { name: "Toán" }));
+    await u.click(screen.getByRole("combobox", { name: "Lớp" }));
+    await u.click(await screen.findByRole("option", { name: "Lớp 11" }));
+    await u.click(screen.getByRole("button", { name: "Tạo và soạn đề" }));
+    // the grade goes as the number the organisation teaches, like every other grade field in the app
+    await waitFor(() => expect(lastBody(fetch, "/exams")).toEqual({ title: "Đề mới", subject_id: "s1", grade: 11 }));
   });
 
   it("deletes the selected exams and refreshes the list", async () => {

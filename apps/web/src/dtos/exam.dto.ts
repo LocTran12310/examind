@@ -2,11 +2,17 @@ import type { BlueprintRow, ExamSettings } from "@/interfaces/exam.interface";
 
 export interface CreateExamBody {
   title: string;
+  /** the exam's own subject: what its matrix and pickers are scoped to. Optional — a draft may not know yet. */
+  subject_id?: string | null;
+  /** the grade the paper is for (10/11/12), not a class */
+  grade?: number | null;
 }
 
 /** `PATCH /exams/{id}`; `settings` is merged on the server (e.g. one type of `points_by_type`). */
 export interface UpdateExamBody {
   title?: string;
+  subject_id?: string | null;
+  grade?: number | null;
   description?: string;
   settings?: { points_by_type?: Partial<ExamSettings["points_by_type"]>; scale_to?: number };
 }

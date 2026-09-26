@@ -1,0 +1,64 @@
+# Managed by scripts/aidlc.py — do not edit by hand.
+# Editing this file to skip a gate defeats the point of having one.
+feature: exam-labels-and-roster-fill
+slug: 2026092601-exam-labels-and-roster-fill
+profile: none
+created: 2026-09-26T10:33:55
+ruleset: 7
+current_gate: G3
+history:
+  - gate: G0
+    action: passed
+    at: 2026-09-26T10:36:17
+    by: Loc Tran
+    evidence: architecture map verified by Loc Tran (blanket pre-approval in chat, 2026-09-22 — confirm at final review); 00-intent.md complete
+  - gate: G1
+    action: passed
+    at: 2026-09-26T10:36:17
+    by: Loc Tran
+    evidence: 9 assumptions, none blocking-and-pending; 11 acceptance criteria defined
+  - gate: G2
+    action: passed
+    at: 2026-09-26T10:36:38
+    by: Loc Tran
+    evidence: 4 ADR(s) recorded
+  - gate: G3
+    action: passed
+    at: 2026-09-26T10:37:30
+    by: Loc Tran
+    evidence: graph valid - 3 UoW, 5 tickets, no cycles
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-26T10:37:57
+    by: Claude Opus 5
+    ticket: T-01-01
+  - gate: G4
+    action: scope
+    at: 2026-09-26T10:39:22
+    by: Loc Tran
+    ticket: T-01-01
+  - gate: G4
+    action: scope
+    at: 2026-09-26T10:39:39
+    by: Loc Tran
+    ticket: T-01-01
+  - gate: G4
+    action: evidence
+    at: 2026-09-26T10:39:44
+    by: Loc Tran
+    ticket: T-01-01
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-26T10:39:44
+    by: Loc Tran
+    ticket: T-01-01
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-26T10:39:52
+    by: Claude Opus 5
+    ticket: T-01-02
+  - gate: G4
+    action: scope
+    at: 2026-09-26T10:40:50
+    by: Loc Tran
+    ticket: T-01-02
