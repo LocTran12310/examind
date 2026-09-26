@@ -1,6 +1,7 @@
 import { useMe } from "@/hooks/common/use-me";
 import { usePracticeHistoryQuery, useMyMasteryQuery } from "@/hooks/react-query/use-query-practice";
 import { useGroupStatsQuery, useTopicStatsQuery } from "@/hooks/react-query/use-query-stats";
+import { weakestSubject } from "@/lib/page-libs/my-stats/weakest-subject";
 
 /** "Tiến độ của tôi": the caller's own answers per topic and type, mastery, and practice history.
  *  Roles nest, so staff reach this page too and read their own — empty, because nobody assigns them work.
@@ -17,5 +18,8 @@ export function useMyStatsPage() {
   const { data: mastery } = useMyMasteryQuery();
   const { data: practice } = usePracticeHistoryQuery();
   return { ready: !!(topics && types && mastery), canPractise: me.role === "student",
+           // the subject step of "Tạo đề ôn tập" opens here: these rows already say where the student is
+           // furthest behind, so nothing extra is fetched to preselect it (A-03)
+           weakestSubject: weakestSubject(topics ?? []),
            topics: topics ?? [], types: types ?? [], mastery: mastery ?? [], practice };
 }

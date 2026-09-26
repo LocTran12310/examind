@@ -3,7 +3,7 @@
 # Ticket graph — 2026092602-student-side-subjects
 
 - Units of Work: **2**
-- Tickets: **4** (1 done)
+- Tickets: **4** (2 done)
 - Total effort: **1.5d**
 - Critical path: **6h** across 2 tickets
 - Theoretical minimum duration with unlimited parallelism: **6h**
@@ -24,7 +24,7 @@ slice — the floor on how fast it can finish no matter how many people work on 
 graph LR
   subgraph UOW_01["UOW-01 · Đề ôn tập mang môn của nó"]
     T_01_01["✓ T-01-01<br/>Môn đi xuyên cổng analytics tới cái đề"]
-    T_01_02["T-01-02<br/>Bước chọn môn ở nút Tạo đề ôn tập"]
+    T_01_02["✓ T-01-02<br/>Bước chọn môn ở nút Tạo đề ôn tập"]
   end
   subgraph UOW_02["UOW-02 · Tiến độ của tôi đọc được khi có nhiều môn"]
     T_02_01["T-02-01<br/>Bộ chọn môn kéo cả bốn khối của trang tiến độ"]
@@ -44,7 +44,13 @@ Tickets in the same wave have no dependency between them and can run in parallel
 
 ## Write-conflict hazards
 
-None: every pair that writes a shared path is ordered by a dependency.
+These pairs have no ordering constraint, so a scheduler may run them at the
+same time — and they write the same path. Sequential execution is safe;
+parallel agents will lose one side's work.
+
+| A | B | Contested path |
+|---|---|---|
+| T-01-02 | T-02-01 | `apps/web/src/components/page-components/MyStats/MyStatsPage.tsx`, `apps/web/src/hooks/page-hooks/my-stats/use-my-stats-page.ts` |
 
 ## Critical path
 
@@ -58,6 +64,6 @@ adding people to tickets off this path will not make the feature ship sooner.
 | ID | UoW | Layer | Type | Est | Depends on | Verifies | Status |
 |----|-----|-------|------|-----|-----------|----------|--------|
 | T-01-01 | UOW-01 | api | feature | 3h | — | AC-03 | done |
-| T-01-02 | UOW-01 | web | feature | 3h | T-01-01 | AC-01, AC-02 | todo |
+| T-01-02 | UOW-01 | web | feature | 3h | T-01-01 | AC-01, AC-02 | done |
 | T-02-01 | UOW-02 | web | feature | 4h | — | AC-04, AC-05 | todo |
 | T-02-02 | UOW-02 | web | feature | 2h | — | AC-06, AC-07 | todo |

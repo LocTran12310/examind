@@ -36,9 +36,12 @@ t(id="T-01-01", uow="UOW-01", title="Môn đi xuyên cổng analytics tới cái
              "Không kèm thì đề không có môn, như cũ", "Đề ôn của giáo viên giao không đổi gì"])
 t(id="T-01-02", uow="UOW-01", title="Bước chọn môn ở nút Tạo đề ôn tập", layer="web", estimate="3h",
   depends_on=["T-01-01"], verifies=["AC-01", "AC-02"], assumptions=["A-01", "A-02", "A-03"],
-  tests=[f"{S}/__tests__/practice.test.tsx"],
+  tests=[f"{S}/__tests__/practice.test.tsx", f"{S}/__tests__/my-stats.test.tsx"],
   touches=[f"{S}/components/common/PracticeButton/PracticeButton.tsx",
-           f"{S}/hooks/common/use-practice-button.ts"],
+           f"{S}/hooks/common/use-practice-button.ts",
+           f"{S}/lib/page-libs/my-stats/weakest-subject.ts",
+           f"{S}/hooks/page-hooks/my-stats/use-my-stats-page.ts",
+           f"{S}/components/page-components/MyStats/MyStatsPage.tsx"],
   context="Nhiều môn thì hỏi, mặc định là môn yếu nhất (A-03); một môn thì gửi thẳng, không hỏi (A-02) — nhưng "
           "vẫn gửi, để đề luôn có môn.",
   done_when=["Nhiều môn thì có bước chọn, mặc định môn yếu nhất", "Một môn thì không hỏi mà vẫn gửi môn",

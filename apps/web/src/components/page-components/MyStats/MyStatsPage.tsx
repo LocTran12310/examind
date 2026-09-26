@@ -15,7 +15,7 @@ export function MyStatsPage() {
   if (!p.ready) return null;
   return (
     <>
-      <PageHeader title="Tiến độ của tôi" description="Tỉ lệ làm đúng theo chuyên đề và loại câu" actions={p.canPractise ? <PracticeButton /> : undefined} />
+      <PageHeader title="Tiến độ của tôi" description="Tỉ lệ làm đúng theo chuyên đề và loại câu" actions={p.canPractise ? <PracticeButton defaultSubjectId={p.weakestSubject} /> : undefined} />
       {p.topics.length === 0 ? (
         <EmptyState>Làm bài được giao để xem tiến độ của bạn.</EmptyState>
       ) : (

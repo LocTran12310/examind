@@ -1,5 +1,6 @@
 import { screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { weakestSubject } from "@/lib/page-libs/my-stats/weakest-subject";
 import MyStatsPage from "@/app/(app)/me/stats/page";
 import { MeProvider } from "@/hooks/common/use-me";
 import { mockFetch, renderWithQuery as render, route, me } from "./helpers";
@@ -33,5 +34,24 @@ describe("my stats", () => {
     // the order carries the same information; calling a student's topic "cần ôn nhất" passes a verdict (AC-04, ADR-02)
     expect(screen.getByRole("heading", { name: "Mức nắm vững (thấp trước)" })).toBeInTheDocument();
     expect(document.body).not.toHaveTextContent(/yếu nhất|cần ôn nhất/);
+  });
+});
+
+describe("môn đang yếu nhất", () => {
+  const row = (subject: string | null, points: number, max: number, answered = 4) =>
+    ({ id: subject ?? "x", parent_id: null, name: "n", path: "p", depth: 1, level_kind: "strand", subject_id: subject, points, max_points: max, answered, ratio: max ? points / max : null });
+
+  it("là môn có tỉ lệ thấp nhất, không phải môn đầu bảng", () => {
+    expect(weakestSubject([row("s1", 8, 10), row("s2", 2, 10)])).toBe("s2");
+  });
+
+  it("một môn chưa ai trả lời câu nào thì không phải môn yếu nhất — chưa đo khác với yếu", () => {
+    // cùng một luật mà các dải mức nắm vững được dựng trên: 0 lượt là "chưa đủ dữ liệu", không phải 0%
+    expect(weakestSubject([row("s1", 8, 10), row("s2", 0, 0, 0)])).toBe("s1");
+  });
+
+  it("chưa có gì để nói thì trả về null, chứ không đoán bừa một môn", () => {
+    expect(weakestSubject([])).toBeNull();
+    expect(weakestSubject([row(null, 5, 10)])).toBeNull(); // hàng "Chưa phân loại" không thuộc môn nào
   });
 });
