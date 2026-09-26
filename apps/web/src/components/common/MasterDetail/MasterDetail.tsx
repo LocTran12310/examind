@@ -7,6 +7,11 @@ import { splitStorage } from "@/lib/common/split-storage";
 /**
  * Table on top, "Chi tiết" below, with a draggable divider. The split is remembered
  * per screen (`id`). Without a detail the table takes the whole height.
+ *
+ * What `detail` owes this frame: it is given a height and must live inside it — `flex h-full min-h-0 flex-col`
+ * with one part that scrolls. A detail that grows instead (`min-h-full`) makes this section the scroller, and
+ * then the table inside it loses everything that only stays still when the table itself owns the scrolling:
+ * its toolbar, its sticky header and its pagination all ride away with the rows.
  */
 export function MasterDetail({ id, master, detail }: { id: string; master: React.ReactNode; detail?: React.ReactNode | null }) {
   const { defaultLayout, onLayoutChanged } = useDefaultLayout({ id: `examind.split.${id}`, storage: splitStorage() });

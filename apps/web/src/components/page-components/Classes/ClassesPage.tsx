@@ -37,7 +37,7 @@ export function ClassesPage() {
           }
           detail={
             p.active && (
-              <Card className="min-h-full">
+              <Card className="flex h-full min-h-0 flex-col">
                 <CardHeader>
                   <CardTitle>
                     Chi tiết · Lớp {p.active.name} <span className="font-normal text-muted-foreground">({p.active.school_year})</span>
@@ -50,7 +50,7 @@ export function ClassesPage() {
                     </Button>
                   </CardAction>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="min-h-0 flex-1">
                   <MemberManager classId={p.active.id} />
                 </CardContent>
               </Card>

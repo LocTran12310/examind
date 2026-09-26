@@ -68,11 +68,11 @@ export function OrgsPage() {
           detail={
             p.active &&
             !p.active.is_system && (
-              <Card className="min-h-full">
+              <Card className="flex h-full min-h-0 flex-col">
                 <CardHeader>
                   <CardTitle>Thành viên · {p.active.name}</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="min-h-0 flex-1">
                   <MembershipTable key={p.active.id} side={{ kind: "org", orgId: p.active.id, orgName: p.active.name }} />
                 </CardContent>
               </Card>

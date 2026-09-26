@@ -19,14 +19,14 @@ export function AccountsPage() {
         master={<DataTable useRows={useAccountSearchQuery} columns={p.columns} getRowId={(a) => a.id} selectable={false} onRowActivate={p.setActive} activeRowId={p.active?.id} />}
         detail={
           p.active && (
-            <Card className="min-h-full">
+            <Card className="flex h-full min-h-0 flex-col">
               <CardHeader>
                 <CardTitle>Tổ chức của {p.active.full_name}</CardTitle>
                 <CardDescription>
                   Đăng nhập: {p.active.home_org_code} / {p.active.username}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="min-h-0 flex-1">
                 <MembershipTable key={p.active.id} side={{ kind: "user", userId: p.active.id, userName: p.active.full_name }} />
               </CardContent>
             </Card>

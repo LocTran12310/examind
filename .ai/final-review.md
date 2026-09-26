@@ -1404,3 +1404,33 @@ sinh trong cùng một bảng, ảnh mobile cho thấy ba hàng chờ, hàng nh�
 cuộn, hàng nhập nằm ngay sau hàng cuối chứ không bị đẩy xuống mép đáy — đó là hành vi đúng của `sticky`, và nó
 chỉ "dính" khi có gì đó để cuộn qua. Ghim nó xuống mép khi bảng còn trống sẽ để lại một khoảng trắng giữa danh
 sách và ô nhập.
+
+## 41. Bảng "Chi tiết" giữ được thanh công cụ, tiêu đề và phân trang (2026-09-26)
+
+Ở mục "Chi tiết" của trang Lớp học, cuộn danh sách học sinh là **cả ba thứ ấy trôi đi theo**. Nguyên nhân không
+nằm ở bảng: `DataTable` vốn đã là một cột flex có thanh công cụ và phân trang **ngoài** vùng cuộn, và hàng tiêu
+đề `sticky top-0` **trong** vùng cuộn. Nó chỉ cần được cho một chiều cao để làm việc ấy.
+
+Cái không cho là thẻ `Card` của mục chi tiết: `min-h-full` nghĩa là **nở ra theo nội dung**, nên phần cuộn thật
+sự là cả mục "Chi tiết", còn bảng bên trong không bao giờ phải cuộn — và thứ gì ở trong một trang đang cuộn thì
+cuộn cùng trang. Đổi thành `flex h-full min-h-0 flex-col` với `CardContent` là `min-h-0 flex-1`.
+
+**Ba trang cùng lỗi, sửa cả ba**: Lớp học, Tổ chức, Tài khoản — cả ba đều là một bảng trong thẻ chi tiết, và cả
+ba đều viết `min-h-full`. Trang Đề thi thì vốn đã đúng; nó là bản mẫu.
+
+**Hợp đồng ấy nay được viết ở `MasterDetail`**, chỗ duy nhất biết về nó: mục chi tiết **được cho** một chiều cao
+và phải sống trong đó. Một chi tiết nở ra thay vì vừa khít sẽ biến chính mục ấy thành thứ cuộn, và bảng bên
+trong mất hết những gì chỉ đứng yên khi **bảng tự sở hữu phần cuộn của mình**.
+
+**Bước kiểm đầu tiên đỏ vì một bộ chọn tưởng đúng.** `[data-slot=data-table]:last-of-type` — "cái bảng dưới" —
+thật ra khớp **cả hai**: `:last-of-type` xét theo anh em cùng cha, mà hai bảng không cùng cha nên mỗi cái đều là
+"cái cuối" trong cha của mình. Giới hạn vào `section[aria-label="Chi tiết"]` là xong.
+
+**Và "dính" vẫn không khẳng định được**: Playwright coi một phần tử là visible kể cả khi nó nằm ngoài khung
+nhìn. Bước kiểm vì vậy khẳng định **cấu trúc mà tính dính đòi hỏi** — thanh công cụ, hàng tiêu đề và dòng phân
+trang đều nằm bên trong đúng một `data-table` của mục chi tiết — rồi cuộn tới hàng cuối và để **tấm ảnh** nói
+phần còn lại. Ảnh cho thấy danh sách đã cuộn tới hs019/hs020 mà thanh công cụ, hàng lọc và dòng "Hiển thị 1–20
+trên 25 kết quả" vẫn nguyên chỗ.
+
+**Kiểm chứng.** Web **292 passed**, tsc và ESLint xanh. Trình duyệt: `owner-walk-2` **14/14** hai viewport, đọc
+từng ảnh.
