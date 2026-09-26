@@ -126,6 +126,8 @@ class PracticeAttemptRow:
     submitted_at: datetime | None
     score10: float | None  # on a 10 scale, once submitted
     settings: dict
+    #: the subject the exam was drawn inside; None for the runs made before an exam recorded one
+    subject_id: uuid.UUID | None = None
 
 
 @dataclass(frozen=True)

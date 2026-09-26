@@ -89,8 +89,11 @@ def rollup(leaves: list[tuple[TopicMastery, TopicNode]], topics: dict[uuid.UUID,
     out = []
     for tid, a in agg.items():
         t = topics[tid]
+        # the subject rides along so a reader can narrow to one without asking the taxonomy a second time; the
+        # topic already knows it (TopicNode.subject_id), so this is carrying a fact, not deriving one
         row = {"topic_id": tid, "parent_id": t.parent_id, "name": t.name, "path": t.path, "depth": t.path.count(".") + 1,
-               "mastery": round(a["w"] / a["n"], 4) if a["n"] else None, "answers": a["n"], "tracked": a["leaf"]}
+               "subject_id": t.subject_id, "mastery": round(a["w"] / a["n"], 4) if a["n"] else None,
+               "answers": a["n"], "tracked": a["leaf"]}
         out.append({**row, "enough_data": enough(row["answers"]), "weak": is_weak(*_level(row))})
     return sorted(out, key=lambda r: r["path"])
 

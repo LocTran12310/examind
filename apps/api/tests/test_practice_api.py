@@ -75,3 +75,10 @@ def test_practice_exam_records_the_subject_it_was_drawn_inside(client, db):
     plain = s.post("/api/me/practice", json={"count": 5}).json()
     assert str(subject_of(scoped["attempt_id"])) == subject
     assert subject_of(plain["attempt_id"]) is None
+
+    # and the two lists a student narrows by subject say which subject each row is (ADR-03): without that, a
+    # picker on the progress page could only ever narrow half the screen
+    history = {h["attempt_id"]: h["subject_id"] for h in s.get("/api/me/practice").json()}
+    assert history[scoped["attempt_id"]] == subject
+    assert history[plain["attempt_id"]] is None  # asked without one: not claimed by any subject
+    assert all("subject_id" in row for row in s.get("/api/me/mastery").json())

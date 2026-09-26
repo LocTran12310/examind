@@ -46,8 +46,22 @@ t(id="T-01-02", uow="UOW-01", title="Bước chọn môn ở nút Tạo đề ô
           "vẫn gửi, để đề luôn có môn.",
   done_when=["Nhiều môn thì có bước chọn, mặc định môn yếu nhất", "Một môn thì không hỏi mà vẫn gửi môn",
              "Ngân hàng môn ấy trống thì nói rõ là môn ấy chưa có câu"])
+t(id="T-02-00", uow="UOW-02", title="Mức nắm vững và lịch sử ôn tập nói ra môn của từng hàng", layer="api", estimate="3h",
+  verifies=["AC-05", "AC-07"], assumptions=["A-05", "A-08"],
+  tests=[f"{API}/tests/test_practice_api.py", f"{API}/tests/unit/test_analytics_handlers.py"],
+  touches=[f"{M}/analytics/domain/services/mastery.py",
+           f"{M}/analytics/domain/value_objects.py",
+           f"{M}/analytics/infrastructure/adapters/assessment.py",
+           f"{M}/assessment/application/dto.py",
+           f"{M}/assessment/infrastructure/read_models.py",
+           f"{M}/analytics/application/queries/my_practice.py"],
+  context="ADR-03: một bộ chọn chỉ áp cho nửa trang là cái bẫy đọc số tệ nhất. Hai danh sách này ngắn (≤20 lượt, "
+          "vài chục chuyên đề) nên chúng chỉ cần NÓI RA môn của từng hàng, còn lọc thì làm ở tầng đọc — rẻ hơn "
+          "luồn một bộ lọc qua ba lớp, và còn hiện được môn lên màn hình. TopicNode đã mang subject_id sẵn.",
+  done_when=["Mỗi hàng mức nắm vững có subject_id", "Mỗi lượt ôn tập có subject_id",
+             "Lượt cũ không có môn thì trả null chứ không đoán"])
 t(id="T-02-01", uow="UOW-02", title="Bộ chọn môn kéo cả bốn khối của trang tiến độ", layer="web", estimate="4h",
-  verifies=["AC-04", "AC-05"], assumptions=["A-04", "A-05"],
+  depends_on=["T-02-00"], verifies=["AC-04", "AC-05"], assumptions=["A-04", "A-05"],
   tests=[f"{S}/__tests__/my-stats.test.tsx"],
   touches=[f"{S}/components/page-components/MyStats/MyStatsPage.tsx",
            f"{S}/hooks/page-hooks/my-stats/use-my-stats-page.ts",

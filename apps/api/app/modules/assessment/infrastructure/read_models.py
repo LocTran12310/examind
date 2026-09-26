@@ -188,7 +188,8 @@ class SqlPersonalReader:
                                     .where(at_c.student_id == student_id, at_c.assignment_id.is_(None), e_c.organization_id == org_id)
                                     .order_by(at_c.started_at.desc()).limit(limit)).all()
         return [PracticeAttemptRow(a.id, e.title, a.status, a.started_at, a.submitted_at,
-                                   scaled(a.score or 0, a.max_score or 0) if a.status == "submitted" else None, dict(e.settings or {}))
+                                   scaled(a.score or 0, a.max_score or 0) if a.status == "submitted" else None,
+                                   dict(e.settings or {}), e.subject_id)
                 for a, e in rows]
 
     def latest_review(self, org_id: uuid.UUID, student_id: uuid.UUID) -> PersonalReviewRow | None:

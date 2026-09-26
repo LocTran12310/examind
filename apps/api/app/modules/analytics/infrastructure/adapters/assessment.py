@@ -37,7 +37,7 @@ class AssessmentExams:
         return self.assessment.assign_personal(org_id, exam_id, student_id, title, open_at, close_at, duration_minutes, created_by)
 
     def practice_attempts(self, org_id: uuid.UUID, student_id: uuid.UUID, limit: int) -> list[PracticeAttempt]:
-        return [PracticeAttempt(r.attempt_id, r.title, r.status, r.started_at, r.submitted_at, r.score10, r.settings)
+        return [PracticeAttempt(r.attempt_id, r.title, r.status, r.started_at, r.submitted_at, r.score10, r.settings, r.subject_id)
                 for r in self.assessment.practice_attempts(org_id, student_id, limit)]
 
     def latest_review(self, org_id: uuid.UUID, student_id: uuid.UUID) -> ReviewStatus | None:
