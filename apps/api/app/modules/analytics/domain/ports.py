@@ -86,7 +86,10 @@ class Assessment(Protocol):
     """Exams, assignments and attempts (assessment context) for personal review exams."""
 
     def create_exam(self, org_id: uuid.UUID, title: str, created_by: uuid.UUID | None, adaptive: dict,
-                    question_ids: list[uuid.UUID]) -> uuid.UUID: ...
+                    question_ids: list[uuid.UUID], subject_id: uuid.UUID | None = None) -> uuid.UUID:
+        """`subject_id` is the subject the plan was drawn inside. It is known here, so the exam records it
+        rather than leaving someone to infer it later from the questions (ADR-01)."""
+        ...
 
     def start_attempt(self, org_id: uuid.UUID, exam_id: uuid.UUID, student_id: uuid.UUID, deadline: datetime) -> uuid.UUID: ...
 

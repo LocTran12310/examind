@@ -26,8 +26,8 @@ class AssessmentExams:
         self.assessment = assessment
 
     def create_exam(self, org_id: uuid.UUID, title: str, created_by: uuid.UUID | None, adaptive: dict,
-                    question_ids: list[uuid.UUID]) -> uuid.UUID:
-        return self.assessment.create_personal_exam(org_id, title, created_by, adaptive, list(question_ids))
+                    question_ids: list[uuid.UUID], subject_id: uuid.UUID | None = None) -> uuid.UUID:
+        return self.assessment.create_personal_exam(org_id, title, created_by, adaptive, list(question_ids), subject_id)
 
     def start_attempt(self, org_id: uuid.UUID, exam_id: uuid.UUID, student_id: uuid.UUID, deadline: datetime) -> uuid.UUID:
         return self.assessment.new_attempt(org_id, exam_id, student_id, deadline).id

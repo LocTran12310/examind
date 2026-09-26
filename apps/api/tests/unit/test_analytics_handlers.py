@@ -185,9 +185,11 @@ class FakeAssessment:
         self.exams, self.attempts, self.assigned = {}, [], []
         self.practice, self.reviews = [], {}
 
-    def create_exam(self, org_id, title, created_by, adaptive, question_ids):
+    def create_exam(self, org_id, title, created_by, adaptive, question_ids, subject_id=None):
         exam_id = uuid.uuid4()
-        self.exams[exam_id] = {"title": title, "adaptive": adaptive, "questions": list(question_ids), "created_by": created_by}
+        # the subject is kept like the real adapter keeps it: a fact recorded at build time, not read back later
+        self.exams[exam_id] = {"title": title, "adaptive": adaptive, "questions": list(question_ids),
+                               "created_by": created_by, "subject_id": subject_id}
         return exam_id
 
     def start_attempt(self, org_id, exam_id, student_id, deadline):
@@ -450,6 +452,11 @@ def test_start_practice_creates_the_exam_and_an_hour_long_attempt():
     assert exam["title"] == "Đề ôn tập – An" and exam["adaptive"]["student_id"] == str(STUDENT.user_id)
     assert assessment.attempts[0][2] == NOW + timedelta(minutes=60)
     assert out["groups"] == plan_summary({"adaptive": exam["adaptive"]})["groups"] and out["note"] == exam["adaptive"]["note"]
+    assert exam["subject_id"] is None  # asked without a subject: the exam records none rather than guessing
+    # asked inside one, the exam keeps it — the plan was drawn there, so it is a fact and not an inference
+    subject = uuid.uuid4()
+    handle(STUDENT, StartPractice(count=3, subject_id=subject))
+    assert [e["subject_id"] for e in assessment.exams.values()][-1] == subject
     with pytest.raises(Forbidden):
         handle(TEACHER, StartPractice())
     empty = StartPracticeHandler(planner(pool=FakePool(per_topic=0, loose=0)), assessment, FakeRoster([me]), lambda: NOW, uow)

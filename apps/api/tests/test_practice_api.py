@@ -1,6 +1,9 @@
 from datetime import timedelta
 
+from sqlalchemy import select
+
 from app.shared.domain.clock import utcnow as now
+from app.shared.infrastructure.schema.assessment import attempts, exams
 from tests.exam_helpers import display_key, klass_with_student, login
 from tests.test_mastery import take
 
@@ -55,3 +58,20 @@ def test_teacher_assigns_personal_review_to_class(client, db):
     assert {o["review"]["assignment_id"] for o in ov2}.isdisjoint({o["review"]["assignment_id"] for o in ov})
     assert login(client, "trungtama", "hs01").post(f"/api/classes/{klass['id']}/adaptive-assignments", json={
         "count": 5, "open_at": now().isoformat(), "close_at": (now() + timedelta(days=1)).isoformat()}).status_code == 403
+
+
+def test_practice_exam_records_the_subject_it_was_drawn_inside(client, db):
+    """The plan is built inside one subject, so the exam says which one (ADR-01) — nobody has to read the
+    questions back to find out. Asked without a subject, the exam records none rather than guessing."""
+    take(client, db, right=False)
+    s = login(client, "trungtama", "hs01")
+    subject = client.get("/api/taxonomy").json()["subjects"][0]["id"]
+
+    def subject_of(attempt_id: str):
+        exam_id = db.scalar(select(attempts.c.exam_id).where(attempts.c.id == attempt_id))
+        return db.scalar(select(exams.c.subject_id).where(exams.c.id == exam_id))
+
+    scoped = s.post("/api/me/practice", json={"count": 5, "subject_id": subject}).json()
+    plain = s.post("/api/me/practice", json={"count": 5}).json()
+    assert str(subject_of(scoped["attempt_id"])) == subject
+    assert subject_of(plain["attempt_id"]) is None

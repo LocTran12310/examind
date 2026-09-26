@@ -28,7 +28,8 @@ t(id="T-01-01", uow="UOW-01", title="Môn đi xuyên cổng analytics tới cái
   touches=[f"{M}/analytics/domain/ports.py",
            f"{M}/analytics/infrastructure/adapters/assessment.py",
            f"{M}/analytics/application/commands/start_practice.py",
-           f"{M}/assessment/application/api.py"],
+           f"{M}/assessment/application/api.py",
+           f"{M}/assessment/application/commands/create_personal_exam.py"],
   context="ADR-01. Kế hoạch đã được dựng trong phạm vi một môn nên môn là dữ kiện đã biết lúc tạo đề; ghi nó lên "
           "exams.subject_id là ghi lại sự thật. Không đụng assign_class_review (ADR-02).",
   done_when=["POST /me/practice kèm subject_id thì đề mang đúng môn ấy",

@@ -32,8 +32,9 @@ class StartPracticeHandler:
             raise Conflict("Ngân hàng chưa có câu hỏi phù hợp", code="empty_bank")
         me = self.roster.person(actor.user_id)
         adaptive = adaptive_settings(actor.user_id, plan)
+        # the plan was drawn inside this subject, so the exam says so — nobody has to read the questions back
         exam_id = self.assessment.create_exam(actor.org_id, f"Đề ôn tập – {me.full_name if me else ''}", actor.user_id, adaptive,
-                                              [p.question_id for p in plan.picks])
+                                              [p.question_id for p in plan.picks], cmd.subject_id)
         attempt_id = self.assessment.start_attempt(actor.org_id, exam_id, actor.user_id, self.clock() + timedelta(minutes=PRACTICE_MINUTES))
         self.uow.commit()
         return {"attempt_id": attempt_id, "question_count": len(plan.picks), **plan_summary({"adaptive": adaptive})}

@@ -51,10 +51,10 @@ class AssessmentApi:
     # ------------------------------------------------------------------ analytics (personal review exams)
 
     def create_personal_exam(self, org_id: uuid.UUID, title: str, created_by: uuid.UUID | None, adaptive: dict,
-                             question_ids: list[uuid.UUID]) -> uuid.UUID:
+                             question_ids: list[uuid.UUID], subject_id: uuid.UUID | None = None) -> uuid.UUID:
         """A personal review exam from analytics' plan; flushed with the caller's transaction."""
         return CreatePersonalExamHandler(self.exams, self.bank, self.uow)(
-            CreatePersonalExam(org_id, title, created_by, dict(adaptive), tuple(question_ids)))
+            CreatePersonalExam(org_id, title, created_by, dict(adaptive), tuple(question_ids), subject_id))
 
     def assign_personal(self, org_id: uuid.UUID, exam_id: uuid.UUID, student_id: uuid.UUID, title: str, open_at: datetime,
                         close_at: datetime, duration_minutes: int, created_by: uuid.UUID | None) -> uuid.UUID:
