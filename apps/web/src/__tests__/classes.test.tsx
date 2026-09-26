@@ -188,6 +188,22 @@ describe("tìm nâng cao khi thêm học sinh", () => {
     expect(f.mock.calls.filter((c) => c[0] === "/api/classes/c1/members")).toHaveLength(1);
   });
 
+  it("em đã ở trong lớp xuống cuối, để màn hình đầu tiên không toàn ô không tích được", async () => {
+    // mở từ trong một lớp thì chính học sinh của lớp ấy khớp trước theo tên, và cả màn hình đầu là những dòng
+    // "đã ở trong lớp" — thấy được trên ảnh chụp kiểm chứng, sửa bằng thứ tự chứ không bằng cách giấu chúng đi
+    mockFetch(
+      route("POST", "/api/classes/search", searchPage([klass({ id: "c1" })])),
+      found([student("hs01", ["c1"]), student("hs02"), student("hs03", ["c1"]), student("hs04")]),
+    );
+    const u = userEvent.setup();
+    render(<MemberManager classId="c1" />);
+    await u.click(await screen.findByRole("button", { name: "Thêm học sinh" }));
+    await u.click(await screen.findByRole("tab", { name: "Tìm từng em" }));
+    await u.click(screen.getByRole("button", { name: "Tìm nâng cao" }));
+    const names = [...(await screen.findByTestId("wide-results")).querySelectorAll("li")].map((li) => li.textContent?.trim().slice(0, 4));
+    expect(names).toEqual(["HS02", "HS04", "HS01", "HS03"]);
+  });
+
   it("nói ra khi còn kết quả ngoài trang đang xem", async () => {
     // một danh sách bị cắt mà không nói gì là cách một giáo viên kết luận rằng học sinh ấy không tồn tại
     mockFetch(route("POST", "/api/classes/search", searchPage([klass({ id: "c1" })])), found([student("hs01")], 51));

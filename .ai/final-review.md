@@ -1214,3 +1214,45 @@ trong cơ sở dữ liệu — đúng tình huống anh gặp khi lập lớp ch
 **Kiểm chứng.** API **579 passed, 1 skipped**; web 264 → **274 passed** (10 test mới), tsc và ESLint xanh. Trình
 duyệt: 5 bước × 2 viewport, **10/10**, đọc từng ảnh. Dấu vết trên dữ liệu thật: một đề `E2E · nhãn đề` được tạo
 rồi xoá ngay trong cùng lượt chạy; đếm lại sau khi chạy — 0 đề còn sót, 0 học sinh bị xếp vào lớp nào.
+
+## 36. Ba chỗ nữa từ lần anh đi tiếp một vòng (2026-09-26)
+
+Không lập kế hoạch AI-DLC: ba chỗ sửa rời nhau, cùng một buổi, giống §34. Việc thứ ba giao cho một agent phụ
+chạy song song (anh yêu cầu chia việc); tôi đọc lại diff, tự chạy lại toàn bộ kiểm tra và tự kiểm trên trình
+duyệt trước khi commit.
+
+**1. Danh sách đề nói môn của từng đề.** Cùng một hình dạng lỗi như khối lớp: `exams.subject_id` có sẵn và
+`POST /exams/search` đã lọc theo nó từ lâu — màn hình chưa bao giờ hiện. Với ngân hàng một môn thì chẳng ai thấy
+gì; thêm môn thứ hai là trang này thành một đống đề không phân biệt được. **Chưa làm tab theo môn** kiểu ngân
+hàng câu hỏi: tab cần số đếm từng môn, tức thêm một endpoint facets cho đề — đã nói trước thay vì tự làm.
+
+**2. Thêm học sinh: ô tìm kèm nút mở bảng tìm rộng.** Lọc theo lớp, "Chọn tất cả", tích từng em, thêm trong một
+lời gọi. **Một chỗ làm khác cái anh mô tả**: anh bảo nút ấy mở *dialog*, nhưng "Thêm học sinh" **đã là** một
+dialog, và dialog chồng dialog là hai phím Escape với hai focus trap trên một màn hình. Bảng rộng vì vậy thay
+nội dung của chính hộp đang mở, có nút "Quay lại".
+
+Danh sách cắt ở 50 và **nói ra còn bao nhiêu kết quả nữa** — một danh sách bị cắt mà im lặng là cách người dùng
+kết luận rằng học sinh ấy không tồn tại.
+
+**Và ảnh kiểm chứng bắt được một lỗi của chính bản sửa này.** Mở từ trong một lớp thì học sinh của chính lớp ấy
+khớp trước theo tên, nên **cả màn hình đầu tiên là những dòng "đã ở trong lớp"** — không tích được một ô nào.
+Sửa bằng **thứ tự**, không bằng cách giấu chúng đi: em đã ở trong lớp vẫn có mặt (biết "em ấy đã ở trong lớp"
+tốt hơn là tưởng em ấy không tồn tại) nhưng xuống cuối. Đây là thứ chỉ ảnh chụp nói ra được; mọi khẳng định đều
+xanh trước và sau.
+
+**3. Trang "Chuyển năm học" gập lại theo lớp.** Trước: mỗi lớp là một bảng phẳng toàn bộ học sinh — 7 khối × 5
+lớp × 25 em là ~900 dòng để cuộn. Nay mỗi lớp là **một dòng**, và dòng ấy vẫn nói đủ cả kế hoạch: tên lớp → lớp
+đích (vẫn sửa được tại chỗ), sĩ số, tóm tắt đã đặt gì ("Lên lớp 25"), và nút "Tất cả: …". Bung một lớp mới thấy
+bảng học sinh. Ảnh chụp: cả 6 lớp · 150 học sinh nằm gọn trên **một màn hình không cần cuộn**.
+
+Khẳng định phân biệt được hai bản dựng là `count [aria-label^="Năm mới của"] = 0` khi mọi lớp còn gập — bản cũ
+có **150** ô chọn ấy ngay khi trang mở. Radix gỡ hẳn nội dung đã gập khỏi DOM nên con số ấy là thật, không phải
+`display:none`. **Không có "mở tất cả"**: mở 35 lớp cùng lúc chính là cái cuộn vừa bỏ đi.
+
+**Kiểm chứng.** Web 275 → **280 passed**, tsc và ESLint xanh. Trình duyệt: 4 bước × 2 viewport, **8/8**, đọc
+từng ảnh. Không bước nào ghi vào dữ liệu — cả ba chỉ đọc và dừng trước nút cuối; riêng "Xác nhận chuyển năm"
+thì sẽ không bao giờ có bước kiểm nào bấm, vì nó chuyển 150 học sinh và không có đường lùi.
+
+**Ghi lại một điều về cách làm.** Agent phụ báo lại rằng nó để một cảnh báo lint trong file **của tôi** chứ
+không sửa — đúng: file ấy ngoài phạm vi nó được giao. Cảnh báo là thật (`?? []` tạo mảng mới mỗi lần render nên
+`useMemo` bên dưới không bao giờ giữ được), và tôi sửa.

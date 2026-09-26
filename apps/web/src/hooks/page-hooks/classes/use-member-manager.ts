@@ -63,7 +63,15 @@ export function useStudentFinder(classId: string) {
     [q, classFilter],
   );
   const { data } = useUserSearchQuery(body);
-  const rows = data?.data ?? [];
+  // Whoever is already in this class cannot be added, and they sort first by name — so the first screenful of a
+  // search run from inside a class was entirely rows you cannot tick. They stay listed (learning "em ấy đã ở
+  // trong lớp" beats concluding the student does not exist) but they go last. The order is of this page only,
+  // which is why the page says how many matches it is not showing.
+  const rows = useMemo(() => {
+    const all = data?.data ?? [];
+    const here = (u: User) => u.class_ids.includes(classId);
+    return [...all.filter((u) => !here(u)), ...all.filter(here)];
+  }, [data, classId]);
   const already = useMemo(() => new Set(rows.filter((u) => u.class_ids.includes(classId)).map((u) => u.id)), [rows, classId]);
   return {
     q,

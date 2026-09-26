@@ -30,7 +30,8 @@ describe("rollover wizard", () => {
     expect(within(c10).getByRole("textbox", { name: "Lớp mới của 10A1" })).toHaveValue("11A1");
     expect(screen.getByTestId("plan-12C")).toHaveTextContent("Tốt nghiệp");
     expect(screen.getByLabelText("Tổng hợp")).toHaveTextContent("Lên lớp: 2");
-    await u.click(within(c10).getByRole("combobox", { name: "Năm mới của Bình" }));
+    await u.click(within(c10).getByRole("button", { name: /Lớp 10A1/ }));
+    await u.click(await within(c10).findByRole("combobox", { name: "Năm mới của Bình" }));
     await u.click(await screen.findByRole("option", { name: "Ở lại lớp (10A1)" }));
     expect(within(c10).getByRole("combobox", { name: "Năm mới của Bình" })).toHaveTextContent("Ở lại lớp (10A1)");
     expect(screen.getByLabelText("Tổng hợp")).toHaveTextContent("Ở lại lớp: 1");
@@ -43,5 +44,43 @@ describe("rollover wizard", () => {
     expect(body.activate_target).toBe(true);
     expect(body.classes[0].students).toEqual([{ user_id: "an", action: "promote" }, { user_id: "binh", action: "retain" }]);
     await waitFor(() => expect(fetch).toHaveBeenCalled());
+  });
+
+  it("keeps every class folded: the header carries the plan, the students are one click away", async () => {
+    mockFetch(route("POST", "/api/school-years/y1/rollover/preview", plan));
+    const u = userEvent.setup();
+    render(<RolloverPage yearId="y1" />);
+    const c10 = await screen.findByTestId("plan-10A1");
+    // folded, the header still answers "how many" and "what happens to them", and stays editable
+    expect(c10).toHaveTextContent("2 học sinh");
+    expect(screen.getByTestId("summary-10A1")).toHaveTextContent("Lên lớp 2");
+    expect(within(c10).getByRole("textbox", { name: "Lớp mới của 10A1" })).toHaveValue("11A1");
+    expect(within(c10).getByRole("button", { name: "Tất cả: Lên lớp" })).toBeInTheDocument();
+    expect(screen.queryByText("An")).not.toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: "Năm mới của An" })).not.toBeInTheDocument();
+    await u.click(within(c10).getByRole("button", { name: /Lớp 10A1/ }));
+    expect(await within(c10).findByText("An")).toBeInTheDocument();
+    expect(within(c10).getByRole("combobox", { name: "Năm mới của Bình" })).toBeInTheDocument();
+    expect(screen.queryByText("Em")).not.toBeInTheDocument();
+    await u.click(within(c10).getByRole("combobox", { name: "Năm mới của Bình" }));
+    await u.click(await screen.findByRole("option", { name: "Ở lại lớp (10A1)" }));
+    expect(screen.getByTestId("summary-10A1")).toHaveTextContent("Lên lớp 1 · Ở lại lớp 1");
+    expect(screen.getByLabelText("Tổng hợp")).toHaveTextContent("Lên lớp: 1");
+    expect(screen.getByLabelText("Tổng hợp")).toHaveTextContent("Ở lại lớp: 1");
+    await u.click(within(c10).getByRole("button", { name: /Lớp 10A1/ }));
+    await waitFor(() => expect(screen.queryByText("An")).not.toBeInTheDocument());
+    expect(screen.getByTestId("summary-10A1")).toHaveTextContent("Lên lớp 1 · Ở lại lớp 1");
+  });
+
+  it("folds each class on its own: opening one leaves the others closed", async () => {
+    mockFetch(route("POST", "/api/school-years/y1/rollover/preview", plan));
+    const u = userEvent.setup();
+    render(<RolloverPage yearId="y1" />);
+    const c12 = await screen.findByTestId("plan-12C");
+    expect(c12).toHaveTextContent("1 học sinh");
+    expect(screen.getByTestId("summary-12C")).toHaveTextContent("Tốt nghiệp 1");
+    await u.click(within(c12).getByRole("button", { name: /Lớp 12C/ }));
+    expect(await within(c12).findByText("Em")).toBeInTheDocument();
+    expect(screen.queryByText("An")).not.toBeInTheDocument();
   });
 });
