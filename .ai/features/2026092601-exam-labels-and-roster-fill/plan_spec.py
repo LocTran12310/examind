@@ -63,7 +63,7 @@ t(id="T-02-01", uow="UOW-02", title="Read model trả ngày giao, hạn và số
              "Chưa giao lần nào thì trả null", "Học sinh của tổ chức khác không lọt vào"])
 t(id="T-02-02", uow="UOW-02", title="Ô đề ôn cá nhân trên bảng tổng quan lớp", layer="web", estimate="3h",
   depends_on=["T-02-01"], verifies=["AC-04", "AC-05", "AC-06", "AC-07"], assumptions=["A-04", "A-09"],
-  tests=[f"{S}/__tests__/class-detail.test.tsx"],
+  tests=[f"{S}/__tests__/mastery.test.tsx"],
   touches=[f"{S}/components/page-components/ClassDetail/ClassOverview/ClassOverview.tsx",
            f"{S}/interfaces/mastery.interface.ts"],
   context="Tên đề link sang báo cáo bài giao (A-09). Quá hạn = hạn đã qua và chưa nộp (A-04); đã nộp thì hạn "
