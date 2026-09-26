@@ -72,16 +72,18 @@ export function StructurePage() {
     );
   } else if (node.kind === "class" && found?.klass) {
     panel = (
-      <>
-        <div className="mb-2 flex flex-wrap gap-2">
+      <div className="flex h-full min-h-0 flex-col gap-2">
+        <div className="flex shrink-0 flex-wrap gap-2">
           <Button variant="outline" size="sm" asChild>
             <Link href={`/org/classes/${found.klass.id}`}>
               <ExternalLink /> Mở trang lớp
             </Link>
           </Button>
         </div>
-        <MemberManager classId={found.klass.id} />
-      </>
+        <div className="min-h-0 flex-1">
+          <MemberManager classId={found.klass.id} />
+        </div>
+      </div>
     );
   } else {
     panel = p.data ? <p className="text-sm text-muted-foreground">Không tìm thấy mục đã chọn.</p> : <Skeleton className="h-40" />;

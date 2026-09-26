@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/common/http";
-import { TABLE_CELL, TABLE_HEAD, TABLE_HEAD_ROW, TABLE_HEADER, TABLE_ROW, TABLE_SCROLL } from "@/constants/table.constant";
+import { TABLE_CELL, TABLE_FILTER_ROW, TABLE_HEAD, TABLE_HEAD_ROW, TABLE_HEADER, TABLE_ROW, TABLE_SCROLL } from "@/constants/table.constant";
 import { cn } from "@/lib/utils";
 import { FilterCell } from "./FilterCell";
 import { Pagination } from "./Pagination";
@@ -199,7 +199,7 @@ export function DataTableView<T>({
             </TableRow>
           ))}
           {hasFilters && (
-            <TableRow className="hover:bg-transparent" data-slot="filter-row">
+            <TableRow className={TABLE_FILTER_ROW} data-slot="filter-row">
               {table.getLeafHeaders().map((h) => {
                 const spec = h.column.columnDef.meta?.filter;
                 const header = h.column.columnDef.header;

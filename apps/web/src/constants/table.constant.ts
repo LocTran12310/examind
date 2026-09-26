@@ -9,6 +9,9 @@
 export const TABLE_SCROLL = "min-h-0 flex-1 overflow-auto [&>[data-slot=table-container]]:overflow-visible";
 export const TABLE_HEADER = "sticky top-0 z-10 bg-card shadow-[inset_0_-1px_0_var(--border)]";
 export const TABLE_HEAD_ROW = "bg-muted/40 hover:bg-muted/40";
+/** the filter row under the headings. Opaque on purpose: it is part of the sticky head, and a transparent row
+ *  there lets the rows scrolling underneath show through it. */
+export const TABLE_FILTER_ROW = "bg-card hover:bg-card";
 export const TABLE_HEAD = "border-r text-xs font-semibold last:border-r-0";
 export const TABLE_ROW = "even:bg-muted/40";
 export const TABLE_CELL = "border-r last:border-r-0";

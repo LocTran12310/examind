@@ -22,7 +22,10 @@ export function StructureSplit({ tree, title, crumbs, action, children }: { tree
         {crumbs && <CardDescription>{crumbs}</CardDescription>}
         {action && <CardAction>{action}</CardAction>}
       </CardHeader>
-      <CardContent className="min-h-0 flex-1 overflow-auto px-4">{children}</CardContent>
+      {/* the panel is handed a height and fills it; this box does NOT scroll. A table inside only keeps its
+          toolbar, its sticky header and its pagination still when it owns the scrolling itself — if this box
+          scrolled instead, all three would ride away with the rows. */}
+      <CardContent className="flex min-h-0 flex-1 flex-col px-4">{children}</CardContent>
     </Card>
   );
   if (mobile)
