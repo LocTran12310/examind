@@ -1,9 +1,21 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { FormDialog } from "@/components/common/FormDialog/FormDialog";
 
 describe("FormDialog", () => {
+  it("đóng ngay ở phím Escape đầu tiên", async () => {
+    // Radix đưa focus vào phần tử bấm được đầu tiên trong hộp thoại. Nếu đó là một trigger của tooltip thì
+    // tooltip mở theo focus và lớp dismiss của nó ăn mất phím Escape đầu tiên — người dùng phải bấm hai lần,
+    // ở MỌI hộp thoại của ứng dụng.
+    const onOpenChange = vi.fn();
+    const u = userEvent.setup();
+    render(<FormDialog open onOpenChange={onOpenChange} title="Thêm tag"><p>nội dung</p></FormDialog>);
+    await u.keyboard("{Escape}");
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+
   it("maximises, restores and resizes from its edges", async () => {
     const u = userEvent.setup();
     render(<FormDialog open onOpenChange={() => {}} title="Thêm tag"><p>nội dung</p></FormDialog>);

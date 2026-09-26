@@ -4,7 +4,6 @@ import { Maximize2, Minimize2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 type Size = { w: number; h: number };
@@ -95,16 +94,20 @@ export function FormDialog({
           <DialogTitle className="select-none">{title}</DialogTitle>
           {description ? <DialogDescription>{description}</DialogDescription> : <DialogDescription className="sr-only">{title}</DialogDescription>}
         </DialogHeader>
-        <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-sm" className="absolute top-2 right-10" aria-label={maximized ? "Thu nhỏ" : "Phóng to"} onClick={() => setMaximized((m) => !m)}>
-              {maximized ? <Minimize2 /> : <Maximize2 />}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{maximized ? "Thu nhỏ" : "Phóng to"}</TooltipContent>
-        </Tooltip>
-        </TooltipProvider>
+        {/* No tooltip here on purpose. This button is the first focusable thing in the dialog, so Radix focuses
+            it on open; a tooltip trigger opens its tooltip on focus, and the tooltip's dismissable layer then
+            eats the FIRST Escape — in every dialog in the app. The tooltip also said nothing the aria-label did
+            not already say, so `title` (no layer, no focus behaviour) carries the hover hint. */}
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="absolute top-2 right-10"
+          aria-label={maximized ? "Thu nhỏ" : "Phóng to"}
+          title={maximized ? "Thu nhỏ" : "Phóng to"}
+          onClick={() => setMaximized((m) => !m)}
+        >
+          {maximized ? <Minimize2 /> : <Maximize2 />}
+        </Button>
         <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">{children}</div>
         {!maximized &&
           HANDLES.map((hd) => (
