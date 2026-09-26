@@ -1516,3 +1516,28 @@ nghĩa là thêm một môn bịa vào ngân hàng thật và bốn lượt ôn 
 
 **Kiểm chứng.** API **581 passed, 1 skipped**; web 292 → **304 passed**; tsc, ESLint, ruff và 4 import contract
 xanh. Trình duyệt: 1 bước × 2 viewport, **2/2**, đọc ảnh.
+
+## 44. "Bài được giao" nhóm theo môn (2026-09-26)
+
+Việc §43 đã ghi vào Out of scope, anh bảo làm luôn. Bài giao lấy môn từ **đề** của nó, nhưng `/me/assignments`
+không nói ra môn ấy — nên trang chủ học sinh không có gì để nhóm. Nay mỗi dòng mang `subject_id`, lấy trong
+**một** lần tra cho cả danh sách: hỏi từng bài một là N+1 ngay trên màn hình đầu tiên ai cũng mở.
+
+**Chỉ nhóm khi một mục có từ hai môn.** Một tiêu đề lặp trên mọi nhóm thì không phân biệt được gì, nên trung tâm
+một môn thấy đúng danh sách nó vẫn thấy — cùng luật mà cây chuyên đề (F23) và tổng quan lớp đã theo. Bài mà đề
+chưa có môn đứng riêng ở cuối dưới **"Chưa rõ môn"**, không bị nhận vào môn đứng đầu bảng.
+
+**Không có ảnh trình duyệt, và lý do đáng ghi lại.** Bản kiểm cần một phiên đăng nhập học sinh; runner có sẵn
+`e2e-hs01`, nhưng **mật khẩu lưu trong `.ai/credentials.env` không còn đăng nhập được** — các tài khoản e2e ấy
+được dựng bằng `make e2e-fixture` trước lần xoá sạch và dựng lại cơ sở dữ liệu, nên chúng không còn tồn tại.
+Dựng lại chúng chỉ để chụp một khung hình là thêm 4 tài khoản, 1 lớp và 10 câu hỏi bịa vào ngân hàng thật; và
+tôi không gõ mật khẩu vào form đăng nhập để đi vòng. Bù lại, `assign.test.tsx` dựng ba bài của hai môn cộng một
+bài không môn và khẳng định đúng ba tiêu đề theo thứ tự.
+
+**Và runner để lộ một cái bẫy đáng báo.** Khi đăng nhập hỏng, nó in `pass — 0/0 steps` — một dòng tổng kết
+**trông như xanh** cho một lượt chạy không kiểm được gì. Lỗi đăng nhập có in ra ở dòng trên, nhưng ai đọc dòng
+cuối (hoặc một CI đọc mã thoát) sẽ thấy "pass". Đây đúng loại "xanh mà nói dối" mà cả phiên này đã đi tìm, lần
+này nằm trong chính bộ kiểm chứng. Nó là skill dùng chung nên tôi không tự sửa — báo để anh biết.
+
+**Kiểm chứng.** Web 304 → **306 passed**; API các file liên quan 14 passed; tsc, ESLint, ruff và 4 import
+contract xanh.
