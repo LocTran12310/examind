@@ -1353,9 +1353,7 @@ dưới `sm` thì tên đăng nhập với lớp hiện tại **xuống dòng th
 không mất gì, chỉ chuyển chỗ. Không chọn cuộn ngang: trên điện thoại, phải tự phát hiện ra một thanh cuộn mới
 đọc được cái tên là một màn hình hỏng.
 
-**Chỗ bản dựng lệch khỏi chữ anh viết, nói rõ:** anh viết "table với row input", còn ô nhập nay **nằm trên**
-bảng. Lý do: ở trong bảng nó trôi xuống theo mỗi em được thêm, và danh sách gợi ý bị chính khung cuộn cắt mất —
-đúng hai thứ anh bảo phải hết. Đưa lại vào bảng dưới dạng một hàng dính đáy là làm được; chờ anh nói.
+**Chỗ bản dựng lệch khỏi chữ anh viết** — ô nhập ra khỏi bảng — **đã được sửa lại ngay sau đó**: xem §40.
 
 **`sticky` và "không nhảy" không có test nào**, và agent phụ nói thẳng điều đó thay vì viết một test trông như
 đang kiểm. jsdom không có layout: `position: sticky`, `overflow` và một hộp thoại tự canh giữa đều không tạo ra
@@ -1371,3 +1369,38 @@ footer dính đáy và hộp thoại giữ nguyên chiều cao khi danh sách ng
 trong DOM (một bản cho điện thoại, một bản cho cột), mỗi bản ẩn ở một bề rộng, và `text=` của Playwright lấy
 phần tử khớp đầu tiên rồi đợi nó **hiện ra** — ở desktop đó đúng là bản đang `display:none`. Mọi khẳng định trên
 một dữ liệu được lặp lại cho responsive phải giới hạn vào đúng chỗ muốn kiểm.
+
+## 40. Ô nhập trở lại làm hàng dính đáy, và một UI cho mọi bảng (2026-09-26)
+
+Hai việc, cùng một câu hỏi: **ai là chủ của cái nhìn**.
+
+**1. Ô nhập trở lại trong bảng, ghim đáy khung cuộn.** Anh viết "table với row input" và tôi đã để nó ra ngoài vì
+ở trong bảng nó trôi xuống theo mỗi em được thêm. Cái làm việc ấy khả thi trở lại là chính cấu trúc vừa dựng cho
+§39: hộp thoại có chiều cao cố định và chỉ phần giữa cuộn, nên một `tfoot` `sticky bottom-0` **không trôi đi
+đâu**. Lý do cũ để đưa nó ra ngoài đã hết hiệu lực, nên nó quay vào.
+
+Danh sách gợi ý chuyển sang **popover** thay vì một panel trong luồng: ô nhập nay nằm **bên trong** khung cuộn
+của bảng, mà một panel trong luồng sẽ bị đúng cái khung ấy cắt cụt — lỗi mà §39 vừa mới sửa. Popover được
+portal ra ngoài nên không có gì cắt được nó, và `onOpenAutoFocus` bị chặn để con trỏ ở lại trong ô: danh sách là
+thứ để đọc trong lúc gõ, không phải thứ để tab vào.
+
+**2. Một UI cho mọi bảng, một nguồn.** Anh nói "DialogTable cũng phải giống DataTable, chỉ 1 UI thôi, để dễ kiểm
+soát" — và đúng: `DialogTable` **không** nên là `DataTable` về máy móc (URL state, phân trang máy chủ, bộ lọc cột
+— thứ một hộp chọn không cần và sẽ phải chống lại), nhưng nó cũng không được là một **cái bảng khác** khi nhìn.
+
+Nên cái nhìn có đúng một nguồn: `constants/table.constant.ts` giữ các chuỗi class của khung cuộn, hàng tiêu đề
+dính, viền cột, hàng kẻ so le và hàng ghim đáy; **cả hai** bảng đọc từ đó. Hai bản sao của mấy chuỗi ấy là hai
+chỗ để cái nhìn lệch nhau, và lệch là thứ làm một màn hình trông như đến từ chỗ khác.
+
+**Một khẳng định phải đổi nghĩa, và đó là đúng.** Test cũ khẳng định ô nhập nằm **ngoài** vùng cuộn — hợp lệ khi
+nó ở trên bảng. Nay nó khẳng định ngược lại: ô nhập nằm **trong** bảng và trong `[data-slot=dialog-table-foot]`,
+còn **nút lưu vẫn ở ngoài**. Đổi một khẳng định theo hợp đồng mới thì được; làm nó yếu đi để khỏi đỏ thì không.
+
+**Kiểm chứng.** Web **292 passed**, tsc và ESLint xanh. Trình duyệt: `add-student-flow` **8/8** và
+`owner-walk-2` **12/12**, hai viewport, đọc từng ảnh — ảnh desktop cho thấy hàng nhập nằm ngay dưới hàng học
+sinh trong cùng một bảng, ảnh mobile cho thấy ba hàng chờ, hàng nhập, và tên vẫn đọc được đủ ở 390px.
+
+**Một điều về `sticky bottom-0` nên biết trước khi thấy nó "không dính":** khi danh sách còn ngắn hơn khung
+cuộn, hàng nhập nằm ngay sau hàng cuối chứ không bị đẩy xuống mép đáy — đó là hành vi đúng của `sticky`, và nó
+chỉ "dính" khi có gì đó để cuộn qua. Ghim nó xuống mép khi bảng còn trống sẽ để lại một khoảng trắng giữa danh
+sách và ô nhập.

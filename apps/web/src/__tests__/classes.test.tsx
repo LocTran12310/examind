@@ -311,8 +311,11 @@ describe("thêm học sinh vào lớp", () => {
     const stagedBox = staged().closest("[data-slot=dialog-table]")!;
     expect(stagedBox).not.toBeNull();
     expect(within(stagedBox as HTMLElement).getByText("Tên đăng nhập")).toBeInTheDocument(); // header ở trong vùng cuộn
-    expect(stagedBox.contains(screen.getByRole("button", { name: "Thêm 0 học sinh" }))).toBe(false);
-    expect(stagedBox.contains(screen.getByRole("textbox", { name: "Tìm học sinh để thêm" }))).toBe(false);
+    expect(stagedBox.contains(screen.getByRole("button", { name: "Thêm 0 học sinh" }))).toBe(false); // nút lưu ở ngoài
+    // còn ô nhập là dòng cuối CỦA BẢNG, ghim đáy vùng cuộn: nó thuộc về danh sách nó thêm vào
+    const box = screen.getByRole("textbox", { name: "Tìm học sinh để thêm" });
+    expect(stagedBox.contains(box)).toBe(true);
+    expect(box.closest("[data-slot=dialog-table-foot]")).not.toBeNull();
     await openPicker(u);
     const sourceBox = (await screen.findByTestId("source-classes")).closest("[data-slot=dialog-table]")!;
     expect(sourceBox).not.toBeNull();

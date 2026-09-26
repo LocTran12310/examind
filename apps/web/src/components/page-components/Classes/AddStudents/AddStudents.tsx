@@ -7,6 +7,7 @@ import { DialogTable, type DialogTableColumn, DialogTableRow } from "@/component
 import { FormDialog } from "@/components/common/FormDialog/FormDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { type StudentStaging, useStudentStaging } from "@/hooks/page-hooks/classes/use-member-manager";
 import { StudentPicker } from "../StudentPicker/StudentPicker";
 
@@ -37,30 +38,46 @@ export function AddStudents({ classId, onAdd }: { classId: string; onAdd: (userI
   const [picking, setPicking] = useState(false);
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
-      <div className="flex shrink-0 items-start gap-2">
-        {/* the box used to be the last row of the table: it moved down with every name staged, and what it
-            offered was clipped by the scroll box it sat in. Up here it stays put and the list opens over. */}
-        <div className="relative flex-1">
-          <Input
-            aria-label="Tìm học sinh để thêm"
-            placeholder="Nhập tên hoặc tên đăng nhập"
-            value={s.q}
-            onChange={(e) => s.setQ(e.target.value)}
-            onKeyDown={(e) => {
-              // Enter takes the first name that can be taken: filling a class is typing, not aiming
-              if (e.key !== "Enter") return;
-              e.preventDefault();
-              const first = s.matches.find((u) => !s.note(u));
-              if (first) pickOne(s, first.id);
-            }}
-          />
-          {s.searching && <Suggestions s={s} />}
-        </div>
-        <Button type="button" variant="outline" size="icon" aria-label="Chọn học sinh từ lớp khác" title="Chọn học sinh từ lớp khác" onClick={() => setPicking(true)}>
-          <Search />
-        </Button>
-      </div>
-      <DialogTable columns={COLUMNS} testId="staged-students">
+      <DialogTable
+        columns={COLUMNS}
+        testId="staged-students"
+        /* the line where the next name is typed is the last row of the table, pinned to the bottom of the scroll
+           box: it is part of the list it feeds, and it does not walk downwards as rows are added above it. What
+           it offers opens in a popover — a panel in flow would be clipped by the very box the row sits in. */
+        foot={
+          <div className="flex items-center gap-2">
+            <Popover open={s.searching} onOpenChange={(o) => !o && s.clearQuery()}>
+              <PopoverAnchor asChild>
+                <Input
+                  aria-label="Tìm học sinh để thêm"
+                  placeholder="Nhập tên hoặc tên đăng nhập"
+                  className="flex-1"
+                  value={s.q}
+                  onChange={(e) => s.setQ(e.target.value)}
+                  onKeyDown={(e) => {
+                    // Enter takes the first name that can be taken: filling a class is typing, not aiming
+                    if (e.key !== "Enter") return;
+                    e.preventDefault();
+                    const first = s.matches.find((u) => !s.note(u));
+                    if (first) pickOne(s, first.id);
+                  }}
+                />
+              </PopoverAnchor>
+              <PopoverContent
+                align="start"
+                className="w-(--radix-popover-trigger-width) p-0"
+                // the box keeps the caret: the list is something to read while typing, not something to tab into
+                onOpenAutoFocus={(e) => e.preventDefault()}
+              >
+                <Suggestions s={s} />
+              </PopoverContent>
+            </Popover>
+            <Button type="button" variant="outline" size="icon" aria-label="Chọn học sinh từ lớp khác" title="Chọn học sinh từ lớp khác" onClick={() => setPicking(true)}>
+              <Search />
+            </Button>
+          </div>
+        }
+      >
         {s.staged.map((u) => {
           // named, because a JSX element written straight into the cells array asks eslint for a key it has no use for
           const drop = (
@@ -85,7 +102,7 @@ export function AddStudents({ classId, onAdd }: { classId: string; onAdd: (userI
             />
           );
         })}
-        {s.staged.length === 0 && <DialogTableRow span cells={["Chưa có em nào trong danh sách — gõ tên vào ô trên, hoặc chọn từ một lớp khác."]} />}
+        {s.staged.length === 0 && <DialogTableRow span cells={["Chưa có em nào trong danh sách — gõ tên vào dòng dưới, hoặc chọn từ một lớp khác."]} />}
       </DialogTable>
       <div className="shrink-0 border-t pt-3">
         <Button className="w-full" disabled={s.staged.length === 0} onClick={() => void onAdd(s.staged.map((u) => u.id))}>
@@ -122,15 +139,11 @@ function pickOne(s: StudentStaging, id: string) {
   s.clearQuery();
 }
 
-/** What the box matches, over the table rather than above it: a panel in flow would push the rows — and with them
- *  the footer — down a little on every keystroke. */
+/** What the box matches. It rides in a popover, which is portalled out of the dialog: the input row lives inside
+ *  the table's scroll box, and a panel in flow would be cut off by it. */
 function Suggestions({ s }: { s: StudentStaging }) {
   return (
-    <ul
-      aria-label="Học sinh khớp"
-      data-testid="student-suggestions"
-      className="absolute inset-x-0 top-full z-20 mt-1 max-h-60 divide-y overflow-y-auto rounded-lg border bg-popover shadow-md"
-    >
+    <ul aria-label="Học sinh khớp" data-testid="student-suggestions" className="max-h-60 divide-y overflow-y-auto">
       {s.matches.length === 0 && <li className="px-2 py-1.5 text-sm text-muted-foreground">Không có học sinh nào khớp.</li>}
       {s.matches.map((u) => {
         const note = s.note(u);

@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/common/http";
+import { TABLE_CELL, TABLE_HEAD, TABLE_HEAD_ROW, TABLE_HEADER, TABLE_ROW, TABLE_SCROLL } from "@/constants/table.constant";
 import { cn } from "@/lib/utils";
 import { FilterCell } from "./FilterCell";
 import { Pagination } from "./Pagination";
@@ -168,11 +169,11 @@ export function DataTableView<T>({
         )}
       </Toolbar>}
       {/* only this area scrolls; the table's own x-scroll wrapper is disabled so the sticky header works */}
-      <div className="min-h-0 flex-1 overflow-auto [&>[data-slot=table-container]]:overflow-visible">
+      <div className={TABLE_SCROLL}>
       <Table>
-        <TableHeader className="sticky top-0 z-10 bg-card shadow-[inset_0_-1px_0_var(--border)]">
+        <TableHeader className={TABLE_HEADER}>
           {table.getHeaderGroups().map((hg) => (
-            <TableRow key={hg.id} className="bg-muted/40 hover:bg-muted/40">
+            <TableRow key={hg.id} className={TABLE_HEAD_ROW}>
               {hg.headers.map((h) => {
                 const meta = h.column.columnDef.meta;
                 const sortKey = meta?.sort;
@@ -181,7 +182,7 @@ export function DataTableView<T>({
                 return (
                   <TableHead
                     key={h.id}
-                    className={cn("border-r text-xs font-semibold last:border-r-0", meta?.align === "right" && "text-right", meta?.align === "center" && "text-center", meta?.className)}
+                    className={cn(TABLE_HEAD, meta?.align === "right" && "text-right", meta?.align === "center" && "text-center", meta?.className)}
                     aria-sort={active ? (active.desc ? "descending" : "ascending") : undefined}
                   >
                     {sortKey ? (
@@ -203,7 +204,7 @@ export function DataTableView<T>({
                 const spec = h.column.columnDef.meta?.filter;
                 const header = h.column.columnDef.header;
                 return (
-                  <TableHead key={h.id} className="h-auto border-r py-1 last:border-r-0">
+                  <TableHead key={h.id} className={cn(TABLE_CELL, "h-auto py-1")}>
                     {spec && <FilterCell spec={spec} name={h.column.id} label={typeof header === "string" ? header : h.column.id} get={tq.get} set={tq.setFilters} />}
                   </TableHead>
                 );
@@ -240,7 +241,7 @@ export function DataTableView<T>({
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() ? "selected" : activeRowId === row.id ? "selected" : undefined}
-                className={cn("even:bg-muted/40", onRowActivate && "cursor-pointer", activeRowId === row.id && "bg-primary/10 even:bg-primary/10", rowClassName?.(row.original))}
+                className={cn(TABLE_ROW, onRowActivate && "cursor-pointer", activeRowId === row.id && "bg-primary/10 even:bg-primary/10", rowClassName?.(row.original))}
                 onClick={onRowActivate ? () => onRowActivate(row.original) : undefined}
                 tabIndex={onRowActivate ? 0 : undefined}
                 onKeyDown={onRowActivate ? (e) => e.key === "Enter" && onRowActivate(row.original) : undefined}
@@ -248,7 +249,7 @@ export function DataTableView<T>({
                 {row.getVisibleCells().map((cell) => {
                   const meta = cell.column.columnDef.meta;
                   return (
-                    <TableCell key={cell.id} className={cn("border-r last:border-r-0", meta?.align === "right" && "text-right tabular-nums", meta?.align === "center" && "text-center", meta?.className)}>
+                    <TableCell key={cell.id} className={cn(TABLE_CELL, meta?.align === "right" && "text-right tabular-nums", meta?.align === "center" && "text-center", meta?.className)}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   );
