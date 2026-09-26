@@ -7,6 +7,7 @@ import { ListLayout } from "@/components/common/ListLayout/ListLayout";
 import { MasterDetail } from "@/components/common/MasterDetail/MasterDetail";
 import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { DataTable } from "@/components/common/DataTable/DataTable";
+import { SubjectTabs } from "@/components/common/SubjectTabs/SubjectTabs";
 import { ExamPreviewDialog } from "@/components/page-components/ExamDetail/ExamPreviewDialog/ExamPreviewDialog";
 import { ExamQuestionsTable } from "@/components/page-components/ExamDetail/ExamQuestionsTable/ExamQuestionsTable";
 import { Button } from "@/components/ui/button";
@@ -23,8 +24,13 @@ export function ExamsPage() {
         <MasterDetail
           id="exams"
           master={
-            <DataTable
+            <div className="flex h-full min-h-0 flex-col gap-2">
+              {/* the scope sits above the table, not in a column: it is what the list is *about*, and the
+                  numbers on it say what each tab would show */}
+              <SubjectTabs subjects={p.subjects} counts={p.facets?.subjects} value={p.subject} onChange={p.chooseSubject} allLabel="Tất cả" />
+              <DataTable
               useRows={useExamSearchQuery}
+              params={p.params}
               columns={p.columns}
               getRowId={(e) => e.id}
               onAdd={() => p.setCreating(true)}
@@ -34,7 +40,8 @@ export function ExamsPage() {
               deleteLabel={(rows) => `Xóa ${rows.length} đề thi?`}
               onRowActivate={p.setActive}
               activeRowId={p.active?.id}
-            />
+              />
+            </div>
           }
           detail={
             p.active && (

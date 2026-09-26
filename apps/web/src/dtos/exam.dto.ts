@@ -1,4 +1,11 @@
+import type { SearchBody } from "@/dtos/search.dto";
 import type { BlueprintRow, ExamSettings } from "@/interfaces/exam.interface";
+
+/** `POST /exams/search` and `/exams/facets`: the subject the list is scoped to rides at the top of the body —
+ *  an id, or "none" for the exams nobody gave a subject. */
+export interface ExamSearchBody extends SearchBody {
+  subject_id?: string | null;
+}
 
 export interface CreateExamBody {
   title: string;

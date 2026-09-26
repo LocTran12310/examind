@@ -61,14 +61,33 @@ describe("exams list", () => {
     expect(calls(fetch, "/api/exams/e1")).toHaveLength(1);
   });
 
-  it("the list says which subject each paper is for, and filters by it (AC-01)", async () => {
-    // the exam has carried a subject and the endpoint has filtered by it all along; the list never showed it,
-    // so with two subjects in the bank this screen would be one undifferentiated pile
+  it("tab theo môn: mỗi tab mang số của nó, và chọn tab là đổi phạm vi chứ không phải thêm một bộ lọc", async () => {
+    // hai cách nói cùng một điều là hai cách để chúng nói khác nhau: môn là phạm vi (tab), cột chỉ để đọc
     const fetch = mockFetch(
       route("GET", "/api/taxonomy", { subjects: [{ id: "s1", code: "toan", name: "Toán" }, { id: "s2", code: "ly", name: "Vật lý" }], grades: [], semesters: [] }),
-      route("POST", "/api/exams/search", searchPage([exam({ subject_id: "s1" }), exam({ id: "e2", title: "Đề Lý", subject_id: null })])),
+      route("POST", "/api/exams/facets", { subjects: { s1: 30, none: 6 } }),
+      route("POST", "/api/exams/search", searchPage([exam({ subject_id: "s1" })])),
     );
     const u = userEvent.setup();
+    renderWithQuery(<ExamsRoute />);
+    const tabs = await screen.findByRole("tablist", { name: "Môn học" });
+    // Vật lý giữ 0 đề nên không chiếm chỗ; "Tất cả" mang tổng, "Chưa phân môn" chỉ hiện khi có đề như thế
+    await waitFor(() => expect([...within(tabs).getAllByRole("tab")].map((t) => t.textContent)).toEqual(["Tất cả36", "Toán30", "Chưa phân môn 6"]));
+    await u.click(within(tabs).getByRole("tab", { name: /Chưa phân môn/ }));
+    // "none" đi ở đầu thân yêu cầu như một phạm vi, không nằm trong filters
+    await waitFor(() => expect(lastBody(fetch, "/exams/search").subject_id).toBe("none"));
+    expect((lastBody(fetch, "/exams/search").filters as Record<string, unknown> | undefined)?.subject_id).toBeUndefined();
+    expect(currentUrl()).toContain("subject_id=none");
+  });
+
+  it("the list says which subject each paper is for (AC-01)", async () => {
+    // the exam has carried a subject and the endpoint has filtered by it all along; the list never showed it,
+    // so with two subjects in the bank this screen would be one undifferentiated pile
+    mockFetch(
+      route("GET", "/api/taxonomy", { subjects: [{ id: "s1", code: "toan", name: "Toán" }, { id: "s2", code: "ly", name: "Vật lý" }], grades: [], semesters: [] }),
+      route("POST", "/api/exams/facets", { subjects: { s1: 1, none: 1 } }),
+      route("POST", "/api/exams/search", searchPage([exam({ subject_id: "s1" }), exam({ id: "e2", title: "Đề Lý", subject_id: null })])),
+    );
     renderWithQuery(<ExamsRoute />);
     await screen.findByRole("button", { name: "Kiểm tra 15 phút" });
     const subjectOf = (title: string) =>
@@ -76,10 +95,6 @@ describe("exams list", () => {
     expect(subjectOf("Kiểm tra 15 phút")).toBe("Toán");
     // an exam with no subject says so with a dash instead of an empty cell
     expect(subjectOf("Đề Lý")).toBe("—");
-    await u.click(screen.getByRole("combobox", { name: "Lọc Môn" }));
-    await u.click(await screen.findByRole("option", { name: "Vật lý" }));
-    await waitFor(() => expect(lastBody(fetch, "/exams/search").filters).toEqual({ subject_id: { value: "s2" } }));
-    expect(currentUrl()).toContain("subject_id=s2");
   });
 
   it("creates an exam and opens it", async () => {

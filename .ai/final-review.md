@@ -1256,3 +1256,38 @@ thì sẽ không bao giờ có bước kiểm nào bấm, vì nó chuyển 150 h
 **Ghi lại một điều về cách làm.** Agent phụ báo lại rằng nó để một cảnh báo lint trong file **của tôi** chứ
 không sửa — đúng: file ấy ngoài phạm vi nó được giao. Cảnh báo là thật (`?? []` tạo mảng mới mỗi lần render nên
 `useMemo` bên dưới không bao giờ giữ được), và tôi sửa.
+
+## 37. Tab theo môn cho đề, và hộp "Thêm học sinh" thành một bảng (2026-09-26)
+
+**1. Đề chia tab theo môn.** §36 nói trước rằng tab cần một endpoint facets; anh bảo làm, nên có `POST
+/exams/facets`. Hai quyết định đáng ghi:
+
+- **`subject_id` chuyển từ bộ lọc thành phạm vi** (đầu thân yêu cầu, nhận `"none"` cho đề chưa phân môn), và
+  **bộ lọc ở cột Môn bị bỏ**. Cột để *đọc*, tab để *thu hẹp* — hai cách nói cùng một điều là hai cách để chúng
+  nói khác nhau.
+- **Facets cố tình bỏ qua chính phạm vi đang chọn.** Một tab phải nói *nó sẽ hiện gì nếu bấm vào*; đếm bên trong
+  tab đang mở thì mọi tab khác đọc 0. Test API khẳng định đúng điều này: gọi facets **kèm** `subject_id` vẫn trả
+  đủ cả hai môn, còn một bộ lọc tên thì làm hẹp mọi tab.
+
+`SubjectTabs` lên `components/common/` để hai màn hình dùng chung, và nhận thêm một prop `allLabel`: ngân hàng
+câu hỏi **không** có tab "Tất cả" vì nó buộc phải nằm trong một môn (không có cây chuyên đề chung cho mọi môn),
+còn danh sách đề thì không bị thế. Ngân hàng không truyền prop ấy nên không đổi gì.
+
+**2. Hộp "Thêm học sinh vào lớp": bỏ hai tab, còn một bảng.** Bảng ngoài là các lớp cũ, mỗi dòng có checkbox ở
+cột đầu và mở ra được để xem từng học sinh, mỗi em một checkbox. Tích cả lớp là việc thường; tích từng em là
+ngoại lệ. Tích nhiều lớp cùng lúc vẫn chỉ **một** lời gọi mang mọi id. "Tìm nâng cao" nay là **một hộp thoại
+riêng chồng lên** hộp lớp.
+
+**Tôi đã cãi chuyện dialog chồng dialog ở §36 và lần này làm theo anh.** Lý do cũ vẫn đúng về kỹ thuật (hai focus
+trap, hai phím Escape) nhưng nó là lý do của tôi, không phải của người dùng; anh nói hai lần thì nó là quyết định
+của anh. Bước kiểm khẳng định `count [role=dialog] = 2`.
+
+**Hai việc này chạy ở hai agent phụ song song.** Tôi đọc lại diff, tự chạy lại mọi kiểm tra và tự verify trình
+duyệt. Agent làm hộp thêm học sinh **bắt được một lỗi biên dịch trong file của tôi** (`lastBody(...).filters?.x`
+trên `Record<string, unknown>`) — vitest không kiểm kiểu nên test của tôi xanh trong khi `tsc` đỏ; tôi sửa. Nó
+cũng ghi lại một điều đáng có ticket riêng: `FormDialog` để focus rơi vào nút "Phóng to" (một `TooltipTrigger`),
+nên lớp dismiss của tooltip **nuốt phím Escape đầu tiên** của mọi hộp thoại trong ứng dụng.
+
+**Kiểm chứng.** Web 280 → **284 passed**, tsc và ESLint xanh. Trình duyệt: 5 bước × 2 viewport, **10/10**, đọc
+từng ảnh. Bước S2 khẳng định `count [role=dialog] [role=tab] = 0` — trong hộp thoại không còn tab nào; không
+giới hạn vào hộp thì nó sẽ đếm cả hai tab của trang phía sau và đỏ vì lý do chẳng liên quan.

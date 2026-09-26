@@ -108,3 +108,25 @@ def test_subject_and_grade_can_be_set_and_cleared(client, db):
     # and one that sends null clears them
     cleared = client.patch(f"/api/exams/{exam['id']}", json={"grade": None, "subject_id": None}).json()
     assert cleared["grade"] is None and cleared["subject_id"] is None
+
+
+def test_exams_scope_by_subject_and_count_per_subject(client, db):
+    """The subject is a scope the tabs pick, and every tab carries the number it would show (AC: tab theo môn)."""
+    setup_admin(client, db)
+    subject = client.get("/api/taxonomy").json()["subjects"][0]["id"]
+    client.post("/api/exams", json={"title": "Đề Toán", "subject_id": subject})
+    client.post("/api/exams", json={"title": "Đề chưa phân môn"})
+    titles = lambda **b: [e["title"] for e in client.post("/api/exams/search", json=b).json()["data"]]  # noqa: E731
+
+    assert sorted(titles()) == ["Đề Toán", "Đề chưa phân môn"]  # no scope: everything
+    assert titles(subject_id=subject) == ["Đề Toán"]
+    # "none" is an answer, not a missing filter: the exams nobody gave a subject
+    assert titles(subject_id="none") == ["Đề chưa phân môn"]
+    assert client.post("/api/exams/search", json={"subject_id": "khong-phai-uuid"}).status_code == 422
+
+    facets = client.post("/api/exams/facets", json={}).json()["subjects"]
+    assert facets == {subject: 1, "none": 1}
+    # the tab's number says what that tab would show, so the scope in hand must not shrink the others
+    assert client.post("/api/exams/facets", json={"subject_id": subject}).json()["subjects"] == {subject: 1, "none": 1}
+    # the rest of the search does count: a title filter narrows every tab
+    assert client.post("/api/exams/facets", json={"q": "chưa phân"}).json()["subjects"] == {"none": 1}

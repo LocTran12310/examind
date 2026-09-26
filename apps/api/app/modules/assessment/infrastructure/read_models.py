@@ -22,7 +22,7 @@ from app.shared.infrastructure.schema.academic import classes
 from app.shared.infrastructure.schema.assessment import assignment_targets, assignments, attempt_answers, attempts, exam_questions, exams
 from app.shared.infrastructure.schema.bank import questions
 from app.shared.infrastructure.schema.identity import users
-from app.shared.infrastructure.sql_search import Col, search
+from app.shared.infrastructure.sql_search import Col, contains, search, where_clauses
 
 e_c, eq_c, a_c, at_c, q_c = exams.c, exam_questions.c, assignments.c, attempts.c, questions.c
 
@@ -37,6 +37,13 @@ EXAM_COLS = {
     "question_count": Col(func.coalesce(_COUNTS.c.n, 0), filterable=False),
     "total_points": Col(func.coalesce(_COUNTS.c.pts, 0), filterable=False),
 }
+def _scoped(stmt, subject_id: uuid.UUID | str | None):
+    """"none" is the exams nobody gave a subject — a real answer, not a missing filter."""
+    if subject_id == "none":
+        return stmt.where(e_c.subject_id.is_(None))
+    return stmt.where(e_c.subject_id == subject_id) if subject_id else stmt
+
+
 EXAM_QUESTION_COLS = {
     "position": Col(eq_c.position, "number"),
     "stem": Col(q_c.stem),
@@ -57,12 +64,26 @@ class SqlExamReader:
     def __init__(self, session: Session):
         self.session = session
 
-    def search(self, org_id: uuid.UUID, req: SearchRequest) -> Page[ExamSummary]:
+    def search(self, org_id: uuid.UUID, req: SearchRequest, subject_id: uuid.UUID | str | None = None) -> Page[ExamSummary]:
         stmt = (select(Exam, _COUNTS.c.n, _COUNTS.c.pts).outerjoin(_COUNTS, _COUNTS.c.exam_id == e_c.id)
                 .where(e_c.organization_id == org_id, e_c.source != "adaptive"))
+        stmt = _scoped(stmt, subject_id)
         rows, total = search(self.session, stmt, req, EXAM_COLS, text=[e_c.title], default_sort=[e_c.created_at.desc(), e_c.id],
                              scalars=False)
         return Page([ExamSummary(e, n or 0, round(float(p or 0), 4)) for e, n, p in rows], total, req.page, req.limit)
+
+    def subject_counts(self, org_id: uuid.UUID, req: SearchRequest) -> dict[str, int]:
+        """Exams per subject under the rest of the search — the numbers on the subject tabs.
+
+        The subject scope itself is left out on purpose: a tab has to say what it would show if you clicked it,
+        and counting inside the tab already chosen would make every other tab read 0."""
+        stmt = select(e_c.subject_id, func.count()).select_from(exams).where(e_c.organization_id == org_id, e_c.source != "adaptive")
+        if req.q:
+            stmt = stmt.where(contains(e_c.title, req.q))
+        for c in where_clauses(EXAM_COLS, req.filters):
+            stmt = stmt.where(c)
+        rows = self.session.execute(stmt.group_by(e_c.subject_id)).all()
+        return {("none" if k is None else str(k)): n for k, n in rows}
 
     def questions(self, exam_id: uuid.UUID, req: SearchRequest) -> Page[ExamQuestionRow]:
         stmt = (select(eq_c.question_id, eq_c.position, eq_c.section, eq_c.points, eq_c.row)

@@ -12,7 +12,7 @@ import { BankFilters } from "@/components/page-components/Bank/BankFilters/BankF
 import { BulkActions } from "@/components/page-components/Bank/BulkBar/BulkBar";
 import { QuestionRow } from "@/components/page-components/Bank/QuestionRow/QuestionRow";
 import { RecentChanges } from "@/components/page-components/Bank/RecentChanges/RecentChanges";
-import { SubjectTabs } from "@/components/page-components/Bank/SubjectTabs/SubjectTabs";
+import { SubjectTabs } from "@/components/common/SubjectTabs/SubjectTabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";

@@ -5,8 +5,26 @@ from pydantic import BaseModel, Field
 
 from app.modules.assessment.application.dto import AssignmentView, AttemptBrief, ExamQuestionView, ExamSummary, ExamView, MyAssignmentView
 from app.modules.assessment.domain.entities import Assignment, Exam
+from app.shared.domain.errors import Invalid
+from app.shared.interface.search_schemas import SearchBody
 
 # ------------------------------------------------------------------ exams
+
+
+class ExamSearchBody(SearchBody):
+    """The subject the list is scoped to sits at the top of the body, like the bank's: an id, or "none" for the
+    exams nobody gave a subject. It is a scope, not a filter — one way to narrow by subject, not two."""
+    subject_id: str | None = None
+
+    def scope(self) -> uuid.UUID | str | None:
+        if self.subject_id == "none":
+            return "none"
+        if not self.subject_id:
+            return None
+        try:
+            return uuid.UUID(self.subject_id)
+        except ValueError:
+            raise Invalid("Môn học không hợp lệ", "subject_id") from None
 
 
 class ExamIn(BaseModel):

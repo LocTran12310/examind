@@ -16,9 +16,14 @@ from app.shared.application.search import Page, SearchRequest
 
 
 class ExamReader(Protocol):
-    def search(self, org_id: uuid.UUID, req: SearchRequest) -> Page[ExamSummary]:
+    def search(self, org_id: uuid.UUID, req: SearchRequest, subject_id: uuid.UUID | str | None = None) -> Page[ExamSummary]:
         """Exams of the org except personal review ones, newest first. Filters: title (text) · grade (number) ·
-        source (enum) · subject_id (uuid) · created_at (date); sort also by question_count, total_points."""
+        source (enum) · subject_id (uuid) · created_at (date); sort also by question_count, total_points.
+        `subject_id` here is the scope the tabs pick — an id, or "none" for the exams with no subject."""
+        ...
+
+    def subject_counts(self, org_id: uuid.UUID, req: SearchRequest) -> dict[str, int]:
+        """Exams per subject under the rest of the search, keyed by id with "none" for those without one."""
         ...
 
     def questions(self, exam_id: uuid.UUID, req: SearchRequest) -> Page[ExamQuestionRow]:

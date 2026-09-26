@@ -29,7 +29,7 @@ from app.modules.assessment.application.queries.my_assignments import MyAssignme
 from app.modules.assessment.application.queries.search_assignments import SearchAssignments, SearchAssignmentsHandler
 from app.modules.assessment.application.queries.search_attempts import SearchAttempts, SearchAttemptsHandler
 from app.modules.assessment.application.queries.search_exam_questions import SearchExamQuestions, SearchExamQuestionsHandler
-from app.modules.assessment.application.queries.search_exams import SearchExams, SearchExamsHandler
+from app.modules.assessment.application.queries.search_exams import ExamFacetsHandler, SearchExams, SearchExamsHandler
 from app.modules.assessment.application.queries.trial_run import TrialRun, TrialRunHandler
 from app.modules.assessment.interface import deps
 from app.modules.assessment.interface.schemas import (
@@ -44,6 +44,7 @@ from app.modules.assessment.interface.schemas import (
     ExamOut,
     ExamPatch,
     ExamQuestionOut,
+    ExamSearchBody,
     GradeIn,
     IdsIn,
     MyAssignmentOut,
@@ -77,10 +78,18 @@ def _server_time(response: Response) -> None:
 
 
 @router.post("/exams/search", response_model=PageOut[ExamOut])
-def search_exams(body: SearchBody, actor: Actor = Depends(staff_actor), handle: SearchExamsHandler = Depends(deps.search_exams)):
-    """Filters: title (text) · grade (number) · source (enum) · subject_id (uuid) · created_at (date); sort also by
-    question_count, total_points. Newest first; personal review exams are left out; rows never embed questions."""
-    return _page(handle(actor, SearchExams(body.to_request())), exam_row_out)
+def search_exams(body: ExamSearchBody, actor: Actor = Depends(staff_actor), handle: SearchExamsHandler = Depends(deps.search_exams)):
+    """Scope: `subject_id` an id or "none". Filters: title (text) · grade (number) · source (enum) · created_at
+    (date); sort also by question_count, total_points. Newest first; personal review exams are left out; rows
+    never embed questions."""
+    return _page(handle(actor, SearchExams(body.to_request(), body.scope())), exam_row_out)
+
+
+@router.post("/exams/facets")
+def exam_facets(body: ExamSearchBody, actor: Actor = Depends(staff_actor), handle: ExamFacetsHandler = Depends(deps.exam_facets)) -> dict[str, dict[str, int]]:
+    """How many exams each subject holds under the rest of this search — the numbers on the subject tabs. The
+    subject scope itself is ignored here: a tab says what it would show if you clicked it."""
+    return handle(actor, SearchExams(body.to_request()))
 
 
 @router.post("/exams", response_model=ExamOut, status_code=201)

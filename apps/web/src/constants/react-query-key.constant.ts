@@ -133,6 +133,7 @@ export const INGESTION_SETTINGS_KEYS = {
 export const EXAM_KEYS = {
   ALL: ["exams"] as const,
   SEARCH: (body: unknown) => ["exams", "search", body] as const,
+  FACETS: (body: unknown) => ["exams", "facets", body] as const,
   DETAIL: (id: string) => ["exams", "detail", id] as const,
   QUESTIONS: (id: string, body: unknown) => ["exams", "questions", id, body] as const,
 };

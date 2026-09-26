@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient, type UseMutationResult, type UseQueryResult } from "@tanstack/react-query";
 import { EXAM_KEYS } from "@/constants/react-query-key.constant";
-import type { BlueprintBody, CreateExamBody, UpdateExamBody } from "@/dtos/exam.dto";
+import type { BlueprintBody, CreateExamBody, ExamSearchBody, UpdateExamBody } from "@/dtos/exam.dto";
 import type { SearchBody } from "@/dtos/search.dto";
 import type { BlueprintResult, Exam, ExamQuestion } from "@/interfaces/exam.interface";
 import type { RowsQueryOptions, SearchPage } from "@/interfaces/search-page.interface";
@@ -31,6 +31,13 @@ function useExamMutation<V, R = Exam>(fn: (v: V) => Promise<R>): UseMutationResu
 }
 
 export const useCreateExamMutation = () => useExamMutation<CreateExamBody>(examService.create);
+
+/** The numbers on the subject tabs: same body as the list minus paging and ordering, which do not move them. */
+export function useExamFacetsQuery(body: ExamSearchBody): UseQueryResult<{ subjects: Record<string, number> }, Error> {
+  const { sort, subject_id, ...rest } = body; // the scope in hand must not shrink the other tabs
+  const facetsBody: ExamSearchBody = { ...rest, page: 1 };
+  return useQuery<{ subjects: Record<string, number> }, Error>({ queryKey: EXAM_KEYS.FACETS(facetsBody), queryFn: () => examService.facets(facetsBody) });
+}
 
 export function useDeleteExamsMutation(): UseMutationResult<void, Error, string[]> {
   const qc = useQueryClient();

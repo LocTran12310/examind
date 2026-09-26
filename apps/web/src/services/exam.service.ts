@@ -1,4 +1,4 @@
-import type { BlueprintBody, CreateExamBody, ExamQuestionIdsBody, ExamQuestionPointsBody, UpdateExamBody } from "@/dtos/exam.dto";
+import type { BlueprintBody, CreateExamBody, ExamQuestionIdsBody, ExamQuestionPointsBody, ExamSearchBody, UpdateExamBody } from "@/dtos/exam.dto";
 import type { SearchBody } from "@/dtos/search.dto";
 import type { BlueprintResult, Exam, ExamQuestion } from "@/interfaces/exam.interface";
 import type { SearchPage } from "@/interfaces/search-page.interface";
@@ -7,6 +7,8 @@ import { http } from "@/lib/common/http";
 export const examService = {
   /** The list never embeds questions (`questions: []`). */
   search: (body: SearchBody) => http<SearchPage<Exam>>("/exams/search", { body }),
+  /** How many exams each subject holds under the rest of the search — the numbers on the subject tabs. */
+  facets: (body: ExamSearchBody) => http<{ subjects: Record<string, number> }>("/exams/facets", { body }),
   get: (id: string) => http<Exam>(`/exams/${id}`),
   create: (body: CreateExamBody) => http<Exam>("/exams", { body }),
   update: (id: string, body: UpdateExamBody) => http<Exam>(`/exams/${id}`, { method: "PATCH", body }),

@@ -35,7 +35,7 @@ from app.modules.assessment.application.queries.my_assignments import MyAssignme
 from app.modules.assessment.application.queries.search_assignments import SearchAssignmentsHandler
 from app.modules.assessment.application.queries.search_attempts import SearchAttemptsHandler
 from app.modules.assessment.application.queries.search_exam_questions import SearchExamQuestionsHandler
-from app.modules.assessment.application.queries.search_exams import SearchExamsHandler
+from app.modules.assessment.application.queries.search_exams import ExamFacetsHandler, SearchExamsHandler
 from app.modules.assessment.application.queries.trial_run import TrialRunHandler
 from app.modules.assessment.domain.ports import FactListener, QuestionBank, Roster, Subjects
 from app.modules.assessment.infrastructure.read_models import SqlAssignmentReader, SqlAttemptHistoryReader, SqlExamReader, SqlPersonalReader, SqlResultReader
@@ -104,6 +104,10 @@ def assessment_api(db: Session) -> AssessmentApi:
 
 def search_exams(db: Session = Depends(get_db)) -> SearchExamsHandler:
     return SearchExamsHandler(SqlExamReader(db))
+
+
+def exam_facets(db: Session = Depends(get_db)) -> ExamFacetsHandler:
+    return ExamFacetsHandler(SqlExamReader(db))
 
 
 def get_exam(db: Session = Depends(get_db)) -> GetExamHandler:
