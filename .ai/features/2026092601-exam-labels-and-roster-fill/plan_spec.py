@@ -51,12 +51,12 @@ t(id="T-01-02", uow="UOW-01", title="Sửa môn và khối tại chỗ trên tra
              "Đề đã có câu hỏi thì có câu cảnh báo"])
 t(id="T-02-01", uow="UOW-02", title="Read model trả ngày giao, hạn và số lượt ôn cá nhân", layer="api", estimate="4h",
   verifies=["AC-04", "AC-05", "AC-06", "AC-07"], assumptions=["A-03", "A-04"],
-  tests=[f"{API}/tests/test_stats_api.py"],
+  tests=[f"{API}/tests/test_practice_api.py", f"{API}/tests/unit/test_analytics_handlers.py"],
   touches=[f"{M}/assessment/infrastructure/read_models.py",
            f"{M}/assessment/application/dto.py",
-           f"{M}/analytics/domain/ports.py",
-           f"{M}/analytics/application/queries/class_overview.py",
-           f"{M}/analytics/interface/router.py"],
+           f"{M}/analytics/domain/value_objects.py",
+           f"{M}/analytics/infrastructure/adapters/assessment.py",
+           f"{M}/analytics/application/queries/class_overview.py"],
   context="ADR-02. Cùng một truy vấn: lượt mới nhất cộng COUNT tổng số lượt. Đếm ở Python sau limit 1 sẽ luôn "
           "ra 1 — đó là cái bẫy của ticket này.",
   done_when=["Trả tên đề, assignment_id, open_at, close_at, status và tổng số lượt",

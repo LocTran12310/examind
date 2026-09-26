@@ -171,10 +171,15 @@ class SqlPersonalReader:
                 for a, e in rows]
 
     def latest_review(self, org_id: uuid.UUID, student_id: uuid.UUID) -> PersonalReviewRow | None:
+        """The newest personal review paper of one student, with how many that student has in all.
+
+        The count is a window function on the same statement, not a second query and not `len(rows)`: the
+        window is computed over the whole result set *before* LIMIT, so it still says 3 when the row returned
+        is only the latest of three. Counting in Python after `limit(1)` would answer 1 every time (ADR-02)."""
         t_c = assignment_targets.c
         row = self.session.execute(
-            select(Assignment, at_c.status).join(Exam, e_c.id == a_c.exam_id)
+            select(Assignment, at_c.status, func.count().over().label("total")).join(Exam, e_c.id == a_c.exam_id)
             .join(assignment_targets, t_c.assignment_id == a_c.id)
             .outerjoin(attempts, (at_c.assignment_id == a_c.id) & (at_c.student_id == student_id))
             .where(t_c.user_id == student_id, e_c.source == "adaptive", a_c.organization_id == org_id).order_by(a_c.created_at.desc()).limit(1)).first()
-        return PersonalReviewRow(row[0].id, row[0].title, row[1] or "not_started") if row else None
+        return PersonalReviewRow(row[0].id, row[0].title, row[1] or "not_started", row[0].open_at, row[0].close_at, row[2]) if row else None

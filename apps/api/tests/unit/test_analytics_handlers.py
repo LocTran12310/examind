@@ -481,12 +481,14 @@ def test_class_overview_and_practice_history():
     mastery = recorded(*enough_answers(PROP, 0.0), *enough_answers(SETS, 0.4, first=10),
                        *enough_answers(GEO, 0.0, MIN_ANSWERS - 1, first=20))
     assessment = FakeAssessment()
-    assessment.reviews[student.id] = ReviewStatus(uuid.uuid4(), "Đề ôn cá nhân", "not_started")
+    assessment.reviews[student.id] = ReviewStatus(uuid.uuid4(), "Đề ôn cá nhân", "not_started", NOW, NOW + timedelta(days=7), 3)
     teacher = Member(uuid.uuid4(), "Cô Lan", "gv01", True, "teacher")
     ov = ClassOverviewHandler(mastery, FakeTopics(), FakeRoster([student, teacher]), assessment, lambda: NOW)(TEACHER, ClassOverview(KLASS))
     assert [o["username"] for o in ov] == ["hs01"]
     assert [w["name"] for w in ov[0]["weakest"]] == ["Mệnh đề", "Tập hợp"]  # Hình học has too little behind it
-    assert ov[0]["review"]["status"] == "not_started"
+    # the cell has to say which paper, when it was given, by when, and that it is not the only one (ADR-02)
+    assert ov[0]["review"]["status"] == "not_started" and ov[0]["review"]["title"] == "Đề ôn cá nhân"
+    assert ov[0]["review"]["close_at"] == NOW + timedelta(days=7) and ov[0]["review"]["total"] == 3
 
     settings = {"adaptive": {"note": None, "plan": [{"question_id": "q1", "reason": "Chuyên đề yếu", "topic": "Mệnh đề"},
                                                     {"question_id": "q2", "reason": "Chuyên đề yếu", "topic": "Mệnh đề"},

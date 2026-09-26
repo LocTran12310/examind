@@ -30,5 +30,6 @@ class ClassOverviewHandler:
             rows = mastery_rows(self.mastery, self.topics, actor.org_id, u.id, self.clock())
             out.append({"student_id": u.id, "full_name": u.full_name, "username": u.username,
                         "weakest": [{"name": r["name"], "mastery": r["mastery"], "answers": r["answers"]} for r in weak_topics(rows, PLAN_TOPICS)],
-                        "review": {"assignment_id": review.assignment_id, "title": review.title, "status": review.status} if review else None})
+                        "review": {"assignment_id": review.assignment_id, "title": review.title, "status": review.status,
+                                   "open_at": review.open_at, "close_at": review.close_at, "total": review.total} if review else None})
         return out

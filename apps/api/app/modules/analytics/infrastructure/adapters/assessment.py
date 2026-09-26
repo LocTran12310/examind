@@ -42,4 +42,4 @@ class AssessmentExams:
 
     def latest_review(self, org_id: uuid.UUID, student_id: uuid.UUID) -> ReviewStatus | None:
         r = self.assessment.latest_personal_review(org_id, student_id)
-        return ReviewStatus(r.assignment_id, r.title, r.status) if r else None
+        return ReviewStatus(r.assignment_id, r.title, r.status, r.open_at, r.close_at, r.total) if r else None

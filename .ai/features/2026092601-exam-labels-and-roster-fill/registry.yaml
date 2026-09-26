@@ -86,7 +86,7 @@ ticket:
     layer: api
     type: feature
     estimate_hours: 4
-    status: todo
+    status: done
     depends_on: []
     blocks:
       - T-02-02
@@ -98,9 +98,9 @@ ticket:
     touches:
       - apps/api/app/modules/assessment/infrastructure/read_models.py   # new
       - apps/api/app/modules/assessment/application/dto.py   # new
-      - apps/api/app/modules/analytics/domain/ports.py   # new
+      - apps/api/app/modules/analytics/domain/value_objects.py   # new
+      - apps/api/app/modules/analytics/infrastructure/adapters/assessment.py   # new
       - apps/api/app/modules/analytics/application/queries/class_overview.py   # new
-      - apps/api/app/modules/analytics/interface/router.py   # new
   - id: T-02-02
     uow: UOW-02
     title: 'Ô đề ôn cá nhân trên bảng tổng quan lớp'

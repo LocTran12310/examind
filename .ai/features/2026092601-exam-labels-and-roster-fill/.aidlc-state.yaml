@@ -84,3 +84,23 @@ history:
     by: Loc Tran
     reason: T-01-01 đã đóng và commit SAU khi T-01-02 start, nên các file của nó nằm trong cửa sổ base của ticket này; không phải thay đổi ngoài phạm vi
     ticket: T-01-02
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-26T10:42:28
+    by: Claude Opus 5
+    ticket: T-02-01
+  - gate: G4
+    action: scope
+    at: 2026-09-26T10:45:54
+    by: Loc Tran
+    ticket: T-02-01
+  - gate: G4
+    action: evidence
+    at: 2026-09-26T10:46:11
+    by: Loc Tran
+    ticket: T-02-01
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-26T10:46:11
+    by: Loc Tran
+    ticket: T-02-01

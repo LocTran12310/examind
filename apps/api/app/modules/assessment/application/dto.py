@@ -130,7 +130,12 @@ class PracticeAttemptRow:
 
 @dataclass(frozen=True)
 class PersonalReviewRow:
-    """The latest personal review exam assigned to a student and where the student is with it."""
+    """The latest personal review exam assigned to a student, where the student is with it, and how many such
+    papers that student has been given altogether (ADR-02) — the count is what stops the cell from implying the
+    latest one is the only one."""
     assignment_id: uuid.UUID
     title: str
     status: str  # not_started | in_progress | submitted
+    open_at: datetime
+    close_at: datetime
+    total: int

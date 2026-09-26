@@ -70,3 +70,7 @@ class ReviewStatus:
     assignment_id: uuid.UUID
     title: str
     status: str
+    open_at: datetime
+    close_at: datetime
+    #: personal review papers this student has been given altogether, not just this one
+    total: int

@@ -43,5 +43,15 @@ def test_teacher_assigns_personal_review_to_class(client, db):
         assert len(mine) == 1 and mine[0]["state"] == "open"
     ov = client.get(f"/api/classes/{klass['id']}/overview").json()
     assert all(o["review"] and o["review"]["status"] == "not_started" for o in ov)
+    # the cell has to answer four questions, not one: which paper, given when, due when, and how many in all
+    assert all(o["review"]["title"] == "Đề ôn cá nhân" and o["review"]["open_at"] and o["review"]["close_at"] for o in ov)
+    assert all(o["review"]["total"] == 1 for o in ov)
+    # give the class a second round: the newest paper is the one shown, and the count says it is not alone.
+    # Counting rows in Python after `limit(1)` would answer 1 here — which is the whole point of the window (ADR-02)
+    client.post(f"/api/classes/{klass['id']}/adaptive-assignments",
+                json={"count": 10, "open_at": now().isoformat(), "close_at": (now() + timedelta(days=3)).isoformat(), "duration_minutes": 30})
+    ov2 = client.get(f"/api/classes/{klass['id']}/overview").json()
+    assert all(o["review"]["total"] == 2 for o in ov2)
+    assert {o["review"]["assignment_id"] for o in ov2}.isdisjoint({o["review"]["assignment_id"] for o in ov})
     assert login(client, "trungtama", "hs01").post(f"/api/classes/{klass['id']}/adaptive-assignments", json={
         "count": 5, "open_at": now().isoformat(), "close_at": (now() + timedelta(days=1)).isoformat()}).status_code == 403
