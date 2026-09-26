@@ -107,8 +107,8 @@ verify-check: ## Check the evidence backs the claims: make verify-check f=.ai/fe
 
 E2E := .ai/e2e/teaching-loop
 
-e2e-fixture: ## The sandbox the end-to-end walk runs in: class, students, questions (idempotent)
-	python3 scripts/e2e_fixture.py
+e2e-fixture: ## The sandbox the walk runs in: class, students, questions (idempotent). ARGS=--with-exam also gives the class a paper
+	python3 scripts/e2e_fixture.py $(ARGS)
 
 e2e: ## Walk the whole teaching loop in a browser — six sessions, one teacher and four students
 	@for env in e2e-teacher e2e-hs01 e2e-hs02 e2e-hs03 e2e-hs04 e2e-report; do \

@@ -15,9 +15,10 @@ environment của nó đều `required: false` một cách cố ý.
 
 ```bash
 make e2e-fixture      # dựng lớp thử, 4 học sinh thử, chuyên đề thử, 10 câu hỏi (chạy lại được)
+make e2e-fixture ARGS=--with-exam   # thêm đề "E2E · bài mẫu" và giao cho lớp thử — cho bản kiểm cần sẵn một bài
 make e2e              # 20 bước, 6 phiên đăng nhập, ảnh chụp vào teaching-loop/evidence/
-make e2e-teardown     # nói xem sẽ xoá gì
-ARGS=--yes make e2e-teardown   # xoá nốt các bài làm (SQL) rồi dựng lại mastery
+make e2e-teardown     # xoá đề, bài giao, câu hỏi, lớp và vô hiệu hoá 4 tài khoản thử; bài làm thì chỉ in câu SQL
+make e2e-teardown ARGS=--yes   # xoá nốt các bài làm (SQL) rồi dựng lại mastery
 ```
 
 `make e2e` seed sẵn mã tổ chức vào cả sáu phiên trình duyệt; `.ai/credentials.env` phải có `E2E_TEACHER_*` và
@@ -33,6 +34,11 @@ lớp có thật nào: fixture dựng lớp `E2E · lớp thử` và bốn tài 
 | Duyệt một câu (S2) | **Có, và kịch bản tự làm** — S3 hoàn tác đúng lượt đó |
 | Tạo đề, giao bài | Có — cho tới khi có học sinh làm |
 | Bốn bài làm đã nộp | **Không, qua sản phẩm** — và điều đó là đúng: một câu trả lời thật không phải thứ giáo viên nên xoá được |
+
+**`--yes` chỉ gác phần SQL, không gác cả lệnh.** Chạy `make e2e-teardown` trần **đã xoá** mọi thứ API xoá
+được — đề, bài giao, chuyên đề và câu hỏi, lớp thử — rồi mới dừng ở chỗ các bài làm. Tôi từng đọc dòng mô tả cũ
+("nói xem sẽ xoá gì") rồi chạy nó để xem thử, và mất nguyên sandbox vừa dựng. Dựng lại được bằng một lệnh, nhưng
+đừng chạy nó để thăm dò.
 
 Nên mỗi vòng để lại một đề, một bài giao, bốn bài làm và 40 dòng `answer_facts`. `make e2e-teardown ARGS=--yes`
 gỡ hết: nó in câu SQL xoá bài làm (các `answer_facts` đi theo vì khoá ngoại là `ON DELETE CASCADE`), chạy khi

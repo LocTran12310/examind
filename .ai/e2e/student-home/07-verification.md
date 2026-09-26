@@ -15,16 +15,20 @@ mỗi mục một cấu trúc khác nhau.
 
 | ID | Step | Path | Interaction | Verifies | Assert | Env |
 |---|---|---|---|---|---|---|
-| S1 | Trang chủ học sinh: các mục còn nguyên, không có tiêu đề môn thừa | `/home` | `settle 5000` | flat-when-one-subject | `text=Đang mở`; `count h3 = 0`; `no-text=Chưa rõ môn`; `no-text=Có lỗi xảy ra` | e2e-hs01 |
+| S1 | Trang chủ học sinh: có bài để hiện, và không một tiêu đề môn nào | `/home` | `settle 5000` | flat-when-one-subject | `text=Đang mở`; `count [data-testid="open-E2E · bài mẫu"] = 1`; `count [data-testid="open-E2E · bài mẫu"] button:has-text("Bắt đầu") = 1`; `count h3 = 0`; `no-text=Không có bài nào đang mở`; `no-text=Chưa rõ môn`; `no-text=Có lỗi xảy ra` | e2e-hs01 |
 
-**Và phải nói thẳng bước này chứng minh được tới đâu.** Tài khoản `e2e.hs01` vừa dựng lại **chưa được giao bài
-nào**, nên ảnh chụp là trạng thái rỗng ("Không có bài nào đang mở"). Với danh sách rỗng thì `count h3 = 0` đúng
-một cách tầm thường — nó **không** phân biệt được hai bản dựng. Thứ bước này thật sự chứng minh là hẹp hơn
-nhiều, và vẫn đáng có: một học sinh thật đăng nhập được, trang chủ dựng được cho vai học sinh, và vòng lặp nhóm
-mới thêm vào **không ném lỗi** trên đường đi.
+**`count h3 = 0` chỉ có nghĩa khi danh sách không rỗng, nên phải giao bài trước.** Lượt chạy đầu của bản này đi
+trên một `e2e.hs01` chưa được giao gì: ảnh chụp là trạng thái rỗng ("Không có bài nào đang mở"), và với danh sách
+rỗng thì "không có tiêu đề nào" đúng một cách tầm thường — nó không phân biệt được bản dựng nào với bản dựng nào.
+Giờ `make e2e-fixture ARGS=--with-exam` giao `E2E · bài mẫu` cho lớp thử, nên ba khẳng định đi cùng nhau mới là
+bằng chứng: **có** đúng thẻ bài ấy (`count [data-testid="open-E2E · bài mẫu"] = 1`), **không** có tiêu đề môn
+(`count h3 = 0`), và mục không phải trạng thái rỗng (`no-text=Không có bài nào đang mở`). Một bản dựng luôn in
+tiêu đề — cách hiển nhiên để viết cái nhóm này — sẽ ra `h3 = 1` và đỏ ở đúng đây.
 
-Muốn nó nói được nhiều hơn thì phải giao cho em ấy một bài thật, tức thêm một bước của vai giáo viên và một bài
-giao vào lớp thử. Chưa làm; ghi ra đây để lần sau không ai đọc dòng "2/2" rồi tưởng cái nhóm đã được chụp ảnh.
+**Đề của fixture mang môn Toán thật**, không để trống. Nếu để trống thì `subject_id` của bài giao là `null` và
+`count h3 = 0` xanh nhờ nhánh "không có môn nào" chứ không nhờ nhánh "một môn" — hai nhánh khác nhau trong
+`group-by-subject.ts`, và nhánh đáng kiểm ở trung tâm này là nhánh sau. Đây cũng là đường đi qua `subjects_of`
+ở tầng API: một đề không môn thì cái truy vấn ấy không phải trả lời gì.
 
 ## Không kiểm ở đây
 
@@ -32,3 +36,23 @@ giao vào lớp thử. Chưa làm; ghi ra đây để lần sau không ai đọc
   tâm này: nó dạy một môn. Thêm môn thứ hai vào ngân hàng thật chỉ để chụp ảnh là thêm dữ liệu bịa vào nơi anh
   đang dùng thật. Chốt ở `assign.test.tsx`, nơi dựng ba bài của hai môn cộng một bài không môn và khẳng định
   đúng ba tiêu đề theo thứ tự `["Toán", "Vật lý", "Chưa rõ môn"]`.
+- **Mục "Đã làm"** vẫn chưa có ảnh: lớp thử chưa em nào nộp bài, nên mục ấy không tồn tại trên trang. Nó có ảnh
+  khi kịch bản vòng dạy học chạy hết bốn em; cho tới lúc đó, nhóm của mục ấy được chốt ở `assign.test.tsx`.
+
+## Dữ liệu
+
+Bước này **chỉ đọc** — nó dừng trước nút "Bắt đầu", nên không mở bài làm nào. Bài giao mà nó cần là của fixture
+(`E2E · bài mẫu` trong `E2E · lớp thử`), dựng một lần và dùng lại: `_paper` tìm theo tiêu đề trước khi tạo, nên
+chạy `make e2e-fixture ARGS=--with-exam` nhiều lần không sinh thêm bài giao nào.
+
+**Tên của nó cố tình khác tên đề của vòng dạy học.** Lần đầu tôi đặt trùng `E2E · vòng dạy học`, và đó là một cái
+bẫy: kịch bản `teaching-loop` **tự dựng** đề tên ấy qua màn hình, nên hai đề cùng tên sẽ nằm cạnh nhau trong một
+tổ chức. Mọi `click td:has-text("E2E · vòng dạy học")` và mọi `[data-testid="open-E2E · vòng dạy học"]` khi ấy
+khớp hai phần tử, và Playwright lấy cái **đầu tiên** — bước vẫn xanh, nhưng xanh trên cái đề nó không định nói
+tới. Đã xoá đề đặt nhầm ấy (chưa em nào làm) và dựng lại dưới tên riêng.
+
+**`count h3 = 0` giả định sandbox chỉ có bài của fixture.** Đề mà `teaching-loop` dựng qua màn hình **không mang
+môn** (bước S4 chưa chọn Môn), nên nếu chạy bản này ngay sau một vòng dạy học chưa dọn, mục "Đang mở" có hai môn
+khác nhau — một Toán, một trống — và tiêu đề nhóm sẽ hiện đúng như thiết kế, làm bước này đỏ vì dữ liệu chứ không
+vì sản phẩm. Chạy nó trên sandbox sạch (sau `make e2e-teardown`), hoặc thêm bước chọn Môn vào S4 của vòng ấy khi
+nào chạy lại cả vòng.

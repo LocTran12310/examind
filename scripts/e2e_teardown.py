@@ -9,7 +9,7 @@ So this script does everything the API can do, and for the attempts it prints th
 them — `answer_facts.attempt_id` is ON DELETE CASCADE, so the facts go with them — and runs it only when you
 pass --yes. Deleting rows from a live database is the owner's decision, not a script's default.
 
-    python3 scripts/e2e_teardown.py            # say what would go, delete nothing that needs SQL
+    python3 scripts/e2e_teardown.py            # delete everything the API can; only the attempts are held back
     python3 scripts/e2e_teardown.py --yes      # also delete the attempts, then rebuild mastery
 
 Run it between two walks: a second walk on an uncleaned organisation makes a second exam of the same name.
@@ -21,11 +21,14 @@ import sys
 sys.path.insert(0, __import__("os").path.dirname(__file__))
 from e2e_fixture import CLASS_NAME, PREFIX, STUDENTS, TOPIC_NAME, Api, credentials, one  # noqa: E402
 
-EXAM_TITLE = f"{PREFIX} · vòng dạy học"
+# Everything the sandbox creates is prefixed, and there is more than one paper now — the walk's own
+# `E2E · vòng dạy học` and the fixture's `E2E · bài mẫu`. Matching the prefix rather than one title is what
+# keeps a second paper from being left behind silently.
+TITLE_LIKE = f"{PREFIX} %"
 ATTEMPT_SQL = """delete from attempts a
  using assignments s, exams e
  where a.assignment_id = s.id and s.exam_id = e.id
-   and e.organization_id = '{org}' and e.title = '{title}'"""
+   and e.organization_id = '{org}' and e.title like '{title}'"""
 
 
 def psql(sql: str) -> str:
@@ -46,16 +49,17 @@ def main() -> None:
                                 "username": env.get("LOCAL_USER"), "password": env.get("LOCAL_PASSWORD")})
     org = api("GET", "/auth/me")["org"]["id"]
 
-    exams = [e for e in api("POST", "/exams/search", {"page": 1, "limit": 200})["data"] if e["title"] == EXAM_TITLE]
+    all_exams = api("POST", "/exams/search", {"page": 1, "limit": 200})["data"]
+    exams = [e for e in all_exams if e["title"].startswith(PREFIX + " ")]
     if any(not e["title"].startswith(PREFIX) for e in exams):      # belt and braces: nothing without the prefix
         raise SystemExit("từ chối: có đề không mang tiền tố E2E trong danh sách sẽ xoá")
     attempts = int(psql(f"select count(*) from attempts a join assignments s on s.id = a.assignment_id "
                         f"join exams e on e.id = s.exam_id where e.organization_id = '{org}' "
-                        f"and e.title = '{EXAM_TITLE}'") or 0)
+                        f"and e.title like '{TITLE_LIKE}'") or 0)
     print(f"đề    : {len(exams)} · bài làm đã nộp: {attempts}")
 
     if attempts:
-        sql = ATTEMPT_SQL.format(org=org, title=EXAM_TITLE)
+        sql = ATTEMPT_SQL.format(org=org, title=TITLE_LIKE)
         if not args.yes:
             print("\nCòn bài làm. Xoá chúng là thao tác không hoàn lại được và phải do anh quyết — chạy lại với --yes,")
             print("hoặc tự chạy câu này:\n")
@@ -65,7 +69,7 @@ def main() -> None:
         print(f"\nxoá bài làm:\n  {sql}")
         psql(sql)
         left = psql(f"select count(*) from attempts a join assignments s on s.id = a.assignment_id "
-                    f"join exams e on e.id = s.exam_id where e.organization_id = '{org}' and e.title = '{EXAM_TITLE}'")
+                    f"join exams e on e.id = s.exam_id where e.organization_id = '{org}' and e.title like '{TITLE_LIKE}'")
         print(f"  → còn {left} bài")
 
     # Filtering happens here, on ids this script itself resolved from the title — never by a key handed to a

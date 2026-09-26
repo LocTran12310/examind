@@ -1541,3 +1541,36 @@ này nằm trong chính bộ kiểm chứng. Nó là skill dùng chung nên tôi
 
 **Kiểm chứng.** Web 304 → **306 passed**; API các file liên quan 14 passed; tsc, ESLint, ruff và 4 import
 contract xanh.
+
+## 45. Giao bài cho lớp thử, và ba cái bẫy trên đường (2026-09-26)
+
+§44 kết thúc bằng một bản kiểm "2/2" mà ảnh chụp là **trang rỗng**: `e2e.hs01` chưa được giao bài nào, nên
+"không có tiêu đề môn nào" đúng một cách tầm thường. Anh bảo giao bài rồi kiểm lại. Hoá ra `e2e_fixture.py`
+đã có sẵn `--with-exam` — dựng một đề 10 câu và giao cho lớp thử, tìm theo tiêu đề trước khi tạo nên chạy lại
+được. Giờ `make e2e-fixture ARGS=--with-exam` (cờ đi qua Makefile, trước đây không).
+
+Bước S1 nay khẳng định ba thứ đi cùng nhau: **có** đúng thẻ bài ấy, **không** có tiêu đề môn, và mục **không**
+phải trạng thái rỗng. Một bản dựng luôn in tiêu đề — cách hiển nhiên để viết cái nhóm này — ra `h3 = 1` và đỏ.
+Đó là khác biệt giữa một khẳng định và một câu mô tả. 2/2 xanh, đọc cả hai ảnh, thẻ "E2E · bài mẫu" nằm đó.
+
+**Bẫy 1 — hai đề cùng tên.** Lần đầu tôi để fixture đặt tên đề là `E2E · vòng dạy học`, trùng đúng tên mà kịch
+bản `teaching-loop` **tự dựng qua màn hình**. Hai đề cùng tên trong một tổ chức làm mọi
+`click td:has-text(...)` và mọi `[data-testid="open-<tên>"]` khớp hai phần tử, Playwright lấy cái đầu tiên —
+bước vẫn xanh, nhưng xanh trên cái đề nó không định nói tới. Đã xoá đề đặt nhầm (chưa em nào làm) và tách tên:
+`E2E · bài mẫu` cho fixture, `E2E · vòng dạy học` cho vòng dạy học.
+
+**Bẫy 2 — đề của fixture phải mang môn.** Để trống thì `subject_id` là `null`, và `h3 = 0` xanh nhờ nhánh
+"không có môn nào" chứ không nhờ nhánh "một môn" — hai nhánh khác nhau trong `group-by-subject.ts`, và nhánh
+đáng kiểm ở trung tâm này là nhánh sau. Nay đề mang môn Toán thật, nên khẳng định đi qua đúng `subjects_of`
+ở tầng API. (Đề mà `teaching-loop` dựng qua màn hình vẫn chưa chọn môn — ghi trong bản spec, sửa khi nào chạy
+lại cả vòng.)
+
+**Bẫy 3 — `make e2e-teardown` xoá thật.** README viết "nói xem sẽ xoá gì"; tôi đọc dòng ấy rồi chạy thử để xem
+nó có thấy đề mới không, và nó **xoá sạch sandbox vừa dựng**. `--yes` chỉ gác phần SQL (các bài làm), không gác
+cả lệnh: đề, bài giao, chuyên đề, câu hỏi và lớp thử đi ngay ở lần chạy trần. Dựng lại bằng một lệnh nên không
+mất gì, và không có dữ liệu thật nào trong tầm — script lọc theo tiền tố `E2E` và từ chối nếu có đề không mang
+tiền tố ấy. Đã sửa cả dòng README lẫn docstring của script cho đúng việc nó làm. Và tiện thể teardown giờ dọn
+theo **tiền tố** thay vì đúng một tiêu đề, nên không bỏ sót đề thứ hai.
+
+**Kiểm chứng.** Trình duyệt: 1 bước × 2 viewport, **2/2**, đọc cả hai ảnh. Không đụng mã sản phẩm, nên không
+chạy lại bộ test — thay đổi nằm ở `scripts/e2e_fixture.py`, `scripts/e2e_teardown.py`, `Makefile` và hai bản spec.

@@ -24,7 +24,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PREFIX = "E2E"
 CLASS_NAME = f"{PREFIX} · lớp thử"
 TOPIC_NAME = f"{PREFIX} · chuyên đề thử"
-EXAM_TITLE = f"{PREFIX} · vòng dạy học"
+EXAM_TITLE = f"{PREFIX} · vòng dạy học"      # the walk builds this one through the screens
+PAPER_TITLE = f"{PREFIX} · bài mẫu"          # --with-exam: a paper already sitting in the class, for specs that need one
 STUDENT_PASSWORD = "E2eHocSinh!2026"
 STUDENTS = [("e2e.hs01", "E2E Học sinh 01"), ("e2e.hs02", "E2E Học sinh 02"),
             ("e2e.hs03", "E2E Học sinh 03"), ("e2e.hs04", "E2E Học sinh 04")]
@@ -156,24 +157,30 @@ def build(api: Api, show: bool, reset: bool, with_exam: bool = False) -> dict:
 
     exam = assignment = None
     if with_exam and made_questions and klass and not show:
-        exam, assignment = _paper(api, klass, made_questions)
+        exam, assignment = _paper(api, klass, made_questions, subject)
     return {"subject": subject, "topic": topic, "class": klass, "students": students,
             "questions": made_questions, "created_students": made, "exam": exam, "assignment": assignment}
 
 
-def _paper(api: Api, klass: dict, questions: list) -> tuple[dict, dict]:
-    """An exam of the ten questions, already given to the test class. The end-to-end walk builds these through
-    the screens on purpose — this is for the verification runs that need a paper to already be sitting there."""
-    exam = one(api("POST", "/exams/search", {"page": 1, "limit": 200})["data"], EXAM_TITLE, "title")
+def _paper(api: Api, klass: dict, questions: list, subject: dict) -> tuple[dict, dict]:
+    """An exam of the ten questions, already given to the test class. The end-to-end walk builds its own paper
+    through the screens on purpose, so this one carries a **different title**: two exams of the same name in one
+    organisation make every `click td:has-text(...)` and every `[data-testid="open-<title>"]` ambiguous, and the
+    step picks whichever came first rather than the one it means."""
+    exam = one(api("POST", "/exams/search", {"page": 1, "limit": 200})["data"], PAPER_TITLE, "title")
     if exam is None:
-        exam = api("POST", "/exams", {"title": EXAM_TITLE})
+        # the subject is part of the fixture, not decoration: what a student sees grouped by subject comes from
+        # exams.subject_id, so a paper without one would exercise the null branch and nothing else
+        exam = api("POST", "/exams", {"title": PAPER_TITLE, "subject_id": subject["id"]})
         api("POST", f"/exams/{exam['id']}/questions", {"question_ids": [q["id"] for q in questions]})
         exam = api("GET", f"/exams/{exam['id']}")
-    assignment = one(api("POST", "/assignments/search", {"page": 1, "limit": 200})["data"], EXAM_TITLE, "title")
+    elif not exam.get("subject_id"):
+        exam = api("PATCH", f"/exams/{exam['id']}", {"subject_id": subject["id"]}) or exam
+    assignment = one(api("POST", "/assignments/search", {"page": 1, "limit": 200})["data"], PAPER_TITLE, "title")
     if assignment is None:
         opens = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=1)
         assignment = api("POST", "/assignments", {
-            "exam_id": exam["id"], "title": EXAM_TITLE, "class_ids": [klass["id"]],
+            "exam_id": exam["id"], "title": PAPER_TITLE, "class_ids": [klass["id"]],
             "open_at": opens.isoformat(), "close_at": (opens + datetime.timedelta(days=7)).isoformat(),
             "duration_minutes": 120, "max_attempts": 1,
             # deterministic labels: a verification step that clicks "phương án A" must mean the same A every run
@@ -194,7 +201,7 @@ def report(state: dict) -> None:
             count = sum(1 for s in QUESTIONS if s["type"] == qtype)
             print(f"  {qtype:<13} ×{count}  {json.dumps(key, ensure_ascii=False)}")
     if state.get("assignment"):
-        print(f"bài giao  : {EXAM_TITLE} · {state['assignment']['id']}")
+        print(f"bài giao  : {PAPER_TITLE} · {state['assignment']['id']}")
     print("\ndán vào .ai/credentials.env:")
     for username, _ in STUDENTS:
         print(f"  {username.replace('e2e.hs', 'E2E_HS').upper()}_USER={username}")
