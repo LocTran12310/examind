@@ -1468,3 +1468,51 @@ hỏng vào ngày người dùng động tới nó** — và tệ hơn, nó hỏ
 
 **Kiểm chứng.** Web **292 passed**, tsc và ESLint xanh. Trình duyệt: `add-student-flow` **8/8**,
 `owner-walk-2` **14/14**, và bản kiểm của F23 (trang lớp) **10/10** — tất cả hai viewport, đọc từng ảnh.
+
+## 43. F26 `2026092602-student-side-subjects` + màn hình nhập tài khoản (2026-09-26)
+
+Anh hỏi **"Tạo đề ôn tập lưu ở đâu? Môn gì?"**, và câu hỏi ấy mở ra cùng một hình dạng lỗi lần thứ ba trong
+ngày: **dữ liệu có chỗ, API nhận, màn hình không hỏi.**
+
+Đề ôn tập lưu cùng chỗ với mọi đề khác — một hàng `exams`, đánh dấu `adaptive` nên không lọt vào "Đề thi & giao
+bài" — kèm một lượt làm bài mở sẵn. Môn thì **không có: 0/95**. `POST /me/practice` đã nhận `subject_id` và bộ
+lập kế hoạch đã dùng nó để thu hẹp ngân hàng, nhưng cổng `create_exam` phía analytics không có tham số nào để
+truyền môn xuống, nên nó **rơi mất giữa đường**.
+
+**Kết quả dò toàn bộ phía học sinh** (anh yêu cầu): trang chủ "Bài được giao" phẳng (ghi lại, chưa làm); nút tạo
+đề không gửi môn; `TopicStatsTree` **đã biết** nhóm theo môn từ F23 nhưng trang không truyền dữ liệu môn vào;
+mức nắm vững phẳng, cắt cứng ở 8 dòng; lịch sử ôn tập phẳng, **không ẩn được, không lọc được** — nguyên văn của
+anh.
+
+**Hai quyết định là của anh, không phải của tôi** (chat 2026-09-26): chọn môn **trước** khi tạo đề, và trang
+tiến độ dùng **bộ chọn môn** như trang Báo cáo. Tôi hỏi vì cả hai đều có hai câu trả lời hợp lý và đoán sai thì
+phải làm lại.
+
+**ADR-03 là chỗ đáng đọc nhất.** Bộ chọn môn phải áp cho **cả bốn khối** hoặc đừng làm: một bộ chọn chỉ áp cho
+nửa trang là cái bẫy đọc số tệ nhất bày ra được — người đọc chọn "Toán" rồi đọc một con số của mọi môn mà không
+có gì trên màn hình nói ra điều đó. Nó buộc phải mở lại G3 giữa chừng để thêm một ticket API: `/me/mastery` và
+`/me/practice` không nói môn của từng hàng, nên nếu bỏ qua thì bộ chọn chỉ narrow được hai trong bốn khối.
+
+Hai danh sách ấy ngắn (≤20 lượt, vài chục chuyên đề) nên chúng chỉ cần **nói ra** môn của từng hàng, còn lọc làm
+ở tầng đọc — rẻ hơn luồn một bộ lọc qua ba lớp, và còn hiện được môn lên màn hình. **Lượt ôn cũ trả `null` và
+không rơi vào môn nào** khi đang lọc: một bộ lọc lặng lẽ nhận chúng về môn đang xem là nói dối về quá khứ.
+
+**Môn yếu nhất đọc từ dữ liệu trang đã có**, không fetch thêm. Và "môn chưa ai trả lời câu nào" **không phải**
+môn yếu nhất — chưa đo khác với yếu, đúng luật mà các dải mức nắm vững được dựng trên.
+
+**Màn hình nhập tài khoản** (việc song song): bước một là một `<input type="file">` native trần — chỗ cuối còn
+sót của quy ước "shadcn thay control native" mà repo đã áp ở mọi nơi khác. Nay là ô bấm-hoặc-kéo-thả, kèm **file
+mẫu đặt thẳng trong source** và link tải. Các cột của file mẫu được đối chiếu với chính `user_import.py` chứ
+không chép theo mô tả trên màn hình — lần này mô tả đúng, nhưng biết nó đúng vì đã đọc mới là bằng chứng.
+
+**Một bước kiểm bị bỏ vì trình duyệt không mở được thứ nó định mở.** Bước mở thẳng file mẫu đỏ với "Download is
+starting": `.csv` khiến Chromium tải về chứ không hiện trang. Đỏ vì định dạng, không vì sản phẩm — và điều nó
+định khẳng định đã nằm ở chỗ tốt hơn: một test đọc `href` từ DOM rồi mở file **trên đĩa** và so hàng tiêu đề với
+bộ phân tích.
+
+**Phần không kiểm được trên trình duyệt lần này lớn hơn thường lệ, và lý do là thật:** bộ chọn môn chỉ hiện khi
+có **từ hai môn**, lịch sử chỉ gập khi một em đã ôn **từ bốn lượt** — trung tâm seed không có cả hai. Dựng chúng
+nghĩa là thêm một môn bịa vào ngân hàng thật và bốn lượt ôn bịa vào hồ sơ một em thật, đúng cái giá §42 vừa trả.
+
+**Kiểm chứng.** API **581 passed, 1 skipped**; web 292 → **304 passed**; tsc, ESLint, ruff và 4 import contract
+xanh. Trình duyệt: 1 bước × 2 viewport, **2/2**, đọc ảnh.
