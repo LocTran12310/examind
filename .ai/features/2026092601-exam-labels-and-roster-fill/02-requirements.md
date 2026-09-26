@@ -31,6 +31,14 @@ When tôi nhìn ô chọn Môn
 Then màn hình nói rằng đổi môn chỉ đổi phạm vi ma trận, câu đã có giữ nguyên
 ```
 
+**AC-12** — Bỏ trống lại được
+```gherkin
+Given một đề đang có khối 11
+When tôi chọn lại "Chưa chọn" ở ô Lớp
+Then đề không còn khối nào
+And một lần sửa không gửi khoá ấy thì khối giữ nguyên
+```
+
 ## US-02 — Biết đã giao đề ôn cá nhân nào, bao giờ, còn hạn không
 **Priority:** must
 

@@ -3,8 +3,8 @@
 # Ticket graph — 2026092601-exam-labels-and-roster-fill
 
 - Units of Work: **3**
-- Tickets: **5** (5 done)
-- Total effort: **2.1d**
+- Tickets: **6** (6 done)
+- Total effort: **2.4d**
 - Critical path: **7h** across 2 tickets
 - Theoretical minimum duration with unlimited parallelism: **7h**
 
@@ -12,7 +12,7 @@
 
 | UoW | Title | Risk | Effort | Elapsed | Depends on | Status |
 |-----|-------|------|--------|---------|-----------|--------|
-| UOW-01 | Đề nói được nó thuộc môn nào, khối nào | low | 6h | 3h | — | todo |
+| UOW-01 | Đề nói được nó thuộc môn nào, khối nào | low | 1.0d | 3h | — | todo |
 | UOW-02 | Ô đề ôn cá nhân nói đủ: đề nào, bao giờ, còn hạn không, mấy đề | low | 7h | 7h | — | todo |
 | UOW-03 | Rót một lớp mới từ một lớp cũ trong một lần bấm | low | 4h | 4h | — | todo |
 
@@ -26,6 +26,7 @@ graph LR
   subgraph UOW_01["UOW-01 · Đề nói được nó thuộc môn nào, khối nào"]
     T_01_01["✓ T-01-01<br/>Môn và Lớp ở form tạo đề"]
     T_01_02["✓ T-01-02<br/>Sửa môn và khối tại chỗ trên trang soạn đề"]
+    T_01_03["✓ T-01-03<br/>Bỏ trống lại được môn hoặc khối"]
   end
   subgraph UOW_02["UOW-02 · Ô đề ôn cá nhân nói đủ: đề nào, bao giờ, còn hạn không, mấy đề"]
     T_02_01["✓ T-02-01<br/>Read model trả ngày giao, hạn và số lượt ôn cá nhân"]
@@ -43,7 +44,7 @@ Tickets in the same wave have no dependency between them and can run in parallel
 
 | Wave | Tickets | Parallel capacity | Wave duration (longest ticket) |
 |------|---------|-------------------|-------------------------------|
-| W1 | T-01-01, T-01-02, T-02-01, T-03-01 | 4 | 4h |
+| W1 | T-01-01, T-01-02, T-01-03, T-02-01, T-03-01 | 5 | 4h |
 | W2 | T-02-02 | 1 | 3h |
 
 ## Write-conflict hazards
@@ -63,6 +64,7 @@ adding people to tickets off this path will not make the feature ship sooner.
 |----|-----|-------|------|-----|-----------|----------|--------|
 | T-01-01 | UOW-01 | web | feature | 3h | — | AC-01 | done |
 | T-01-02 | UOW-01 | web | feature | 3h | — | AC-02, AC-03 | done |
+| T-01-03 | UOW-01 | api | feature | 2h | — | AC-12 | done |
 | T-02-01 | UOW-02 | api | feature | 4h | — | AC-04, AC-05, AC-06, AC-07 | done |
 | T-02-02 | UOW-02 | web | feature | 3h | T-02-01 | AC-04, AC-05, AC-06, AC-07 | done |
 | T-03-01 | UOW-03 | web | feature | 4h | — | AC-08, AC-09, AC-10, AC-11 | done |

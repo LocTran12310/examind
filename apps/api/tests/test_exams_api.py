@@ -90,3 +90,21 @@ def test_exam_questions_are_a_paged_table(client, db):
     only_tf = client.post(f"/api/exams/{exam['id']}/questions/search", json={"filters": {"type": {"value": "true_false"}}}).json()
     assert only_tf["total"] == 1 and only_tf["data"][0]["section"] == "II"
     assert client.post("/api/exams/search", json={"limit": 5}).json()["data"][0]["questions"] == []  # the list never embeds questions
+
+
+def test_subject_and_grade_can_be_set_and_cleared(client, db):
+    """A label the screen offers to empty must actually empty (AC-12).
+
+    `PATCH` builds its changes with `exclude_unset=True`, so a key that arrives at all was sent deliberately and
+    `null` means "clear". Reading truthiness instead of presence made "Chưa chọn" a silent no-op — the exam kept
+    the old grade and the screen went on showing it.
+    """
+    setup_admin(client, db)
+    subject = client.get("/api/taxonomy").json()["subjects"][0]["id"]
+    exam = client.post("/api/exams", json={"title": "Đề nhãn", "subject_id": subject, "grade": 11}).json()
+    assert exam["subject_id"] == subject and exam["grade"] == 11
+    # a change that says nothing about the labels leaves them alone
+    assert client.patch(f"/api/exams/{exam['id']}", json={"title": "Đề nhãn 2"}).json()["grade"] == 11
+    # and one that sends null clears them
+    cleared = client.patch(f"/api/exams/{exam['id']}", json={"grade": None, "subject_id": None}).json()
+    assert cleared["grade"] is None and cleared["subject_id"] is None

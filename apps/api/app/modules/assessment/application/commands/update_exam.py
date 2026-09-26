@@ -27,8 +27,11 @@ class UpdateExamHandler:
             e.title = exam_rules.title_of(changes["title"])
         if changes.get("description") is not None:
             e.description = changes["description"]
+        # presence, not truthiness: the router builds `changes` with `exclude_unset=True`, so a key that is here
+        # at all was sent on purpose and `null` means "clear it". Reading `.get(f) is not None` made emptying a
+        # label a silent no-op — the screen offered "Chưa chọn" and nothing happened.
         for f in ("grade", "subject_id"):
-            if changes.get(f) is not None:
+            if f in changes:
                 setattr(e, f, changes[f] or None)
         if changes.get("settings") is not None:
             e.settings = exam_rules.merged_settings(e.settings, changes["settings"])

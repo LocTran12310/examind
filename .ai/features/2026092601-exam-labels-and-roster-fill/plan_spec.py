@@ -49,6 +49,14 @@ t(id="T-01-02", uow="UOW-01", title="Sửa môn và khối tại chỗ trên tra
           "trận, câu đã có giữ nguyên — không thêm guard ở API.",
   done_when=["Chọn là lưu, không có nút Lưu riêng", "Ma trận đổi theo môn vừa chọn",
              "Đề đã có câu hỏi thì có câu cảnh báo"])
+t(id="T-01-03", uow="UOW-01", title="Bỏ trống lại được môn hoặc khối", layer="api", estimate="2h",
+  verifies=["AC-12"], assumptions=["A-02"],
+  tests=[f"{API}/tests/test_exams_api.py"],
+  touches=[f"{M}/assessment/application/commands/update_exam.py"],
+  context="Phát hiện khi viết bản kiểm chứng cho T-01-02: update_exam bỏ qua mọi thay đổi có giá trị None, nên "
+          "PATCH {grade: null} là một no-op im lặng và ô 'Chưa chọn' hứa một việc nó không làm. Router đã dùng "
+          "model_dump(exclude_unset=True), nên 'khoá có mặt' đã phân biệt được với 'khoá không gửi'.",
+  done_when=["Gửi null thì xoá được giá trị", "Không gửi khoá thì giữ nguyên", "Có test cho cả hai"])
 t(id="T-02-01", uow="UOW-02", title="Read model trả ngày giao, hạn và số lượt ôn cá nhân", layer="api", estimate="4h",
   verifies=["AC-04", "AC-05", "AC-06", "AC-07"], assumptions=["A-03", "A-04"],
   tests=[f"{API}/tests/test_practice_api.py", f"{API}/tests/unit/test_analytics_handlers.py"],

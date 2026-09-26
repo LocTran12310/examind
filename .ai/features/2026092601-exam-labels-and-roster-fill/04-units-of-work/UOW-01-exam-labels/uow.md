@@ -6,7 +6,7 @@ demoable: true
 duration: 2d
 depends_on: []
 requirements: [US-01]
-verifies: [AC-01, AC-02, AC-03]
+verifies: [AC-01, AC-02, AC-03, AC-12]
 risk: low
 status: todo
 rollback: revert the merge commit; migrations have downgrade()
@@ -32,6 +32,6 @@ rollback: revert the merge commit; migrations have downgrade()
 | None significant | — |
 
 ## Definition of done
-- [ ] All of AC-01, AC-02, AC-03 pass
+- [ ] All of AC-01, AC-02, AC-03, AC-12 pass
 - [ ] Demo script executed end to end
 - [ ] Demoed and accepted at gate G4

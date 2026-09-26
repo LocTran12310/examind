@@ -144,3 +144,33 @@ history:
     at: 2026-09-26T10:52:33
     by: Loc Tran
     ticket: T-03-01
+  - gate: G3
+    action: reopened
+    at: 2026-09-26T10:53:31
+    by: Loc Tran
+    reason: Ô 'Chưa chọn' của Môn/Lớp không xoá được giá trị - update_exam bỏ qua khi giá trị là None, nên PATCH {grade - null} là một no-op im lặng. Cần một ticket API để lời hứa trên màn hình là thật
+  - gate: G3
+    action: passed
+    at: 2026-09-26T10:53:47
+    by: Loc Tran
+    evidence: graph valid - 3 UoW, 6 tickets, no cycles
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-26T10:53:59
+    by: Claude Opus 5
+    ticket: T-01-03
+  - gate: G4
+    action: scope
+    at: 2026-09-26T10:54:59
+    by: Loc Tran
+    ticket: T-01-03
+  - gate: G4
+    action: evidence
+    at: 2026-09-26T10:55:11
+    by: Loc Tran
+    ticket: T-01-03
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-26T10:55:11
+    by: Loc Tran
+    ticket: T-01-03
