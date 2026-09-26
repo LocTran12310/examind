@@ -1,63 +1,88 @@
 "use client";
 
-import { ChevronDown, Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FormDialog } from "@/components/common/FormDialog/FormDialog";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { type ClassAdder, useClassAdder, useClassRoster } from "@/hooks/page-hooks/classes/use-member-manager";
-import type { SchoolClass } from "@/interfaces/class.interface";
-import { cn } from "@/lib/utils";
-import { StudentFinder } from "../StudentFinder/StudentFinder";
+import { type StudentStaging, useStudentStaging } from "@/hooks/page-hooks/classes/use-member-manager";
+import { StudentPicker } from "../StudentPicker/StudentPicker";
 
-/** Fill this class from the classes that came before it: one table of every other class, each row folded over its
- *  own roster, and one request for everything ticked — across several classes if several are open. Ticking a class
- *  row takes the whole class, which is the usual job; the child rows are there for the exceptions.
+/** The draft list of who is about to be added: one row per student, and a last row that is an input. Typing two
+ *  characters offers the matching students; picking one turns the input row into a staged row and leaves a fresh
+ *  input ready, so a class can be filled by typing names one after another. The magnifier next to it opens the
+ *  picker for the other way round — whole old classes, ticked. Nothing is saved until the footer sends the lot in
+ *  one request, whichever way the rows arrived.
  *
  *  This is not "Chuyển năm học" and does not replace it (ADR-04): that one moves a whole year by name rule
  *  (10A1 → 11A1) and records how each student left. This one is the small, pointed version — this new class, from
  *  those old classes, chosen by hand. The link below is there because the bigger door is easy to miss from in here,
  *  which is exactly how this screen came to be the only one anybody found. */
 export function AddStudents({ classId, onAdd }: { classId: string; onAdd: (userIds: string[]) => Promise<boolean> }) {
-  const a = useClassAdder(classId);
-  const [finding, setFinding] = useState(false);
+  const s = useStudentStaging(classId);
+  const [picking, setPicking] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  // the input is the last row of a table that scrolls: what it offers has to be brought into view, not clipped
+  useEffect(() => {
+    if (s.searching && box.current) box.current.scrollTop = box.current.scrollHeight;
+  }, [s.searching, s.matches]);
   return (
     <div className="grid gap-3">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-sm text-muted-foreground">Tích cả lớp cũ, hoặc mở lớp ra để tích từng em.</p>
-        <Button type="button" variant="outline" size="sm" onClick={() => setFinding(true)}>
-          <Search /> Tìm nâng cao
-        </Button>
-      </div>
-      <div className="max-h-96 overflow-y-auto rounded-lg border">
-        <Table data-testid="source-classes">
+      <div ref={box} className="max-h-96 overflow-y-auto rounded-lg border">
+        <Table data-testid="staged-students">
           <TableHeader>
             <TableRow>
+              <TableHead>Học sinh</TableHead>
+              <TableHead>Tên đăng nhập</TableHead>
+              <TableHead>Lớp hiện tại</TableHead>
               <TableHead className="w-8" />
-              <TableHead className="w-8" />
-              <TableHead>Lớp</TableHead>
-              <TableHead>Năm học</TableHead>
-              <TableHead className="text-right">Học sinh</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {a.sources.map((c) => (
-              <ClassRows key={c.id} c={c} classId={classId} a={a} />
-            ))}
-            {a.sources.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} className="text-muted-foreground">
-                  Chưa có lớp nào khác.
+            {s.staged.map((u) => (
+              <TableRow key={u.id}>
+                <TableCell className="font-medium">{u.full_name}</TableCell>
+                <TableCell className="font-mono text-xs text-muted-foreground">{u.username}</TableCell>
+                <TableCell className="text-muted-foreground">{s.classLabel(u)}</TableCell>
+                <TableCell>
+                  <Button type="button" variant="ghost" size="icon-sm" aria-label={`Bỏ ${u.full_name}`} onClick={() => s.unstage(u.id)}>
+                    <X />
+                  </Button>
                 </TableCell>
               </TableRow>
-            )}
+            ))}
+            <TableRow className="hover:bg-transparent">
+              <TableCell colSpan={4}>
+                <div className="flex items-start gap-2">
+                  <div className="grid flex-1 gap-1">
+                    <Input
+                      aria-label="Tìm học sinh để thêm"
+                      placeholder="Nhập tên hoặc tên đăng nhập"
+                      value={s.q}
+                      onChange={(e) => s.setQ(e.target.value)}
+                      onKeyDown={(e) => {
+                        // Enter takes the first name that can be taken: filling a class is typing, not aiming
+                        if (e.key !== "Enter") return;
+                        e.preventDefault();
+                        const first = s.matches.find((u) => !s.note(u));
+                        if (first) pickOne(s, first.id);
+                      }}
+                    />
+                    {s.searching && <Suggestions s={s} />}
+                  </div>
+                  <Button type="button" variant="outline" size="icon" aria-label="Chọn học sinh từ lớp khác" title="Chọn học sinh từ lớp khác" onClick={() => setPicking(true)}>
+                    <Search />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
           </TableBody>
         </Table>
       </div>
-      <Button disabled={a.picked.size === 0} onClick={() => void onAdd([...a.picked])}>
-        Thêm {a.picked.size} học sinh
+      <Button disabled={s.staged.length === 0} onClick={() => void onAdd(s.staged.map((u) => u.id))}>
+        Thêm {s.staged.length} học sinh
       </Button>
       <p className="text-xs text-muted-foreground">
         Chuyển cả một năm học — mọi lớp, 10A1 lên 11A1, kèm ở lại và tốt nghiệp — thì dùng{" "}
@@ -66,76 +91,53 @@ export function AddStudents({ classId, onAdd }: { classId: string; onAdd: (userI
         </Link>
         .
       </p>
-      <FormDialog open={finding} onOpenChange={setFinding} title="Tìm nâng cao" description="Tìm theo tên hoặc lớp, tích nhiều em rồi thêm một lần." wide>
-        <StudentFinder classId={classId} onAdd={onAdd} />
+      <FormDialog open={picking} onOpenChange={setPicking} title="Chọn học sinh" description="Tích cả lớp cũ hoặc từng em, rồi bấm chọn để đưa vào danh sách." wide>
+        <StudentPicker
+          classId={classId}
+          staged={s.ids}
+          onConfirm={(users) => {
+            s.stage(users);
+            setPicking(false);
+          }}
+          onCancel={() => setPicking(false)}
+        />
       </FormDialog>
     </div>
   );
 }
 
-/** One old class, and its students beneath it while the row is open. */
-function ClassRows({ c, classId, a }: { c: SchoolClass; classId: string; a: ClassAdder }) {
-  const r = useClassRoster(a, c.id, classId);
-  const open = a.isOpen(c.id);
-  const whole = r.addable.length > 0 && r.addable.every((id) => a.picked.has(id));
+/** Stage one match and empty the box, so the next name can be typed straight away. */
+function pickOne(s: StudentStaging, id: string) {
+  const u = s.matches.find((m) => m.id === id);
+  if (!u) return;
+  s.stage([u]);
+  s.clearQuery();
+}
+
+/** What the row input matches, under it inside the same row: in flow rather than floating, because a floating
+ *  panel is clipped by the scroll box the table lives in. */
+function Suggestions({ s }: { s: StudentStaging }) {
   return (
-    <>
-      <TableRow>
-        <TableCell>
-          {/* a class with nothing left to offer: a tick that changed nothing would be a lie (A-07) */}
-          <Checkbox
-            aria-label={`Chọn lớp ${c.name}`}
-            checked={whole}
-            disabled={r.loaded ? r.addable.length === 0 : c.member_count === 0}
-            onCheckedChange={() => (whole ? a.unpick(r.addable) : r.loaded ? a.pick(r.addable) : a.want(c.id))}
-          />
-        </TableCell>
-        <TableCell>
-          <button
-            type="button"
-            aria-label={`Xem học sinh lớp ${c.name}`}
-            aria-expanded={open}
-            onClick={() => a.toggleOpen(c.id)}
-            className="flex items-center text-muted-foreground hover:text-foreground"
-          >
-            <ChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} />
-          </button>
-        </TableCell>
-        <TableCell className="font-medium">Lớp {c.name}</TableCell>
-        <TableCell className="text-muted-foreground">{c.school_year}</TableCell>
-        <TableCell className="text-right tabular-nums text-muted-foreground">{c.member_count}</TableCell>
-      </TableRow>
-      {open && r.loading && (
-        <TableRow>
-          <TableCell colSpan={5} className="text-muted-foreground">
-            Đang tải…
-          </TableCell>
-        </TableRow>
-      )}
-      {open && r.loaded && r.students.length === 0 && (
-        <TableRow>
-          <TableCell colSpan={5} className="text-muted-foreground">
-            Lớp này chưa có học sinh.
-          </TableCell>
-        </TableRow>
-      )}
-      {open &&
-        r.students.map((u) => {
-          const here = u.class_ids.includes(classId);
-          return (
-            <TableRow key={u.id} className="bg-muted/40">
-              <TableCell>
-                {/* already a member: nothing to add, and the row says so instead of vanishing (A-07) */}
-                <Checkbox aria-label={`Chọn ${u.full_name}`} checked={a.picked.has(u.id)} disabled={here} onCheckedChange={() => a.toggle(u.id)} />
-              </TableCell>
-              <TableCell />
-              <TableCell colSpan={2}>
-                {u.full_name} <span className="font-mono text-xs text-muted-foreground">{u.username}</span>
-              </TableCell>
-              <TableCell className="text-right text-xs text-muted-foreground">{here && "đã ở trong lớp"}</TableCell>
-            </TableRow>
-          );
-        })}
-    </>
+    <ul aria-label="Học sinh khớp" data-testid="student-suggestions" className="max-h-60 divide-y overflow-y-auto rounded-lg border bg-popover shadow-sm">
+      {s.matches.length === 0 && <li className="px-2 py-1.5 text-sm text-muted-foreground">Không có học sinh nào khớp.</li>}
+      {s.matches.map((u) => {
+        const note = s.note(u);
+        return (
+          <li key={u.id}>
+            {/* whoever cannot be taken stays on the list and says why, instead of the name seeming not to exist */}
+            <button
+              type="button"
+              disabled={!!note}
+              onClick={() => pickOne(s, u.id)}
+              className="flex w-full items-center gap-2 px-2 py-1.5 text-left text-sm hover:bg-muted disabled:pointer-events-none disabled:opacity-60"
+            >
+              {u.full_name} <span className="font-mono text-xs text-muted-foreground">{u.username}</span>
+              <span className="ml-auto text-xs text-muted-foreground">{note || s.classLabel(u)}</span>
+            </button>
+          </li>
+        );
+      })}
+      {s.more > 0 && <li className="px-2 py-1.5 text-xs text-muted-foreground">Còn {s.more} kết quả nữa — lọc thêm để thấy.</li>}
+    </ul>
   );
 }

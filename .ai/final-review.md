@@ -1278,6 +1278,10 @@ cột đầu và mở ra được để xem từng học sinh, mỗi em một ch
 ngoại lệ. Tích nhiều lớp cùng lúc vẫn chỉ **một** lời gọi mang mọi id. "Tìm nâng cao" nay là **một hộp thoại
 riêng chồng lên** hộp lớp.
 
+> Đoạn dưới mô tả bản đầu tiên của hộp thoại này, sống được đúng một buổi: anh mô tả lại luồng chi tiết hơn và
+> nó được làm lại ngay trong ngày — xem §38. Giữ nguyên đoạn này thay vì sửa chồng lên, vì cái đáng đọc là lý do
+> nó đổi, không phải một bản ghi trông như chưa từng sai.
+
 **Tôi đã cãi chuyện dialog chồng dialog ở §36 và lần này làm theo anh.** Lý do cũ vẫn đúng về kỹ thuật (hai focus
 trap, hai phím Escape) nhưng nó là lý do của tôi, không phải của người dùng; anh nói hai lần thì nó là quyết định
 của anh. Bước kiểm khẳng định `count [role=dialog] = 2`.
@@ -1291,3 +1295,37 @@ nên lớp dismiss của tooltip **nuốt phím Escape đầu tiên** của mọ
 **Kiểm chứng.** Web 280 → **284 passed**, tsc và ESLint xanh. Trình duyệt: 5 bước × 2 viewport, **10/10**, đọc
 từng ảnh. Bước S2 khẳng định `count [role=dialog] [role=tab] = 0` — trong hộp thoại không còn tab nào; không
 giới hạn vào hộp thì nó sẽ đếm cả hai tab của trang phía sau và đỏ vì lý do chẳng liên quan.
+
+## 38. Luồng thêm học sinh: hai hộp thoại, hai việc (2026-09-26)
+
+Anh mô tả lại chính xác hơn, và nó khác bản ở §37 về **vai** chứ không phải về giao diện:
+
+| | §37 | §38 |
+| --- | --- | --- |
+| Hộp 1 | bảng các lớp cũ — chọn là **lưu luôn** | **danh sách chờ**: các em sắp được thêm, có dòng nhập để gõ tên |
+| Hộp 2 | "Tìm nâng cao" — một cách tìm khác | **chọn hàng loạt**: bảng lớp cũ + ô tìm, "Chọn" đưa vào danh sách chờ |
+| Lưu | ở hộp đang mở | **chỉ ở hộp 1** |
+
+Điểm đổi thật sự là **"Chọn" không còn lưu**. Trước đó bấm chọn trong hộp lớp là ghi thẳng vào lớp; giờ nó chỉ
+đưa vào danh sách chờ, và người dùng nhìn thấy đầy đủ ai sắp vào lớp — kèm **lớp hiện tại của từng em** — trước
+khi bấm lưu. Đó cũng là khẳng định đỏ được trên bản cũ mà agent phụ dựng ra để chứng minh: trên mã cũ, xác nhận
+một lựa chọn nhiều lớp **gửi yêu cầu ngay**, còn bản mới thì chưa gửi gì.
+
+Tên "Tìm nâng cao" bị bỏ theo đúng lời anh — đó chỉ là cách anh gọi cái nút. Nút nay là biểu tượng kính lúp với
+`aria-label="Chọn học sinh từ lớp khác"`, và hộp 2 mang tiêu đề theo việc nó làm: **"Chọn học sinh"**.
+
+**Một chỗ lệch khỏi chữ "dropdown", nói rõ.** Gợi ý dưới ô nhập render **trong luồng**, không nổi tuyệt đối:
+bảng nằm trong khung `overflow-y-auto`, nên một panel nổi sẽ bị chính khung ấy cắt cụt. Hình dạng vẫn là panel
+có viền ngay dưới ô nhập, và không bị cắt ở 390px.
+
+**Một thay đổi hành vi đáng biết**: đóng hộp 2 bằng Escape hoặc bấm ra ngoài **bỏ luôn các ô đã tích** — giống
+nút "Hủy". Trước kia Escape trả về bảng lớp còn giữ tích, vì tích khi ấy sống ở hộp 1. Danh sách chờ thì không
+bao giờ mất.
+
+**Kiểm chứng.** Web 285 → **288 passed**, tsc và ESLint xanh. Trình duyệt: 6 bước × 2 viewport, **12/12**, đọc
+từng ảnh — S2 cho thấy hàng chờ "Học sinh 101 · hs101 · Lớp 11A1" với nút bỏ, ô nhập và nút chọn; S5 cho thấy
+hộp "Chọn học sinh" chồng lên, bảng lớp mở ra 25 em của 11A1, footer "Hủy / Chọn 0 học sinh".
+
+**Và bản kiểm chứng của chính tôi đã lạc hậu trong lúc ấy.** Agent phụ báo lại rằng hai bước trong
+`.ai/e2e/owner-walk-2` còn trỏ vào nút và testid đã bị xoá — đúng, và nó không tự sửa vì file ấy ngoài phạm vi
+được giao. Tôi sửa rồi chạy lại. Một kịch bản kiểm chứng cũng là mã: nó mục đi cùng tốc độ với màn hình nó kiểm.

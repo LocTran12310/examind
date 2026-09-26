@@ -90,86 +90,175 @@ describe("classes", () => {
   });
 });
 
-describe("thêm học sinh từ các lớp cũ", () => {
-  /** `POST /users/search` keyed by the class asked for, so each roster and the target class differ */
-  const rosters = (byClass: Record<string, User[]>) => (url: string, init?: RequestInit) => {
-    if (url !== "/api/users/search" || init?.method !== "POST") return undefined;
-    const body = JSON.parse(String(init.body));
-    return { body: searchPage(byClass[String(body.class_id)] ?? []) };
-  };
-
-  it("mở một lớp cũ thấy học sinh, tích cả lớp rồi thêm trong một lời gọi (AC-08)", async () => {
-    // the reported cost: filling a 25-student class meant 25 searches and 25 clicks
-    const f = mockFetch(
-      route("POST", "/api/classes/search", searchPage([klass({ id: "c1", name: "12A99", school_year: "2027-2028", member_count: 0 }), klass({ id: "c0", name: "11A1", member_count: 2 })])),
-      rosters({ c1: [], c0: [student("hs01", ["c0"]), student("hs02", ["c0"])] }),
-      route("POST", "/api/classes/c1/members", undefined, 204),
-    );
-    const u = userEvent.setup();
+describe("thêm học sinh vào lớp", () => {
+  /** `POST /users/search`: the roster of the class asked for, or the matches of a query. */
+  const users =
+    (byClass: Record<string, User[]>, found: User[] = [], total = found.length) =>
+    (url: string, init?: RequestInit) => {
+      if (url !== "/api/users/search" || init?.method !== "POST") return undefined;
+      const body = JSON.parse(String(init.body));
+      return { body: body.class_id ? searchPage(byClass[String(body.class_id)] ?? []) : searchPage(found, total) };
+    };
+  const classes = (...list: SchoolClass[]) => route("POST", "/api/classes/search", searchPage(list));
+  const target = klass({ id: "c1", name: "12A99", school_year: "2027-2028", member_count: 0 });
+  /** open the dialog and hand back its row input */
+  const openDialog = async (u: ReturnType<typeof userEvent.setup>) => {
     render(<MemberManager classId="c1" />);
     await u.click(await screen.findByRole("button", { name: "Thêm học sinh" }));
-    // the old classes are on screen with their year and size, not behind a search box
-    const table = await screen.findByTestId("source-classes");
-    expect(within(table).getByText(/11A1/)).toBeInTheDocument();
-    expect(within(table).getByText("2026-2027")).toBeInTheDocument();
-    expect(within(table).queryByText(/12A99/)).toBeNull(); // the class being filled is not a source for itself
-    expect(within(table).queryByText("HS01")).toBeNull(); // a class row is folded over its roster
-    await u.click(within(table).getByRole("button", { name: "Xem học sinh lớp 11A1" }));
-    expect(await within(table).findByText("HS01")).toBeInTheDocument();
-    // ticking the class row ticks every student it can offer: "chọn toàn lớp" is the case, not the exception
-    await u.click(within(table).getByRole("checkbox", { name: "Chọn lớp 11A1" }));
-    await waitFor(() => expect(screen.getByRole("checkbox", { name: "Chọn HS02" })).toBeChecked());
-    await u.click(screen.getByRole("button", { name: "Thêm 2 học sinh" }));
-    await waitFor(() => expect(lastBody(f, "/classes/c1/members")).toEqual({ user_ids: ["hs01", "hs02"] }));
-    // one request for the whole class, not one per student
-    expect(f.mock.calls.filter((c) => c[0] === "/api/classes/c1/members")).toHaveLength(1);
+    return await screen.findByRole("textbox", { name: "Tìm học sinh để thêm" });
+  };
+  const staged = () => screen.getByTestId("staged-students");
+  const openPicker = (u: ReturnType<typeof userEvent.setup>) => u.click(screen.getByRole("button", { name: "Chọn học sinh từ lớp khác" }));
+
+  it("gõ tên vào dòng nhập của bảng là đưa em ấy vào danh sách chờ", async () => {
+    // the reported cost: filling a class meant hunting each em through a separate search box
+    const f = mockFetch(classes(target, klass({ id: "c0", name: "11A1", member_count: 1 })), users({ c1: [] }, [student("hs01", ["c0"])]));
+    const u = userEvent.setup();
+    const box = await openDialog(u);
+    await u.type(box, "h"); // one letter matches the whole school: nothing is searched yet
+    expect(screen.queryByTestId("student-suggestions")).toBeNull();
+    await u.type(box, "s");
+    await waitFor(() => expect(lastBody(f, "/users/search")).toMatchObject({ q: "hs", filters: { role: { value: "student" } } }));
+    await u.click(await screen.findByRole("button", { name: /HS01/ }));
+    // the row now names the em, the account and the class he is in today
+    expect(within(staged()).getByText("HS01")).toBeInTheDocument();
+    expect(within(staged()).getByText("hs01")).toBeInTheDocument();
+    expect(within(staged()).getByText("Lớp 11A1")).toBeInTheDocument();
+    expect(box).toHaveValue(""); // a fresh input row, ready for the next name
+    expect(screen.queryByTestId("student-suggestions")).toBeNull();
+    expect(screen.getByRole("button", { name: "Thêm 1 học sinh" })).toBeEnabled();
+    expect(f.mock.calls.filter((c) => c[0] === "/api/classes/c1/members")).toHaveLength(0); // staged, not saved
   });
 
-  it("tích hai lớp cùng lúc thì vẫn là một lời gọi mang mọi id", async () => {
-    // the two tabs this table replaced could only ever offer one source class at a time
+  it("danh sách chờ còn nguyên khi mở hộp chọn, và hộp chọn thêm vào chứ không thay thế", async () => {
+    mockFetch(classes(target, klass({ id: "c0", name: "11A1", member_count: 1 })), users({ c1: [], c0: [student("hs02", ["c0"])] }, [student("hs01", ["c0"])]));
+    const u = userEvent.setup();
+    const box = await openDialog(u);
+    await u.type(box, "hs");
+    await u.click(await screen.findByRole("button", { name: /HS01/ }));
+    await openPicker(u);
+    await u.click(await screen.findByRole("checkbox", { name: "Chọn lớp 11A1" }));
+    await u.click(await screen.findByRole("button", { name: "Chọn 1 học sinh" }));
+    // what was typed and what was ticked are the same kind of row, and both are still waiting
+    await waitFor(() => expect(screen.getByRole("button", { name: "Thêm 2 học sinh" })).toBeEnabled());
+    expect(within(staged()).getByText("HS01")).toBeInTheDocument();
+    expect(within(staged()).getByText("HS02")).toBeInTheDocument();
+  });
+
+  it("hộp chọn tích hai lớp một lúc: cả hai vào danh sách chờ và chưa lưu gì", async () => {
+    // the picker chooses; it does not save. The footer of the dialog underneath is the one request.
     const f = mockFetch(
-      route("POST", "/api/classes/search", searchPage([klass({ id: "c1" }), klass({ id: "c0", name: "11A1" }), klass({ id: "c00", name: "11A2" })])),
-      rosters({ c1: [], c0: [student("hs01", ["c0"])], c00: [student("hs02", ["c00"])] }),
+      classes(target, klass({ id: "c0", name: "11A1" }), klass({ id: "c00", name: "11A2" })),
+      users({ c1: [], c0: [student("hs01", ["c0"])], c00: [student("hs02", ["c00"])] }),
       route("POST", "/api/classes/c1/members", undefined, 204),
     );
     const u = userEvent.setup();
-    render(<MemberManager classId="c1" />);
-    await u.click(await screen.findByRole("button", { name: "Thêm học sinh" }));
+    await openDialog(u);
+    await openPicker(u);
     await u.click(await screen.findByRole("checkbox", { name: "Chọn lớp 11A1" }));
     await u.click(screen.getByRole("checkbox", { name: "Chọn lớp 11A2" }));
-    await u.click(await screen.findByRole("button", { name: "Thêm 2 học sinh" }));
-    await waitFor(() => expect(lastBody(f, "/classes/c1/members")).toEqual({ user_ids: ["hs01", "hs02"] }));
-    expect(f.mock.calls.filter((c) => c[0] === "/api/classes/c1/members")).toHaveLength(1);
+    await u.click(await screen.findByRole("button", { name: "Chọn 2 học sinh" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Thêm 2 học sinh" })).toBeEnabled());
+    expect(within(staged()).getByText("HS01")).toBeInTheDocument();
+    expect(within(staged()).getByText("HS02")).toBeInTheDocument();
+    expect(f.mock.calls.filter((c) => c[0] === "/api/classes/c1/members")).toHaveLength(0);
   });
 
-  it("bỏ tích được từng em, và em đã ở trong lớp thì không tích lại được (AC-09, AC-10)", async () => {
+  it("footer lưu mọi em đang chờ trong đúng một lời gọi mang mọi id (AC-08)", async () => {
     const f = mockFetch(
-      route("POST", "/api/classes/search", searchPage([klass({ id: "c1" }), klass({ id: "c0", name: "11A1" })])),
-      rosters({ c1: [student("hs03", ["c0", "c1"])], c0: [student("hs01", ["c0"]), student("hs02", ["c0"]), student("hs03", ["c0", "c1"])] }),
+      classes(target, klass({ id: "c0", name: "11A1", member_count: 1 })),
+      users({ c1: [], c0: [student("hs02", ["c0"])] }, [student("hs01", ["c0"])]),
       route("POST", "/api/classes/c1/members", undefined, 204),
     );
     const u = userEvent.setup();
-    render(<MemberManager classId="c1" />);
-    await u.click(await screen.findByRole("button", { name: "Thêm học sinh" }));
-    // ticking a folded class opens it as well, so the 25 names the tick just chose are on screen
+    const box = await openDialog(u);
+    await u.type(box, "hs");
+    await u.click(await screen.findByRole("button", { name: /HS01/ }));
+    await openPicker(u);
     await u.click(await screen.findByRole("checkbox", { name: "Chọn lớp 11A1" }));
-    // hs03 is already a member: it is not counted in, and its box cannot be ticked
-    await waitFor(() => expect(screen.getByRole("button", { name: "Thêm 2 học sinh" })).toBeEnabled());
+    await u.click(await screen.findByRole("button", { name: "Chọn 1 học sinh" }));
+    await u.click(await screen.findByRole("button", { name: "Thêm 2 học sinh" }));
+    await waitFor(() => expect(lastBody(f, "/classes/c1/members")).toEqual({ user_ids: ["hs01", "hs02"] }));
+    // one request for the whole list, not one per student, however many ways the rows arrived
+    expect(f.mock.calls.filter((c) => c[0] === "/api/classes/c1/members")).toHaveLength(1);
+  });
+
+  it("em đã ở trong lớp thì không gõ vào danh sách được, cũng không tích được trong hộp chọn (AC-09, AC-10)", async () => {
+    mockFetch(
+      classes(target, klass({ id: "c0", name: "11A1", member_count: 2 })),
+      users({ c1: [student("hs03", ["c0", "c1"])], c0: [student("hs01", ["c0"]), student("hs03", ["c0", "c1"])] }, [student("hs03", ["c0", "c1"])]),
+    );
+    const u = userEvent.setup();
+    const box = await openDialog(u);
+    await u.type(box, "hs");
+    // offered, so nobody concludes the em does not exist — but not takeable, and the row says why
+    const hit = await screen.findByRole("button", { name: /HS03/ });
+    expect(hit).toBeDisabled();
+    expect(within(hit).getByText("đã ở trong lớp")).toBeInTheDocument();
+    await u.clear(box);
+    await openPicker(u);
+    await u.click(await screen.findByRole("button", { name: "Xem học sinh lớp 11A1" }));
+    await screen.findByText("đã ở trong lớp");
     expect(screen.getByRole("checkbox", { name: "Chọn HS03" })).toBeDisabled();
-    expect(screen.getByText("đã ở trong lớp")).toBeInTheDocument();
-    await u.click(screen.getByRole("checkbox", { name: "Chọn HS02" }));
-    await u.click(screen.getByRole("button", { name: "Thêm 1 học sinh" }));
-    await waitFor(() => expect(lastBody(f, "/classes/c1/members")).toEqual({ user_ids: ["hs01"] }));
+    // ticking the class takes the one em it can offer, not the member it cannot
+    await u.click(screen.getByRole("checkbox", { name: "Chọn lớp 11A1" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Chọn 1 học sinh" })).toBeEnabled());
+  });
+
+  it("em đã trong danh sách chờ thì hộp chọn không cho chọn lại", async () => {
+    mockFetch(classes(target, klass({ id: "c0", name: "11A1", member_count: 1 })), users({ c1: [], c0: [student("hs01", ["c0"])] }, [student("hs01", ["c0"])]));
+    const u = userEvent.setup();
+    const box = await openDialog(u);
+    await u.type(box, "hs");
+    await u.click(await screen.findByRole("button", { name: /HS01/ }));
+    await openPicker(u);
+    await u.click(await screen.findByRole("button", { name: "Xem học sinh lớp 11A1" }));
+    expect(await screen.findByText("đã trong danh sách")).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: "Chọn HS01" })).toBeDisabled();
+    expect(screen.getByRole("checkbox", { name: "Chọn lớp 11A1" })).toBeDisabled(); // nothing left to offer
+  });
+
+  it("hủy hộp chọn thì không thêm gì vào danh sách chờ", async () => {
+    const f = mockFetch(
+      classes(target, klass({ id: "c0", name: "11A1", member_count: 1 })),
+      users({ c1: [], c0: [student("hs01", ["c0"])] }),
+      route("POST", "/api/classes/c1/members", undefined, 204),
+    );
+    const u = userEvent.setup();
+    await openDialog(u);
+    await openPicker(u);
+    await u.click(await screen.findByRole("checkbox", { name: "Chọn lớp 11A1" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Chọn 1 học sinh" })).toBeEnabled());
+    await u.click(screen.getByRole("button", { name: "Hủy" }));
+    await waitFor(() => expect(screen.queryByRole("textbox", { name: "Tìm học sinh" })).toBeNull());
+    expect(screen.getByRole("button", { name: "Thêm 0 học sinh" })).toBeDisabled();
+    expect(within(staged()).queryByText("HS01")).toBeNull();
+    expect(f.mock.calls.filter((c) => c[0] === "/api/classes/c1/members")).toHaveLength(0);
+  });
+
+  it("hộp chọn là hộp thoại riêng, và Escape chỉ đóng hộp trên", async () => {
+    mockFetch(classes(target, klass({ id: "c0", name: "11A1", member_count: 1 })), users({ c1: [], c0: [student("hs02", ["c0"])] }, [student("hs01", ["c0"])]));
+    const u = userEvent.setup();
+    const box = await openDialog(u);
+    await u.type(box, "hs");
+    await u.click(await screen.findByRole("button", { name: /HS01/ }));
+    await openPicker(u);
+    // the picker is its own dialog: while it is on top the draft list underneath is out of reach
+    const find = await screen.findByRole("textbox", { name: "Tìm học sinh" });
+    expect(screen.queryByRole("textbox", { name: "Tìm học sinh để thêm" })).toBeNull();
+    // one press is enough — nothing in the header opens a layer that eats the first Escape
+    await u.click(find);
+    await u.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("textbox", { name: "Tìm học sinh" })).toBeNull());
+    expect(screen.getByRole("dialog")).toHaveAccessibleName("Thêm học sinh vào lớp");
+    expect(within(staged()).getByText("HS01")).toBeInTheDocument(); // the draft list came back as it was
   });
 
   it("lớp không còn em nào để thêm thì không tích được", async () => {
-    mockFetch(
-      route("POST", "/api/classes/search", searchPage([klass({ id: "c1" }), klass({ id: "c0", name: "11A1" })])),
-      rosters({ c1: [student("hs01", ["c0", "c1"])], c0: [student("hs01", ["c0", "c1"])] }),
-    );
+    mockFetch(classes(target, klass({ id: "c0", name: "11A1", member_count: 1 })), users({ c1: [student("hs01", ["c0", "c1"])], c0: [student("hs01", ["c0", "c1"])] }));
     const u = userEvent.setup();
-    render(<MemberManager classId="c1" />);
-    await u.click(await screen.findByRole("button", { name: "Thêm học sinh" }));
+    await openDialog(u);
+    await openPicker(u);
     await u.click(await screen.findByRole("button", { name: "Xem học sinh lớp 11A1" }));
     await screen.findByText("đã ở trong lớp");
     expect(screen.getByRole("checkbox", { name: "Chọn lớp 11A1" })).toBeDisabled();
@@ -177,84 +266,38 @@ describe("thêm học sinh từ các lớp cũ", () => {
 
   it("chỉ sang Chuyển năm học cho việc cả năm (AC-11)", async () => {
     // the whole-year move already existed and he never found it — which is why this dialog names it
-    mockFetch(route("POST", "/api/classes/search", searchPage([klass({ id: "c1" })])), rosters({}));
+    mockFetch(classes(target), users({ c1: [] }));
     const u = userEvent.setup();
-    render(<MemberManager classId="c1" />);
-    await u.click(await screen.findByRole("button", { name: "Thêm học sinh" }));
+    await openDialog(u);
     expect(await screen.findByRole("link", { name: /Chuyển năm học/ })).toHaveAttribute("href", "/org/school-years");
   });
-});
 
-describe("tìm nâng cao khi thêm học sinh", () => {
-  const found = (users: User[], total = users.length) => (url: string, init?: RequestInit) => {
-    if (url !== "/api/users/search" || init?.method !== "POST") return undefined;
-    const body = JSON.parse(String(init.body));
-    return { body: body.class_id === "c1" ? searchPage([]) : searchPage(users, total) };
-  };
-
-  it("hộp Tìm nâng cao lọc theo lớp, tích nhiều em, thêm một lần", async () => {
-    // ô tìm cũ chỉ thêm được từng em một, và không nói được "những em chưa có lớp nào"
-    const f = mockFetch(
-      route("POST", "/api/classes/search", searchPage([klass({ id: "c1" }), klass({ id: "c0", name: "11A1" })])),
-      found([student("hs01"), student("hs02")]),
-      route("POST", "/api/classes/c1/members", undefined, 204),
-    );
-    const u = userEvent.setup();
-    render(<MemberManager classId="c1" />);
-    await u.click(await screen.findByRole("button", { name: "Thêm học sinh" }));
-    await u.click(await screen.findByRole("button", { name: "Tìm nâng cao" }));
-    await u.type(await screen.findByRole("textbox", { name: "Tìm tên" }), "hs");
-    await waitFor(() => expect(lastBody(f, "/users/search")).toMatchObject({ q: "hs", filters: { role: { value: "student" } } }));
-    await u.click(screen.getByRole("checkbox", { name: "Chọn tất cả" }));
-    await u.click(screen.getByRole("button", { name: "Thêm 2 học sinh" }));
-    await waitFor(() => expect(lastBody(f, "/classes/c1/members")).toEqual({ user_ids: ["hs01", "hs02"] }));
-    expect(f.mock.calls.filter((c) => c[0] === "/api/classes/c1/members")).toHaveLength(1);
-  });
-
-  it("là một hộp thoại riêng trên hộp thoại lớp, và Escape chỉ đóng hộp trên", async () => {
-    mockFetch(
-      route("POST", "/api/classes/search", searchPage([klass({ id: "c1" }), klass({ id: "c0", name: "11A1" })])),
-      found([student("hs01")]),
-    );
-    const u = userEvent.setup();
-    render(<MemberManager classId="c1" />);
-    await u.click(await screen.findByRole("button", { name: "Thêm học sinh" }));
-    await u.click(await screen.findByRole("checkbox", { name: "Chọn lớp 11A1" }));
-    await u.click(screen.getByRole("button", { name: "Tìm nâng cao" }));
-    // the search is its own dialog: while it is on top the class table underneath is out of reach
-    await screen.findByRole("textbox", { name: "Tìm tên" });
-    expect(screen.queryByRole("checkbox", { name: "Chọn lớp 11A1" })).toBeNull();
-    // Escape from the search box: focus opens on the header button, whose tooltip takes the first Escape for itself
-    await u.click(screen.getByRole("textbox", { name: "Tìm tên" }));
-    await u.keyboard("{Escape}");
-    // only the top one closed: the classes are back, with what was ticked still ticked
-    await waitFor(() => expect(screen.queryByRole("textbox", { name: "Tìm tên" })).toBeNull());
-    expect(screen.getByRole("dialog")).toHaveAccessibleName("Thêm học sinh vào lớp");
-    expect(screen.getByRole("checkbox", { name: "Chọn lớp 11A1" })).toBeChecked();
-  });
-
-  it("em đã ở trong lớp xuống cuối, để màn hình đầu tiên không toàn ô không tích được", async () => {
+  it("tìm trong hộp chọn: tích nhiều em một lúc, em đã ở trong lớp xuống cuối", async () => {
     // mở từ trong một lớp thì chính học sinh của lớp ấy khớp trước theo tên, và cả màn hình đầu là những dòng
     // "đã ở trong lớp" — thấy được trên ảnh chụp kiểm chứng, sửa bằng thứ tự chứ không bằng cách giấu chúng đi
-    mockFetch(
-      route("POST", "/api/classes/search", searchPage([klass({ id: "c1" })])),
-      found([student("hs01", ["c1"]), student("hs02"), student("hs03", ["c1"]), student("hs04")]),
-    );
+    const f = mockFetch(classes(target), users({ c1: [] }, [student("hs01", ["c1"]), student("hs02"), student("hs03", ["c1"]), student("hs04")]));
     const u = userEvent.setup();
-    render(<MemberManager classId="c1" />);
-    await u.click(await screen.findByRole("button", { name: "Thêm học sinh" }));
-    await u.click(await screen.findByRole("button", { name: "Tìm nâng cao" }));
-    const names = [...(await screen.findByTestId("wide-results")).querySelectorAll("li")].map((li) => li.textContent?.trim().slice(0, 4));
+    await openDialog(u);
+    await openPicker(u);
+    await u.type(await screen.findByRole("textbox", { name: "Tìm học sinh" }), "hs");
+    await waitFor(() => expect(lastBody(f, "/users/search")).toMatchObject({ q: "hs", filters: { role: { value: "student" } } }));
+    const names = [...(await screen.findByTestId("found-students")).querySelectorAll("li")].map((li) => li.textContent?.trim().slice(0, 4));
     expect(names).toEqual(["HS02", "HS04", "HS01", "HS03"]);
+    await u.click(screen.getByRole("checkbox", { name: "Chọn tất cả" }));
+    await u.click(await screen.findByRole("button", { name: "Chọn 2 học sinh" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Thêm 2 học sinh" })).toBeEnabled());
   });
 
-  it("nói ra khi còn kết quả ngoài trang đang xem", async () => {
+  it("nói ra khi còn kết quả ngoài danh sách đang xem", async () => {
     // một danh sách bị cắt mà không nói gì là cách một giáo viên kết luận rằng học sinh ấy không tồn tại
-    mockFetch(route("POST", "/api/classes/search", searchPage([klass({ id: "c1" })])), found([student("hs01")], 51));
+    mockFetch(classes(target), users({ c1: [] }, [student("hs01")], 51));
     const u = userEvent.setup();
-    render(<MemberManager classId="c1" />);
-    await u.click(await screen.findByRole("button", { name: "Thêm học sinh" }));
-    await u.click(await screen.findByRole("button", { name: "Tìm nâng cao" }));
+    const box = await openDialog(u);
+    await u.type(box, "hs");
+    expect(await screen.findByText(/Còn 50 kết quả nữa/)).toBeInTheDocument();
+    await u.clear(box);
+    await openPicker(u);
+    await u.type(await screen.findByRole("textbox", { name: "Tìm học sinh" }), "hs");
     expect(await screen.findByText(/Còn 50 kết quả nữa/)).toBeInTheDocument();
   });
 });

@@ -52,9 +52,9 @@ export function MemberManager({ classId, prefix = "m." }: MemberManagerProps) {
         emptyText="Lớp chưa có học sinh."
       />
       <FormDialog open={m.adding} onOpenChange={m.setAdding} title="Thêm học sinh vào lớp" wide>
-        {/* one table of the old classes, because that is where the students already are: filling a class by naming
-            25 students one at a time was the only door there used to be. "Tìm nâng cao" is for the em nobody can
-            place — it opens over this one and leaves the ticks here alone. */}
+        {/* the draft list of who is about to be added, typed name by name in its own row input; the magnifier in
+            that row opens the picker over this dialog for the other way round — whole old classes, ticked — and
+            what it brings back lands here as rows, not as a second save. */}
         <AddStudents classId={classId} onAdd={async (ids) => {
           const ok = await m.addStudents(ids);
           if (ok) m.setAdding(false);
