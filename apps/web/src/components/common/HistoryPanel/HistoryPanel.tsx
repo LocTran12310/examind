@@ -33,5 +33,11 @@ export function HistoryPanel({ targetId, related, orgId, prefix = "h." }: { targ
     ],
     [orgId],
   );
-  return <DataTable useRows={useAuditSearchQuery} prefix={prefix} params={params} columns={columns} getRowId={(e) => e.id} selectable={false} emptyText="Chưa có thay đổi nào." />;
+  // the dialogs that host this are `tall`, so the table is given a height and keeps its own toolbar, sticky
+  // header and pagination still while only the rows scroll
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      <DataTable useRows={useAuditSearchQuery} prefix={prefix} params={params} columns={columns} getRowId={(e) => e.id} selectable={false} emptyText="Chưa có thay đổi nào." />
+    </div>
+  );
 }

@@ -89,7 +89,7 @@ export function StudentRecordPage({ id }: { id: string }) {
         ))}
       </ol>
       <AttemptHistory studentId={id} />
-      <FormDialog open={history} onOpenChange={setHistory} title={`Lịch sử · ${data.student.full_name}`} wide>
+      <FormDialog open={history} onOpenChange={setHistory} title={`Lịch sử · ${data.student.full_name}`} wide tall>
         <HistoryPanel related={data.student.id} />
       </FormDialog>
     </>

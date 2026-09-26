@@ -102,7 +102,7 @@ export function MembershipTable({ side }: { side: MembershipTableSide }) {
       <FormDialog open={t.adding} onOpenChange={t.setAdding} title={side.kind === "org" ? `Thêm tài khoản vào ${side.orgName}` : `Thêm ${side.userName} vào tổ chức`}>
         <AddForm side={side} onDone={() => t.setAdding(false)} />
       </FormDialog>
-      <FormDialog open={t.history} onOpenChange={t.setHistory} title="Lịch sử" wide>
+      <FormDialog open={t.history} onOpenChange={t.setHistory} title="Lịch sử" wide tall>
         {side.kind === "org" ? <HistoryPanel orgId={side.orgId} /> : <HistoryPanel related={side.userId} />}
       </FormDialog>
     </>

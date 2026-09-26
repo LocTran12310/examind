@@ -67,7 +67,7 @@ export function SchoolYearsPage() {
       <FormDialog open={!!p.editing} onOpenChange={(o) => !o && p.setEditing(null)} title={`Sửa ${p.editing?.code ?? ""}`}>
         {p.editing && <YearForm year={p.editing} onDone={() => p.setEditing(null)} />}
       </FormDialog>
-      <FormDialog open={!!p.history} onOpenChange={(o) => !o && p.setHistory(null)} title={`Lịch sử · ${p.history?.code ?? ""}`} wide>
+      <FormDialog open={!!p.history} onOpenChange={(o) => !o && p.setHistory(null)} title={`Lịch sử · ${p.history?.code ?? ""}`} wide tall>
         {p.history && <HistoryPanel targetId={p.history.id} />}
       </FormDialog>
     </>

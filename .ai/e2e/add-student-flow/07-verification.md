@@ -7,40 +7,41 @@ viewports: [desktop, mobile]
 # Verification — đi hết luồng thêm học sinh, kể cả lúc bấm Lưu
 
 Các bản kiểm trước dừng **trước** nút lưu, nên chúng chứng minh được màn hình chứ chưa chứng minh được **việc**.
-Bản này đi hết: gõ một em, chọn thêm hai em từ lớp cũ, bấm thêm, xem lớp nhận đủ ba — rồi **tự dọn**.
+Bản này đi hết: dựng một lớp trống của riêng nó, gõ một em, chọn thêm hai em từ lớp cũ, bấm thêm, xem lớp nhận
+đủ ba — rồi **xoá luôn cái lớp ấy**.
 
-Lớp đích là **12A99 · 2027-2028**, lớp trống của năm mới. Ba em được thêm vẫn giữ nguyên lớp 11A1 của mình (một
-học sinh thuộc được nhiều lớp), nên bước dọn trả mọi thứ về đúng như trước.
+**Vì sao lớp phải là của riêng bản kiểm.** Bản đầu mượn `12A99`, lớp trống anh tự tạo. Rồi anh dùng nó thật —
+thêm `hs050` vào — và bản kiểm đỏ ở đúng chỗ nó khẳng định "lớp chưa có học sinh", còn bước dọn thì không dám
+xoá cả trang vì trong đó có em của anh. Ba em của lượt chạy hỏng ở lại trong lớp cho tới khi tôi gỡ tay. Một bản
+kiểm chứng dùng chung dữ liệu với người dùng là một bản kiểm chứng sẽ hỏng vào ngày người dùng động tới nó.
+
+Xoá lớp mang theo mọi bản ghi thành viên của nó (`delete_class`), còn **tài khoản học sinh thì không hề đụng
+tới** — các em vẫn ở nguyên lớp cũ của mình, vì một học sinh thuộc được nhiều lớp.
 
 ## Steps
 
 | ID | Step | Path | Interaction | Verifies | Assert | Env |
 |---|---|---|---|---|---|---|
-| S1 | Gõ tên vào dòng nhập là vào danh sách chờ | `/org/classes` | `settle 4000; click [aria-label="Chọn năm học"]; settle 1000; click [role=option]:has-text("2027-2028"); settle 3000; click td:has-text("12A99"); settle 2500; click a:has-text("Mở trang lớp"); settle 4500; click [role=tab]:has-text("Học sinh"); settle 2500; click button:has-text("Thêm học sinh"); settle 2500; fill [aria-label="Tìm học sinh để thêm"] = Học sinh 101; settle 2500; click [data-testid=student-suggestions] li:has-text("hs101"); settle 1500` | staging | `count [data-testid=staged-students] tbody tr:has-text("hs101") = 1`; `count [data-testid=staged-students] tbody tr:has-text("Lớp 11A1") = 1`; `text=Thêm 1 học sinh`; `no-text=Có lỗi xảy ra` | local |
-| S2 | Hộp chọn đưa thêm hai em vào cùng danh sách chờ, chưa lưu gì | `/org/classes` | `settle 4000; click [aria-label="Chọn năm học"]; settle 1000; click [role=option]:has-text("2027-2028"); settle 3000; click td:has-text("12A99"); settle 2500; click a:has-text("Mở trang lớp"); settle 4500; click [role=tab]:has-text("Học sinh"); settle 2500; click button:has-text("Thêm học sinh"); settle 2500; fill [aria-label="Tìm học sinh để thêm"] = Học sinh 101; settle 2500; click [data-testid=student-suggestions] li:has-text("hs101"); settle 1200; click [aria-label="Chọn học sinh từ lớp khác"]; settle 2500; click [aria-label="Xem học sinh lớp 11A1"]; settle 2500; click [aria-label="Chọn Học sinh 102"]; settle 600; click [aria-label="Chọn Học sinh 103"]; settle 600; click button:has-text("Chọn 2 học sinh"); settle 2000` | staging | `count [role=dialog] = 1`; `count [data-testid=staged-students] tbody tr = 3`; `text=Thêm 3 học sinh`; `count table:has-text("Lớp chưa có học sinh") = 1`; `no-text=Có lỗi xảy ra` | local |
-| S3 | Bấm thêm: lớp nhận đủ ba em | `/org/classes` | `settle 4000; click [aria-label="Chọn năm học"]; settle 1000; click [role=option]:has-text("2027-2028"); settle 3000; click td:has-text("12A99"); settle 2500; click a:has-text("Mở trang lớp"); settle 4500; click [role=tab]:has-text("Học sinh"); settle 2500; click button:has-text("Thêm học sinh"); settle 2500; fill [aria-label="Tìm học sinh để thêm"] = Học sinh 101; settle 2500; click [data-testid=student-suggestions] li:has-text("hs101"); settle 1200; click [aria-label="Chọn học sinh từ lớp khác"]; settle 2500; click [aria-label="Xem học sinh lớp 11A1"]; settle 2500; click [aria-label="Chọn Học sinh 102"]; settle 600; click [aria-label="Chọn Học sinh 103"]; settle 600; click button:has-text("Chọn 2 học sinh"); settle 1500; click button:has-text("Thêm 3 học sinh"); settle 4000` | saving | `text=Đã thêm 3 học sinh vào lớp`; `count [role=dialog] = 0`; `count tbody tr:has-text("hs101") = 1`; `count tbody tr:has-text("hs102") = 1`; `count tbody tr:has-text("hs103") = 1`; `no-text=Lớp chưa có học sinh` | local |
-| S4 | Dọn: bỏ đúng ba em ấy ra khỏi lớp | `/org/classes` | `settle 4000; click [aria-label="Chọn năm học"]; settle 1000; click [role=option]:has-text("2027-2028"); settle 3000; click td:has-text("12A99"); settle 2500; click a:has-text("Mở trang lớp"); settle 4500; click [role=tab]:has-text("Học sinh"); settle 3000; click thead [aria-label="Chọn tất cả"]; settle 1200; click button:has-text("Xóa"); settle 1500; click [role=alertdialog] button:has-text("Xóa"); settle 3500` | cleanup | `text=Lớp chưa có học sinh`; `no-text=hs101`; `no-text=Có lỗi xảy ra` | local |
+| S1 | Dựng một lớp trống cho chính bản kiểm này | `/org/classes` | `settle 4500; click button:has-text("Thêm mới"); settle 2000; fill [role=dialog] [placeholder="10A1"] = E2E lớp kiểm; settle 500; click button:has-text("Tạo lớp"); settle 3500; fill [aria-label="Lọc Lớp"] = E2E lớp kiểm; settle 2500` | own-class | `count tbody tr:has-text("E2E lớp kiểm") = 1`; `no-text=Có lỗi xảy ra` | local |
+| S2 | Gõ tên vào dòng nhập là vào danh sách chờ, và chưa lưu gì | `/org/classes` | `settle 4500; fill [aria-label="Lọc Lớp"] = E2E lớp kiểm; settle 2500; click td:has-text("E2E lớp kiểm"); settle 3000; click section[aria-label="Chi tiết"] button:has-text("Thêm học sinh"); settle 2500; fill [aria-label="Tìm học sinh để thêm"] = Học sinh 101; settle 2500; click [data-testid=student-suggestions] li:has-text("hs101"); settle 1500` | staging | `count [data-testid=staged-students] tbody tr:has-text("hs101") = 1`; `count [data-testid=staged-students] tbody tr:has-text("Lớp 11A1") = 1`; `text=Thêm 1 học sinh`; `count section[aria-label="Chi tiết"]:has-text("Lớp chưa có học sinh") = 1`; `no-text=Có lỗi xảy ra` | local |
+| S3 | Hộp chọn thêm hai em nữa, rồi bấm lưu: lớp nhận đủ ba | `/org/classes` | `settle 4500; fill [aria-label="Lọc Lớp"] = E2E lớp kiểm; settle 2500; click td:has-text("E2E lớp kiểm"); settle 3000; click section[aria-label="Chi tiết"] button:has-text("Thêm học sinh"); settle 2500; fill [aria-label="Tìm học sinh để thêm"] = Học sinh 101; settle 2500; click [data-testid=student-suggestions] li:has-text("hs101"); settle 1200; click [aria-label="Chọn học sinh từ lớp khác"]; settle 2500; click [aria-label="Xem học sinh lớp 11A1"]; settle 2500; click [aria-label="Chọn Học sinh 102"]; settle 600; click [aria-label="Chọn Học sinh 103"]; settle 600; click button:has-text("Chọn 2 học sinh"); settle 1500; click button:has-text("Thêm 3 học sinh"); settle 4000` | saving | `text=Đã thêm 3 học sinh vào lớp`; `count [role=dialog] = 0`; `count section[aria-label="Chi tiết"] tbody tr:has-text("hs101") = 1`; `count section[aria-label="Chi tiết"] tbody tr:has-text("hs102") = 1`; `count section[aria-label="Chi tiết"] tbody tr:has-text("hs103") = 1` | local |
+| S4 | Dọn: xoá cái lớp bản kiểm đã dựng | `/org/classes` | `settle 4500; fill [aria-label="Lọc Lớp"] = E2E lớp kiểm; settle 2500; click tbody [aria-label="Chọn dòng"]; settle 1200; click button:has-text("Xóa"); settle 1500; click [role=alertdialog] button:has-text("Xóa"); settle 3500` | cleanup | `count tbody tr:has-text("E2E lớp kiểm") = 0`; `no-text=Có lỗi xảy ra` | local |
 
-**S2 khẳng định `count [role=dialog] = 1`**: hộp chọn đã đóng sau khi bấm "Chọn", còn hộp danh sách chờ vẫn mở.
-Và **`count table:has-text("Lớp chưa có học sinh") = 1`** là chỗ chứng minh *chưa lưu gì*: bảng học sinh của lớp
-nằm ngay phía sau hộp thoại và vẫn đang rỗng. Trên bản trước bản này, bấm chọn là **ghi thẳng vào lớp** — nên
-khẳng định ấy phân biệt được hai bản dựng, không chỉ mô tả bản hiện tại.
+**S2 chứng minh "chưa lưu gì" bằng chính bảng phía sau**: mục "Chi tiết" của lớp vừa dựng vẫn đọc "Lớp chưa có
+học sinh" trong khi danh sách chờ đã có một em. Trên bản trước bản này, bấm chọn là **ghi thẳng vào lớp** — nên
+khẳng định ấy phân biệt được hai bản dựng, không chỉ mô tả bản hiện tại. Nó bám vào `section[aria-label="Chi
+tiết"]`, vì mục ấy là chỗ duy nhất câu kia được phép xuất hiện.
 
-**`count … tbody tr = 3`** là ba hàng học sinh. Ô nhập **nằm trên bảng**, không còn là một hàng của nó: ở trong
-bảng nó trôi xuống theo mỗi em được thêm, và danh sách gợi ý bị chính khung cuộn cắt mất. Đây là chỗ bản dựng
-lệch khỏi chữ anh viết ("table với row input") — đổi lại là không có gì nhảy.
-
-**Và khẳng định về lớp hiện tại phải bám vào hàng**, không phải `text=Lớp 11A1`. Ở bề rộng điện thoại, tên đăng
+**Khẳng định về lớp hiện tại phải bám vào hàng**, không phải `text=Lớp 11A1`: ở bề rộng điện thoại, tên đăng
 nhập và lớp hiện tại xuống dòng thứ hai ngay dưới tên, nên **cùng một chuỗi có mặt hai lần trong DOM**, mỗi bản
 ẩn ở một bề rộng. `text=` của Playwright lấy phần tử khớp **đầu tiên** rồi đợi nó hiện ra — ở desktop đó lại
-đúng là bản dành cho điện thoại, đang `display:none`, nên bước đỏ trong khi màn hình hiện chữ ấy rõ ràng. Mọi
-khẳng định trên một dữ liệu được lặp lại cho responsive đều phải giới hạn vào đúng chỗ muốn kiểm.
+đúng là bản dành cho điện thoại, đang `display:none`, nên bước đỏ trong khi màn hình hiện chữ ấy rõ ràng.
 
 ## Dữ liệu
 
-S3 **ghi thật**: ba học sinh vào lớp 12A99. S4 lấy lại trong cùng lượt chạy, qua chính nút Xóa của sản phẩm. Hai
-viewport nghĩa là hai vòng thêm–xoá khép kín. Ba em ấy vẫn ở nguyên lớp 11A1 từ đầu đến cuối — một học sinh
-thuộc được nhiều lớp, nên vòng này không đụng gì tới lớp cũ của họ.
+Lớp `E2E lớp kiểm` được dựng ở S1 và xoá ở S4, trong cùng một lượt chạy. Hai viewport nghĩa là hai vòng
+dựng–xoá khép kín, và desktop xoá xong mới tới lượt mobile dựng. Ba học sinh được thêm vào lớp ấy vẫn ở nguyên
+lớp 11A1 của mình từ đầu đến cuối.
 
-Nếu S3 đỏ thì S4 sẽ không có gì để xoá và cũng đỏ (`text=Lớp chưa có học sinh` vốn đã đúng), chứ không xoá nhầm
-học sinh của lớp khác: nó chỉ chọn cả trang của **lớp 12A99** rồi bấm Xóa.
+Nếu S1 đỏ thì S2–S4 không tìm thấy lớp nào tên ấy và cùng đỏ, chứ không đụng vào lớp khác: mọi bước đều lọc
+danh sách theo đúng cái tên ấy trước khi bấm bất cứ thứ gì.

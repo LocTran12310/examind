@@ -1434,3 +1434,37 @@ trên 25 kết quả" vẫn nguyên chỗ.
 
 **Kiểm chứng.** Web **292 passed**, tsc và ESLint xanh. Trình duyệt: `owner-walk-2` **14/14** hai viewport, đọc
 từng ảnh.
+
+## 42. Những bảng còn lại, và một bản kiểm chứng đã giẫm lên dữ liệu của anh (2026-09-26)
+
+**Đi soát hết mọi bảng trong ứng dụng**, không sửa mò. Kết quả đáng nói hơn bản thân chỗ sửa:
+
+| Nhóm | Trạng thái |
+| --- | --- |
+| Bảng của các trang danh sách (Người dùng, Tags, Duyệt, Đề đã tải lên, Năm học, Cơ cấu, Model AI, Ngân hàng, Đề thi, Lớp học, Tổ chức, Tài khoản) | **vốn đã đúng** — tất cả nằm trong `ListLayout`, thứ đã cho bảng một chiều cao từ đầu |
+| Sheet "Thay đổi gần đây" | **vốn đã đúng** — `min-h-0 flex-1 overflow-hidden` |
+| Ba hộp thoại "Lịch sử" (năm học, tổ chức/tài khoản, hồ sơ học sinh) | **hỏng** — `FormDialog` không có `tall` nên hộp co theo nội dung, bảng không có chiều cao nào để giữ thanh công cụ |
+| Tab "Học sinh" của trang lớp | **hỏng** — nằm trong luồng trang, bảng nở theo nội dung |
+
+Nên chỗ sửa nhỏ: ba hộp thoại nhận `tall`, `HistoryPanel` bọc trong một cột flex `h-full`, và trang lớp thành
+một cột lấp đầy trang — tab Tổng quan tự cuộn, tab Học sinh trao chiều cao cho bảng.
+
+**Các bảng còn lại cố tình không dính, và đó là đúng**: lịch sử làm bài trên hồ sơ, bảng "Tình hình học tập",
+báo cáo bài giao, bản đồ nhiệt, kết quả một lượt làm bài, ma trận đề. Chúng nằm trong luồng đọc của một trang,
+không phải danh sách để lướt — cho mỗi cái một khung cuộn riêng là biến một trang đọc được thành một chồng cửa
+sổ nhỏ, mỗi cái cuộn một kiểu.
+
+**Và bản kiểm chứng luồng thêm học sinh đã giẫm lên dữ liệu của anh.** Nó mượn `12A99` — lớp trống anh tự tạo.
+Anh dùng nó thật, thêm `hs050`; lần chạy sau đỏ ở đúng chỗ khẳng định "lớp chưa có học sinh", và bước dọn thì
+**không dám xoá cả trang** vì trong đó có em của anh, nên ba em của lượt chạy hỏng nằm lại trong lớp cho tới khi
+tôi gỡ tay (xoá đúng ba bản ghi thành viên ấy, `hs050` giữ nguyên).
+
+Bản kiểm nay **dựng lớp của riêng nó** (`E2E lớp kiểm`) ở bước đầu và **xoá ở bước cuối** — xoá lớp mang theo
+mọi bản ghi thành viên, còn tài khoản học sinh không hề đụng tới. Đếm lại sau khi chạy: 0 lớp `E2E`, `12A99` trở
+về đúng một mình `hs050`, sáu lớp thật vẫn đủ 25.
+
+Bài học đáng ghi hơn cái lỗi: **một bản kiểm chứng dùng chung dữ liệu với người dùng là một bản kiểm chứng sẽ
+hỏng vào ngày người dùng động tới nó** — và tệ hơn, nó hỏng theo kiểu để lại rác mà chính nó không dọn nổi.
+
+**Kiểm chứng.** Web **292 passed**, tsc và ESLint xanh. Trình duyệt: `add-student-flow` **8/8**,
+`owner-walk-2` **14/14**, và bản kiểm của F23 (trang lớp) **10/10** — tất cả hai viewport, đọc từng ảnh.

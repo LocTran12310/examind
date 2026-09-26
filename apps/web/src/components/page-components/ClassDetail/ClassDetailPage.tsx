@@ -18,7 +18,7 @@ export function ClassDetailPage({ id }: { id: string }) {
   if (p.error) return <p className="text-sm text-destructive">{p.error}</p>;
   if (!p.data) return null;
   return (
-    <>
+    <div className="flex min-h-0 flex-1 flex-col">
       <BackLink href="/org/classes">Lớp học</BackLink>
       <PageHeader
         title={`Lớp ${p.data.name}`}
@@ -29,13 +29,16 @@ export function ClassDetailPage({ id }: { id: string }) {
       <FormDialog open={p.adaptive} title="Giao đề ôn cá nhân cho cả lớp" onOpenChange={(o) => !o && p.setAdaptive(false)}>
         <ClassAdaptiveDialog classId={id} onDone={p.assigned} />
       </FormDialog>
-      <Tabs defaultValue="overview">
+      {/* a column that fills the page: the overview scrolls as a whole, while the students tab hands its height
+          to the table so that table keeps its own toolbar, header and pagination still (MasterDetail says the
+          same thing about detail panes) */}
+      <Tabs defaultValue="overview" className="flex min-h-0 flex-1 flex-col">
         <TabsList aria-label="Xem lớp" className="mb-4">
           <TabsTrigger value="overview">Tổng quan</TabsTrigger>
           <TabsTrigger value="students">Học sinh</TabsTrigger>
         </TabsList>
         {/* AC-03: cả lớp trước, từng em sau — người dạy hỏi "lớp thế nào" trước khi hỏi "em nào" */}
-        <TabsContent value="overview">
+        <TabsContent value="overview" className="min-h-0 flex-1 overflow-auto">
           {p.summary && <ClassSummary data={p.summary} />}
           {p.overview && p.overview.length > 0 && (
             <Panel className="mt-4">
@@ -44,10 +47,10 @@ export function ClassDetailPage({ id }: { id: string }) {
             </Panel>
           )}
         </TabsContent>
-        <TabsContent value="students">
+        <TabsContent value="students" className="min-h-0 flex-1">
           <MemberManager classId={id} />
         </TabsContent>
       </Tabs>
-    </>
+    </div>
   );
 }
