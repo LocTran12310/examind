@@ -3,7 +3,7 @@
 # Ticket graph — 2026092602-student-side-subjects
 
 - Units of Work: **2**
-- Tickets: **5** (3 done)
+- Tickets: **5** (5 done)
 - Total effort: **1.9d**
 - Critical path: **7h** across 2 tickets
 - Theoretical minimum duration with unlimited parallelism: **7h**
@@ -28,8 +28,8 @@ graph LR
   end
   subgraph UOW_02["UOW-02 · Tiến độ của tôi đọc được khi có nhiều môn"]
     T_02_00["✓ T-02-00<br/>Mức nắm vững và lịch sử ôn tập nói ra môn của từng hàng"]
-    T_02_01["T-02-01<br/>Bộ chọn môn kéo cả bốn khối của trang tiến độ"]
-    T_02_02["T-02-02<br/>Lịch sử ôn tập gập lại được"]
+    T_02_01["✓ T-02-01<br/>Bộ chọn môn kéo cả bốn khối của trang tiến độ"]
+    T_02_02["✓ T-02-02<br/>Lịch sử ôn tập gập lại được"]
   end
   T_01_01 --> T_01_02
   T_02_00 --> T_02_01
@@ -69,5 +69,5 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-01-01 | UOW-01 | api | feature | 3h | — | AC-03 | done |
 | T-01-02 | UOW-01 | web | feature | 3h | T-01-01 | AC-01, AC-02 | done |
 | T-02-00 | UOW-02 | api | feature | 3h | — | AC-05, AC-07 | done |
-| T-02-01 | UOW-02 | web | feature | 4h | T-02-00 | AC-04, AC-05 | todo |
-| T-02-02 | UOW-02 | web | feature | 2h | — | AC-06, AC-07 | todo |
+| T-02-01 | UOW-02 | web | feature | 4h | T-02-00 | AC-04, AC-05 | done |
+| T-02-02 | UOW-02 | web | feature | 2h | — | AC-06, AC-07 | done |

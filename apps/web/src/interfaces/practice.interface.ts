@@ -13,6 +13,8 @@ export interface PracticeItem {
   started_at: string;
   submitted_at: string | null;
   score10: number | null;
+  /** the subject the exam was drawn inside; null for runs from before an exam recorded one */
+  subject_id: string | null;
   note: string | null;
   groups: PlanGroup[];
 }

@@ -1,19 +1,39 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { Panel } from "@/components/common/Panel/Panel";
+import { Button } from "@/components/ui/button";
 import { ToneBadge } from "@/components/common/ToneBadge/ToneBadge";
 import type { PracticeItem } from "@/interfaces/practice.interface";
 import { fmt } from "@/lib/common/dates";
 
-/** The student's last practice attempts and why their questions were chosen. */
+/** The number of runs shown before the list folds: enough to see what you did lately, short enough that the
+ *  panels under it stay reachable without scrolling past a wall of history. */
+const SHOWN = 3;
+
+/** The student's last practice attempts and why their questions were chosen.
+ *
+ *  Folded to the last few by default. Every run a student does adds a row here, so after a term of practice the
+ *  list pushes everything else off the screen — but the rows are the student's own record, so the answer is to
+ *  fold them, not to let anything delete them. */
 export function PracticeHistory({ items }: { items: PracticeItem[] | undefined }) {
+  const [open, setOpen] = useState(false);
   if (!items || !items.length) return null;
+  const shown = open ? items : items.slice(0, SHOWN);
+  const hidden = items.length - shown.length;
   return (
     <Panel>
-      <h2 className="mb-2 font-medium">Lịch sử ôn tập</h2>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <h2 className="font-medium">Lịch sử ôn tập</h2>
+        {(hidden > 0 || open) && (
+          <Button variant="ghost" size="sm" onClick={() => setOpen((v) => !v)}>
+            {open ? "Thu gọn" : `Xem cả ${items.length} lượt`}
+          </Button>
+        )}
+      </div>
       <ul className="divide-y divide-border text-sm" data-testid="practice-history">
-        {items.map((p) => (
+        {shown.map((p) => (
           <li key={p.attempt_id} className="py-2">
             <div className="flex items-center justify-between gap-2">
               <span>
@@ -35,6 +55,7 @@ export function PracticeHistory({ items }: { items: PracticeItem[] | undefined }
           </li>
         ))}
       </ul>
+      {hidden > 0 && <p className="mt-2 text-xs text-muted-foreground">Còn {hidden} lượt nữa.</p>}
     </Panel>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { EmptyState } from "@/components/common/EmptyState/EmptyState";
+import { OptionSelect } from "@/components/common/OptionSelect/OptionSelect";
 import { GroupStats } from "@/components/common/GroupStats/GroupStats";
 import { PageHeader } from "@/components/common/PageHeader/PageHeader";
 import { Panel } from "@/components/common/Panel/Panel";
@@ -15,7 +16,19 @@ export function MyStatsPage() {
   if (!p.ready) return null;
   return (
     <>
-      <PageHeader title="Tiến độ của tôi" description="Tỉ lệ làm đúng theo chuyên đề và loại câu" actions={p.canPractise ? <PracticeButton defaultSubjectId={p.weakestSubject} /> : undefined} />
+      <PageHeader
+        title="Tiến độ của tôi"
+        description="Tỉ lệ làm đúng theo chuyên đề và loại câu"
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            {/* the scope of the whole page, not of one panel — mặc định "Mọi môn", như trang Báo cáo */}
+            {p.subjectOptions.length > 1 && (
+              <OptionSelect aria-label="Môn" className="w-40" value={p.subjectId} onValueChange={p.setSubjectId} emptyLabel="Mọi môn" options={p.subjectOptions} />
+            )}
+            {p.canPractise && <PracticeButton defaultSubjectId={p.weakestSubject} />}
+          </div>
+        }
+      />
       {p.topics.length === 0 ? (
         <EmptyState>Làm bài được giao để xem tiến độ của bạn.</EmptyState>
       ) : (
@@ -27,7 +40,7 @@ export function MyStatsPage() {
           </Panel>
           <Panel>
             <h2 className="mb-2 font-medium">Theo chuyên đề</h2>
-            <TopicStatsTree rows={p.topics} />
+            <TopicStatsTree rows={p.topics} subjects={p.subjectNames} />
           </Panel>
           <Panel>
             <h2 className="mb-2 font-medium">Theo loại câu</h2>

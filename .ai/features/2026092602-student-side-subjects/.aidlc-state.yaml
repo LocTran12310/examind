@@ -104,3 +104,47 @@ history:
     by: Loc Tran
     reason: Các file apps/web/public/** và UserImport/** trong cửa sổ base là việc song song của một agent khác (màn hình nhập tài khoản từ file), không thuộc ticket này và chưa commit
     ticket: T-02-00
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-26T21:49:26
+    by: Claude Opus 5
+    ticket: T-02-01
+  - gate: G4
+    action: ticket in_progress
+    at: 2026-09-26T21:51:07
+    by: Claude Opus 5
+    ticket: T-02-02
+  - gate: G4
+    action: scope
+    at: 2026-09-26T21:53:02
+    by: Loc Tran
+    reason: Màn hình nhập tài khoản từ file (FileDropField, UserImport, public/) là việc song song của một agent khác trong cùng cây, chưa commit
+    ticket: T-02-01
+  - gate: G4
+    action: evidence
+    at: 2026-09-26T21:53:03
+    by: Loc Tran
+    ticket: T-02-01
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-26T21:53:03
+    by: Loc Tran
+    reason: Màn hình nhập tài khoản từ file (FileDropField, UserImport, public/) là việc song song của một agent khác trong cùng cây, chưa commit
+    ticket: T-02-01
+  - gate: G4
+    action: scope
+    at: 2026-09-26T21:53:04
+    by: Loc Tran
+    reason: Cùng lý do - việc nhập tài khoản từ file của agent khác nằm trong cửa sổ base
+    ticket: T-02-02
+  - gate: G4
+    action: evidence
+    at: 2026-09-26T21:53:05
+    by: Loc Tran
+    ticket: T-02-02
+  - gate: G4
+    action: ticket done (review bypassed)
+    at: 2026-09-26T21:53:05
+    by: Loc Tran
+    reason: Cùng lý do - việc nhập tài khoản từ file của agent khác nằm trong cửa sổ base
+    ticket: T-02-02

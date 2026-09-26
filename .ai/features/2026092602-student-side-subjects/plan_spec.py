@@ -65,9 +65,9 @@ t(id="T-02-01", uow="UOW-02", title="Bộ chọn môn kéo cả bốn khối c�
   tests=[f"{S}/__tests__/my-stats.test.tsx"],
   touches=[f"{S}/components/page-components/MyStats/MyStatsPage.tsx",
            f"{S}/hooks/page-hooks/my-stats/use-my-stats-page.ts",
-           f"{S}/hooks/react-query/use-query-practice.ts",
-           f"{S}/services/practice.service.ts",
-           f"{S}/dtos/practice.dto.ts"],
+           f"{S}/interfaces/mastery.interface.ts",
+           f"{S}/interfaces/practice.interface.ts",
+           f"{S}/__tests__/mastery.test.tsx"],
   context="ADR-03: một bộ chọn chỉ áp cho nửa trang là cái bẫy đọc số tệ nhất bày ra được. /stats/* đã nhận "
           "subject_id từ F23; mastery và lịch sử ôn thì lọc ở tầng đọc.",
   done_when=["Mặc định Mọi môn, số không đổi so với trước", "Chọn một môn thì cả bốn khối theo môn ấy",

@@ -16,10 +16,10 @@ describe("mastery UI", () => {
     render(
       <MasteryList
         rows={[
-          { topic_id: "1", parent_id: null, name: "Vectơ", path: "a", depth: 1, mastery: 0.9, answers: 8, tracked: true, enough_data: true, weak: false },
-          { topic_id: "2", parent_id: null, name: "Mệnh đề", path: "b", depth: 1, mastery: 0.2, answers: 6, tracked: true, enough_data: true, weak: true },
-          { topic_id: "3", parent_id: null, name: "Hàm số", path: "d", depth: 1, mastery: 0.3, answers: 3, tracked: true, enough_data: false, weak: false },
-          { topic_id: "4", parent_id: null, name: "Đại số", path: "c", depth: 1, mastery: 0.5, answers: 8, tracked: false, enough_data: true, weak: true },
+          { topic_id: "1", parent_id: null, name: "Vectơ", path: "a", depth: 1, subject_id: "s1", mastery: 0.9, answers: 8, tracked: true, enough_data: true, weak: false },
+          { topic_id: "2", parent_id: null, name: "Mệnh đề", path: "b", depth: 1, subject_id: "s1", mastery: 0.2, answers: 6, tracked: true, enough_data: true, weak: true },
+          { topic_id: "3", parent_id: null, name: "Hàm số", path: "d", depth: 1, subject_id: "s1", mastery: 0.3, answers: 3, tracked: true, enough_data: false, weak: false },
+          { topic_id: "4", parent_id: null, name: "Đại số", path: "c", depth: 1, subject_id: "s1", mastery: 0.5, answers: 8, tracked: false, enough_data: true, weak: true },
         ]}
       />,
     );

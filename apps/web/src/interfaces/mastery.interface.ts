@@ -5,6 +5,8 @@ export interface MasteryRow {
   name: string;
   path: string;
   depth: number;
+  /** the subject this topic belongs to, so a reader can narrow to one without asking the taxonomy again */
+  subject_id: string | null;
   mastery: number | null;
   answers: number;
   tracked: boolean;
