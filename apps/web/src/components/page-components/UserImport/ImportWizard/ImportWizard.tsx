@@ -52,7 +52,7 @@ export function ImportWizard({ orgCode }: { orgCode: string }) {
           onChange={onFile}
           disabled={busy}
           testId="file"
-          hint="Cột: full_name (bắt buộc), username, role, class. Bỏ trống username để hệ thống tự tạo; role nhận student, teacher hoặc org_admin."
+          hint="Cột: Họ tên (bắt buộc), Tên đăng nhập, Vai trò, Lớp — đúng như file xuất ra, nên xuất rồi sửa rồi nhập lại được. Bỏ trống Tên đăng nhập để hệ thống tự tạo; Vai trò nhận Học sinh, Giáo viên, Quản trị trung tâm; một ô Lớp ghi nhiều lớp thì ngăn bằng dấu chấm phẩy. Tên cột tiếng Anh (full_name, username, role, class) vẫn nhận."
         >
           <a href={TEMPLATE_HREF} download className="inline-flex items-center gap-1 font-medium text-primary underline underline-offset-2">
             <Download className="size-3.5" /> Tải file mẫu (.csv)

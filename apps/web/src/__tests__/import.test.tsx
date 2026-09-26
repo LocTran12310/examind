@@ -97,8 +97,10 @@ describe("file drop field on the import screen", () => {
     render(<ImportWizard orgCode="trungtama" />);
     const href = screen.getByRole("link", { name: /Tải file mẫu/ }).getAttribute("href")!;
     const template = readFileSync(path.join(process.cwd(), "public", href), "utf8").replace(/^﻿/, "").trim().split("\n");
-    expect(template[0]).toBe("full_name,username,role,class");
+    expect(template[0]).toBe("Họ tên,Tên đăng nhập,Vai trò,Lớp");
     expect(template.length).toBeGreaterThan(1);
-    expect(screen.getByText(/Cột: full_name/)).toHaveTextContent("username, role, class");
+    // the words the file shows are the words the hint names, and one row documents the `;` between two classes
+    expect(screen.getByText(/Cột: Họ tên/)).toHaveTextContent("Tên đăng nhập, Vai trò, Lớp");
+    expect(template.some((l) => l.includes("10A1; 11A2"))).toBe(true);
   });
 });

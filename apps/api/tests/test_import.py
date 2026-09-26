@@ -75,3 +75,33 @@ def test_teacher_cannot_import_teachers(client, db):
     login_as(client, db, "teacher")
     body = upload(client, "t.csv", b"full_name,role\nA B C,teacher\n").json()
     assert body["rows"][0]["errors"] == ["Bạn không có quyền tạo vai trò này"]
+
+
+def test_a_file_the_export_wrote_reads_back(client, db):
+    """The file people re-import is the one the product exported: Vietnamese headers, Vietnamese roles, `;` classes.
+
+    Written as the export writes it, column for column — including the Email column the importer has no use for, to
+    pin that an unknown column is ignored rather than shifting the ones after it."""
+    login_as(client, db, "org_admin", username="admin")
+    data = ("\ufeffHọ tên,Tên đăng nhập,Email,Vai trò,Lớp\n"
+            "Lê Thị Mai,lethimai,,Học sinh,\"12X1; 12X2\"\n"
+            "Phạm Văn Bình,phamvanbinh,,Giáo viên,\n"
+            "Đỗ Quản Trị,doquantri,,Quản trị trung tâm,\n").encode()
+    body = upload(client, "nguoi-dung.csv", data).json()
+    assert body["error_count"] == 0, body["rows"]
+    assert [r["role"] for r in body["rows"]] == ["student", "teacher", "org_admin"]
+    assert [r["full_name"] for r in body["rows"]] == ["Lê Thị Mai", "Phạm Văn Bình", "Đỗ Quản Trị"]
+    assert body["rows"][0]["class"] == "12X1; 12X2"
+    r = client.post("/api/users/import/commit", json={"rows": body["rows"]})
+    assert r.status_code == 201, r.text
+    counts = {c["name"]: c["member_count"] for c in client.post("/api/classes/search", json={}).json()["data"]}
+    assert counts.get("12X1") == 1 and counts.get("12X2") == 1
+    assert "12X1; 12X2" not in counts      # one cell, two classes — never one class with a semicolon in its name
+
+
+def test_unaccented_headers_and_key_headers_both_read(client, db):
+    login_as(client, db, "org_admin", username="admin")
+    body = upload(client, "a.csv", "Ho ten,Vai tro,Lop\nTrần Bảo,gv,\n".encode()).json()
+    assert body["rows"][0]["full_name"] == "Trần Bảo" and body["rows"][0]["role"] == "teacher"
+    body = upload(client, "b.csv", "full_name,role,class\nTrần Bảo,teacher,\n".encode()).json()
+    assert body["rows"][0]["full_name"] == "Trần Bảo" and body["rows"][0]["role"] == "teacher"

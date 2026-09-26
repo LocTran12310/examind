@@ -50,7 +50,10 @@ class CommitImport:
 
 
 class CommitImportHandler:
-    """Every account gets a temporary password to change on first login; a class name puts the account in that class."""
+    """Every account gets a temporary password to change on first login; each class named on the row enrols the account.
+
+    A cell naming several classes is what the export writes for a student who is in more than one, so reading it back
+    has to enrol into each of them — joining them into one name would quietly create a class called "12A1; 11A2"."""
 
     def __init__(self, users: UserRepository, classes: ClassDirectory, hasher: PasswordHasher, secrets: Secrets, audit: AuditTrail,
                  uow: UnitOfWork):
@@ -68,12 +71,12 @@ class CommitImportHandler:
             user = User(organization_id=actor.org_id, username=r.username, full_name=r.full_name, role=r.role,
                         password_hash=self.hasher.hash(password), must_change_password=True)
             self.users.add(user)
-            if r.klass:
-                if r.klass not in class_ids:
-                    class_ids[r.klass] = self.classes.find_or_create(actor, r.klass)
-                self.classes.enroll(actor, class_ids[r.klass], {user.id})
+            for name in r.classes:
+                if name not in class_ids:
+                    class_ids[name] = self.classes.find_or_create(actor, name)
+                self.classes.enroll(actor, class_ids[name], {user.id})
             created.append({"user_id": user.id, "username": r.username, "full_name": r.full_name, "role": r.role,
-                            "class": r.klass, "temp_password": password})
+                            "class": "; ".join(r.classes), "temp_password": password})
         self.audit.record(actor, actor.org_id, "user.import", "user", None, count=len(created))
         self.uow.commit()
         return created

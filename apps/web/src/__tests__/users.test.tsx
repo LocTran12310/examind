@@ -1,5 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MeProvider } from "@/hooks/common/use-me";
 import UsersPage from "@/app/(app)/org/users/page";
@@ -39,6 +41,33 @@ beforeEach(() => setUrl("/org/users"));
 afterEach(() => vi.unstubAllGlobals());
 
 describe("users", () => {
+  /** The export is the file people edit and send back, so its header and its cells are the ones the importer reads:
+   *  labels rather than keys, and `;` between two classes. A space there would come back as one class of that name. */
+  it("exports the columns and the words the importer reads back", async () => {
+    const both = searchPage([
+      { id: "c1", name: "10A1", school_year: "2026-2027", grade: 10, member_count: 2 },
+      { id: "c2", name: "11A2", school_year: "2026-2027", grade: 11, member_count: 1 },
+    ]);
+    mockFetch(
+      route("POST", "/api/users/search", searchPage([users[0], user({ id: "s", full_name: "Bùi Văn Châu", class_ids: ["c1", "c2"] })])),
+      route("POST", "/api/classes/search", both),
+    );
+    const blobs: Blob[] = [];
+    vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: vi.fn((b: Blob) => (blobs.push(b), "blob:x")), revokeObjectURL: vi.fn() }));
+    renderPage();
+    await screen.findByText("Bùi Văn Châu");
+    await userEvent.click(screen.getByRole("button", { name: /Xuất khẩu/ }));
+    await waitFor(() => expect(blobs).toHaveLength(1));
+    const [head, ...body] = (await blobs[0].text()).replace(/^﻿/, "").trim().split("\n");
+    expect(head).toBe("Họ tên,Tên đăng nhập,Email,Vai trò,Lớp");
+    // the template in public/ carries the same header, minus the one column the importer has no use for
+    const template = readFileSync(path.join(process.cwd(), "public", "mau-nhap-tai-khoan.csv"), "utf8").replace(/^﻿/, "").split("\n")[0].trim();
+    expect(head.split(",").filter((c) => c !== "Email").join(",")).toBe(template);
+    const row = body.find((l) => l.startsWith("Bùi Văn Châu"))!;
+    expect(row).toContain("Học sinh");
+    expect(row).toContain("10A1; 11A2");
+  });
+
   it("teachers can only create students", () => {
     expect(rolesManagedBy("teacher")).toEqual(["student"]);
     expect(rolesManagedBy("org_admin")).toContain("teacher");

@@ -1613,3 +1613,36 @@ chưa-nộp là hai trạng thái môn gặp nhau trong cùng mục "Đang mở"
 **Kiểm chứng.** `make e2e` **20/20**, đọc cả 20 ảnh; vai báo cáo chạy lại 5/5 sau khi sửa S18; `student-home`
 2/2 sau khi dựng lại bài mẫu. Sandbox hiện để lại: lớp thử, 4 tài khoản, 10 câu, `E2E · bài mẫu` (chưa ai làm),
 `E2E · vòng dạy học` với 4 bài đã nộp — gỡ bằng `make e2e-teardown ARGS=--yes`.
+
+## 47. Một thứ tiếng cho file xuất và file nhập (2026-09-26)
+
+Anh mở hai file cạnh nhau: file xuất ghi `Họ tên · Tên đăng nhập · Vai trò · Lớp` với `Học sinh`/`Giáo viên`, file
+mẫu để nhập lại ghi `full_name · username · role · class` với `student`/`teacher`. Hai bộ chữ cho một việc.
+
+**Hoá ra bộ nhập đã hiểu tiếng Việt từ đầu** — `ALIASES` có "họ tên", "vai trò", "lớp"; `ROLE_ALIASES` có "học
+sinh", "giáo viên". Chỉ file mẫu và dòng gợi ý là tiếng Anh, nên **không ai biết**. Một khả năng không nói ra thì
+bằng không có.
+
+**Nay nhãn chính là khoá, về mặt đọc file.** `COLUMN_LABELS` và `ROLE_LABELS` khai mỗi cột/vai trò một hàng nhãn
+— nhãn chuẩn (thứ file xuất và file mẫu viết) rồi tới các cách người ta gõ: không dấu, cách gọi khác. `ALIASES`
+và `ROLE_ALIASES` sinh ra từ đó chứ không chép tay, nên không lệch được. Tên cột tiếng Anh vẫn nhận vì
+`_header_key` trả về chính nó khi không khớp nhãn nào — file do script viết đọc y như cũ. File mẫu viết lại bằng
+đúng hàng tiêu đề của file xuất, và dòng gợi ý nói thẳng cả hai điều.
+
+**Về ý "dòng header bằng key-enum rồi ẩn đi".** CSV không có khái niệm dòng ẩn — dòng thứ hai sẽ bị Excel,
+Numbers và chính bộ đọc của ta coi là dữ liệu. Bảng nhãn ở trên làm đúng việc anh cần (máy nhận ra, người đọc
+tiếng Việt) mà không đẻ thêm một dòng ma. Nếu vẫn muốn hàng khoá ẩn thật thì phải chuyển hẳn sang `.xlsx` —
+chưa làm, ghi ra đây.
+
+**Và có hai chỗ vòng xuất-nhập gãy thật, không phải chuyện chữ nghĩa:**
+- **Vai trò quản trị không nhập lại được.** File xuất ghi `Quản trị trung tâm` (nhãn trên web), mà `ROLE_ALIASES`
+  chỉ có `admin`. Xuất ra rồi nhập lại thì mọi dòng quản trị đỏ "Vai trò không hợp lệ". Nay nhãn ấy là một alias.
+- **Một em hai lớp thì nhập lại đẻ ra lớp rác.** File xuất nối tên lớp bằng **dấu cách** — `12A1 11A2` — và
+  `find_or_create` sẽ **tạo một lớp tên "12A1 11A2"**. Nay file xuất ngăn bằng `;`, và bộ nhập tách ô ấy ra rồi
+  xếp em đó vào **từng** lớp. Đây là lỗi im lặng: không báo gì, chỉ để lại một lớp không ai gọi tên như thế.
+
+**Kiểm chứng.** API **581 → 583 passed**, 1 skipped; web **306 → 307 passed**; tsc, ESLint và 4 import contract
+xanh. Hai bài mới đáng kể: `test_a_file_the_export_wrote_reads_back` dựng đúng hàng tiêu đề của file xuất (kể cả
+cột Email bộ nhập không dùng), ba vai trò bằng nhãn tiếng Việt, một ô hai lớp — rồi khẳng định ra **hai** lớp;
+và `users.test.tsx` bấm đúng nút "Xuất khẩu", đọc chính Blob đi ra, so hàng tiêu đề với **file mẫu đọc từ đĩa**.
+Trình duyệt: `.ai/e2e/import-labels` 1 bước × 2 viewport, **2/2**, đọc cả hai ảnh.

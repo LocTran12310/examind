@@ -136,10 +136,13 @@ export function useUsersPage() {
         failed(e);
       }
     },
-    /** Every row of the current filters as CSV. */
+    /** Every row of the current filters as CSV — the same columns and the same words the importer reads back,
+     *  so a file that leaves here can come back in. The header labels are aliases of the column keys and the role
+     *  cells are aliases of the role names (`user_import.py`), and several classes are separated by `;` because a
+     *  space would make one class name out of two. */
     exportCsv: async () => {
       const users = await fetchAll(toSearchBody(tq.apiParams, filterKinds(columns)));
-      const rows = users.map((u) => ({ full_name: u.full_name, username: u.username, email: u.email ?? "", role: ROLE_LABEL[u.role], classes: u.class_ids.map((id) => classById.get(id)?.name).join(" ") }));
+      const rows = users.map((u) => ({ full_name: u.full_name, username: u.username, email: u.email ?? "", role: ROLE_LABEL[u.role], classes: u.class_ids.map((id) => classById.get(id)?.name).filter(Boolean).join("; ") }));
       downloadText("nguoi-dung.csv", toCsv(rows, [["full_name", "Họ tên"], ["username", "Tên đăng nhập"], ["email", "Email"], ["role", "Vai trò"], ["classes", "Lớp"]]));
     },
   };
