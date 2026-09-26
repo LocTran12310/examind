@@ -88,6 +88,7 @@ describe("classes", () => {
     render(<MemberManager classId="c1" />);
     await screen.findByText("HS01");
     await u.click(screen.getByRole("button", { name: "Thêm học sinh" }));
+    await u.click(await screen.findByRole("tab", { name: "Tìm từng em" }));
     await u.type(screen.getByRole("textbox", { name: "Tìm học sinh" }), "hs");
     const dialog = await screen.findByRole("dialog");
     await u.click(await within(dialog).findByRole("button", { name: "Thêm" }));
@@ -100,5 +101,64 @@ describe("classes", () => {
     await u.click(screen.getByRole("button", { name: "Xóa" }));
     await u.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Xóa" }));
     await waitFor(() => expect(f.mock.calls.some(([url, init]) => url === "/api/classes/c1/members/hs01" && (init as RequestInit)?.method === "DELETE")).toBe(true));
+  });
+});
+
+describe("thêm cả một lớp cũ", () => {
+  /** `POST /users/search` keyed by the class asked for, so the source class and the target class differ */
+  const rosters = (byClass: Record<string, User[]>) => (url: string, init?: RequestInit) => {
+    if (url !== "/api/users/search" || init?.method !== "POST") return undefined;
+    const body = JSON.parse(String(init.body));
+    return { body: searchPage(byClass[String(body.class_id)] ?? []) };
+  };
+
+  it("chọn một lớp cũ rồi thêm cả lớp trong một lời gọi (AC-08)", async () => {
+    // the reported cost: filling a 25-student class meant 25 searches and 25 clicks
+    const f = mockFetch(
+      route("POST", "/api/classes/search", searchPage([klass({ id: "c1", name: "12A99", school_year: "2027-2028", member_count: 0 }), klass({ id: "c0", name: "11A1", member_count: 2 })])),
+      rosters({ c1: [], c0: [student("hs01", ["c0"]), student("hs02", ["c0"])] }),
+      route("POST", "/api/classes/c1/members", undefined, 204),
+    );
+    const u = userEvent.setup();
+    render(<MemberManager classId="c1" />);
+    await u.click(await screen.findByRole("button", { name: "Thêm học sinh" }));
+    // the old classes are on screen with their year and size, not behind a search box
+    const list = await screen.findByTestId("source-classes");
+    expect(within(list).getByText(/11A1/)).toBeInTheDocument();
+    expect(within(list).queryByText(/12A99/)).toBeNull(); // the class being filled is not a source for itself
+    await u.click(within(list).getByRole("button", { name: /11A1/ }));
+    // everyone is ticked to begin with: "chọn toàn lớp" is the case, not the exception
+    await waitFor(() => expect(screen.getByRole("button", { name: "Thêm 2 học sinh" })).toBeEnabled());
+    await u.click(screen.getByRole("button", { name: "Thêm 2 học sinh" }));
+    await waitFor(() => expect(lastBody(f, "/classes/c1/members")).toEqual({ user_ids: ["hs01", "hs02"] }));
+    // one request for the whole class, not one per student
+    expect(f.mock.calls.filter((c) => c[0] === "/api/classes/c1/members")).toHaveLength(1);
+  });
+
+  it("bỏ tích được từng em, và em đã ở trong lớp thì không tích lại được (AC-09, AC-10)", async () => {
+    const f = mockFetch(
+      route("POST", "/api/classes/search", searchPage([klass({ id: "c1" }), klass({ id: "c0", name: "11A1" })])),
+      rosters({ c1: [student("hs03", ["c0", "c1"])], c0: [student("hs01", ["c0"]), student("hs02", ["c0"]), student("hs03", ["c0", "c1"])] }),
+      route("POST", "/api/classes/c1/members", undefined, 204),
+    );
+    const u = userEvent.setup();
+    render(<MemberManager classId="c1" />);
+    await u.click(await screen.findByRole("button", { name: "Thêm học sinh" }));
+    await u.click(await within(await screen.findByTestId("source-classes")).findByRole("button", { name: /11A1/ }));
+    // hs03 is already a member: it is not counted in, and its box cannot be ticked
+    await waitFor(() => expect(screen.getByRole("button", { name: "Thêm 2 học sinh" })).toBeEnabled());
+    expect(screen.getByRole("checkbox", { name: "Chọn HS03" })).toBeDisabled();
+    await u.click(screen.getByRole("checkbox", { name: "Chọn HS02" }));
+    await u.click(screen.getByRole("button", { name: "Thêm 1 học sinh" }));
+    await waitFor(() => expect(lastBody(f, "/classes/c1/members")).toEqual({ user_ids: ["hs01"] }));
+  });
+
+  it("chỉ sang Chuyển năm học cho việc cả năm (AC-11)", async () => {
+    // the whole-year move already existed and he never found it — which is why this dialog names it
+    mockFetch(route("POST", "/api/classes/search", searchPage([klass({ id: "c1" })])), rosters({}));
+    const u = userEvent.setup();
+    render(<MemberManager classId="c1" />);
+    await u.click(await screen.findByRole("button", { name: "Thêm học sinh" }));
+    expect(await screen.findByRole("link", { name: /Chuyển năm học/ })).toHaveAttribute("href", "/org/school-years");
   });
 });

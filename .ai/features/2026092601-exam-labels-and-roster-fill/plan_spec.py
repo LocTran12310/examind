@@ -74,7 +74,7 @@ t(id="T-03-01", uow="UOW-03", title="Thêm cả một lớp cũ vào lớp đang
   verifies=["AC-08", "AC-09", "AC-10", "AC-11"], assumptions=["A-05", "A-06", "A-07"],
   tests=[f"{S}/__tests__/classes.test.tsx"],
   touches=[f"{S}/components/page-components/Classes/MemberManager/MemberManager.tsx",
-           f"{S}/components/page-components/Classes/MemberManager/FromClass.tsx",
+           f"{S}/components/page-components/Classes/FromClass/FromClass.tsx",
            f"{S}/hooks/page-hooks/classes/use-member-manager.ts"],
   context="ADR-04. Không API mới: POST /classes/{id}/members đã nhận danh sách user_ids. Lớp nguồn lấy từ "
           "POST /classes/search, học sinh lấy từ POST /users/search lọc class_id. Tích sẵn cả lớp (A-05); em đã "

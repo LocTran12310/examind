@@ -11,9 +11,9 @@
 | AC-05 | T-02-01, T-02-02 | UOW-02 | done |
 | AC-06 | T-02-01, T-02-02 | UOW-02 | done |
 | AC-07 | T-02-01, T-02-02 | UOW-02 | done |
-| AC-08 | T-03-01 | UOW-03 | open |
-| AC-09 | T-03-01 | UOW-03 | open |
-| AC-10 | T-03-01 | UOW-03 | open |
-| AC-11 | T-03-01 | UOW-03 | open |
+| AC-08 | T-03-01 | UOW-03 | done |
+| AC-09 | T-03-01 | UOW-03 | done |
+| AC-10 | T-03-01 | UOW-03 | done |
+| AC-11 | T-03-01 | UOW-03 | done |
 
 Coverage: **11/11** acceptance criteria.

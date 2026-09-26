@@ -3,7 +3,7 @@
 # Ticket graph — 2026092601-exam-labels-and-roster-fill
 
 - Units of Work: **3**
-- Tickets: **5** (4 done)
+- Tickets: **5** (5 done)
 - Total effort: **2.1d**
 - Critical path: **7h** across 2 tickets
 - Theoretical minimum duration with unlimited parallelism: **7h**
@@ -32,7 +32,7 @@ graph LR
     T_02_02["✓ T-02-02<br/>Ô đề ôn cá nhân trên bảng tổng quan lớp"]
   end
   subgraph UOW_03["UOW-03 · Rót một lớp mới từ một lớp cũ trong một lần bấm"]
-    T_03_01["T-03-01<br/>Thêm cả một lớp cũ vào lớp đang mở"]
+    T_03_01["✓ T-03-01<br/>Thêm cả một lớp cũ vào lớp đang mở"]
   end
   T_02_01 --> T_02_02
 ```
@@ -65,4 +65,4 @@ adding people to tickets off this path will not make the feature ship sooner.
 | T-01-02 | UOW-01 | web | feature | 3h | — | AC-02, AC-03 | done |
 | T-02-01 | UOW-02 | api | feature | 4h | — | AC-04, AC-05, AC-06, AC-07 | done |
 | T-02-02 | UOW-02 | web | feature | 3h | T-02-01 | AC-04, AC-05, AC-06, AC-07 | done |
-| T-03-01 | UOW-03 | web | feature | 4h | — | AC-08, AC-09, AC-10, AC-11 | todo |
+| T-03-01 | UOW-03 | web | feature | 4h | — | AC-08, AC-09, AC-10, AC-11 | done |

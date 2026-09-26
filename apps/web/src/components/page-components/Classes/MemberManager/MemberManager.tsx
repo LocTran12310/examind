@@ -9,9 +9,11 @@ import { ToolbarButton } from "@/components/common/DataTable/Toolbar";
 import { DataTable } from "@/components/common/DataTable/DataTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMemberManager, useStudentSearch } from "@/hooks/page-hooks/classes/use-member-manager";
 import { useUserSearchQuery } from "@/hooks/react-query/use-query-user";
 import type { User } from "@/interfaces/user.interface";
+import { FromClass } from "../FromClass/FromClass";
 
 const COLUMNS: ColumnDef<User, unknown>[] = [
   {
@@ -79,7 +81,24 @@ export function MemberManager({ classId, prefix = "m." }: MemberManagerProps) {
         emptyText="Lớp chưa có học sinh."
       />
       <FormDialog open={m.adding} onOpenChange={m.setAdding} title="Thêm học sinh vào lớp">
-        <AddStudents classId={classId} onAdd={m.addStudent} />
+        {/* two doors, because the two jobs are different sizes: one student somebody names, or the class that
+            came before this one. Searching 25 names one at a time was the only door there used to be. */}
+        <Tabs defaultValue="from-class">
+          <TabsList aria-label="Cách thêm học sinh" className="mb-3">
+            <TabsTrigger value="from-class">Từ lớp cũ</TabsTrigger>
+            <TabsTrigger value="search">Tìm từng em</TabsTrigger>
+          </TabsList>
+          <TabsContent value="from-class">
+            <FromClass classId={classId} onAdd={async (ids) => {
+              const ok = await m.addStudents(ids);
+              if (ok) m.setAdding(false);
+              return ok;
+            }} />
+          </TabsContent>
+          <TabsContent value="search">
+            <AddStudents classId={classId} onAdd={m.addStudent} />
+          </TabsContent>
+        </Tabs>
       </FormDialog>
     </>
   );
