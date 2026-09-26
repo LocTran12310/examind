@@ -33,6 +33,21 @@ rollback: revert the merge commit; migrations have downgrade()
 | None significant | — |
 
 ## Definition of done
-- [ ] All of AC-08, AC-09, AC-10, AC-11 pass
-- [ ] Demo script executed end to end
-- [ ] Demoed and accepted at gate G4
+- [x] All of AC-08, AC-09, AC-10, AC-11 pass
+- [x] Demo script executed end to end
+- [x] Demoed and accepted at gate G4
+
+## Verification evidence
+
+`make verify` — **10/10**, ảnh đã đọc. S5 cho thấy lớp **12A99 · 2027-2028** (lớp trống của năm mới), hộp thoại
+mở ở tab "Từ lớp cũ", lớp nguồn **11A1 · 2026-2027**, **25 ô tích sẵn**, một nút **"Thêm 25 học sinh"**, và
+dòng chỉ sang "Năm học › Chuyển năm học".
+
+**Danh sách lớp bám theo năm ở thanh trên**, nên bước phải đổi năm trước khi tìm lớp — bản đầu thiếu chỗ ấy và
+đỏ với "không tìm thấy 12A99" trong khi lớp vẫn nằm nguyên trong cơ sở dữ liệu.
+
+**Bước dừng ngay trước nút "Thêm"**: con số 25 đã nói cả lớp nguồn được đọc **và** mọi em được tích sẵn, còn
+bấm thật sẽ ghi 25 dòng vào một lớp thật mà lấy lại phải xoá từng em qua hai trang bảng. Một lời gọi duy nhất
+cho cả lớp chốt ở `classes.test.tsx`, nơi đếm được số lần gọi `POST /classes/{id}/members`. **AC-09 và AC-10**
+cũng ở đó: cả hai cần một lớp nguồn có em đã nằm sẵn trong lớp đích, dựng được trong ba dòng và không ghi vào
+dữ liệu thật.

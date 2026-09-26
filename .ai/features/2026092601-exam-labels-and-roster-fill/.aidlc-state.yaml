@@ -5,7 +5,7 @@ slug: 2026092601-exam-labels-and-roster-fill
 profile: none
 created: 2026-09-26T10:33:55
 ruleset: 7
-current_gate: G3
+current_gate: G5
 history:
   - gate: G0
     action: passed
@@ -174,3 +174,13 @@ history:
     at: 2026-09-26T10:55:11
     by: Loc Tran
     ticket: T-01-03
+  - gate: G4
+    action: passed
+    at: 2026-09-26T11:10:04
+    by: Loc Tran
+    evidence: every done ticket has a passing verification run; all 6 tickets done, all UoW checklists ticked
+  - gate: G5
+    action: passed
+    at: 2026-09-26T11:10:04
+    by: Loc Tran
+    evidence: assumptions resolved, ADRs settled, graph valid

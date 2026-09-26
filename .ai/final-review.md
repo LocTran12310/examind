@@ -1167,3 +1167,50 @@ nó đỏ và ghi lý do ngay cạnh. Hành vi được chốt bằng test ở `
 **Dữ liệu thật.** Bước kiểm lựa chọn **ghi vào ngân hàng thật** — đặt mức độ cho một câu — rồi tự lấy lại ngay
 trong cùng lượt, qua chính "Thay đổi gần đây" của sản phẩm. Hai viewport nghĩa là hai cặp sửa–hoàn tác khép kín;
 ảnh S3 cho thấy cả hai lượt đều đã được đánh dấu đã hoàn tác.
+
+## 35. F25 `2026092601-exam-labels-and-roster-fill` (2026-09-26)
+
+Ba thứ anh nêu khi đi qua "Đề thi & giao bài", trang lớp và việc lập lớp năm mới. **Hai trong ba không cần một
+dòng API nào** — đáng nói ra, vì nó cho biết lỗi nằm ở đâu: API đã nhận đủ thứ cần từ đầu, web chưa bao giờ hỏi.
+
+**"Ma trận đề và Thang điểm không giống nhau?" — câu hỏi ấy chỉ ra lỗi nặng nhất trong ba.** Cột "Lớp" trống ở
+cả 36 dòng vì **0/131 đề có `grade`**: `POST /exams` và `PATCH /exams/{id}` nhận `grade` và `subject_id` từ ngày
+đầu, còn form "Tạo đề mới" chỉ có đúng một ô Tên đề. Môn còn nặng hơn khối — đề tạo từ giao diện **không có môn
+nào**, mà môn chính là thứ giới hạn ma trận, nên ma trận của nó mở cả cây chuyên đề của mọi môn.
+
+**Khối lớp là thứ giáo viên đặt, không suy từ câu hỏi** (ADR-01). Suy được — câu nào cũng có `grade` — nhưng một
+đề thi thử THPT rút từ cả ba khối, nên con số suy ra là một cái trung bình vô nghĩa **trưng lên như thể giáo
+viên đã chọn**. Đúng lỗi mà `difficulty_source` của F22 đã phải sửa.
+
+**Ô "Đề ôn cá nhân" giờ nói đủ bốn thứ** anh hỏi: đề nào (link sang báo cáo), giao ngày nào, hạn ngày nào, và
+**có mấy đề**. Số đếm là window function trên chính câu truy vấn lấy lượt mới nhất: window tính trên cả tập kết
+quả **trước** LIMIT, nên vẫn nói 3 khi hàng trả về là một. Đếm ở Python sau `limit(1)` sẽ trả lời 1 mọi lúc —
+test API giao hai vòng để bắt đúng cái bẫy ấy.
+
+**Xếp lớp: việc này đã có sẵn một nửa mà anh không gặp.** "Chuyển năm học" trên trang Năm học chuyển **cả năm**
+— mọi lớp, 10A1 → 11A1, ở lại / chuyển trường / tốt nghiệp từng em, tạo lớp đích còn thiếu, chạy lại không nhân
+đôi. Cái thiếu là việc nhỏ hơn và **khác hẳn**: rót đúng một lớp mới từ đúng một lớp cũ do anh chỉ. Không gộp
+hai thứ (ADR-04) — gộp là hỏng cả hai — nhưng hộp thoại nay **nói ra** đường kia tồn tại, vì anh đã đứng ở đây
+và không biết nó có.
+
+**Một lỗi tôi tự tạo ra rồi tự bắt, ghi bằng `aidlc reopen`.** Panel mới mời người dùng chọn "Chưa chọn" để bỏ
+trống môn hay khối — nhưng `update_exam` đọc `changes.get(f) is not None`, nên `PATCH {grade: null}` là một
+**no-op im lặng**: màn hình hứa một việc nó không làm. Router vốn đã dựng `changes` bằng `exclude_unset=True`,
+nghĩa là "khoá có mặt" đã phân biệt được với "khoá không gửi" từ lâu. Sửa một dòng, và test được chứng minh là
+**đỏ trên mã cũ** trước khi xanh trên mã mới. Kế hoạch được mở lại ở G3 để thêm ticket thay vì lặng lẽ nhét vào.
+
+**Hai bước kiểm của tôi xanh mà không chứng minh điều chúng nói, cả hai đều tự bắt bằng cách đọc ảnh:**
+
+1. `text=Đề ôn cá nhân` xanh **nhờ cái nút "Giao đề ôn cá nhân"** ở góc trên trang, không nhờ ô đang kiểm. Giờ
+   mọi khẳng định bám vào `[data-testid=ov-hs001]`.
+2. Bước "xem cột Lớp rồi xoá đề" chụp ảnh **sau** khi xoá, nên ảnh là một bảng rỗng — không thấy ô `11` mà bước
+   tự nhận là đang chứng minh. Đúng câu trong `AGENTS.md`: *một khẳng định thoả được không phải là một tấm ảnh
+   có ích*. Tách thành hai bước.
+
+**Và một cái bẫy của chính sản phẩm**: danh sách lớp bám theo năm học ở thanh trên, nên lớp của năm sau **không
+có** trên trang khi header còn ở năm này. Bước kiểm đỏ với "không tìm thấy 12A99" trong khi lớp vẫn nằm nguyên
+trong cơ sở dữ liệu — đúng tình huống anh gặp khi lập lớp cho năm mới.
+
+**Kiểm chứng.** API **579 passed, 1 skipped**; web 264 → **274 passed** (10 test mới), tsc và ESLint xanh. Trình
+duyệt: 5 bước × 2 viewport, **10/10**, đọc từng ảnh. Dấu vết trên dữ liệu thật: một đề `E2E · nhãn đề` được tạo
+rồi xoá ngay trong cùng lượt chạy; đếm lại sau khi chạy — 0 đề còn sót, 0 học sinh bị xếp vào lớp nào.

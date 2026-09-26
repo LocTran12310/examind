@@ -32,6 +32,21 @@ rollback: revert the merge commit; migrations have downgrade()
 | None significant | — |
 
 ## Definition of done
-- [ ] All of AC-04, AC-05, AC-06, AC-07 pass
-- [ ] Demo script executed end to end
-- [ ] Demoed and accepted at gate G4
+- [x] All of AC-04, AC-05, AC-06, AC-07 pass
+- [x] Demo script executed end to end
+- [x] Demoed and accepted at gate G4
+
+## Verification evidence
+
+`make verify` — **10/10**, ảnh đã đọc. S4 cho thấy ô "Đề ôn cá nhân" của hs001 đọc thành câu: **Ôn cá nhân ·
+12A1** (link sang báo cáo bài giao) · **giao 25/09/2026 · hạn 15/10/2026** · **Đã làm**, và các em khác là
+**Chưa làm** với đúng ngày ấy.
+
+**Một khẳng định của bước này từng xanh mà không chứng minh gì.** Bản đầu viết `text=Đề ôn cá nhân` và nó xanh
+— nhưng xanh nhờ cái **nút "Giao đề ôn cá nhân"** ở góc trên trang, không nhờ ô đang kiểm. Giờ mọi khẳng định
+bám vào `[data-testid=ov-hs001]`.
+
+**AC-05, AC-06, AC-07 không có ảnh**: trung tâm seed giao đúng một đề cho mỗi em và hạn chưa qua, nên ba nhánh
+kia không tồn tại trong dữ liệu; giao thêm một vòng chỉ để chụp ảnh là thêm 150 bài giao bịa. Cả ba chốt ở
+`mastery.test.tsx`, và AC-06 còn chốt ở `test_practice_api.py` — giao hai vòng rồi khẳng định `total == 2`,
+đúng chỗ mà đếm sau `limit(1)` sẽ trả lời 1.
