@@ -1641,6 +1641,20 @@ chưa làm, ghi ra đây.
   `find_or_create` sẽ **tạo một lớp tên "12A1 11A2"**. Nay file xuất ngăn bằng `;`, và bộ nhập tách ô ấy ra rồi
   xếp em đó vào **từng** lớp. Đây là lỗi im lặng: không báo gì, chỉ để lại một lớp không ai gọi tên như thế.
 
+**Đi hết một vòng bằng tay, trên Chrome (2026-09-27).** Bấm "Xuất khẩu" ở `/org/users` → file về máy; mở ra thấy
+`Học sinh 050,hs050,,Học sinh,12A2; 12A99` và `Quản trị trung tâm,admin,,Quản trị trung tâm,`. Chọn **đúng file
+ấy** ở `/org/users/import`: đọc được **160/160 dòng**, cột nào ra cột nấy, vai trò nào ra vai trò nấy, ô hai lớp
+giữ nguyên `12A2; 12A99`, và dòng quản trị **không** còn "Vai trò không hợp lệ". Lỗi duy nhất trên mọi dòng là
+*"Tên đăng nhập đã tồn tại"* — đúng như phải thế: nhập là **tạo mới**, không phải cập nhật, nên nhập lại nguyên
+si vào chính tổ chức ấy thì không tạo gì cả (và không tạo gì thật).
+
+Để đối chiếu, tôi nhập luôn **file xuất của hôm qua** (bản trước khi sửa): dòng 55 đọc ra lớp `12A2 12A99` —
+**một** tên lớp có dấu cách. Nếu bấm tạo, `find_or_create` sẽ đẻ ra một lớp mang đúng cái tên ấy. Đó là hình
+dạng của lỗi cũ, nhìn thấy được trên màn hình.
+
+**Chưa thử nhánh tạo thật từ file xuất** — nó ghi tài khoản vào tổ chức thật mà tài khoản thì chỉ vô hiệu hoá
+được chứ không xoá được, nên để anh quyết.
+
 **Kiểm chứng.** API **581 → 583 passed**, 1 skipped; web **306 → 307 passed**; tsc, ESLint và 4 import contract
 xanh. Hai bài mới đáng kể: `test_a_file_the_export_wrote_reads_back` dựng đúng hàng tiêu đề của file xuất (kể cả
 cột Email bộ nhập không dùng), ba vai trò bằng nhãn tiếng Việt, một ô hai lớp — rồi khẳng định ra **hai** lớp;
