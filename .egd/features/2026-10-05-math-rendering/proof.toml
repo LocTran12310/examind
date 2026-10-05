@@ -121,6 +121,12 @@ $-Ở góc phần tư thứ tư thì : \sin \alpha <0;\cos \alpha >0;\tan \alpha
 
 $\Rightarrow $ chỉ có **C** thỏa mãn.''' }
 wait_for = "[data-testid=solution-preview] .katex"
+screenshot = false
+
+# on a phone the preview sits below the editor: clicking it scrolls it into the frame the screenshot keeps
+[[proof.step]]
+name = "khung xem trước"
+click = "[data-testid=solution-preview]"
 full_page = false
 # the Vietnamese is a text node of the paragraph itself, not letters inside KaTeX
 expect = { visible = ["xpath=//div[@data-testid='solution-preview']//p[contains(text(), 'Ở góc phần tư thứ tư thì')]", "[data-testid=solution-preview] .katex-html"], hidden = ["[data-testid=solution-preview] .katex-error"] }
