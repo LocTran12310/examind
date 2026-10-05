@@ -1,0 +1,8 @@
+{
+  "type": "task_started",
+  "seq": 5,
+  "at": "2026-10-05T09:50:45+00:00",
+  "by": "Loc Tran",
+  "task": "T-1.1",
+  "sha": "003266fd390f786aadb9addd99f231615e9f7ce8"
+}

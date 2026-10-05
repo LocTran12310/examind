@@ -1,0 +1,23 @@
+{
+  "type": "task_submitted",
+  "seq": 8,
+  "at": "2026-10-05T09:51:18+00:00",
+  "by": "Loc Tran",
+  "task": "T-1.2",
+  "spent_h": 3.0,
+  "done_when": [
+    "cụm tiếng Việt trong inline và display math được bọc \\text{} kèm dấu cách ở biên",
+    "công thức thuần ký hiệu và \\text{}/\\mathrm{} có sẵn không đổi"
+  ],
+  "drift": [],
+  "drift_override": false,
+  "drift_reason": null,
+  "test_run": {
+    "command": "./scripts/verify.sh apps/web/src/__tests__/markdown.test.tsx",
+    "exit": 0,
+    "ms": 1521,
+    "tail": "\n RUN  v5.0.1 /Users/macbook/Documents/LocTran/Freelance/Examind/examind/apps/web\n\n\n Test Files  1 passed (1)\n      Tests  13 passed (13)\n   Start at  16:51:17\n   Duration  1.03s (environment 55%, import 17%, setup 16%, tests 7%, transform 5%)\n\n(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:\n  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `\"type\": \"module\"` in the closest package.json\nSet `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.\n"
+  },
+  "tests_skipped": null,
+  "sha": "26bdc3b8417d2047cf36742bad14efb4a1f82138"
+}
