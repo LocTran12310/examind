@@ -87,6 +87,14 @@ verifies = ["AC-1.1", "AC-1.2"]
 viewports = ["desktop", "mobile"]
 
 [[proof.step]]
+name = "đăng nhập"
+goto = "/login"
+fill = { "input[name=org_code]" = "${LOCAL_ORG}", "input[name=username]" = "${LOCAL_USER}", "input[name=password]" = "${LOCAL_PASSWORD}" }
+click = "button[type=submit]"
+wait_for = "text=Ngân hàng câu hỏi"
+screenshot = false
+
+[[proof.step]]
 name = "form soạn câu hỏi"
 goto = "/org/bank/new"
 wait_for = "[data-testid=solution]"

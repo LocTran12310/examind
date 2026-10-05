@@ -36,7 +36,10 @@ base_url = "http://localhost:8088"   # the compose stack behind Caddy (`make up`
 
 [ui]
 python = "/Users/macbook/.venvs/egd-ui/bin/python"   # a Python with Playwright installed (egd does not expand ~)
-storage_state = ".egd/.auth/{env}.json"  # saved by `egd proof login --env <name>`
+# proofs sign in as their first step (${LOCAL_*} from .ai/credentials.env), so no saved session: a shared one
+# breaks on the second viewport, which replays a refresh token the first one already rotated
+# the login page asks /api/auth/me before anyone has signed in; that 401 is the page working, not failing
+ignore_console = ["status of 401 \\(Unauthorized\\)"]
 
 # [github]
 # repo = "owner/name"   # `egd sync github` mirrors tasks into this repo's issues
