@@ -1,0 +1,291 @@
+# Imported from ai-dlc (ai-dlc:2026092204-adaptive-review) on 2026-10-05.
+# ids are kept as they were, so tickets, commits and history still line up.
+
+[feature]
+title = "Adaptive review"
+tier = "standard"
+client = ""
+imported_from = "ai-dlc:2026092204-adaptive-review"
+
+[[assumption]]
+id = "A-01"
+text = "Mastery per (student, leaf topic) = exponential moving average of answer correctness with α = 0.3, where each answer's weight grows with difficulty (nb 0.8, th 1.0, vd 1.2, vdc 1.4); starts at 0.5 with the first answer"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-02"
+text = "Parents' mastery = answered-weighted average of descendants (computed at read time)"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-03"
+text = "Review exam default 20 questions: 60% from the 3 weakest leaf topics (mastery < 0.8, ≥ 1 answer), 30% from medium topics (0.5–0.8), 10% re-ask of questions answered wrong ≥ 24 h ago; fill from weakest topics' neighbours when short"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-04"
+text = "Target difficulty by mastery: < 0.4 → nb/th, 0.4–0.7 → th/vd, > 0.7 → vd/vdc; questions without difficulty count as th"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-05"
+text = "Questions answered correctly in the last 7 days are excluded from new review exams; flagged/non-usable questions are always excluded"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-06"
+text = "Student self-practice: untimed-in-practice but capped at 60 minutes, results shown immediately, no attempt limit; stored as attempts without assignment"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-07"
+text = "Teacher \"đề ôn cá nhân\" for a class creates one adaptive exam per student and one assignment per student (window + duration from the dialog)"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-08"
+text = "Suspect key rule: a MCQ with ≥ 10 graded answers where the top-quartile students (by attempt score) chose one other option at least 60% of the time → status `flagged` with issue \"Nghi sai đáp án\" and the evidence stored; also flagged when overall correctness < 15% with ≥ 20 answers"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-09"
+text = "Detection runs in the worker every 10 minutes and on demand; flagged questions reappear in the review queue of their source document (or a \"Câu bị gắn cờ\" list for manual questions)"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[ac]]
+id = "AC-01"
+title = "Update on grading"
+story = "US-01 — Mastery per topic"
+given = "a student answers questions tagged to leaf topics"
+when = "the attempt is graded (and when an essay is graded later)"
+then = "the student's mastery for each leaf topic is updated with the difficulty-weighted moving average"
+
+[[ac]]
+id = "AC-02"
+title = "Read mastery"
+story = "US-01 — Mastery per topic"
+given = "mastery rows exist"
+when = "the student opens \"Tiến độ của tôi\" or a teacher opens the student's page"
+then = "they see mastery per leaf and rolled up to parents, weakest first, with the number of answers"
+
+[[ac]]
+id = "AC-03"
+title = "Backfill"
+story = "US-01 — Mastery per topic"
+given = "answer facts that existed before mastery tracking"
+when = "the backfill command runs"
+then = "mastery equals what incremental updates would have produced in chronological order"
+
+[[ac]]
+id = "AC-04"
+title = "Composition"
+story = "US-02 — Personal review exam (student)"
+given = "my mastery and answer history"
+when = "I press \"Tạo đề ôn tập\""
+then = "I get 20 questions: ~60% from my 3 weakest topics, ~30% from medium topics, up to 10% re-asks of questions I got wrong ≥ 24 h ago, and difficulty follows my mastery, and I never get questions I answered correctly in the last 7 days or flagged questions"
+
+[[ac]]
+id = "AC-05"
+title = "Take and see results"
+story = "US-02 — Personal review exam (student)"
+given = "the review exam"
+when = "I take it"
+then = "it uses the normal exam page (60-minute cap) and shows results immediately, and my mastery updates"
+
+[[ac]]
+id = "AC-06"
+title = "No history"
+story = "US-02 — Personal review exam (student)"
+given = "I have no graded answers yet"
+when = "I press \"Tạo đề ôn tập\""
+then = "I get a balanced exam across strands of my grade and a note that it will adapt after this one"
+
+[[ac]]
+id = "AC-07"
+title = "Assign to class"
+story = "US-03 — Personal review exams for a class (teacher)"
+given = "class 10A1 with graded students"
+when = "I click \"Giao đề ôn cá nhân\" with 15 questions, a window and 30 minutes"
+then = "each student gets their own exam and assignment, visible on their home page"
+
+[[ac]]
+id = "AC-08"
+title = "Overview"
+story = "US-03 — Personal review exams for a class (teacher)"
+given = "personal review assignments"
+when = "I open the class page"
+then = "I see each student's weakest topics and review assignment status"
+
+[[ac]]
+id = "AC-09"
+title = "Detect"
+story = "US-04 — Suspect answer keys"
+given = "a MCQ with ≥ 10 graded answers where the best students mostly chose another option"
+when = "detection runs"
+then = "the question becomes \"flagged\" with issue \"Nghi sai đáp án\" and evidence (option counts, top-quartile choice)"
+
+[[ac]]
+id = "AC-10"
+title = "Review flagged questions"
+story = "US-04 — Suspect answer keys"
+given = "flagged questions"
+when = "I open the review list"
+then = "their documents show \"Nghi sai đáp án\" counts, the queue shows the evidence, and fixing the key (1–4) + Enter approves it"
+
+[[ac]]
+id = "AC-11"
+title = "Exclusion"
+story = "US-04 — Suspect answer keys"
+given = "a flagged question"
+when = "exams are generated (blueprint or adaptive)"
+then = "it is not drawn until approved again"
+
+[[ac]]
+id = "AC-12"
+title = "No false alarm on hard questions"
+story = "US-04 — Suspect answer keys"
+given = "a hard question where the best students chose the key and weaker students spread across options"
+when = "detection runs"
+then = "it is not flagged"
+
+[[decision]]
+id = "ADR-01"
+title = "Difficulty-weighted EMA mastery on leaf topics"
+status = "accepted"
+choice = "** EMA α 0.3 over correctness ratio with difficulty weights; parents aggregated at read time"
+
+[[decision]]
+id = "ADR-02"
+title = "Adaptive exams are ordinary exams"
+status = "accepted"
+choice = "** Persist generated review sets as `Exam(source=adaptive)`; practice = attempt without assignment; class mode = one assignment per student"
+
+[[decision]]
+id = "ADR-03"
+title = "Top-quartile key audit"
+status = "accepted"
+choice = "** Compare the key with what the top-quartile students chose; flag, never auto-edit; flagged questions leave the usable pool until approved"
+
+[[slice]]
+id = "UOW-01"
+title = "Mastery per topic follows every graded answer"
+covers = ["AC-01", "AC-02", "AC-03", "AC-08"]
+demo = """
+1. A student submits an exam → 'Tiến độ của tôi' shows mastery per topic, weakest first
+2. Teacher opens the class page → the student's weakest topics are listed
+3. Run `python -m app.services.mastery backfill` → mastery rebuilt identically"""
+
+[[slice]]
+id = "UOW-02"
+title = "Students and teachers get personalised review exams"
+covers = ["AC-04", "AC-05", "AC-06", "AC-07"]
+demo = """
+1. Student presses 'Tạo đề ôn tập' → 20 questions, plan shows 'Chuyên đề yếu: …', runs in the exam page, results immediately
+2. Mastery updates after submitting
+3. Teacher on class 10A1 → 'Giao đề ôn cá nhân' (15 câu, 30 phút) → every student's home shows their own exam"""
+
+[[slice]]
+id = "UOW-03"
+title = "Suspect answer keys are flagged for review"
+covers = ["AC-09", "AC-10", "AC-11", "AC-12"]
+demo = """
+1. Seed: flip the key of a question answered by ≥ 10 students → run 'Kiểm tra đáp án' → it appears as 'Nghi sai đáp án' with evidence
+2. In the queue press the right option key, then Enter → approved and usable again
+3. A hard but correct question is not flagged"""
+
+[[task]]
+id = "T-01-01"
+slice = "UOW-01"
+title = "Mastery table, EMA update on grading, backfill command"
+estimate_h = 3.0
+touches = ["apps/api/migrations/versions/0010_adaptive.py", "apps/api/app/models/mastery.py", "apps/api/app/models/__init__.py", "apps/api/app/services/mastery.py", "apps/api/app/services/attempts.py", "apps/api/app/models/question.py", "apps/api/app/seed/bootstrap.py"]
+tests = ["apps/api/tests/test_mastery.py"]
+done_when = ["EMA matches hand-computed values", "Backfill equals incremental"]
+
+[[task]]
+id = "T-01-02"
+slice = "UOW-01"
+title = "Mastery API (own, per student, class overview)"
+estimate_h = 2.0
+depends_on = ["T-01-01"]
+touches = ["apps/api/app/routers/adaptive.py", "apps/api/app/routers/__init__.py"]
+tests = ["apps/api/tests/test_mastery_api.py"]
+done_when = ["Students only see their own", "Class overview lists weakest topics"]
+
+[[task]]
+id = "T-01-03"
+slice = "UOW-01"
+title = "Mastery in 'Tiến độ của tôi' and class overview UI"
+estimate_h = 3.0
+depends_on = ["T-01-02"]
+touches = ["apps/web/src/app/(app)/me/stats/page.tsx", "apps/web/src/app/(app)/org/classes/[id]/page.tsx", "apps/web/src/components/adaptive/MasteryList.tsx", "apps/web/src/components/adaptive/ClassOverview.tsx", "apps/web/src/lib/types.ts"]
+tests = ["apps/web/src/__tests__/mastery.test.tsx"]
+done_when = ["Weakest first", "Class overview table"]
+
+[[task]]
+id = "T-02-01"
+slice = "UOW-02"
+title = "Adaptive generator (weak/medium/re-ask, difficulty targeting, exclusions)"
+estimate_h = 4.0
+depends_on = ["T-01-01"]
+touches = ["apps/api/app/services/adaptive.py"]
+tests = ["apps/api/tests/test_adaptive.py"]
+done_when = ["Composition within ±1 of targets", "Exclusions honoured", "< 500 ms on the perf fixture"]
+
+[[task]]
+id = "T-02-02"
+slice = "UOW-02"
+title = "Practice and class adaptive-assignment API"
+estimate_h = 3.0
+depends_on = ["T-02-01", "T-01-02"]
+touches = ["apps/api/app/routers/adaptive.py", "apps/api/app/services/adaptive.py", "apps/api/app/services/exams.py", "apps/api/app/services/attempts.py"]
+tests = ["apps/api/tests/test_practice_api.py"]
+done_when = ["Practice attempt starts", "One assignment per student", "Adaptive exams hidden from the exams list"]
+
+[[task]]
+id = "T-02-03"
+slice = "UOW-02"
+title = "Tạo đề ôn tập' and 'Giao đề ôn cá nhân' UI with the plan"
+estimate_h = 3.0
+depends_on = ["T-02-02", "T-01-03"]
+touches = ["apps/web/src/components/adaptive/PracticeButton.tsx", "apps/web/src/components/adaptive/ClassAdaptiveDialog.tsx", "apps/web/src/app/(app)/me/stats/page.tsx", "apps/web/src/app/(app)/org/classes/[id]/page.tsx", "apps/web/src/app/(app)/home/page.tsx"]
+tests = ["apps/web/src/__tests__/practice.test.tsx"]
+done_when = ["Button starts practice", "Dialog assigns to class"]
+
+[[task]]
+id = "T-03-01"
+slice = "UOW-03"
+title = "Key audit: detection, evidence, worker schedule, exclusion from exams"
+estimate_h = 3.0
+depends_on = ["T-01-01"]
+touches = ["apps/api/app/services/key_audit.py", "apps/api/app/worker/main.py", "apps/api/app/routers/review.py", "apps/api/app/services/review.py"]
+tests = ["apps/api/tests/test_key_audit.py"]
+done_when = ["Wrong key flagged", "Hard correct question not flagged", "Runs every 10 minutes"]
+
+[[task]]
+id = "T-03-02"
+slice = "UOW-03"
+title = "Flagged questions in review list and queue with evidence"
+estimate_h = 2.0
+depends_on = ["T-03-01", "T-01-03"]
+touches = ["apps/web/src/components/review/ReviewList.tsx", "apps/web/src/components/review/ReviewQueue.tsx", "apps/web/src/lib/types.ts"]
+tests = ["apps/web/src/__tests__/flagged.test.tsx"]
+done_when = ["Count badge", "Evidence panel", "Approve after fixing"]

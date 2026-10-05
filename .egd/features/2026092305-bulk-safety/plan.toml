@@ -1,0 +1,259 @@
+# Imported from ai-dlc (ai-dlc:2026092305-bulk-safety) on 2026-10-05.
+# ids are kept as they were, so tickets, commits and history still line up.
+
+[feature]
+title = "A bulk edit you can take back, and a way back out of a page"
+tier = "standard"
+client = ""
+imported_from = "ai-dlc:2026092305-bulk-safety"
+
+[[assumption]]
+id = "A-01"
+text = "One bulk action is one undoable unit: every question it touched is restored together, or none is"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-23) — the complaint is \"khó tìm lại được\", and a half-undone batch is worse than none"
+
+[[assumption]]
+id = "A-02"
+text = "The snapshot a review event records widens to cover everything the bulk bar can change: status, difficulty, grade, subject, primary topic, the whole topic list and tags"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval. Without it there is nothing to restore — this is the defect, not a feature"
+
+[[assumption]]
+id = "A-03"
+text = "Undo restores the recorded `before` as it was, even if the question changed again afterwards, and says so; it does not attempt a three-way merge"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval. A merge nobody asked for is a second surprise on top of the first"
+
+[[assumption]]
+id = "A-04"
+text = "An undo is itself a recorded event (`undo`), so the history never loses a step and an undo cannot be undone twice"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; `review_events` is append-only by design"
+
+[[assumption]]
+id = "A-05"
+text = "\"Thay đổi gần đây\" lists the batches of the organisation, newest first, with who, when, what changed and how many questions — not one row per question"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; a 20-question batch as 20 rows is the same wall of labels Loc Tran already objected to"
+
+[[assumption]]
+id = "A-06"
+text = "A batch older than a fixed window can still be read but no longer offers undo, so an \"undo\" never quietly reverses a month of work"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; the window is 7 days (ADR-02)"
+
+[[assumption]]
+id = "A-07"
+text = "Questions in the bank do not get a default point value; points stay a property of the paper (`points_by_type` plus the per-question override)"
+blocking = false
+status = "confirmed"
+resolution = "Recommended by me and open for Loc Tran at final review — see ADR-03"
+
+[[assumption]]
+id = "A-08"
+text = "Every detail page carries a back link to its list: assignment report, attempt result, new question, question preview"
+blocking = false
+status = "confirmed"
+resolution = "Confirmed by Loc Tran in chat (2026-09-23): \"không có nút back về trang trước đó?\""
+
+[[ac]]
+id = "AC-01"
+title = "Undo from the toast"
+story = "US-01 — A bulk edit can be taken back at once"
+given = "I set a difficulty, a subject, a grade, a topic or a tag on selected questions"
+when = "the toast appears and I press \"Hoàn tác\""
+then = "every question that edit touched goes back to exactly what it was, the list refreshes, and the toast says how many were restored"
+
+[[ac]]
+id = "AC-02"
+title = "All or nothing"
+story = "US-01 — A bulk edit can be taken back at once"
+given = "a batch of questions to restore"
+when = "one of them can no longer be restored"
+then = "nothing is restored, and the refusal names the questions in the way"
+
+[[ac]]
+id = "AC-03"
+title = "Recent changes"
+story = "US-02 — A mistake found later can still be found and undone"
+given = "bulk edits made in this organisation"
+when = "I open \"Thay đổi gần đây\""
+then = "I see one row per edit — when, who, what fields changed, how many questions — newest first, and each row can be undone"
+
+[[ac]]
+id = "AC-04"
+title = "An undo is part of the history"
+story = "US-02 — A mistake found later can still be found and undone"
+given = "a batch I have undone"
+when = "I look at the list again"
+then = "the undo is itself a row, the original row says it was undone, and neither offers undo again"
+
+[[ac]]
+id = "AC-05"
+title = "Old enough is read-only"
+story = "US-02 — A mistake found later can still be found and undone"
+given = "a batch older than the undo window"
+when = "I look at it in the list"
+then = "it is readable and says why it can no longer be undone"
+
+[[ac]]
+id = "AC-06"
+title = "The count is on the action"
+story = "US-03 — The toolbar says what it is about to change"
+given = "questions selected in the bank"
+when = "I open a bulk action"
+then = "the action names how many questions it will change, and with nothing selected it stays disabled"
+
+[[ac]]
+id = "AC-07"
+title = "Back links"
+story = "US-04 — Every detail page has a way back"
+given = "the assignment report, the attempt result, the new-question form or the question preview"
+when = "the page is open"
+then = "a back link leads to the list it belongs to, in the same place and shape as the other detail pages"
+
+[[decision]]
+id = "ADR-01"
+title = "The batch is a column on `review_events`, not a new table"
+status = "accepted"
+
+[[decision]]
+id = "ADR-02"
+title = "The undo window is 7 days"
+status = "accepted"
+
+[[decision]]
+id = "ADR-03"
+title = "Questions carry no default points; points stay on the paper"
+status = "accepted"
+
+[[decision]]
+id = "ADR-04"
+title = "Undo goes through the aggregate and its guards"
+status = "accepted"
+
+[[slice]]
+id = "UOW-01"
+title = "A history worth restoring: a wider snapshot and a batch id"
+covers = ["AC-01", "AC-03", "AC-05"]
+demo = """
+1. Đổi mức độ cho 3 câu → review_events có 3 dòng cùng một batch_id
+2. Mỗi dòng ghi đủ môn, lớp, mức độ, chuyên đề và tag trước/sau
+3. POST /question-events/search trả một dòng cho cả lượt sửa, kèm lý do nếu không hoàn tác được"""
+
+[[slice]]
+id = "UOW-02"
+title = "Hoàn tác: a bulk edit restored as one unit"
+covers = ["AC-01", "AC-02", "AC-04", "AC-05"]
+demo = """
+1. POST /questions/bulk/undo với batch vừa sửa → các câu trở lại đúng như cũ
+2. Một câu đã bị xóa → từ chối cả lượt, nêu tên câu
+3. Hoàn tác lần hai → 409, lượt hoàn tác cũng nằm trong lịch sử"""
+
+[[slice]]
+id = "UOW-03"
+title = "The bank: undo in the toast, recent changes, and a count on every action"
+covers = ["AC-01", "AC-03", "AC-04", "AC-05", "AC-06"]
+demo = """
+1. Đặt Lớp 12 nhầm cho 2 câu → toast có Hoàn tác → hai câu trở lại như cũ
+2. Thay đổi gần đây: ai, lúc nào, sửa gì, mấy câu — hoàn tác từng lượt
+3. Mỗi nút bulk nói rõ sẽ đổi bao nhiêu câu"""
+
+[[slice]]
+id = "UOW-04"
+title = "A way back from every detail page"
+covers = ["AC-07"]
+demo = "1. Báo cáo bài giao, kết quả bài làm, thêm câu hỏi, xem trước câu hỏi: đều có đường về danh sách"
+
+[[task]]
+id = "T-01-01"
+slice = "UOW-01"
+title = "Widen what a review event records"
+estimate_h = 3.0
+touches = ["apps/api/app/modules/bank/domain/entities.py", "apps/api/app/modules/bank/application/common.py", "apps/api/app/modules/bank/application/commands/bulk_update_questions.py"]
+tests = ["apps/api/tests/unit/test_bank_handlers.py"]
+done_when = ["snapshot() covers status, difficulty, grade, subject, topics with primary, tags", "set_topics and set_tags record a before, not only an after", "Existing events still read back without raising"]
+
+[[task]]
+id = "T-01-02"
+slice = "UOW-01"
+title = "batch_id on review_events"
+estimate_h = 2.0
+touches = ["apps/api/alembic/versions", "apps/api/app/shared/infrastructure/schema/bank.py", "apps/api/app/modules/bank/infrastructure/repositories.py", "apps/api/app/modules/bank/domain/ports.py"]
+tests = ["apps/api/tests/test_bank_api.py"]
+done_when = ["Migration up and down", "alembic check clean", "One request writes one batch id"]
+
+[[task]]
+id = "T-01-03"
+slice = "UOW-01"
+title = "POST /question-events/search — one row per batch"
+estimate_h = 4.0
+depends_on = ["T-01-01", "T-01-02"]
+touches = ["apps/api/app/modules/bank/infrastructure/read_models.py", "apps/api/app/modules/bank/application/queries", "apps/api/app/modules/bank/interface/router.py", "apps/api/app/modules/bank/interface/schemas.py"]
+tests = ["apps/api/tests/test_bank_api.py", "apps/api/tests/unit/test_bank_handlers.py"]
+done_when = ["One row per batch with actor, fields, question count", "undoable plus a reason when false", "Org-scoped"]
+
+[[task]]
+id = "T-02-01"
+slice = "UOW-02"
+title = "UndoBatch: restore a batch through the aggregate"
+estimate_h = 4.0
+depends_on = ["T-01-01", "T-01-02"]
+touches = ["apps/api/app/modules/bank/application/commands/undo_batch.py", "apps/api/app/modules/bank/domain/services/history.py"]
+tests = ["apps/api/tests/unit/test_bank_handlers.py"]
+done_when = ["Every field of the before restored", "A missing question refuses the whole batch", "subject_topic_conflict still applies"]
+
+[[task]]
+id = "T-02-02"
+slice = "UOW-02"
+title = "The undo is itself an event, and cannot run twice"
+estimate_h = 3.0
+depends_on = ["T-02-01"]
+touches = ["apps/api/app/modules/bank/application/commands/undo_batch.py", "apps/api/app/modules/bank/interface/router.py", "apps/api/app/modules/bank/interface/schemas.py"]
+tests = ["apps/api/tests/test_bank_api.py"]
+done_when = ["undo events under a new batch naming the one undone", "409 on a second undo", "422 past the window, naming its age"]
+
+[[task]]
+id = "T-03-01"
+slice = "UOW-03"
+title = "Hoàn tác in the toast"
+estimate_h = 3.0
+depends_on = ["T-02-02"]
+touches = ["apps/web/src/hooks/page-hooks/bank/use-bulk-actions.ts", "apps/web/src/hooks/react-query/use-query-question.ts", "apps/web/src/services/question.service.ts"]
+tests = ["apps/web/src/__tests__/bank-bulk.test.tsx"]
+done_when = ["Toast carries Hoàn tác", "Restored count reported", "List and facets refresh"]
+
+[[task]]
+id = "T-03-02"
+slice = "UOW-03"
+title = "Thay đổi gần đây"
+estimate_h = 4.0
+depends_on = ["T-01-03", "T-02-02"]
+touches = ["apps/web/src/components/page-components/Bank/RecentChanges/RecentChanges.tsx", "apps/web/src/hooks/page-hooks/bank/use-recent-changes.ts", "apps/web/src/components/page-components/Bank/BankPage.tsx"]
+tests = ["apps/web/src/__tests__/bank-history.test.tsx"]
+done_when = ["Rows show when, who, fields, count", "Undo from a row", "A stale row states its reason"]
+
+[[task]]
+id = "T-03-03"
+slice = "UOW-03"
+title = "Each bulk action names what it will change"
+estimate_h = 2.0
+touches = ["apps/web/src/components/page-components/Bank/BulkBar/BulkBar.tsx"]
+tests = ["apps/web/src/__tests__/bank-bulk.test.tsx"]
+done_when = ["Count on the actions", "Disabled with nothing selected", "Toolbar keeps its shape"]
+
+[[task]]
+id = "T-04-01"
+slice = "UOW-04"
+title = "Back links on the four detail pages"
+estimate_h = 2.0
+touches = ["apps/web/src/components/page-components/AssignmentReport/AssignmentReportPage.tsx", "apps/web/src/components/page-components/AttemptResult/AttemptResultPage.tsx", "apps/web/src/components/page-components/QuestionNew/QuestionNewPage.tsx", "apps/web/src/components/page-components/QuestionPreview/QuestionPreviewPage.tsx"]
+tests = ["apps/web/src/__tests__/assignment-report.test.tsx"]
+done_when = ["BackLink on all four", "Each points at the list it belongs to"]

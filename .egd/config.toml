@@ -1,0 +1,51 @@
+# EGD configuration — committed, shared by the whole team.
+# Secrets and URLs you do not want here go in .egd/secrets.env (gitignored)
+# and are referenced as ${NAME}.
+
+[limits]
+task_hours = 4        # a task bigger than this must be split
+slice_hours = 16      # longest dependency chain inside one slice
+
+[proof]
+# Runs a task's `tests` on `egd submit` and backs `kind = "test"` proofs.
+# {tests} is replaced by the task's test paths.
+test_command = "./scripts/verify.sh {tests}"
+timeout = 600
+
+[report]
+lang = "en"           # client reports and release notes: en | vi
+
+# Who may sign what. Names and roles live in team.toml.
+[roles]
+gate = ["pm", "lead"]                 # pass frame … build, release
+review = ["dev", "qa", "lead", "pm"]  # accept / reject a task
+uat = ["client", "po"]                # UAT verdicts and the accept gate
+cr_approve = ["client", "po"]         # approve or reject change requests
+
+# Environments proofs run against. `required` ones gate `build`.
+# [env.local]
+# base_url = "http://localhost:3000"
+#
+# [env.staging]
+# base_url = "${STAGING_URL}"
+#
+# [env.prod]
+# base_url = "${PROD_URL}"
+# required = false
+# readonly = true      # only GET/HEAD/OPTIONS and steps marked safe = true
+
+# [ui]
+# python = "~/.venvs/egd-ui/bin/python"   # a Python with Playwright installed
+# storage_state = ".egd/.auth/{env}.json"  # saved by `egd proof login --env <name>`
+
+# [github]
+# repo = "owner/name"   # `egd sync github` mirrors tasks into this repo's issues
+
+# How this repository ships — read by the egd-commit, egd-pr and egd-review skills.
+# [pr]
+# base = "main"                       # branch PRs target; diffs are taken against origin/<base>
+# title = "{ticket}: {summary}"       # {ticket} comes from the branch name, e.g. ABC-123
+# ticket = '[A-Z]+-\d+'              # how a ticket id looks in branch names (a literal '…' string)
+#
+# [review]
+# standards = ["docs/standards.md"]   # files or URLs with this team's coding rules

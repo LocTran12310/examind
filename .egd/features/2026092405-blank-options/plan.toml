@@ -1,0 +1,91 @@
+# Imported from ai-dlc (ai-dlc:2026092405-blank-options) on 2026-10-05.
+# ids are kept as they were, so tickets, commits and history still line up.
+
+[feature]
+title = "Phương án là một số thì đang biến mất"
+tier = "standard"
+client = ""
+imported_from = "ai-dlc:2026092405-blank-options"
+
+[[assumption]]
+id = "A-01"
+text = "Nội dung một phương án là một cụm, không phải một tài liệu: danh sách, tiêu đề, trích dẫn không bao giờ hợp lệ ở đó"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; 1160 phương án trong ngân hàng, không cái nào là một danh sách thật"
+
+[[assumption]]
+id = "A-02"
+text = "Đề bài và lời giải giữ nguyên cách render: ở đó một danh sách đánh số là thứ hợp lệ"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; 0 đề bài nào đang bị nuốt, và \"Xét các mệnh đề: 1. … 2. …\" là cách viết bình thường"
+
+[[assumption]]
+id = "A-03"
+text = "Sửa ở chỗ hiển thị, không sửa dữ liệu: `9.` là nội dung đúng mà giáo viên đã soạn"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; sửa dữ liệu là chữa triệu chứng và sẽ tái diễn ở câu tải lên tiếp theo"
+
+[[ac]]
+id = "AC-01"
+title = "Số có dấu chấm vẫn là số"
+story = "US-01 — Phương án hiện đúng nội dung đã soạn"
+given = "một phương án có nội dung \"9.\""
+when = "câu hỏi được hiển thị ở bất kỳ màn nào"
+then = "phương án ấy đọc là \"9.\" chứ không phải một ô trống"
+
+[[ac]]
+id = "AC-02"
+title = "Công thức và chữ không đổi"
+story = "US-01 — Phương án hiện đúng nội dung đã soạn"
+given = "các phương án chứa công thức, chữ thường, hình ảnh"
+when = "câu hỏi được hiển thị"
+then = "chúng hiện đúng như trước, không có gì bị escape lộ ra màn hình"
+
+[[ac]]
+id = "AC-03"
+title = "Đề bài và lời giải giữ nguyên"
+story = "US-01 — Phương án hiện đúng nội dung đã soạn"
+given = "một đề bài có danh sách đánh số thật"
+when = "câu hỏi được hiển thị"
+then = "danh sách ấy vẫn là danh sách"
+
+[[decision]]
+id = "ADR-01"
+title = "Phương án là một cụm, không phải một tài liệu"
+status = "accepted"
+
+[[decision]]
+id = "ADR-02"
+title = "Sửa ở chỗ hiển thị, không sửa dữ liệu"
+status = "accepted"
+
+[[slice]]
+id = "UOW-01"
+title = "Phương án được đọc như một cụm, không như một tài liệu"
+covers = ["AC-01", "AC-02", "AC-03"]
+demo = """
+1. Câu có phương án 108. / 31. / 13. / 36. hiện đủ bốn số ở màn duyệt và màn làm bài
+2. Phương án có công thức, chữ, hình không đổi
+3. Đề bài có danh sách đánh số vẫn là danh sách"""
+
+[[task]]
+id = "T-01-01"
+slice = "UOW-01"
+title = "Chế độ cụm cho Markdown"
+estimate_h = 3.0
+touches = ["apps/web/src/components/common/Markdown/Markdown.tsx", "apps/web/src/lib/common/markdown.ts"]
+tests = ["apps/web/src/__tests__/markdown.test.tsx"]
+done_when = ["9. hiện là 9.", "Công thức, chữ, hình không đổi", "Hàm thoát là hàm thuần, có test riêng"]
+
+[[task]]
+id = "T-01-02"
+slice = "UOW-01"
+title = "Phương án dùng chế độ cụm, đề bài thì không"
+estimate_h = 2.0
+depends_on = ["T-01-01"]
+touches = ["apps/web/src/components/common/QuestionView/QuestionView.tsx"]
+tests = ["apps/web/src/__tests__/question-view.test.tsx"]
+done_when = ["Phương án đi qua chế độ cụm", "Đề bài và lời giải giữ đường cũ", "Có test cho một đề bài có danh sách thật"]

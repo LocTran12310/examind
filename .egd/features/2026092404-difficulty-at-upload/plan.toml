@@ -1,0 +1,253 @@
+# Imported from ai-dlc (ai-dlc:2026092404-difficulty-at-upload) on 2026-10-05.
+# ids are kept as they were, so tickets, commits and history still line up.
+
+[feature]
+title = "Mức độ được gán ngay lúc tách đề"
+tier = "standard"
+client = ""
+imported_from = "ai-dlc:2026092404-difficulty-at-upload"
+
+[[assumption]]
+id = "A-01"
+text = "Mức độ được gán thẳng lúc tách đề, kèm dấu vết nói rõ do máy gán"
+blocking = true
+status = "confirmed"
+resolution = "Loc Tran chọn trong chat (2026-09-24)"
+
+[[assumption]]
+id = "A-02"
+text = "Hai tín hiệu: model của tổ chức, và vị trí câu trong đề (Phần I/II/III + số thứ tự). Không dùng số liệu làm bài"
+blocking = true
+status = "confirmed"
+resolution = "Loc Tran chọn trong chat (2026-09-24)"
+
+[[assumption]]
+id = "A-03"
+text = "Máy không bao giờ đè lên mức độ mà một người đã đặt — `manual` là bất khả xâm phạm"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; đây là điều kiện để \"gán thẳng\" không phá công của giáo viên"
+
+[[assumption]]
+id = "A-04"
+text = "Dấu vết là một cột mới trên `questions` (`auto` / `ai` / `manual`), soi theo đúng cách `question_topics.source` đang làm"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; chuyên đề đã có đúng khái niệm này và nó đang dùng được"
+
+[[assumption]]
+id = "A-05"
+text = "Quy tắc vị trí là một quy ước của đề THPT 2025, không phải sự thật về một câu cụ thể: nó lấp chỗ model không trả lời, và nhường model khi model trả lời"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval — **và phải đo trước khi chốt ai dẫn**; con số đo được ghi vào review cuối"
+
+[[assumption]]
+id = "A-06"
+text = "Có lệnh điền cho các câu đã có sẵn mà chưa có mức độ, chạy được nhiều lần và chỉ chạm câu đang rỗng"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; không có nó thì 374 câu của Loc Tran vẫn rỗng cho tới khi tải lại đề"
+
+[[assumption]]
+id = "A-07"
+text = "Mức độ sửa được ngay trong hàng đợi duyệt, chỗ giáo viên đang nhìn từng câu"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; máy đã đặt thì phải sửa được ở chỗ đang xem lại"
+
+[[ac]]
+id = "AC-01"
+title = "Mọi câu đều có mức độ"
+story = "US-01 — Tách đề xong là có mức độ"
+given = "một đề được tải lên và tách xong"
+when = "tôi xem các câu của đề ấy"
+then = "mỗi câu đều có một mức độ, và không câu nào để trống"
+
+[[ac]]
+id = "AC-02"
+title = "Model dẫn, vị trí lấp"
+story = "US-01 — Tách đề xong là có mức độ"
+given = "model của tổ chức trả lời được cho một số câu"
+when = "pipeline gán mức độ"
+then = "những câu model trả lời mang dấu \"ai\", những câu còn lại mang dấu \"auto\" theo quy tắc vị trí, và không câu nào bị bỏ trống"
+
+[[ac]]
+id = "AC-03"
+title = "Model hỏng thì đề vẫn xong"
+story = "US-01 — Tách đề xong là có mức độ"
+given = "model thiếu, tắt, chậm hoặc trả lời sai định dạng"
+when = "pipeline chạy"
+then = "đề vẫn tách xong, mọi câu vẫn có mức độ từ quy tắc vị trí, và cảnh báo được ghi vào nhật ký của đề"
+
+[[ac]]
+id = "AC-04"
+title = "`manual` là bất khả xâm phạm"
+story = "US-02 — Không đè lên công của người"
+given = "một câu đã được một người đặt mức độ"
+when = "pipeline hoặc lệnh điền chạy lại trên câu ấy"
+then = "mức độ và dấu vết của nó không đổi"
+
+[[ac]]
+id = "AC-05"
+title = "Lệnh điền"
+story = "US-03 — Điền cho những câu đã có sẵn"
+given = "ngân hàng có những câu chưa có mức độ"
+when = "tôi chạy lệnh điền"
+then = "chỉ những câu đang rỗng được điền, chạy lại lần nữa không đổi gì thêm, và lệnh báo lại đã điền bao nhiêu câu bằng tín hiệu nào"
+
+[[ac]]
+id = "AC-06"
+title = "Sửa ngay chỗ đang duyệt"
+story = "US-04 — Nhìn thấy và sửa được"
+given = "một câu trong hàng đợi duyệt"
+when = "tôi xem nó"
+then = "tôi thấy mức độ của nó và thấy nó do máy gán hay người đặt, và sửa được ngay tại đó"
+
+[[decision]]
+id = "ADR-01"
+title = "Dấu vết là một cột trên `questions`, không phải một bảng gợi ý"
+status = "accepted"
+
+[[decision]]
+id = "ADR-02"
+title = "Model dẫn, quy tắc vị trí lấp, không bao giờ để trống"
+status = "accepted"
+
+[[decision]]
+id = "ADR-03"
+title = "Đo trước khi chốt ai dẫn"
+status = "accepted"
+
+[[decision]]
+id = "ADR-04"
+title = "`manual` là bất khả xâm phạm"
+status = "accepted"
+
+[[slice]]
+id = "UOW-01"
+title = "Quy tắc vị trí và dấu vết mức độ"
+covers = ["AC-02", "AC-04"]
+demo = """
+1. Câu Phần I số 1 ra nb, Phần III ra vd — thuần, không cần model
+2. Người đặt mức độ thì dấu vết là manual; lệnh máy không đổi được nó"""
+
+[[slice]]
+id = "UOW-02"
+title = "Lượt model trong pipeline tách đề"
+covers = ["AC-01", "AC-02", "AC-03"]
+demo = """
+1. Tải một đề lên: tách xong mọi câu đều có mức độ
+2. Tắt model: đề vẫn tách xong, mọi câu vẫn có mức độ, nhật ký có cảnh báo"""
+
+[[slice]]
+id = "UOW-03"
+title = "Đo trước khi tin, rồi điền cho câu cũ"
+covers = ["AC-02", "AC-05"]
+demo = """
+1. Báo cáo: độ phủ của model, đồng thuận với quy tắc vị trí, phân bố hai bên
+2. Lệnh điền: chỉ chạm câu rỗng, chạy lại không đổi gì thêm"""
+
+[[slice]]
+id = "UOW-04"
+title = "Thấy và sửa được mức độ ngay chỗ đang duyệt"
+covers = ["AC-06"]
+demo = "1. Thẻ duyệt hiện mức độ và nói rõ máy gán hay người đặt, sửa ngay tại đó"
+
+[[task]]
+id = "T-01-01"
+slice = "UOW-01"
+title = "Cột difficulty_source"
+estimate_h = 2.0
+touches = ["apps/api/migrations/versions", "apps/api/app/shared/infrastructure/schema/bank.py", "apps/api/app/modules/bank/domain/entities.py", "apps/api/app/modules/bank/infrastructure/orm.py"]
+tests = ["apps/api/tests/test_schema_drift.py", "apps/api/tests/test_bank_api.py"]
+done_when = ["Migration up và down", "alembic check sạch", "Nằm trong snapshot lịch sử"]
+
+[[task]]
+id = "T-01-02"
+slice = "UOW-01"
+title = "Quy tắc vị trí, thuần và kiểm được"
+estimate_h = 3.0
+touches = ["apps/api/app/modules/ingestion/domain/services/difficulty_rules.py"]
+tests = ["apps/api/tests/unit/test_ingestion_rules.py"]
+done_when = ["Phủ mọi phần và mọi loại câu", "Không phụ thuộc gì ngoài đầu vào", "Có test cho từng nhánh"]
+
+[[task]]
+id = "T-01-03"
+slice = "UOW-01"
+title = "Mọi đường của người đều ghi manual"
+estimate_h = 3.0
+depends_on = ["T-01-01"]
+touches = ["apps/api/app/modules/bank/application/commands/create_question.py", "apps/api/app/modules/bank/application/commands/update_question.py", "apps/api/app/modules/bank/application/commands/bulk_update_questions.py"]
+tests = ["apps/api/tests/test_bank_api.py", "apps/api/tests/unit/test_bank_handlers.py"]
+done_when = ["Tạo, sửa, hàng loạt đều ghi manual", "check_difficulty chạy trên mọi đường", "Hoàn tác khôi phục cả dấu vết"]
+
+[[task]]
+id = "T-02-01"
+slice = "UOW-02"
+title = "Lượt model đoán mức độ"
+estimate_h = 4.0
+depends_on = ["T-01-02"]
+touches = ["apps/api/app/modules/ingestion/domain/services/difficulty_rules.py", "apps/api/app/modules/ingestion/application/difficulty.py"]
+tests = ["apps/api/tests/unit/test_ingestion_rules.py", "apps/api/tests/test_ingest_pipeline.py"]
+done_when = ["Chia lô như lượt chuyên đề", "Đáp án ngoài bốn mức bị bỏ", "Không import framework nào vào domain"]
+
+[[task]]
+id = "T-02-02"
+slice = "UOW-02"
+title = "Một bước mới trong pipeline"
+estimate_h = 3.0
+depends_on = ["T-02-01", "T-01-01"]
+touches = ["apps/api/app/modules/ingestion/application/stages/difficulty_suggest.py", "apps/api/app/modules/ingestion/application/commands/ingest_document.py"]
+tests = ["apps/api/tests/test_ingest_pipeline.py", "apps/api/tests/test_golden_official.py"]
+done_when = ["Không câu nào rỗng sau khi tách", "Model hỏng chỉ là cảnh báo", "Bộ 18 đề chuẩn không đổi một con số"]
+
+[[task]]
+id = "T-02-03"
+slice = "UOW-02"
+title = "Câu trắc nghiệm và đúng/sai gửi kèm phương án"
+estimate_h = 3.0
+depends_on = ["T-03-01"]
+touches = ["apps/api/app/modules/ingestion/domain/services/difficulty_rules.py", "apps/api/app/modules/ingestion/application/stages/difficulty_suggest.py", "apps/api/scripts/difficulty_report.py"]
+tests = ["apps/api/tests/unit/test_ingestion_rules.py", "apps/api/tests/test_ingest_pipeline.py"]
+done_when = ["Phương án nằm trong prompt, is_true thì không", "Câu không có phương án giữ nguyên hình cũ", "Chạy lại báo cáo và ghi lại con số mới"]
+
+[[task]]
+id = "T-02-04"
+slice = "UOW-02"
+title = "Số câu trong prompt do lượt model tự đặt"
+estimate_h = 3.0
+depends_on = ["T-02-03"]
+touches = ["apps/api/app/modules/ingestion/application/difficulty.py", "apps/api/app/modules/ingestion/application/tagging.py", "apps/api/app/modules/ingestion/application/stages/difficulty_suggest.py", "apps/api/app/modules/ingestion/application/stages/topic_suggest.py", "apps/api/app/modules/ingestion/application/api.py", "apps/api/scripts/difficulty_report.py"]
+tests = ["apps/api/tests/unit/test_ingestion_rules.py", "apps/api/tests/unit/test_ingestion_handlers.py", "apps/api/tests/test_ingest_pipeline.py"]
+done_when = ["Row không còn mang số", "Một lô có số câu trùng vẫn nhận đủ trả lời", "Phần II nhận mức từ model sau khi tách lại"]
+
+[[task]]
+id = "T-03-01"
+slice = "UOW-03"
+title = "Báo cáo đo hai tín hiệu"
+estimate_h = 3.0
+depends_on = ["T-02-01"]
+touches = ["apps/api/scripts/difficulty_report.py"]
+tests = ["apps/api/tests/unit/test_ingestion_rules.py"]
+done_when = ["Độ phủ của model", "Đồng thuận model với quy tắc", "Đối chiếu tỉ lệ đúng ở câu đủ 10 lượt"]
+
+[[task]]
+id = "T-03-02"
+slice = "UOW-03"
+title = "Lệnh điền cho câu chưa có mức độ"
+estimate_h = 3.0
+depends_on = ["T-02-01", "T-01-03"]
+touches = ["apps/api/app/modules/bank/application/commands/backfill_difficulty.py", "apps/api/app/modules/bank/application/dto.py", "apps/api/app/modules/bank/domain/ports.py", "apps/api/app/modules/bank/infrastructure/adapters/suggestions.py", "apps/api/app/modules/bank/infrastructure/repositories.py", "apps/api/app/modules/bank/interface/deps.py", "apps/api/app/modules/bank/interface/schemas.py", "apps/api/app/modules/bank/interface/router.py", "apps/api/app/modules/ingestion/application/api.py", "apps/api/app/main.py"]
+tests = ["apps/api/tests/test_bank_api.py"]
+done_when = ["Chỉ điền câu rỗng", "Chạy lại không đổi gì", "Báo số câu theo từng tín hiệu"]
+
+[[task]]
+id = "T-04-01"
+slice = "UOW-04"
+title = "Mức độ trên thẻ duyệt"
+estimate_h = 4.0
+depends_on = ["T-01-03"]
+touches = ["apps/web/src/components/page-components/ReviewDocument/ReviewQueue/ReviewQueue.tsx", "apps/web/src/hooks/page-hooks/review-document/use-review-queue.ts", "apps/web/src/constants/question.constant.ts", "apps/web/src/interfaces/question.interface.ts"]
+tests = ["apps/web/src/components/page-components/ReviewDocument/ReviewQueue/ReviewQueue.test.tsx", "apps/web/src/components/page-components/ReviewDocument/QuestionEditor/QuestionEditor.test.tsx", "apps/web/src/__tests__/review-document.test.tsx", "apps/web/src/__tests__/tagging-queue.test.tsx", "apps/web/src/__tests__/documents.test.tsx", "apps/web/src/__tests__/exam-builder.test.tsx", "apps/web/src/__tests__/exam-trial.test.tsx", "apps/web/src/__tests__/parsed-question.test.tsx", "apps/web/src/__tests__/result.test.tsx"]
+done_when = ["Hiện mức độ và nguồn", "Sửa được ngay tại thẻ", "Sửa xong thì nguồn thành người đặt"]

@@ -1,0 +1,31 @@
+{
+  "type": "gate_passed",
+  "seq": 5,
+  "at": "2026-09-22T00:17:18+07:00",
+  "by": "Loc Tran",
+  "imported": "ai-dlc",
+  "gate": "slice",
+  "note": "graph valid - 4 UoW, 18 tickets, no cycles",
+  "scope": "35775a0ef966f70d",
+  "planned_tasks": [
+    "T-01-01",
+    "T-01-02",
+    "T-01-03",
+    "T-01-04",
+    "T-01-05",
+    "T-01-06",
+    "T-01-07",
+    "T-01-08",
+    "T-02-01",
+    "T-02-02",
+    "T-03-01",
+    "T-03-02",
+    "T-03-03",
+    "T-03-04",
+    "T-03-05",
+    "T-03-06",
+    "T-04-01",
+    "T-04-02"
+  ],
+  "planned_proofs": []
+}

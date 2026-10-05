@@ -1,0 +1,388 @@
+# Imported from ai-dlc (ai-dlc:2026092207-school-years) on 2026-10-05.
+# ids are kept as they were, so tickets, commits and history still line up.
+
+[feature]
+title = "School years, student history 10 → 12, org ↔ user assignment"
+tier = "standard"
+client = ""
+imported_from = "ai-dlc:2026092207-school-years"
+
+[[assumption]]
+id = "A-01"
+text = "A school year belongs to an org: code \"YYYY-YYYY\", start/end dates, status planning / active / closed; exactly one active year per org"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-02"
+text = "Terms are fixed: HK1 and HK2 per year with their own dates (defaults 05/09–15/01 and 16/01–31/05)"
+blocking = false
+status = "confirmed"
+resolution = "Confirmed by Loc Tran in chat (2026-09-22): \"Hk1 & HK2\""
+
+[[assumption]]
+id = "A-03"
+text = "A class belongs to one school year; a student may be in several classes of the same year and in several orgs"
+blocking = true
+status = "confirmed"
+resolution = "Confirmed by Loc Tran in chat (2026-09-22): \"Cho phép nhiều lớp. nhiều org.\""
+
+[[assumption]]
+id = "A-04"
+text = "Closed years stay editable by org admins; every change to a closed year (and close/reopen itself) is written to the audit history, which is visible on the year, class and student"
+blocking = true
+status = "confirmed"
+resolution = "Confirmed by Loc Tran in chat (2026-09-22): \"Có cho sửa, ghi vào history\""
+
+[[assumption]]
+id = "A-05"
+text = "Enrollment status per class member: đang học / lên lớp / ở lại / chuyển đi / tốt nghiệp, with joined/left dates"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-06"
+text = "Each answer fact snapshots school_year_id, term (hk1/hk2 by date) and the ids of the student's classes in that year; class reports use the snapshot, not current membership"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-07"
+text = "Rollover: target class name = source name with its leading grade number +1 (10A1 → 11A1); grade 12 (the org's highest grade) → tốt nghiệp; per student the admin can pick lên lớp / ở lại (same-name class in the new year) / chuyển đi / tốt nghiệp; the source year can be closed at the end"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-08"
+text = "The header year selector is per browser and per org (localStorage), defaulting to the active year; year-scoped screens: Lớp học, Cơ cấu trường, Báo cáo, Giao bài lists"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-09"
+text = "Question bank, exams and accounts are not year-scoped"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-10"
+text = "\"Đợt kiểm tra\" = semester (hk1/hk2) × kind: Giữa kỳ 1, Cuối kỳ 1, Giữa kỳ 2, Cuối kỳ 2, plus Khảo sát / Thi thử / Ôn tập / Khác with a term; stored in the existing semester_code + exam_kind columns"
+blocking = false
+status = "confirmed"
+resolution = "Confirmed by Loc Tran in chat (2026-09-22): \"Tài liệu sẽ phân theo Kỳ1 /Kỳ2, giữa kỳ 1, giữa kỳ 2, ...\""
+
+[[assumption]]
+id = "A-11"
+text = "Org ↔ user assignment from both screens is a super-admin feature: org list → members panel; new \"Tài khoản\" (all accounts) list → organisations panel; org admins keep \"Thêm tài khoản có sẵn\" in their org"
+blocking = true
+status = "confirmed"
+resolution = "Confirmed by Loc Tran in chat (2026-09-22): \"Org <-> Người dùng. Có thể gán được ở 2 màn hình qua lại\" — who may do it assumed"
+
+[[ac]]
+id = "AC-01"
+title = "CRUD and one active year"
+story = "US-01 — School years and terms"
+given = "an org"
+when = "I create 2027-2028 and set it active"
+then = "it gets HK1 and HK2 with default dates, the previous active year becomes closed or planning as chosen, and only one year is active"
+
+[[ac]]
+id = "AC-02"
+title = "Backfill"
+story = "US-01 — School years and terms"
+given = "classes with a school_year string before the migration"
+when = "the migration runs"
+then = "each distinct year exists as a school year, every class points at its year and the current year is active"
+
+[[ac]]
+id = "AC-03"
+title = "Year in the header"
+story = "US-01 — School years and terms"
+given = "several years"
+when = "I choose a year in the header"
+then = "Lớp học, Cơ cấu trường, Báo cáo and the assignment lists show that year only, and the choice survives reload"
+
+[[ac]]
+id = "AC-04"
+title = "Edits audited"
+story = "US-02 — Closed years stay editable with history"
+given = "a closed year"
+when = "an org admin edits a class, its members or the year itself, or closes/reopens it"
+then = "the change is saved and appears in the \"Lịch sử\" panel with who, when, what"
+
+[[ac]]
+id = "AC-05"
+title = "Snapshot on answers"
+story = "US-03 — Enrollment and answers remember the year"
+given = "a student in 10A1 and 10-Toán-nâng-cao in 2026-2027"
+when = "she answers a question"
+then = "the answer fact stores that year, the term by date and both class ids"
+
+[[ac]]
+id = "AC-06"
+title = "Reports by class and year"
+story = "US-03 — Enrollment and answers remember the year"
+given = "the student moved to 11A1 the next year"
+when = "I open the 10A1 report for 2026-2027 or the 11A1 report"
+then = "her lớp-10 answers count only under 10A1 and her lớp-11 answers only under 11A1"
+
+[[ac]]
+id = "AC-07"
+title = "Term filter"
+story = "US-03 — Enrollment and answers remember the year"
+given = "answers in HK1 and HK2"
+when = "I filter a report by HK1"
+then = "only HK1 answers count"
+
+[[ac]]
+id = "AC-08"
+title = "Timeline"
+story = "US-04 — Student record 10 → 12"
+given = "a student with classes in several years"
+when = "I open \"Hồ sơ học sinh\""
+then = "I see each year with its classes and status, and results per year overall and per top-level topic"
+
+[[ac]]
+id = "AC-09"
+title = "Proposal"
+story = "US-05 — Year rollover"
+given = "the active year 2026-2027 with 10A1, 11B, 12C"
+when = "I start \"Chuyển năm học\" to 2027-2028"
+then = "the proposal maps 10A1 → 11A1, 11B → 12B, 12C → tốt nghiệp, every student defaulting to lên lớp / tốt nghiệp"
+
+[[ac]]
+id = "AC-10"
+title = "Exceptions and commit"
+story = "US-05 — Year rollover"
+given = "I mark one student ở lại and one chuyển đi"
+when = "I confirm"
+then = "target classes are created in 2027-2028, students are enrolled accordingly (ở lại → 10A1 of the new year), source memberships get their statuses, and optionally the old year is closed and the new one activated"
+
+[[ac]]
+id = "AC-11"
+title = "Safe to repeat"
+story = "US-05 — Year rollover"
+given = "a rollover was already committed for a class"
+when = "I run it again"
+then = "existing target classes and memberships are reused, nothing is duplicated"
+
+[[ac]]
+id = "AC-12"
+title = "One picker"
+story = "US-06 — Đợt kiểm tra and org ↔ user assignment"
+given = "the upload form and the bank filters"
+when = "I pick \"Giữa kỳ 1\""
+then = "semester hk1 and kind Giữa kỳ are set/filtered, and lists show \"Giữa kỳ 1\""
+
+[[ac]]
+id = "AC-13"
+title = "Org → users"
+story = "US-06 — Đợt kiểm tra and org ↔ user assignment"
+given = "the super admin on the organisation list"
+when = "they select an org"
+then = "a members panel lists its members with role and home org, and they can add an account (org code + username + role), change the role, lock or remove a non-home membership"
+
+[[ac]]
+id = "AC-14"
+title = "User → orgs"
+story = "US-06 — Đợt kiểm tra and org ↔ user assignment"
+given = "the super admin on \"Tài khoản\" (all accounts)"
+when = "they select an account"
+then = "a panel lists its organisations with role, and they can add an org with a role, change the role or remove it (not the home org)"
+
+[[ac]]
+id = "AC-15"
+title = "Same data both ways"
+story = "US-06 — Đợt kiểm tra and org ↔ user assignment"
+given = "a membership added from either screen"
+when = "I open the other screen"
+then = "it is there with the same role"
+
+[[ac]]
+id = "AC-16"
+title = "History"
+story = "US-06 — Đợt kiểm tra and org ↔ user assignment"
+given = "membership, year or class changes"
+when = "I open \"Lịch sử\" on the org, account, year or class"
+then = "I see the audit entries for it, newest first, paged on the server"
+
+[[decision]]
+id = "ADR-01"
+title = "Classes belong to a school-year row"
+status = "accepted"
+choice = "** `school_years` + `school_terms`; `classes.school_year_id`; string kept as cache"
+
+[[decision]]
+id = "ADR-02"
+title = "Answer facts snapshot year, term and classes"
+status = "accepted"
+choice = "** Write `school_year_id`, `term_code`, `class_ids` when grading; filter on the snapshot"
+
+[[decision]]
+id = "ADR-03"
+title = "Idempotent rollover by (year, class name)"
+status = "accepted"
+choice = "** Preview → commit; target classes found or created by name within the target year; memberships upserted"
+
+[[decision]]
+id = "ADR-04"
+title = "One membership service for both admin screens"
+status = "accepted"
+choice = "** `membership.add/update/remove(actor, org_id, user_id)`; three routers call it"
+
+[[decision]]
+id = "ADR-05"
+title = "History is the audit log"
+status = "accepted"
+choice = "** Read API over `audit_logs` filtered by target; services add `closed_year` to entries"
+
+[[slice]]
+id = "UOW-01"
+title = "School years with HK1/HK2, header year selector, year-scoped classes"
+covers = ["AC-01", "AC-02", "AC-03", "AC-04", "AC-16"]
+demo = """
+1. Năm học: 2026-2027 (đang học) created by backfill with HK1/HK2 dates
+2. Create 2027-2028 → header selector lists both → pick 2027-2028 → Lớp học and Cơ cấu trường are empty
+3. Close 2026-2027, edit a class name in it → 'Lịch sử' shows the change flagged năm đã khóa"""
+
+[[slice]]
+id = "UOW-02"
+title = "Answers remember year, term and classes; reports by year/term; student record"
+covers = ["AC-05", "AC-06", "AC-07", "AC-08"]
+demo = """
+1. Student in 10A1 submits → her fact has 2026-2027, hk1, [10A1]
+2. Reports: pick 2026-2027 and HK1 → numbers change accordingly
+3. Người dùng → student → Hồ sơ: years, classes, results per topic"""
+
+[[slice]]
+id = "UOW-03"
+title = "Chuyển năm học wizard"
+covers = ["AC-09", "AC-10", "AC-11"]
+demo = """
+1. Năm học 2026-2027 → Chuyển năm học → 2027-2028: 10A1→11A1, 10A2→11A2, 10A3→11A3
+2. Mark one student ở lại, one chuyển đi → Xác nhận → 11A1 has the others, 10A1 (2027-2028) has the retained one
+3. Run again → nothing duplicated"""
+
+[[slice]]
+id = "UOW-04"
+title = "Đợt kiểm tra picker; org ↔ user assignment from both admin screens"
+covers = ["AC-12", "AC-13", "AC-14", "AC-15", "AC-16"]
+demo = """
+1. Upload: Đợt kiểm tra 'Giữa kỳ 2' → document shows 'Giữa kỳ 2'; bank filter 'Giữa kỳ 2' finds its questions
+2. Tổ chức → select Trung tâm B → members panel → add trungtama/buivanchau as student
+3. Tài khoản → buivanchau → organisations panel lists Trung tâm A and Trung tâm B; remove B; history shows both changes"""
+
+[[task]]
+id = "T-01-01"
+slice = "UOW-01"
+title = "Migration 0014: school_years, school_terms, classes.school_year_id + backfill; models"
+estimate_h = 2.0
+touches = ["apps/api/migrations/versions/0014_school_years.py", "apps/api/app/models/school_year.py", "apps/api/app/models/school_class.py"]
+tests = ["apps/api/tests/test_school_years.py"]
+done_when = ["Backfill on dev DB", "One active per org"]
+
+[[task]]
+id = "T-01-02"
+slice = "UOW-01"
+title = "Year service + API (CRUD, activate/close/reopen, terms) + audit read API"
+estimate_h = 4.0
+depends_on = ["T-01-01"]
+touches = ["apps/api/app/services/school_years.py", "apps/api/app/routers/school_years.py", "apps/api/app/routers/audit.py", "apps/api/app/services/classes.py"]
+tests = ["apps/api/tests/test_school_years.py", "apps/api/tests/test_audit_api.py"]
+done_when = ["Closed year edit audited", "Audit paged per target"]
+
+[[task]]
+id = "T-01-03"
+slice = "UOW-01"
+title = "YearSwitcher + YearProvider, Năm học page, HistoryPanel; classes/structure/class form by year"
+estimate_h = 4.0
+depends_on = ["T-01-02"]
+touches = ["apps/web/src/components/app/YearSwitcher.tsx", "apps/web/src/components/app/HistoryPanel.tsx", "apps/web/src/app/(app)/org/school-years/page.tsx", "apps/web/src/app/(app)/org/classes/page.tsx", "apps/web/src/app/(app)/org/structure/page.tsx", "apps/web/src/components/app/YearContext.tsx", "apps/web/src/components/years/YearForm.tsx", "apps/web/src/components/org/ClassForms.tsx"]
+tests = ["apps/web/src/__tests__/school-years.test.tsx", "apps/web/src/__tests__/classes.test.tsx", "apps/web/src/__tests__/structure.test.tsx"]
+done_when = ["Selector persists per org", "History panel", "Year-scoped lists"]
+
+[[task]]
+id = "T-02-01"
+slice = "UOW-02"
+title = "Migration 0015: class_members status/dates, answer_facts year/term/class_ids + backfill; snapshot at grading"
+estimate_h = 3.0
+depends_on = ["T-01-01"]
+touches = ["apps/api/migrations/versions/0015_year_history.py", "apps/api/app/models/exam.py", "apps/api/app/services/attempts.py"]
+tests = ["apps/api/tests/test_year_history.py"]
+done_when = ["Snapshot written", "Backfill"]
+
+[[task]]
+id = "T-02-02"
+slice = "UOW-02"
+title = "Stats by class snapshot, year and term; reports page filters"
+estimate_h = 3.0
+depends_on = ["T-02-01"]
+touches = ["apps/api/app/services/stats.py", "apps/api/app/routers/stats.py", "apps/web/src/app/(app)/org/reports/page.tsx"]
+tests = ["apps/api/tests/test_year_history.py", "apps/api/tests/test_stats_api.py", "apps/web/src/__tests__/reports.test.tsx"]
+done_when = ["Moved student counted per year", "Term filter"]
+
+[[task]]
+id = "T-02-03"
+slice = "UOW-02"
+title = "Student record API + Hồ sơ học sinh page"
+estimate_h = 3.0
+depends_on = ["T-02-01"]
+touches = ["apps/api/app/routers/students.py", "apps/api/app/services/record.py", "apps/web/src/app/(app)/org/students/[id]/page.tsx", "apps/web/src/components/students/StudentRecord.tsx"]
+tests = ["apps/api/tests/test_year_history.py", "apps/web/src/__tests__/student-record.test.tsx"]
+done_when = ["Years timeline", "Per-year topic results"]
+
+[[task]]
+id = "T-03-01"
+slice = "UOW-03"
+title = "Rollover service: preview + idempotent commit"
+estimate_h = 4.0
+depends_on = ["T-02-01", "T-01-02"]
+touches = ["apps/api/app/services/rollover.py", "apps/api/app/routers/school_years.py"]
+tests = ["apps/api/tests/test_rollover.py"]
+done_when = ["Name mapping", "Exceptions", "Idempotent", "Close/activate option"]
+
+[[task]]
+id = "T-03-02"
+slice = "UOW-03"
+title = "Chuyển năm học wizard page"
+estimate_h = 4.0
+depends_on = ["T-03-01", "T-01-03"]
+touches = ["apps/web/src/app/(app)/org/school-years/[id]/rollover/page.tsx", "apps/web/src/components/years/RolloverPlan.tsx", "apps/web/src/components/years/RolloverWizard.tsx"]
+tests = ["apps/web/src/__tests__/rollover.test.tsx"]
+done_when = ["Edit actions", "Commit", "Result summary"]
+
+[[task]]
+id = "T-04-01"
+slice = "UOW-04"
+title = "Đợt kiểm tra helper, upload + bank + document labels"
+estimate_h = 2.0
+depends_on = ["T-01-01"]
+touches = ["apps/web/src/lib/exam-period.ts", "apps/web/src/components/documents/UploadForm.tsx", "apps/web/src/components/bank/BankFilters.tsx", "apps/web/src/components/documents/DocumentList.tsx"]
+tests = ["apps/web/src/__tests__/documents.test.tsx", "apps/web/src/__tests__/bank.test.tsx", "apps/web/src/lib/exam-period.test.ts", "apps/web/src/__tests__/parsed-question.test.tsx"]
+done_when = ["One picker", "Labels"]
+
+[[task]]
+id = "T-04-02"
+slice = "UOW-04"
+title = "Membership service by (actor, org, user); admin org members + accounts endpoints"
+estimate_h = 3.0
+depends_on = ["T-01-02"]
+touches = ["apps/api/app/services/membership.py", "apps/api/app/routers/admin_orgs.py", "apps/api/app/routers/admin_users.py", "apps/api/app/schemas/admin.py"]
+tests = ["apps/api/tests/test_admin_memberships.py", "apps/api/tests/test_membership.py"]
+done_when = ["Both directions", "Home membership protected"]
+
+[[task]]
+id = "T-04-03"
+slice = "UOW-04"
+title = "Members panel on Tổ chức, Tài khoản page with orgs panel, history panels"
+estimate_h = 4.0
+depends_on = ["T-04-02", "T-01-03"]
+touches = ["apps/web/src/app/(app)/admin/orgs/page.tsx", "apps/web/src/app/(app)/admin/users/page.tsx", "apps/web/src/components/admin/MembershipTable.tsx", "apps/web/src/lib/nav.ts", "apps/web/src/components/app/HistoryPanel.tsx"]
+tests = ["apps/web/src/__tests__/admin-members.test.tsx"]
+done_when = ["Org → users", "User → orgs", "History"]

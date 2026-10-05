@@ -1,0 +1,152 @@
+# Imported from ai-dlc (ai-dlc:2026092403-blueprint-truth) on 2026-10-05.
+# ids are kept as they were, so tickets, commits and history still line up.
+
+[feature]
+title = "Con số cạnh dòng ma trận phải là con số máy sẽ dùng"
+tier = "standard"
+client = ""
+imported_from = "ai-dlc:2026092403-blueprint-truth"
+
+[[assumption]]
+id = "A-01"
+text = "Con số cạnh một dòng ma trận là số câu dòng ấy lấy được — tức đã áp chuyên đề, loại câu và mức độ của chính nó — và đổi theo khi đổi bộ lọc"
+blocking = true
+status = "confirmed"
+resolution = "Loc Tran nêu trong chat (2026-09-24); đây là nguyên nhân của \"14 câu nhưng chỉ tạo được 7\""
+
+[[assumption]]
+id = "A-02"
+text = "Con số ấy lấy từ đúng phép lọc mà lệnh tạo đề dùng (`status: usable` + chuyên đề + loại + mức độ), không phải một phép đếm song song"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval. Hai phép đếm khác nhau sẽ lệch, và lần lệch đầu tiên chính là lỗi này"
+
+[[assumption]]
+id = "A-03"
+text = "Khi một dòng không đủ câu, màn hình nói rõ đang thiếu vì đâu — chuyên đề hết câu, hay bộ lọc của dòng cắt mất"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; \"thiếu 3 câu\" một mình là thứ Loc Tran đã nói là không hiểu"
+
+[[assumption]]
+id = "A-04"
+text = "Không màn hình nào dán nhãn xếp hạng lên chuyên đề của một người học (\"yếu nhất\", \"giỏi nhất\", \"cần ôn nhất\")"
+blocking = false
+status = "confirmed"
+resolution = "Loc Tran nêu trong chat (2026-09-24): \"rất dễ rơi vào bẫy tâm lý\". Thứ tự sắp xếp giữ nguyên — chỉ bỏ cách gọi tên"
+
+[[assumption]]
+id = "A-05"
+text = "Nút \"Một câu / Toàn đề\" có icon; chữ giữ lại hay không là tuỳ chỗ, nhưng phải có tooltip"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval theo yêu cầu \"thêm icon hoặc chuyển sang Icon rồi thêm tooltip\""
+
+[[ac]]
+id = "AC-01"
+title = "Số câu theo đúng bộ lọc của dòng"
+story = "US-01 — Con số nói thật"
+given = "một dòng ma trận trên một chuyên đề có 14 câu, trong đó 7 câu Trắc nghiệm"
+when = "dòng ấy chọn loại câu Trắc nghiệm"
+then = "con số bên cạnh đọc 7, và bằng đúng số câu lệnh tạo đề lấy được"
+
+[[ac]]
+id = "AC-02"
+title = "Đổi bộ lọc thì số đổi theo"
+story = "US-01 — Con số nói thật"
+given = "một dòng đang hiện số câu của nó"
+when = "tôi đổi loại câu hoặc mức độ của dòng ấy"
+then = "con số tính lại theo bộ lọc mới, không cần tạo đề mới biết"
+
+[[ac]]
+id = "AC-03"
+title = "Lý do thiếu"
+story = "US-02 — Thiếu câu thì nói vì sao"
+given = "một dòng đòi nhiều câu hơn số nó lấy được"
+when = "màn hình báo thiếu"
+then = "nó nói rõ chuyên đề có bao nhiêu câu tất cả và bao nhiêu câu hợp bộ lọc của dòng"
+
+[[ac]]
+id = "AC-04"
+title = "Không còn nhãn xếp hạng"
+story = "US-03 — Không dán nhãn, và nút đọc được"
+given = "màn kết quả bài làm, hồ sơ học sinh và tình hình lớp"
+when = "tôi xem các mục theo chuyên đề"
+then = "thứ tự vẫn là cần ôn trước, nhưng không chỗ nào gọi đó là \"yếu nhất\" hay \"cần ôn nhất\""
+
+[[ac]]
+id = "AC-05"
+title = "Nút chế độ xem có icon và tooltip"
+story = "US-03 — Không dán nhãn, và nút đọc được"
+given = "màn làm bài"
+when = "tôi nhìn nút chuyển chế độ xem"
+then = "mỗi chế độ có icon riêng và một tooltip nói nó làm gì"
+
+[[decision]]
+id = "ADR-01"
+title = "Con số của một dòng hỏi đúng cái mà lệnh tạo đề hỏi"
+status = "accepted"
+
+[[decision]]
+id = "ADR-02"
+title = "Thứ tự là thông tin, tên gọi thì không"
+status = "accepted"
+
+[[decision]]
+id = "ADR-03"
+title = "Icon kèm tooltip, không thay chữ bằng icon trần"
+status = "accepted"
+
+[[slice]]
+id = "UOW-01"
+title = "Con số của một dòng ma trận là con số lệnh tạo đề sẽ dùng"
+covers = ["AC-01", "AC-02", "AC-03"]
+demo = """
+1. Dòng trên chuyên đề Mệnh đề, chọn Trắc nghiệm: số đọc 7 chứ không phải 14
+2. Đổi sang Đúng/Sai: số đổi theo, không cần tạo đề mới biết
+3. Đòi 10 câu khi chỉ có 7: màn hình nói chuyên đề có 14, hợp dòng này 7"""
+
+[[slice]]
+id = "UOW-02"
+title = "Bỏ nhãn xếp hạng, và nút chế độ xem có icon"
+covers = ["AC-04", "AC-05"]
+demo = """
+1. Ba màn theo chuyên đề: thứ tự giữ nguyên, không còn chữ yếu nhất
+2. Nút Một câu / Toàn đề có icon và tooltip"""
+
+[[task]]
+id = "T-01-01"
+slice = "UOW-01"
+title = "Mỗi dòng hỏi số câu của chính bộ lọc của nó"
+estimate_h = 4.0
+touches = ["apps/web/src/hooks/page-hooks/exam-detail/use-blueprint-editor.ts", "apps/web/src/components/page-components/ExamDetail/BlueprintEditor/BlueprintEditor.tsx", "apps/web/src/hooks/react-query/use-query-question.ts"]
+tests = ["apps/web/src/__tests__/exam-builder.test.tsx"]
+done_when = ["Số theo đúng bộ lọc của dòng", "Đổi loại câu hay mức độ thì số tính lại", "Bằng đúng số lệnh tạo đề lấy được"]
+
+[[task]]
+id = "T-01-02"
+slice = "UOW-01"
+title = "Thiếu câu thì nói rõ vì sao"
+estimate_h = 2.0
+depends_on = ["T-01-01"]
+touches = ["apps/web/src/components/page-components/ExamDetail/BlueprintEditor/BlueprintEditor.tsx"]
+tests = ["apps/web/src/__tests__/exam-builder.test.tsx"]
+done_when = ["Nêu cả hai con số", "Dòng rỗng vẫn đỏ như cũ", "Không đổi mã lỗi nào"]
+
+[[task]]
+id = "T-02-01"
+slice = "UOW-02"
+title = "Bỏ nhãn xếp hạng ở ba màn"
+estimate_h = 2.0
+touches = ["apps/web/src/components/page-components/AttemptResult/ResultView/ResultView.tsx", "apps/web/src/components/page-components/ClassDetail/ClassOverview/ClassOverview.tsx", "apps/web/src/components/page-components/MyStats/MyStatsPage.tsx"]
+tests = ["apps/web/src/__tests__/result.test.tsx", "apps/web/src/__tests__/my-stats.test.tsx"]
+done_when = ["Ba chỗ không còn chữ xếp hạng", "Thứ tự không đổi", "Test nào ghim chữ cũ thì sửa theo"]
+
+[[task]]
+id = "T-02-02"
+slice = "UOW-02"
+title = "Nút chế độ xem có icon và tooltip"
+estimate_h = 2.0
+touches = ["apps/web/src/components/page-components/ExamRunner/Runner/Runner.tsx"]
+tests = ["apps/web/src/__tests__/exam-runner.test.tsx"]
+done_when = ["Mỗi chế độ một icon", "Tooltip nói rõ chế độ làm gì", "Tên chế độ vẫn đọc được bằng trình đọc màn hình"]

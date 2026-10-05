@@ -1,0 +1,9 @@
+{
+  "type": "gate_passed",
+  "seq": 28,
+  "at": "2026-09-22T11:17:50+07:00",
+  "by": "Loc Tran",
+  "imported": "ai-dlc",
+  "gate": "release",
+  "note": "assumptions resolved, ADRs settled, graph valid"
+}

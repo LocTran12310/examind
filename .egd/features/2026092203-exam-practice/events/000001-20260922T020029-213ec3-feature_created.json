@@ -1,0 +1,10 @@
+{
+  "type": "feature_created",
+  "seq": 1,
+  "at": "2026-09-22T02:00:29+07:00",
+  "by": "Loc Tran",
+  "imported": "ai-dlc",
+  "tier": "standard",
+  "rules": 1,
+  "source": ".ai/features/2026092203-exam-practice"
+}

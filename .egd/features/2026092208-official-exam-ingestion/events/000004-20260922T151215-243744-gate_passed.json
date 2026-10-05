@@ -1,0 +1,9 @@
+{
+  "type": "gate_passed",
+  "seq": 4,
+  "at": "2026-09-22T15:12:15+07:00",
+  "by": "Loc Tran",
+  "imported": "ai-dlc",
+  "gate": "design",
+  "note": "5 ADR(s) recorded"
+}

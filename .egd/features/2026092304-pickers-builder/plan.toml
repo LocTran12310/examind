@@ -1,0 +1,234 @@
+# Imported from ai-dlc (ai-dlc:2026092304-pickers-builder) on 2026-10-05.
+# ids are kept as they were, so tickets, commits and history still line up.
+
+[feature]
+title = "Pickers that tell the truth, and a builder that lets the teacher decide"
+tier = "standard"
+client = ""
+imported_from = "ai-dlc:2026092304-pickers-builder"
+
+[[assumption]]
+id = "A-01"
+text = "A topic picker opened for a question starts on that question's best suggestion (expanded and focused, not applied); with no suggestion it opens as today"
+blocking = true
+status = "confirmed"
+resolution = "Confirmed by Loc Tran in chat (2026-09-23)"
+
+[[assumption]]
+id = "A-02"
+text = "The number beside a topic is the count of questions in that subtree, scoped to the subject and to usable questions; the count of child topics is not shown"
+blocking = true
+status = "confirmed"
+resolution = "Confirmed by Loc Tran in chat (2026-09-23): \"hiển thị thêm số câu hỏi hiện có của mỗi chuyên đề\""
+
+[[assumption]]
+id = "A-03"
+text = "\"Gán theo gợi ý\" applies each selected question's own top suggestion in one request; questions without a suggestion are left untouched and reported"
+blocking = true
+status = "confirmed"
+resolution = "Confirmed by Loc Tran in chat (2026-09-23)"
+
+[[assumption]]
+id = "A-04"
+text = "The bank's bulk actions gain subject and grade, with the same staff permission as the other bulk edits"
+blocking = false
+status = "confirmed"
+resolution = "Confirmed by Loc Tran in chat (2026-09-23). Open question settled the same day: a subject that would leave a question in another subject's tree **refuses the whole edit** (422 `subject_topic_conflict`, naming the questions and topics); it does not clear the topic silently"
+
+[[assumption]]
+id = "A-05"
+text = "A blueprint row on a topic with no usable question is refused with a message naming the topic, not silently returning fewer questions"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-23) — to confirm at final review"
+
+[[assumption]]
+id = "A-06"
+text = "\"Đổi câu\" offers both paths: the automatic replacement it does today, and choosing from the bank with the filters already used by the builder"
+blocking = false
+status = "confirmed"
+resolution = "Confirmed by Loc Tran in chat (2026-09-23)"
+
+[[assumption]]
+id = "A-07"
+text = "Long option lists (documents, classes) scroll inside the dropdown and load further pages as they scroll"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-23)"
+
+[[ac]]
+id = "AC-01"
+title = "Opens on the suggestion"
+story = "US-01 — The picker starts where the system already guessed"
+given = "a question whose suggestions are on screen"
+when = "I open the topic picker with `T` or with \"Chuyên đề khác…\""
+then = "the suggested topic is expanded, focused and ready to confirm, and nothing has been applied yet"
+
+[[ac]]
+id = "AC-02"
+title = "Counts are questions"
+story = "US-01 — The picker starts where the system already guessed"
+given = "any topic picker"
+when = "it lists topics"
+then = "the number beside a topic is how many usable questions that subtree holds for the subject in hand, a topic with none reads 0, and the count of child topics is not shown as a number"
+
+[[ac]]
+id = "AC-03"
+title = "Take each row's own suggestion"
+story = "US-02 — A page of the tagging queue can be cleared in one click"
+given = "several selected questions, each with its own suggestion"
+when = "I choose \"Gán theo gợi ý\""
+then = "each question gets its own top suggestion in one request, questions without one are left untouched and named, and the remaining count drops by what was applied"
+
+[[ac]]
+id = "AC-04"
+title = "Long filters behave"
+story = "US-02 — A page of the tagging queue can be cleared in one click"
+given = "the document filter with more options than fit"
+when = "I open it"
+then = "the list scrolls inside the dropdown and loads further pages as I reach the end"
+
+[[ac]]
+id = "AC-05"
+title = "Subject and grade in bulk"
+story = "US-03 — The bank can classify what it holds"
+given = "questions selected in the bank, including the \"Chưa phân môn\" tab"
+when = "I set a subject or a grade for them"
+then = "one request applies it, the list refreshes and the tab counts follow"
+
+[[ac]]
+id = "AC-06"
+title = "No silent empty row"
+story = "US-04 — The builder refuses to lie"
+given = "a blueprint row on a topic with no usable question"
+when = "I generate the exam"
+then = "it is refused with a message naming that topic and how many questions it holds, instead of returning fewer questions than asked"
+
+[[ac]]
+id = "AC-07"
+title = "Swap by hand"
+story = "US-04 — The builder refuses to lie"
+given = "a question in an exam"
+when = "I choose to swap it"
+then = "I can either let the system pick a replacement as today, or search the bank and choose one myself, and the exam keeps its points and order"
+
+[[decision]]
+id = "ADR-01"
+title = "The number beside a topic is questions, from the facets"
+status = "accepted"
+choice = "** Pickers take counts from `POST /questions/facets` (subtree totals, subject-scoped, usable only)"
+
+[[decision]]
+id = "ADR-02"
+title = "One request applies many different topics"
+status = "accepted"
+choice = "** `POST /questions/bulk/topics` takes pairs and answers what it skipped"
+
+[[decision]]
+id = "ADR-03"
+title = "A swap is the teacher's choice, with an automatic option"
+status = "accepted"
+choice = "** Keep the automatic replacement and add a chooser with the bank's filters"
+
+[[slice]]
+id = "UOW-01"
+title = "Bulk by suggestion, subject and grade, and a builder that refuses an empty topic"
+covers = ["AC-03", "AC-05", "AC-06"]
+demo = """
+1. POST /questions/bulk/topics với 20 cặp khác nhau → một request, báo số câu bỏ qua
+2. POST /questions/bulk đặt môn và lớp cho các câu chưa phân môn
+3. Ma trận đề có dòng chuyên đề rỗng → 422 nói rõ chuyên đề nào"""
+
+[[slice]]
+id = "UOW-02"
+title = "Pickers that start on the suggestion and count questions"
+covers = ["AC-01", "AC-02", "AC-03", "AC-04", "AC-05"]
+demo = """
+1. Nhấn T: cây mở sẵn ở chuyên đề được gợi ý, chưa áp dụng gì
+2. Số bên cạnh chuyên đề là số câu hỏi; chuyên đề rỗng hiện 0
+3. Chọn 20 câu → Gán theo gợi ý → còn lại giảm, câu không có gợi ý được nêu tên"""
+
+[[slice]]
+id = "UOW-03"
+title = "A blueprint that reads well and a swap the teacher controls"
+covers = ["AC-06", "AC-07"]
+demo = """
+1. Dòng ma trận nằm gọn một hàng ở màn rộng
+2. Đổi câu: chọn từ ngân hàng hoặc để hệ thống chọn"""
+
+[[task]]
+id = "T-01-01"
+slice = "UOW-01"
+title = "POST /questions/bulk/topics"
+estimate_h = 3.0
+touches = ["apps/api/app/modules/bank/application/commands/bulk_set_topics.py", "apps/api/app/modules/bank/interface/router.py", "apps/api/app/modules/bank/interface/schemas.py"]
+tests = ["apps/api/tests/test_topic_coverage.py", "apps/api/tests/unit/test_bank_handlers.py"]
+done_when = ["Pairs applied in one transaction", "skipped reported", "≤200 and subject checked"]
+
+[[task]]
+id = "T-01-02"
+slice = "UOW-01"
+title = "Subject and grade in the bank's bulk edit"
+estimate_h = 2.0
+touches = ["apps/api/app/modules/bank/application/commands/bulk_update_questions.py", "apps/api/app/modules/bank/interface/schemas.py"]
+tests = ["apps/api/tests/test_bank_api.py"]
+done_when = ["subject_id and grade in set", "Validated like a single update"]
+
+[[task]]
+id = "T-01-03"
+slice = "UOW-01"
+title = "The blueprint refuses an empty topic"
+estimate_h = 3.0
+touches = ["apps/api/app/modules/assessment/domain/services/exam_rules.py", "apps/api/app/modules/assessment/application/commands/build_exam.py"]
+tests = ["apps/api/tests/test_exams_api.py"]
+done_when = ["422 empty_topic naming the topic and its count", "A row that can be filled still works"]
+
+[[task]]
+id = "T-02-01"
+slice = "UOW-02"
+title = "Pickers: start on the suggestion, count questions"
+estimate_h = 4.0
+depends_on = ["T-01-01"]
+touches = ["apps/web/src/components/common/TopicPicker/TopicPicker.tsx", "apps/web/src/components/common/TopicTreeSelect/TopicTreeSelect.tsx", "apps/web/src/hooks/page-hooks/tagging-queue/use-tagging-queue.ts"]
+tests = ["apps/web/src/__tests__/tagging-queue.test.tsx", "apps/web/src/__tests__/review-document.test.tsx"]
+done_when = ["initial topic expanded and focused", "counts are questions", "no child-count number"]
+
+[[task]]
+id = "T-02-02"
+slice = "UOW-02"
+title = "Gán theo gợi ý, and filters that scroll"
+estimate_h = 4.0
+depends_on = ["T-01-01", "T-02-01"]
+touches = ["apps/web/src/components/page-components/TaggingQueue/BulkTopicBar/BulkTopicBar.tsx", "apps/web/src/hooks/react-query/use-query-question.ts", "apps/web/src/components/common/OptionSelect/OptionSelect.tsx"]
+tests = ["apps/web/src/__tests__/tagging-queue.test.tsx"]
+done_when = ["One request per page", "Skipped named", "Dropdown scrolls and pages"]
+
+[[task]]
+id = "T-02-03"
+slice = "UOW-02"
+title = "Subject and grade from the bank toolbar"
+estimate_h = 2.0
+depends_on = ["T-01-02"]
+touches = ["apps/web/src/hooks/page-hooks/bank/use-bank-page.tsx", "apps/web/src/components/page-components/Bank/BulkBar/BulkBar.tsx"]
+tests = ["apps/web/src/__tests__/bank-bulk.test.tsx"]
+done_when = ["Môn and Lớp actions", "Counts of the tabs follow"]
+
+[[task]]
+id = "T-03-01"
+slice = "UOW-03"
+title = "Blueprint row layout and the empty-topic message"
+estimate_h = 3.0
+depends_on = ["T-01-03", "T-02-01"]
+touches = ["apps/web/src/components/page-components/ExamDetail/BlueprintEditor/BlueprintEditor.tsx"]
+tests = ["apps/web/src/__tests__/exam-builder.test.tsx"]
+done_when = ["One line at desktop width", "Empty topic named before generating"]
+
+[[task]]
+id = "T-03-02"
+slice = "UOW-03"
+title = "Swap a question from the bank"
+estimate_h = 4.0
+depends_on = ["T-03-01"]
+touches = ["apps/web/src/components/page-components/ExamDetail/SwapQuestionDialog/SwapQuestionDialog.tsx", "apps/web/src/components/page-components/ExamDetail/ExamQuestions/ExamQuestions.tsx"]
+tests = ["apps/web/src/__tests__/exam-builder.test.tsx"]
+done_when = ["Choose from the bank", "Automatic still there", "Points and order kept"]

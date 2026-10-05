@@ -1,0 +1,9 @@
+{
+  "type": "task_done_solo",
+  "seq": 15,
+  "at": "2026-09-24T16:35:02+07:00",
+  "by": "Loc Tran",
+  "imported": "ai-dlc",
+  "task": "T-02-02",
+  "reason": "the write path the stage needs (the bank's set_difficulty, its port and the adapter) and the two tests that now answer the difficulty request of the same model"
+}

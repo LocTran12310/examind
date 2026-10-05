@@ -1,0 +1,9 @@
+{
+  "type": "gate_passed",
+  "seq": 2,
+  "at": "2026-09-22T18:10:07+07:00",
+  "by": "Loc Tran",
+  "imported": "ai-dlc",
+  "gate": "frame",
+  "note": "architecture map verified by Loc Tran (blanket pre-approval in chat, 2026-09-21 — confirm at final review); 00-intent.md complete"
+}

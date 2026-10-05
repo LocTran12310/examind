@@ -1,0 +1,17 @@
+# Who is on the team. With no members listed, anyone may sign anything.
+# Roles used by default: pm, lead, dev, qa, client, po.
+
+# [[member]]
+# name = "Linh"
+# github = "linh-dev"
+# aliases = ["Linh Nguyen"]   # other spellings, e.g. her git user.name
+# roles = ["pm", "lead", "qa", "dev"]
+#
+# [[member]]
+# name = "An"
+# github = "an-dev"
+# roles = ["dev"]
+#
+# [[member]]
+# name = "Acme PO"
+# roles = ["client"]

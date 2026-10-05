@@ -1,0 +1,198 @@
+# Imported from ai-dlc (ai-dlc:2026092602-student-side-subjects) on 2026-10-05.
+# ids are kept as they were, so tickets, commits and history still line up.
+
+[feature]
+title = "phía học sinh cũng phải biết môn"
+tier = "standard"
+client = ""
+imported_from = "ai-dlc:2026092602-student-side-subjects"
+
+[[assumption]]
+id = "A-01"
+text = "Học sinh chọn môn trước khi tạo đề ôn tập, và đề mang đúng môn ấy"
+blocking = true
+status = "confirmed"
+resolution = "Anh chọn trong chat 2026-09-26 giữa ba cách; đây là cách anh chọn"
+
+[[assumption]]
+id = "A-02"
+text = "Trung tâm chỉ có một môn thì không hỏi, gửi thẳng môn ấy"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; một bước chọn giữa một lựa chọn là một cú bấm vô nghĩa — nhưng đề vẫn phải mang môn, nên vẫn gửi"
+
+[[assumption]]
+id = "A-03"
+text = "Môn mặc định của bước chọn là môn học sinh yếu nhất"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; đó là môn em ấy cần ôn nhất, và mastery đã biết điều đó. Vẫn đổi được"
+
+[[assumption]]
+id = "A-04"
+text = "\"Tiến độ của tôi\" dùng bộ chọn môn như trang Báo cáo, mặc định \"Mọi môn\""
+blocking = true
+status = "confirmed"
+resolution = "Anh chọn trong chat 2026-09-26; giống F23 ADR-04 — thêm lựa chọn, không đổi mặc định"
+
+[[assumption]]
+id = "A-05"
+text = "Bộ chọn ấy áp cho cả bốn khối của trang: mức nắm vững, theo chuyên đề, theo loại câu, lịch sử ôn tập"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; một bộ chọn chỉ áp cho nửa trang là một cái bẫy đọc số"
+
+[[assumption]]
+id = "A-06"
+text = "Lịch sử ôn tập gập lại được và mặc định chỉ hiện vài lượt gần nhất"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; anh viết \"không ẩn được\" — thứ thiếu là cách thu nó lại, không phải cách xoá nó đi"
+
+[[assumption]]
+id = "A-07"
+text = "Một đề ôn tập luôn thuộc đúng một môn từ nay"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; kế hoạch được dựng trong phạm vi một môn nên mọi câu của nó cùng môn — ghi môn ấy lên đề là ghi lại sự thật, không phải suy đoán"
+
+[[assumption]]
+id = "A-08"
+text = "95 đề ôn tập cũ để nguyên không môn"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; suy ngược từ câu hỏi của chúng là đoán hộ quá khứ, và lịch sử ôn tập nói \"không rõ môn\" thật thà hơn"
+
+[[ac]]
+id = "AC-01"
+title = "Chọn môn rồi tạo"
+story = "US-01 — Đề ôn tập thuộc một môn"
+given = "trung tâm dạy hai môn"
+when = "tôi bấm \"Tạo đề ôn tập\""
+then = "tôi chọn môn trước, mặc định là môn tôi đang yếu nhất, and đề sinh ra mang đúng môn ấy"
+
+[[ac]]
+id = "AC-02"
+title = "Một môn thì không hỏi"
+story = "US-01 — Đề ôn tập thuộc một môn"
+given = "trung tâm chỉ dạy một môn"
+when = "tôi bấm \"Tạo đề ôn tập\""
+then = "đề được tạo ngay, không hỏi gì, and đề vẫn mang môn duy nhất ấy"
+
+[[ac]]
+id = "AC-03"
+title = "Môn đi được tới tận cái đề"
+story = "US-01 — Đề ôn tập thuộc một môn"
+given = "tôi tạo một đề ôn tập môn Toán"
+when = "đề ấy được lưu"
+then = "`exams.subject_id` của nó là môn Toán, and ngân hàng câu hỏi của kế hoạch chỉ gồm câu của môn ấy"
+
+[[ac]]
+id = "AC-04"
+title = "Bộ chọn môn, mặc định mọi môn"
+story = "US-02 — \"Tiến độ của tôi\" đọc được khi có nhiều môn"
+given = "tôi mở \"Tiến độ của tôi\""
+when = "Bộ chọn môn, mặc định mọi môn"
+then = "có một bộ chọn môn, mặc định \"Mọi môn\", and mọi con số trên trang là của mọi môn, như trước"
+
+[[ac]]
+id = "AC-05"
+title = "Chọn một môn thì cả trang theo môn ấy"
+story = "US-02 — \"Tiến độ của tôi\" đọc được khi có nhiều môn"
+given = "tôi chọn môn Toán"
+when = "Chọn một môn thì cả trang theo môn ấy"
+then = "mức nắm vững, theo chuyên đề, theo loại câu và lịch sử ôn tập đều chỉ còn Toán"
+
+[[ac]]
+id = "AC-06"
+title = "Lịch sử ôn tập gập lại được"
+story = "US-02 — \"Tiến độ của tôi\" đọc được khi có nhiều môn"
+given = "tôi đã ôn nhiều lần"
+when = "tôi mở \"Tiến độ của tôi\""
+then = "lịch sử chỉ hiện vài lượt gần nhất và nói còn bao nhiêu lượt nữa, and tôi mở rộng hoặc thu gọn được"
+
+[[ac]]
+id = "AC-07"
+title = "Lượt ôn cũ không có môn thì nói thật"
+story = "US-02 — \"Tiến độ của tôi\" đọc được khi có nhiều môn"
+given = "một lượt ôn tập được tạo trước thay đổi này"
+when = "tôi lọc theo một môn"
+then = "lượt ấy không bị gán bừa vào môn nào"
+
+[[decision]]
+id = "ADR-01"
+title = "Môn của đề ôn tập là thứ **được chọn**, không phải thứ suy ra"
+status = "accepted"
+
+[[decision]]
+id = "ADR-02"
+title = "Chỉ đổi luồng học sinh tự ôn, không đụng luồng giáo viên giao"
+status = "accepted"
+
+[[decision]]
+id = "ADR-03"
+title = "Bộ chọn môn áp cho **cả bốn khối**, hoặc không nên có"
+status = "accepted"
+
+[[slice]]
+id = "UOW-01"
+title = "Đề ôn tập mang môn của nó"
+covers = ["AC-01", "AC-02", "AC-03"]
+demo = """
+1. Học sinh bấm Tạo đề ôn tập, chọn môn, đề sinh ra mang đúng môn ấy
+2. Trung tâm một môn thì không hỏi, đề vẫn có môn"""
+
+[[slice]]
+id = "UOW-02"
+title = "Tiến độ của tôi đọc được khi có nhiều môn"
+covers = ["AC-04", "AC-05", "AC-06", "AC-07"]
+demo = """
+1. Bộ chọn môn mặc định Mọi môn; chọn một môn thì cả bốn khối theo môn ấy
+2. Lịch sử ôn tập gập lại được và nói còn bao nhiêu lượt nữa"""
+
+[[task]]
+id = "T-01-01"
+slice = "UOW-01"
+title = "Môn đi xuyên cổng analytics tới cái đề"
+estimate_h = 3.0
+touches = ["apps/api/app/modules/analytics/domain/ports.py", "apps/api/app/modules/analytics/infrastructure/adapters/assessment.py", "apps/api/app/modules/analytics/application/commands/start_practice.py", "apps/api/app/modules/assessment/application/api.py", "apps/api/app/modules/assessment/application/commands/create_personal_exam.py"]
+tests = ["apps/api/tests/test_practice_api.py", "apps/api/tests/unit/test_analytics_handlers.py"]
+done_when = ["POST /me/practice kèm subject_id thì đề mang đúng môn ấy", "Không kèm thì đề không có môn, như cũ", "Đề ôn của giáo viên giao không đổi gì"]
+
+[[task]]
+id = "T-01-02"
+slice = "UOW-01"
+title = "Bước chọn môn ở nút Tạo đề ôn tập"
+estimate_h = 3.0
+depends_on = ["T-01-01"]
+touches = ["apps/web/src/components/common/PracticeButton/PracticeButton.tsx", "apps/web/src/hooks/common/use-practice-button.ts", "apps/web/src/lib/page-libs/my-stats/weakest-subject.ts", "apps/web/src/hooks/page-hooks/my-stats/use-my-stats-page.ts", "apps/web/src/components/page-components/MyStats/MyStatsPage.tsx"]
+tests = ["apps/web/src/__tests__/practice.test.tsx", "apps/web/src/__tests__/my-stats.test.tsx"]
+done_when = ["Nhiều môn thì có bước chọn, mặc định môn yếu nhất", "Một môn thì không hỏi mà vẫn gửi môn", "Ngân hàng môn ấy trống thì nói rõ là môn ấy chưa có câu"]
+
+[[task]]
+id = "T-02-00"
+slice = "UOW-02"
+title = "Mức nắm vững và lịch sử ôn tập nói ra môn của từng hàng"
+estimate_h = 3.0
+touches = ["apps/api/app/modules/analytics/domain/services/mastery.py", "apps/api/app/modules/analytics/domain/value_objects.py", "apps/api/app/modules/analytics/infrastructure/adapters/assessment.py", "apps/api/app/modules/assessment/application/dto.py", "apps/api/app/modules/assessment/infrastructure/read_models.py", "apps/api/app/modules/analytics/application/queries/my_practice.py"]
+tests = ["apps/api/tests/test_practice_api.py", "apps/api/tests/unit/test_analytics_handlers.py"]
+done_when = ["Mỗi hàng mức nắm vững có subject_id", "Mỗi lượt ôn tập có subject_id", "Lượt cũ không có môn thì trả null chứ không đoán"]
+
+[[task]]
+id = "T-02-01"
+slice = "UOW-02"
+title = "Bộ chọn môn kéo cả bốn khối của trang tiến độ"
+estimate_h = 4.0
+depends_on = ["T-02-00"]
+touches = ["apps/web/src/components/page-components/MyStats/MyStatsPage.tsx", "apps/web/src/hooks/page-hooks/my-stats/use-my-stats-page.ts", "apps/web/src/interfaces/mastery.interface.ts", "apps/web/src/interfaces/practice.interface.ts", "apps/web/src/__tests__/mastery.test.tsx"]
+tests = ["apps/web/src/__tests__/my-stats.test.tsx"]
+done_when = ["Mặc định Mọi môn, số không đổi so với trước", "Chọn một môn thì cả bốn khối theo môn ấy", "Cây chuyên đề nhóm theo môn khi đang ở Mọi môn"]
+
+[[task]]
+id = "T-02-02"
+slice = "UOW-02"
+title = "Lịch sử ôn tập gập lại được"
+estimate_h = 2.0
+touches = ["apps/web/src/components/page-components/MyStats/PracticeHistory/PracticeHistory.tsx"]
+tests = ["apps/web/src/__tests__/my-stats.test.tsx"]
+done_when = ["Mặc định chỉ hiện vài lượt và nói còn bao nhiêu", "Mở rộng và thu gọn được", "Lượt không rõ môn không bị gán bừa"]

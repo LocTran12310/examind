@@ -1,0 +1,203 @@
+# Imported from ai-dlc (ai-dlc:2026092209-subject-scoped-bank) on 2026-10-05.
+# ids are kept as they were, so tickets, commits and history still line up.
+
+[feature]
+title = "Question bank filtered by subject first"
+tier = "standard"
+client = ""
+imported_from = "ai-dlc:2026092209-subject-scoped-bank"
+
+[[assumption]]
+id = "A-01"
+text = "Subject is the working context of the bank: tabs at the top, always one chosen; questions without a subject have their own \"Chưa phân môn\" tab (shown only when there are any)"
+blocking = true
+status = "confirmed"
+resolution = "Confirmed by Loc Tran in chat (2026-09-22): \"Bộ lọc nên phân theo từng môn\" — tab form accepted under blanket pre-approval, to confirm at final review"
+
+[[assumption]]
+id = "A-02"
+text = "Tags get an optional subject; no subject = shared by all subjects; source tags (nguồn đề) are always shared; backfill gives a tag the subject of its questions when they all share one"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-03"
+text = "The chosen subject is remembered per browser and org (localStorage), like the header year selector — not in the user row as the plan first said"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-04"
+text = "Filters live in a right-side \"Bộ lọc\" sheet with sections and counts; counts are computed with every other filter applied (a facet ignores its own dimension); topic counts include the subtree"
+blocking = false
+status = "confirmed"
+resolution = "Confirmed by Loc Tran in chat (2026-09-22): \"nên để bộ lọc filter dropdown dialog hay đại loại thế\" — sheet form accepted under blanket pre-approval"
+
+[[assumption]]
+id = "A-05"
+text = "The sheet edits a draft and applies on \"Áp dụng\"; chips remove one filter at once; the search box stays on the page"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-06"
+text = "\"Năm học\" filters by the source document's school year (manual questions have none)"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-07"
+text = "The exam matrix (BlueprintEditor) lists topics and tags of the exam's subject only"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[ac]]
+id = "AC-01"
+title = "One subject at a time"
+story = "US-01 — Subject tabs"
+given = "an org with Toán and Vật lý questions"
+when = "I open the bank"
+then = "I see tabs Toán (n) · Vật lý (m), the last subject I used is selected, and only its questions are listed"
+
+[[ac]]
+id = "AC-02"
+title = "Switching clears subject-specific filters"
+story = "US-01 — Subject tabs"
+given = "Toán with topic \"Hàm số\" and a Toán tag chosen"
+when = "I switch to Vật lý"
+then = "the topic and tag filters are removed and the other filters (loại, mức độ, đợt, năm học, trạng thái) stay"
+
+[[ac]]
+id = "AC-03"
+title = "Only this subject's topics and tags"
+story = "US-02 — Filters in a sheet with counts"
+given = "Toán is chosen"
+when = "I open \"Bộ lọc\""
+then = "the topic tree shows Toán topics only, each with the number of questions in its subtree, and tags show Toán tags plus shared tags"
+
+[[ac]]
+id = "AC-04"
+title = "Apply, chips, clear"
+story = "US-02 — Filters in a sheet with counts"
+given = "I tick \"Hàm số\", \"Thi thử\" and nguồn \"Sở GD&ĐT Ninh Bình\" in the sheet"
+when = "I press \"Áp dụng\""
+then = "the URL holds the filters, the list is filtered on the server, each choice appears as a chip with ×, and \"Xóa lọc\" removes all"
+
+[[ac]]
+id = "AC-05"
+title = "Counts follow the other filters"
+story = "US-02 — Filters in a sheet with counts"
+given = "\"Thi thử\" is chosen"
+when = "I open the sheet"
+then = "the numbers beside topics, types and tags count only Thi thử questions of the subject, while the \"Đợt\" section still shows every đợt with its count"
+
+[[ac]]
+id = "AC-06"
+title = "Subject on tags"
+story = "US-03 — Tags by subject"
+given = "the Tags page"
+when = "I create a tag while Toán is chosen"
+then = "it belongs to Toán unless I pick \"Dùng chung\"; the list can be filtered by subject"
+
+[[ac]]
+id = "AC-07"
+title = "Backfill"
+story = "US-03 — Tags by subject"
+given = "existing tags before the migration"
+when = "it runs"
+then = "a tag whose questions are all Toán becomes a Toán tag, source tags and mixed tags stay shared"
+
+[[ac]]
+id = "AC-08"
+title = "Exam matrix by subject"
+story = "US-04 — Exam matrix and school year"
+given = "an exam of subject Toán"
+when = "I edit its matrix"
+then = "the topic picker and tag list only offer Toán topics and Toán/shared tags"
+
+[[ac]]
+id = "AC-09"
+title = "School year filter"
+story = "US-04 — Exam matrix and school year"
+given = "questions imported from files of 2023-2024 and 2024-2025"
+when = "I filter Năm học 2024-2025"
+then = "only questions whose source document is of 2024-2025 remain"
+
+[[decision]]
+id = "ADR-01"
+title = "Subject as the bank's context"
+status = "accepted"
+choice = "** Tabs choose the subject; subject-specific filters are dropped on switch"
+
+[[decision]]
+id = "ADR-02"
+title = "Facets exclude their own dimension"
+status = "accepted"
+choice = "** Each facet query applies every filter but its own; topics counted per subtree"
+
+[[decision]]
+id = "ADR-03"
+title = "Optional subject on tags"
+status = "accepted"
+choice = "** Nullable `tags.subject_id`; lists return subject + shared"
+
+[[slice]]
+id = "UOW-01"
+title = "Tags by subject, subject 'none' / school-year filters, facet counts API"
+covers = ["AC-03", "AC-05", "AC-06", "AC-07", "AC-09"]
+demo = """
+1. GET /questions/facets?subject_id=<Toán> → topics with subtree counts, types, periods, tags
+2. Create a Toán tag → /tags?subject_id=<Lý> does not list it; source tags listed for both
+3. school_year=2024-2025 keeps only questions from 2024-2025 files"""
+
+[[slice]]
+id = "UOW-02"
+title = "Subject tabs, Bộ lọc sheet with counts, chips; exam matrix and Tags page by subject"
+covers = ["AC-01", "AC-02", "AC-03", "AC-04", "AC-05", "AC-06", "AC-08"]
+demo = """
+1. Bank: Toán (396) tab → Bộ lọc → Hàm số + Thi thử + Sở GD&ĐT Ninh Bình → Áp dụng → chips + count; reload keeps it
+2. Switch to Vật lý → topic/tag chips gone, others stay
+3. Exam of Toán → matrix topic picker shows only Toán topics"""
+
+[[task]]
+id = "T-01-01"
+slice = "UOW-01"
+title = "Migration 0016 tags.subject_id + backfill; tag API with subject and shared"
+estimate_h = 3.0
+touches = ["apps/api/migrations/versions/0016_tag_subject.py", "apps/api/app/models/taxonomy.py", "apps/api/app/services/tags.py", "apps/api/app/routers/tags.py", "apps/api/app/schemas/taxonomy.py"]
+tests = ["apps/api/tests/test_tags_subject.py"]
+done_when = ["Backfill", "Subject + shared listing", "Validation"]
+
+[[task]]
+id = "T-01-02"
+slice = "UOW-01"
+title = "Bank filters subject none / school_year; GET /questions/facets"
+estimate_h = 4.0
+touches = ["apps/api/app/services/bank.py", "apps/api/app/routers/questions.py"]
+tests = ["apps/api/tests/test_bank_facets.py"]
+done_when = ["Facets exclude own dimension", "Subtree counts", "School year"]
+
+[[task]]
+id = "T-02-01"
+slice = "UOW-02"
+title = "SubjectTabs + FilterSheet + FilterChips; bank page by subject"
+estimate_h = 4.0
+depends_on = ["T-01-02", "T-01-01"]
+touches = ["apps/web/src/components/bank/SubjectTabs.tsx", "apps/web/src/components/bank/FilterSheet.tsx", "apps/web/src/components/bank/FilterChips.tsx", "apps/web/src/components/bank/BankFilters.tsx", "apps/web/src/app/(app)/org/bank/page.tsx", "apps/web/src/components/topics/TopicTreeSelect.tsx", "apps/web/src/lib/types.ts"]
+tests = ["apps/web/src/__tests__/bank.test.tsx"]
+done_when = ["Tabs", "Sheet", "Chips", "URL state"]
+
+[[task]]
+id = "T-02-02"
+slice = "UOW-02"
+title = "Exam matrix and Tags page by subject"
+estimate_h = 3.0
+depends_on = ["T-01-01"]
+touches = ["apps/web/src/app/(app)/org/exams/[id]/page.tsx", "apps/web/src/app/(app)/org/tags/page.tsx"]
+tests = ["apps/web/src/__tests__/tags.test.tsx", "apps/web/src/__tests__/exams.test.tsx"]
+done_when = ["Exam matrix", "Tags subject column + form"]

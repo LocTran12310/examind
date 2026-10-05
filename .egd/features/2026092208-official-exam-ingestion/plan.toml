@@ -1,0 +1,313 @@
+# Imported from ai-dlc (ai-dlc:2026092208-official-exam-ingestion) on 2026-10-05.
+# ids are kept as they were, so tickets, commits and history still line up.
+
+[feature]
+title = "Read official exam files (THPT 2025 thi thử) correctly"
+tier = "standard"
+client = ""
+imported_from = "ai-dlc:2026092208-official-exam-ingestion"
+
+[[assumption]]
+id = "A-01"
+text = "The 18 files in `Examin/` are representative of the official files centers upload (MathType OLE, three-part THPT 2025 layout, solution section repeating questions)"
+blocking = true
+status = "confirmed"
+resolution = "Confirmed by Loc Tran in chat (2026-09-22): \"Đây là tài liệu chính thức, có thể làm mẫu được\""
+
+[[assumption]]
+id = "A-02"
+text = "MathType is converted by our own MTEF v5 reader (no maintained Python package exists); template/embellishment numbering follows the MathType SDK as used by zhexiao/mtef-go (Apache-2.0, credited)"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-03"
+text = "WMF/EMF pictures are rendered with LibreOffice headless (→ PDF → pypdfium2 PNG, trimmed); the API/worker image grows by ~300 MB; without soffice the old warning path applies"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-04"
+text = "\"Phương pháp\" and \"Cách giải\" stay inside the solution markdown as bold sub-headings, not separate columns"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-05"
+text = "Header metadata (issuer, school year, subject, exam kind, attempt, duration) is a suggestion shown in the upload/document form; the user's values win"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-06"
+text = "\"Tạo đề từ tài liệu\" makes a draft exam with the document's parsed questions in original part/number order, points 0,25 (Phần I), 1 with THPT partial ladder (Phần II), 0,5 (Phần III)"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-07"
+text = "Multi-file upload creates one document per file with the same processing settings; duplicates (same hash) are reported per file and skipped"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-08"
+text = "Expected answers for the golden set are taken from each file's own answer tables and spot-checked by hand; the files stay outside the repo (only derived expectations are committed)"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[ac]]
+id = "AC-01"
+title = "MathType OLE → LaTeX"
+story = "US-01 — Formulas become LaTeX"
+given = "a .docx whose formulas are MathType OLE objects (Equation.DSMT4, MTEF v5)"
+when = "it is imported"
+then = "each formula appears in the question as $…$ LaTeX that KaTeX renders, including fractions, roots, systems, vectors, integrals with limits, lim, sub/superscripts and degrees"
+
+[[ac]]
+id = "AC-02"
+title = "Unreadable formula is not lost"
+story = "US-01 — Formulas become LaTeX"
+given = "a formula object whose data cannot be converted"
+when = "it is imported"
+then = "its preview picture is kept (converted to PNG) and the document shows a warning with the count"
+
+[[ac]]
+id = "AC-03"
+title = "WMF/EMF figures"
+story = "US-02 — Vector pictures become PNG"
+given = "a figure stored as WMF or EMF"
+when = "it is imported"
+then = "the question shows a trimmed PNG of it, and when the converter is unavailable the old warning is shown and the job still succeeds"
+
+[[ac]]
+id = "AC-04"
+title = "Per-part answer tables"
+story = "US-03 — THPT 2025 layout with a solution section"
+given = "a solution section with rows \"Câu | 1 | 2 …\" and \"Đáp án | 3 | 20 …\" under each PHẦN header"
+when = "the file is split"
+then = "those values become the answers of that part's questions (letters for Phần I, Đ/S for Phần II, values for Phần III)"
+
+[[ac]]
+id = "AC-05"
+title = "Lower-case true/false verdicts"
+story = "US-03 — THPT 2025 layout with a solution section"
+given = "\"Đáp án: a đúng| b sai| c sai| d đúng\" in a solution"
+when = "split"
+then = "the four statements get true/false/false/true"
+
+[[ac]]
+id = "AC-06"
+title = "Solution section without a header"
+story = "US-03 — THPT 2025 layout with a solution section"
+given = "the questions restart at PHẦN I Câu 1 after the exam without a \"HƯỚNG DẪN GIẢI\" title"
+when = "split"
+then = "the second pass is read as solutions and merged into the first, not duplicated"
+
+[[ac]]
+id = "AC-07"
+title = "Look-alike letters and methods"
+story = "US-03 — THPT 2025 layout with a solution section"
+given = "an option label typed with a Cyrillic \"А\" and a solution with \"Phương pháp:\" and \"Cách giải:\""
+when = "split"
+then = "the option is read as A and both parts stay in the solution as bold sub-headings"
+
+[[ac]]
+id = "AC-08"
+title = "Reference set"
+story = "US-03 — THPT 2025 layout with a solution section"
+given = "the 18 reference files"
+when = "the golden run imports them"
+then = "396/396 questions are found, at least 98 % have an answer, every question with a solution in the file has it, and no WMF/EMF picture remains"
+
+[[ac]]
+id = "AC-09"
+title = "Header suggestions"
+story = "US-04 — Header metadata and multi-file upload"
+given = "a file whose header reads \"SỞ GD&ĐT … / ĐỀ THI THỬ TỐT NGHIỆP LẦN 1 / NĂM HỌC: 2024 - 2025 / MÔN: TOÁN / Thời gian làm bài: 90 phút\""
+when = "it is parsed"
+then = "the document stores issuer, school year, subject, exam kind \"thi thử\", attempt 1, grade 12 and duration 90, and its questions inherit subject, grade and đợt when the uploader left them empty"
+
+[[ac]]
+id = "AC-10"
+title = "Several files at once"
+story = "US-04 — Header metadata and multi-file upload"
+given = "I drop 18 files in the upload form"
+when = "I confirm"
+then = "18 documents are queued with the same settings, and a file already uploaded is reported as duplicate without stopping the others"
+
+[[ac]]
+id = "AC-11"
+title = "Draft exam in original order"
+story = "US-05 — Exam from a document"
+given = "a parsed document with Phần I/II/III questions"
+when = "I choose \"Tạo đề từ tài liệu\""
+then = "a draft exam is created with the questions in part/number order and points 0,25 / 1 / 0,5 per part"
+
+[[ac]]
+id = "AC-12"
+title = "Only usable questions"
+story = "US-05 — Exam from a document"
+given = "some questions of the document are rejected or duplicates"
+when = "the exam is created"
+then = "those are skipped and the result says how many were skipped"
+
+[[decision]]
+id = "ADR-01"
+title = "Own MTEF v5 reader"
+status = "accepted"
+choice = "** Parse MTEF in `ingestion/mtef.py`, render LaTeX, fall back to the picture per formula"
+
+[[decision]]
+id = "ADR-02"
+title = "Tokens before Pandoc"
+status = "accepted"
+choice = "** Rewrite `document.xml`, replacing each converted `<w:object>` by a `⟦EQn⟧` text run"
+
+[[decision]]
+id = "ADR-03"
+title = "LibreOffice renders WMF/EMF"
+status = "accepted"
+choice = "** soffice → PDF → pypdfium2 PNG, trimmed; optional at runtime"
+
+[[decision]]
+id = "ADR-04"
+title = "Answers from the file's own tables"
+status = "accepted"
+choice = "** Read `Câu | … / Đáp án | …` rows per part in solutions mode"
+
+[[decision]]
+id = "ADR-05"
+title = "Header metadata as suggestions in meta"
+status = "accepted"
+choice = "** `meta.detected`, applied only to fields the uploader left empty"
+
+[[slice]]
+id = "UOW-01"
+title = "MathType formulas become LaTeX, WMF/EMF figures become PNG"
+covers = ["AC-01", "AC-02", "AC-03"]
+demo = """
+1. Upload the Nguyễn Khuyến .docx → review queue shows Câu 1 with KaTeX $\\left(u_{n}\\right)$, $u_{1}=-1$
+2. Câu 4 shows the cube figure as PNG; Phần II Câu 1 graph as PNG
+3. Document log lists 475 equations, 0 failed"""
+
+[[slice]]
+id = "UOW-02"
+title = "THPT 2025 layout: per-part answer tables, verdicts, header-less solutions; golden set of 18"
+covers = ["AC-04", "AC-05", "AC-06", "AC-07", "AC-08"]
+demo = """
+1. Import d01 → Phần III Câu 1 answer 3 from the per-part table, solution attached
+2. Import Lương Tài 2 (no HƯỚNG DẪN GIẢI title) → 22 questions, not 44
+3. golden_live.py over the 18 files prints 396/396, answers ≥ 98 %"""
+
+[[slice]]
+id = "UOW-03"
+title = "Header metadata suggestions and multi-file upload"
+covers = ["AC-09", "AC-10"]
+demo = """
+1. Drop the 18 files at once → 18 rows queued; dropping one again → 'đã có'
+2. A parsed document shows Nguồn: Sở GD Ninh Bình, 2024-2025, Toán, Thi thử lần 1, 90 phút
+3. Its questions are Toán, lớp 12, Thi thử, tagged with the source"""
+
+[[slice]]
+id = "UOW-04"
+title = "Tạo đề từ tài liệu"
+covers = ["AC-11", "AC-12"]
+demo = """
+1. Approve a document's questions → 'Tạo đề từ tài liệu' → exam with 12/4/6 in order, 10 điểm
+2. A rejected question is skipped and reported"""
+
+[[task]]
+id = "T-01-01"
+slice = "UOW-01"
+title = "MTEF v5 reader → LaTeX with template/char tables and fixtures"
+estimate_h = 4.0
+touches = ["apps/api/app/ingestion/mtef.py", "apps/api/tests/fixtures/mtef", "apps/api/pyproject.toml"]
+tests = ["apps/api/tests/test_mtef.py"]
+done_when = ["Template table tests", "Corpus fixtures convert", "Unconvertible → None"]
+
+[[task]]
+id = "T-01-02"
+slice = "UOW-01"
+title = "docx: swap MathType objects for tokens before Pandoc; warnings"
+estimate_h = 2.0
+depends_on = ["T-01-01"]
+touches = ["apps/api/app/ingestion/docx.py", "apps/api/app/ingestion/pipeline.py"]
+tests = ["apps/api/tests/test_docx_mathtype.py"]
+done_when = ["$…$ in lines", "Failed count warning", "Emphasis around formulas kept"]
+
+[[task]]
+id = "T-01-03"
+slice = "UOW-01"
+title = "WMF/EMF → PNG via LibreOffice + pypdfium2; Dockerfile; document_store"
+estimate_h = 3.0
+touches = ["apps/api/app/ingestion/vector_images.py", "apps/api/app/ingestion/assets.py", "apps/api/Dockerfile"]
+tests = ["apps/api/tests/test_vector_images.py"]
+done_when = ["PNG trimmed", "Missing soffice → warning", "Image rebuilt"]
+
+[[task]]
+id = "T-02-01"
+slice = "UOW-02"
+title = "Splitter: per-part answer tables in solutions, lower-case verdicts, header-less solution pass, Cyrillic labels, method headings"
+estimate_h = 4.0
+depends_on = ["T-01-02"]
+touches = ["apps/api/app/ingestion/splitter.py", "apps/api/app/ingestion/lines.py"]
+tests = ["apps/api/tests/test_splitter_thpt.py", "apps/api/tests/test_splitter.py"]
+done_when = ["Table tests", "Old splitter tests green"]
+
+[[task]]
+id = "T-02-02"
+slice = "UOW-02"
+title = "Golden set: 18 reference files, expectations from their tables, live runner report"
+estimate_h = 4.0
+depends_on = ["T-02-01", "T-01-03"]
+touches = ["apps/api/tests/golden/official_expected.json", "apps/api/tests/test_golden_official.py", "scripts/golden_live.py"]
+tests = ["apps/api/tests/test_golden_official.py"]
+done_when = ["396/396", "Answers ≥ 98 %", "Solutions", "No WMF"]
+
+[[task]]
+id = "T-03-01"
+slice = "UOW-03"
+title = "Header metadata detection, applied to empty meta before persist; PATCH /documents/{id}"
+estimate_h = 3.0
+depends_on = ["T-01-02"]
+touches = ["apps/api/app/ingestion/header.py", "apps/api/app/ingestion/pipeline.py", "apps/api/app/routers/documents.py", "apps/api/app/services/documents.py", "apps/api/app/schemas/documents.py"]
+tests = ["apps/api/tests/test_header_meta.py"]
+done_when = ["Detect", "Apply", "Edit meta"]
+
+[[task]]
+id = "T-03-02"
+slice = "UOW-03"
+title = "UploadForm: many files with per-file status; document shows detected metadata"
+estimate_h = 3.0
+depends_on = ["T-03-01"]
+touches = ["apps/web/src/components/documents/UploadForm.tsx", "apps/web/src/components/documents/DocumentMetaFields.tsx", "apps/web/src/components/documents/DocumentInfo.tsx", "apps/web/src/app/(app)/org/documents/page.tsx", "apps/web/src/lib/types.ts"]
+tests = ["apps/web/src/__tests__/documents.test.tsx"]
+done_when = ["Multi-file", "Duplicate row", "Detected shown"]
+
+[[task]]
+id = "T-04-01"
+slice = "UOW-04"
+title = "POST /documents/{id}/exam: draft exam in part/number order, skipped count"
+estimate_h = 2.0
+depends_on = ["T-02-01"]
+touches = ["apps/api/app/services/exams.py", "apps/api/app/routers/documents.py"]
+tests = ["apps/api/tests/test_exam_from_document.py"]
+done_when = ["Order", "Points", "Skipped"]
+
+[[task]]
+id = "T-04-02"
+slice = "UOW-04"
+title = "Tạo đề từ tài liệu' button → opens the new exam"
+estimate_h = 1.0
+depends_on = ["T-04-01"]
+touches = ["apps/web/src/components/documents/DocumentDetail.tsx", "apps/web/src/app/(app)/org/documents/[id]/page.tsx"]
+tests = ["apps/web/src/__tests__/documents.test.tsx"]
+done_when = ["Button", "Toast with skipped"]

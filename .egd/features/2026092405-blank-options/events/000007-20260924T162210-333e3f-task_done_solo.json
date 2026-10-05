@@ -1,0 +1,9 @@
+{
+  "type": "task_done_solo",
+  "seq": 7,
+  "at": "2026-09-24T16:22:10+07:00",
+  "by": "Loc Tran",
+  "imported": "ai-dlc",
+  "task": "T-01-01",
+  "reason": "apps/api files in flight belong to F22's T-02-01, running in parallel; this ticket touches only apps/web"
+}

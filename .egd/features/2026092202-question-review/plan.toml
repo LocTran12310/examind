@@ -1,0 +1,462 @@
+# Imported from ai-dlc (ai-dlc:2026092202-question-review) on 2026-10-05.
+# ids are kept as they were, so tickets, commits and history still line up.
+
+[feature]
+title = "Question review and bank"
+tier = "standard"
+client = ""
+imported_from = "ai-dlc:2026092202-question-review"
+
+[[assumption]]
+id = "A-01"
+text = "Statuses: `draft` (legacy) → at ingestion `auto_approved` or `needs_review`; teacher actions give `approved` / `rejected`; `duplicate` for near-duplicates. `auto_approved` and `approved` are both usable in exams"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-02"
+text = "Auto-approve needs confidence ≥ org threshold (default 0.85) AND an answer (except essays) AND no blocking issue (`thiếu phương án`, `thiếu đáp án`, `đáp án không khớp…`, `OCR`, `AI không phản hồi`, `không nhận ra phương án`)"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-03"
+text = "Near-duplicate = same org, same type, trigram similarity of normalised stem+options ≥ 0.9 against a usable question; the new one becomes `duplicate` with `duplicate_of`"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-04"
+text = "Source view: PDFs/scans show the rendered source page next to the question; Word files show no page image"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-05"
+text = "Keyboard map: Enter approve+next, 1–4 set MCQ answer A–D (a–d toggles for true/false), T topic search, E edit, X reject, J/K next/previous, S skip, ? help"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-06"
+text = "Answer-key paste accepts \"1A 2C 3B\", \"1.A, 2.C\", \"1-A\", or a column of letters; applies to MCQ by number in the document (part-aware with \"PHẦN I:\" prefixes)"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-07"
+text = "Spot check: 5% (min 1) of auto-approved questions per document are queued as \"Kiểm tra ngẫu nhiên\"; if ≥ 2 of the last 20 spot checks in the org were rejected or edited, the org threshold rises by 0.05 (max 0.95)"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-08"
+text = "kNN topic suggestion: when keyword score is weak (< 0.6) the primary topic of the most similar approved question (trigram ≥ 0.35) is suggested with source `knn`"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-09"
+text = "Review assignment is per document (`assigned_to`), optional; queue filter \"Của tôi\""
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-10"
+text = "Bank search: text (unaccented, trigram), subject, grade, semester, exam kind, topic subtree, tags (any), type, difficulty, status, source document; page size 20"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-11"
+text = "Teachers edit any question of their org; students never see the bank"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[ac]]
+id = "AC-01"
+title = "Triage on ingestion"
+story = "US-01 — Automatic triage"
+given = "a parsed document and my org threshold 0.85"
+when = "questions are stored"
+then = "questions with confidence ≥ 0.85, an answer and no blocking issue become \"auto_approved\", and the others become \"needs_review\", each with its issues"
+
+[[ac]]
+id = "AC-02"
+title = "Document progress"
+story = "US-01 — Automatic triage"
+given = "a triaged document"
+when = "I open /org/review"
+then = "each document shows counts: tự duyệt, cần xem, đã duyệt, loại, trùng — and a progress bar"
+
+[[ac]]
+id = "AC-03"
+title = "Near-duplicates"
+story = "US-01 — Automatic triage"
+given = "a question nearly identical (same type, similarity ≥ 0.9) to a usable question in my org"
+when = "it is ingested"
+then = "it becomes \"duplicate\" linked to the existing question, and I can restore it with one click"
+
+[[ac]]
+id = "AC-04"
+title = "Queue order and grouping"
+story = "US-02 — Keyboard review queue"
+given = "a document with flagged questions"
+when = "I open its review queue"
+then = "I see one question at a time, grouped by issue (\"thiếu đáp án\" first), with a counter \"2/5\", and for PDF/scan documents the source page image is shown beside it"
+
+[[ac]]
+id = "AC-05"
+title = "Single-key actions"
+story = "US-02 — Keyboard review queue"
+given = "a question is focused in the queue"
+when = "I press 1–4 the MCQ answer becomes A–D (a–d toggles a true/false statement), and Enter approves and moves to the next, X rejects, J/K move, S skips, T opens topic search, E edits"
+then = "each change is saved immediately without a Save button"
+
+[[ac]]
+id = "AC-06"
+title = "One-touch suggestions"
+story = "US-02 — Keyboard review queue"
+given = "a question with a suggested topic and (for AI results) a suggested answer"
+when = "the queue shows it"
+then = "the suggestion is pre-selected and Enter accepts it"
+
+[[ac]]
+id = "AC-07"
+title = "Inline edit"
+story = "US-02 — Keyboard review queue"
+given = "I press E"
+when = "I edit stem, options, answer or solution in Markdown with live KaTeX preview and press Ctrl+Enter"
+then = "the question is saved, its issues recomputed, and I stay on it"
+
+[[ac]]
+id = "AC-08"
+title = "Approve all confident"
+story = "US-03 — Bulk actions"
+given = "a document with auto_approved questions"
+when = "I click \"Duyệt tất cả câu tin cậy cao\""
+then = "they all become approved"
+
+[[ac]]
+id = "AC-09"
+title = "Paste answer key"
+story = "US-03 — Bulk actions"
+given = "MCQ questions without answers"
+when = "I paste \"1A 2C 3B\" (or \"1.A, 2.C\" or one letter per line)"
+then = "answers are set by number, questions whose only issue was the missing answer move to approved-ready, and a summary shows how many were applied"
+
+[[ac]]
+id = "AC-10"
+title = "Bulk edit"
+story = "US-03 — Bulk actions"
+given = "I select several questions in the document list"
+when = "I set topic, difficulty or tags for the selection"
+then = "all selected questions are updated in one request"
+
+[[ac]]
+id = "AC-11"
+title = "Spot checks"
+story = "US-04 — Quality loop"
+given = "auto-approved questions in a document"
+when = "the document is triaged"
+then = "5% (at least 1) of them are queued as \"Kiểm tra ngẫu nhiên\", and if 2 of the last 20 spot checks were rejected or edited, the org threshold rises by 0.05 (max 0.95)"
+
+[[ac]]
+id = "AC-12"
+title = "kNN topic suggestion"
+story = "US-04 — Quality loop"
+given = "approved questions with confirmed topics"
+when = "a similar new question is ingested and keyword matching is weak"
+then = "its suggested topic comes from the most similar approved question (source \"knn\")"
+
+[[ac]]
+id = "AC-13"
+title = "Review events"
+story = "US-04 — Quality loop"
+given = "any review action (approve, reject, edit, answer, topic)"
+when = "it happens"
+then = "a review event (user, question, action, before/after) is recorded for the quality metrics"
+
+[[ac]]
+id = "AC-14"
+title = "Assign documents"
+story = "US-05 — Team workflow"
+given = "several documents need review"
+when = "I assign a document to a teacher"
+then = "it appears under \"Của tôi\" in that teacher's review list"
+
+[[ac]]
+id = "AC-15"
+title = "Search and filter"
+story = "US-06 — Question bank"
+given = "approved questions across subjects, grades and topics"
+when = "I search \"parabol\" with filters grade 10, topic \"Hàm số bậc hai và đồ thị\" (subtree), status usable"
+then = "I see matching questions paginated with their topic, tags, difficulty and status"
+
+[[ac]]
+id = "AC-16"
+title = "Topic subtree"
+story = "US-06 — Question bank"
+given = "questions tagged to leaf \"Tìm đỉnh và trục đối xứng parabol\""
+when = "I filter by its parent \"Hàm số bậc hai và đồ thị\" or grand-parent \"Đại số\""
+then = "those questions are included"
+
+[[ac]]
+id = "AC-17"
+title = "Edit a question"
+story = "US-06 — Question bank"
+given = "a question in the bank"
+when = "I edit stem, options, answer, solution, difficulty, topics (one primary) and tags, and upload an image into the stem"
+then = "the changes are saved and rendered by QuestionView"
+
+[[ac]]
+id = "AC-18"
+title = "Create manually"
+story = "US-06 — Question bank"
+given = "I click \"Thêm câu hỏi\""
+when = "I fill a new MCQ with an image and save"
+then = "it is created as approved with source \"manual\""
+
+[[ac]]
+id = "AC-19"
+title = "Delete and restore"
+story = "US-06 — Question bank"
+given = "a question not used by any exam"
+when = "I delete it"
+then = "it is removed (rejected questions can be restored from the \"Đã loại\" filter)"
+
+[[ac]]
+id = "AC-20"
+title = "Permissions and isolation"
+story = "US-06 — Question bank"
+given = "a student or a user of another org"
+when = "they call bank or review endpoints"
+then = "they get 403 or 404"
+
+[[decision]]
+id = "ADR-01"
+title = "pg_trgm for dedupe, kNN and search"
+status = "accepted"
+choice = "** `pg_trgm` + `unaccent`; `questions.search_text` = unaccented lower-case stem + options, maintained on write; GIN trigram index"
+
+[[decision]]
+id = "ADR-02"
+title = "One quality module for ingestion and editing"
+status = "accepted"
+choice = "** `app/services/question_quality.py` validates a question dict; the splitter's `_finalise` delegates to it"
+
+[[decision]]
+id = "ADR-03"
+title = "Status column + append-only review events"
+status = "accepted"
+choice = "** Workflow lives in `questions.status`; history in `review_events` (never updated)"
+
+[[decision]]
+id = "ADR-04"
+title = "Keyboard-first single-question queue"
+status = "accepted"
+choice = "** Queue page shows one question, pre-selects suggestions, maps every action to one key, saves on each action (optimistic UI, rollback on error)"
+
+[[decision]]
+id = "ADR-05"
+title = "Two blocking levels: auto-approval vs manual approval"
+status = "accepted"
+choice = "** `blocking()` (stops auto-approval) includes \"needs eyes\" flags (OCR, AI failure, answer conflicts); `blocking_manual()` only structural problems"
+
+[[decision]]
+id = "ADR-06"
+title = "OCR-tolerant option labels"
+status = "accepted"
+choice = "** An option label may be followed directly by a non-space, non-punctuation character; a whitespace before the label is still required so \"AB.AC\" inside text is not split"
+
+[[slice]]
+id = "UOW-01"
+title = "Parsed questions are triaged and de-duplicated automatically"
+covers = ["AC-01", "AC-02", "AC-03", "AC-07", "AC-11", "AC-13", "AC-14", "AC-20"]
+demo = """
+1. Upload samples/exams/de-mau-toan10.docx and de-kho.docx
+2. Open /org/review → each document shows Tự duyệt / Cần xem / Trùng counts and a progress bar
+3. Upload de-mau-toan10.pdf (same questions) → its questions are marked Trùng and linked to the docx ones
+4. As org_admin assign de-kho to a teacher → it appears under 'Của tôi' for that teacher"""
+
+[[slice]]
+id = "UOW-02"
+title = "Teachers clear the review queue with single keys"
+covers = ["AC-04", "AC-05", "AC-06", "AC-07", "AC-08", "AC-09", "AC-11", "AC-13"]
+demo = """
+1. Open de-kho in /org/review → queue shows 'thiếu đáp án' group first, counter 1/5
+2. Press 2 → answer B saved; Enter → approved and next question shown
+3. Press E → edit the stem in Markdown with KaTeX preview → Ctrl+Enter saves
+4. Press X on a bad question → rejected; K goes back
+5. Open the PDF document's queue → source page image shown beside the question
+6. 'Dán đáp án' with '1B 2B 3B 4B 5B' → summary 'Đã áp dụng 5'
+7. 'Duyệt tất cả câu tin cậy cao' → auto-approved become approved"""
+
+[[slice]]
+id = "UOW-03"
+title = "Approved questions teach topic suggestions"
+covers = ["AC-12"]
+demo = """
+1. Approve Câu 2 of de-kho with topic 'Lũy thừa với số mũ thực'
+2. Upload a new file with a near-identical question → its suggested topic is 'Lũy thừa với số mũ thực' (source knn)"""
+
+[[slice]]
+id = "UOW-04"
+title = "Teachers search, edit and create questions in the bank"
+covers = ["AC-10", "AC-15", "AC-16", "AC-17", "AC-18", "AC-19", "AC-20"]
+demo = """
+1. Open /org/bank, search 'parabol', filter Lớp 10 and topic 'Đại số' → vertex questions listed
+2. Open one, edit solution, add a tag, change difficulty → saved and rendered
+3. Click 'Thêm câu hỏi', paste an image into the stem, save → appears as approved manual
+4. Select 3 questions → set difficulty 'Vận dụng' in bulk
+5. Delete a question; filter 'Đã loại' → restore a rejected one"""
+
+[[task]]
+id = "T-01-01"
+slice = "UOW-01"
+title = "Migration: review statuses, duplicate_of, search_text, review_events, pg_trgm/unaccent"
+estimate_h = 3.0
+touches = ["apps/api/migrations/versions/0007_review.py", "apps/api/app/models/question.py", "apps/api/app/models/review.py", "apps/api/app/models/document.py", "apps/api/app/models/__init__.py"]
+tests = ["apps/api/tests/test_review_schema.py"]
+done_when = ["Extensions + GIN index created", "review_events append-only model", "Existing drafts re-triaged"]
+
+[[task]]
+id = "T-01-02"
+slice = "UOW-01"
+title = "question_quality module shared by splitter and edits"
+estimate_h = 3.0
+depends_on = ["T-01-01"]
+touches = ["apps/api/app/services/question_quality.py", "apps/api/app/ingestion/splitter.py"]
+tests = ["apps/api/tests/test_question_quality.py", "apps/api/tests/test_splitter.py"]
+done_when = ["Splitter tests unchanged and green", "Blocking-issue list in one place"]
+
+[[task]]
+id = "T-01-03"
+slice = "UOW-01"
+title = "Triage hook: search_text, near-duplicates, status, spot-check sampling"
+estimate_h = 4.0
+depends_on = ["T-01-02"]
+touches = ["apps/api/app/services/triage.py", "apps/api/app/ingestion/pipeline.py", "apps/api/app/ingestion/jobs.py", "apps/api/app/services/search_text.py"]
+tests = ["apps/api/tests/test_triage.py"]
+done_when = ["Golden docx: ≤ 15% needs_review", "PDF copy of the docx marked duplicate", "Spot checks sampled"]
+
+[[task]]
+id = "T-01-04"
+slice = "UOW-01"
+title = "Review documents API (counts, progress, assignment)"
+estimate_h = 3.0
+depends_on = ["T-01-03"]
+touches = ["apps/api/app/routers/review.py", "apps/api/app/schemas/review.py", "apps/api/app/services/review.py", "apps/api/app/routers/__init__.py"]
+tests = ["apps/api/tests/test_review_api.py"]
+done_when = ["Counts by status per document", "Assignment org_admin only", "Isolation"]
+
+[[task]]
+id = "T-01-05"
+slice = "UOW-01"
+title = "Review list UI with progress and assignment"
+estimate_h = 3.0
+depends_on = ["T-01-04"]
+touches = ["apps/web/src/app/(app)/org/review/page.tsx", "apps/web/src/components/review/ReviewList.tsx", "apps/web/src/lib/types.ts", "apps/web/src/lib/nav.ts"]
+tests = ["apps/web/src/__tests__/review-list.test.tsx"]
+done_when = ["Counts and progress render", "Assign dropdown for org_admin"]
+
+[[task]]
+id = "T-02-01"
+slice = "UOW-02"
+title = "Queue, actions, question edit API; review events; spot-check threshold loop"
+estimate_h = 4.0
+depends_on = ["T-01-04"]
+touches = ["apps/api/app/services/review.py", "apps/api/app/routers/review.py", "apps/api/app/routers/questions.py", "apps/api/app/schemas/questions.py", "apps/api/app/routers/documents.py", "apps/api/app/schemas/documents.py", "apps/api/migrations/versions/0008_question_page.py", "apps/api/app/ingestion/pipeline.py"]
+tests = ["apps/api/tests/test_review_queue.py"]
+done_when = ["Queue ordering by issue group", "Events written for each action", "Threshold raised after 2/20 spot failures"]
+
+[[task]]
+id = "T-02-02"
+slice = "UOW-02"
+title = "Answer-key paste, approve-confident, rendered PDF pages"
+estimate_h = 3.0
+depends_on = ["T-02-01"]
+touches = ["apps/api/app/services/review.py", "apps/api/app/routers/review.py", "apps/api/app/routers/documents.py", "apps/api/app/services/answer_key.py"]
+tests = ["apps/api/tests/test_review_bulk.py"]
+done_when = ["All paste formats parsed", "Page PNG served with cache headers"]
+
+[[task]]
+id = "T-02-03"
+slice = "UOW-02"
+title = "Keyboard review queue page"
+estimate_h = 4.0
+depends_on = ["T-02-01", "T-01-05"]
+touches = ["apps/web/src/app/(app)/org/review/[id]/page.tsx", "apps/web/src/components/review/ReviewQueue.tsx", "apps/web/src/components/review/useHotkeys.ts", "apps/web/src/components/bank/TopicPicker.tsx", "apps/web/src/lib/types.ts"]
+tests = ["apps/web/src/components/review/ReviewQueue.test.tsx"]
+done_when = ["Every key mapped and tested", "Legend visible", "Source page shown for PDFs"]
+
+[[task]]
+id = "T-02-04"
+slice = "UOW-02"
+title = "Inline question editor, answer-key and approve-all dialogs, review-flow test"
+estimate_h = 4.0
+depends_on = ["T-02-03", "T-02-02"]
+touches = ["apps/web/src/components/review/QuestionEditor.tsx", "apps/web/src/components/review/AnswerKeyDialog.tsx", "apps/web/src/components/review/ReviewQueue.tsx", "apps/api/tests/test_review_flow.py", "apps/web/src/app/(app)/org/review/[id]/page.tsx", "apps/web/src/components/ui/index.tsx"]
+tests = ["apps/web/src/components/review/QuestionEditor.test.tsx", "apps/api/tests/test_review_flow.py"]
+done_when = ["Ctrl+Enter saves", "Flow test asserts ≤ 15% flagged and ≤ 2 actions each"]
+
+[[task]]
+id = "T-03-01"
+slice = "UOW-03"
+title = "kNN topic suggestion from approved questions"
+estimate_h = 3.0
+depends_on = ["T-01-03"]
+touches = ["apps/api/app/ingestion/topic_suggest.py", "apps/api/app/services/triage.py"]
+tests = ["apps/api/tests/test_knn.py"]
+done_when = ["knn source recorded", "Keyword kept when strong"]
+
+[[task]]
+id = "T-04-01"
+slice = "UOW-04"
+title = "Bank API: search/filter (text, topic subtree, tags…), create, delete, bulk"
+estimate_h = 4.0
+depends_on = ["T-01-03", "T-02-01"]
+touches = ["apps/api/app/services/bank.py", "apps/api/app/routers/questions.py", "apps/api/app/schemas/questions.py"]
+tests = ["apps/api/tests/test_bank_api.py"]
+done_when = ["All filters combine", "10k-question search < 300 ms", "Students 403"]
+
+[[task]]
+id = "T-04-02"
+slice = "UOW-04"
+title = "Bank list UI with filters and topic picker"
+estimate_h = 4.0
+depends_on = ["T-04-01", "T-01-05"]
+touches = ["apps/web/src/app/(app)/org/bank/page.tsx", "apps/web/src/components/bank/BankFilters.tsx", "apps/web/src/components/bank/TopicPicker.tsx", "apps/web/src/components/bank/QuestionRow.tsx", "apps/web/src/lib/nav.ts"]
+tests = ["apps/web/src/__tests__/bank.test.tsx"]
+done_when = ["Filters + pagination", "Topic picker searchable"]
+
+[[task]]
+id = "T-04-03"
+slice = "UOW-04"
+title = "Question page: edit with image upload, create new"
+estimate_h = 4.0
+depends_on = ["T-04-02", "T-02-04"]
+touches = ["apps/web/src/app/(app)/org/bank/[id]/page.tsx", "apps/web/src/app/(app)/org/bank/new/page.tsx", "apps/web/src/components/review/QuestionEditor.tsx", "apps/web/src/components/bank/QuestionForm.tsx"]
+tests = ["apps/web/src/__tests__/question-edit.test.tsx"]
+done_when = ["Image upload inserts ref", "Create lands on the new question"]
+
+[[task]]
+id = "T-04-04"
+slice = "UOW-04"
+title = "Bulk actions and delete/restore in the bank"
+estimate_h = 3.0
+depends_on = ["T-04-02"]
+touches = ["apps/web/src/components/bank/BulkBar.tsx", "apps/web/src/app/(app)/org/bank/page.tsx"]
+tests = ["apps/web/src/__tests__/bank-bulk.test.tsx"]
+done_when = ["Bulk topic/difficulty/tags", "Delete + restore"]
