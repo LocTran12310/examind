@@ -40,7 +40,7 @@ jobs:
           package_json_file: apps/web/package.json   # packageManager lives here; the repo root has no package.json
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24   # as apps/web/Dockerfile; jsdom's undici needs more than Node 20 has
           cache: pnpm
           cache-dependency-path: apps/web/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile

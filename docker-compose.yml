@@ -32,7 +32,9 @@ services:
       retries: 20
 
   minio:
-    image: minio/minio:latest
+    # MinIO stopped publishing community images (minio/minio and quay.io/minio/minio are gone); this fork
+    # builds the same source with the same layout (docker-entrypoint.sh, minio, mc) and reads the existing volume
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
