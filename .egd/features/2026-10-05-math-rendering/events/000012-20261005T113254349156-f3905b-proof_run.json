@@ -1,0 +1,29 @@
+{
+  "type": "proof_run",
+  "seq": 12,
+  "at": "2026-10-05T11:32:54+00:00",
+  "by": "Loc Tran",
+  "proof": "P-2",
+  "env": "repo",
+  "kind": "cli",
+  "verifies": [
+    "AC-1.2"
+  ],
+  "status": "pass",
+  "reason": "",
+  "sha": "17fe68a2ea40640f6e3008c8af4d047edbbe785f",
+  "dirty": false,
+  "run": "20261005T113251-7f01",
+  "required": true,
+  "def": "556e72ab07d1134b",
+  "artifacts": [
+    "runs/20261005T113251-7f01/P-2@repo/transcript.md"
+  ],
+  "steps": [
+    {
+      "name": "Câu tiếng Việt trong $…$ được cắt ra thành chữ, giữ dấu cách",
+      "status": "pass",
+      "ms": 973
+    }
+  ]
+}
