@@ -103,7 +103,8 @@ services:
       minio: { condition: service_healthy }
 
   web:
-    build: ./apps/web
+    # the /api rewrite is fixed at build time (next.config.ts); the runtime value serves server-side fetches
+    build: { context: ./apps/web, args: { API_INTERNAL_URL: http://api:8000 } }
     restart: unless-stopped
     environment:
       API_INTERNAL_URL: http://api:8000

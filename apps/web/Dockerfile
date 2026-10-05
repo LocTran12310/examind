@@ -9,7 +9,9 @@ RUN corepack enable
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-ENV NEXT_TELEMETRY_DISABLED=1
+# next.config.ts bakes the /api rewrite into the build, so the api address has to be known here, not at runtime
+ARG API_INTERNAL_URL=http://api:8000
+ENV NEXT_TELEMETRY_DISABLED=1 API_INTERNAL_URL=${API_INTERNAL_URL}
 RUN pnpm build
 
 FROM node:24-alpine
