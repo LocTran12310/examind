@@ -1,0 +1,9 @@
+{
+  "type": "task_done_solo",
+  "seq": 9,
+  "at": "2026-09-25T20:16:12+07:00",
+  "by": "Loc Tran",
+  "imported": "ai-dlc",
+  "task": "T-02-01",
+  "reason": "các file assessment/* là của T-01-01, đã done và đã commit; bộ kiểm so với toàn diff nhánh nên mọi ticket sau ticket đầu đều thấy chúng"
+}

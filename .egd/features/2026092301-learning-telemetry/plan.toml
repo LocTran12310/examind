@@ -1,0 +1,250 @@
+# Imported from ai-dlc (ai-dlc:2026092301-learning-telemetry) on 2026-10-05.
+# ids are kept as they were, so tickets, commits and history still line up.
+
+[feature]
+title = "Measure learning, and stop the mastery number lying"
+tier = "standard"
+client = ""
+imported_from = "ai-dlc:2026092301-learning-telemetry"
+
+[[assumption]]
+id = "A-01"
+text = "Time on a question is measured client-side (the runner reports seconds per question when the answer is saved) and clamped server-side to the attempt window; it is evidence, not proof"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-23) — to confirm at final review"
+
+[[assumption]]
+id = "A-02"
+text = "A question a student never opened or answered is excluded from mastery and from item statistics, whoever submitted the attempt (student or the expiry sweep)"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-23): the current behaviour punishes abandoning practice"
+
+[[assumption]]
+id = "A-03"
+text = "\"Weak topic\" = mastery below 0.6 with at least 5 answers, one definition shared by the planner, the API and the UI; below the threshold with fewer answers it is \"chưa đủ dữ liệu\""
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-23) — thresholds to confirm at final review"
+
+[[assumption]]
+id = "A-04"
+text = "Mastery decays toward 0.5 with a half-life of 60 days of no answers on that topic, applied when the value is read or updated, never as a background job"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-23) — to confirm at final review"
+
+[[assumption]]
+id = "A-05"
+text = "Item statistics are computed on demand from `answer_facts` (p-value, first-attempt correct, discrimination by top/bottom third of the attempt's score, distractor counts) and shown with the number of observations; below 10 observations they are marked \"chưa đủ dữ liệu\""
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-23)"
+
+[[assumption]]
+id = "A-06"
+text = "A weekly mastery snapshot per (student, topic) is written by the worker on Mondays in business time and backfilled from facts, so trends exist before any screen shows them"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-23)"
+
+[[assumption]]
+id = "A-07"
+text = "Recompute is an org-admin endpoint that replays the facts of one organisation inside one transaction; at the current volume (hundreds of thousands of facts) this is acceptable"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-23) — revisit if a centre exceeds ~10⁶ facts"
+
+[[ac]]
+id = "AC-01"
+title = "Timing and attempt number"
+story = "US-01 — Answers carry their own evidence"
+given = "a student answering a question in an exam or practice"
+when = "the answer is saved and later graded"
+then = "attempt_answers and answer_facts carry seconds_spent, first_seen_at and whether it was the first attempt at that question, and seconds_spent never exceeds the attempt window"
+
+[[ac]]
+id = "AC-02"
+title = "Unanswered questions do not count"
+story = "US-01 — Answers carry their own evidence"
+given = "an attempt submitted by the student or closed by the expiry sweep"
+when = "questions were never answered"
+then = "they are scored 0 for the exam result as before, but they produce no answer fact, do not move mastery and are excluded from item statistics"
+
+[[ac]]
+id = "AC-03"
+title = "Statistics per question"
+story = "US-02 — Item statistics a teacher can act on"
+given = "a question answered by at least 10 students"
+when = "a teacher opens it"
+then = "it shows share correct, share correct at first attempt, discrimination between the strongest and weakest third, median seconds and, for a multiple choice question, how many chose each option; with fewer observations it says \"chưa đủ dữ liệu\""
+
+[[ac]]
+id = "AC-04"
+title = "The bank can be searched by them"
+story = "US-02 — Item statistics a teacher can act on"
+given = "the question search"
+when = "filtering or sorting on share correct or number of observations"
+then = "the server answers with the same search contract as every other list"
+
+[[ac]]
+id = "AC-05"
+title = "One definition of weak, with enough evidence"
+story = "US-03 — Mastery that can be trusted"
+given = "a student's mastery rows"
+when = "the planner, the API or a report names a weak topic"
+then = "all three use mastery < 0.6 with at least 5 answers, and topics below that answer count are reported as \"chưa đủ dữ liệu\" instead of weak"
+
+[[ac]]
+id = "AC-06"
+title = "Decay and recompute"
+story = "US-03 — Mastery that can be trusted"
+given = "a topic with no answers for 60 days"
+when = "mastery is read or updated"
+then = "it has moved halfway back toward 0.5, and POST /analytics/mastery/rebuild replays the facts to reproduce the same numbers"
+
+[[ac]]
+id = "AC-07"
+title = "Weekly snapshot"
+story = "US-04 — A trend exists"
+given = "a student with answers in several weeks"
+when = "the weekly job has run (or the backfill for past weeks)"
+then = "one row per student, topic and week holds the mastery at the end of that week and the answers in it, and an API returns the series for a student"
+
+[[decision]]
+id = "ADR-01"
+title = "Timing is reported by the client and clamped by the server"
+status = "accepted"
+choice = "** The runner sends `seconds_spent` per save; the server accumulates and clamps to the attempt window, and stores `first_seen_at` / `answered_at`"
+
+[[decision]]
+id = "ADR-02"
+title = "An unanswered question produces no fact"
+status = "accepted"
+choice = "** Grading still scores unanswered questions 0 for the exam result, but writes no `answer_fact`, so mastery, reports and item statistics ignore them"
+
+[[decision]]
+id = "ADR-03"
+title = "Item statistics are read models with a minimum of observations"
+status = "accepted"
+choice = "** Compute share correct, first-attempt share, discrimination (top third vs bottom third of attempt score), median seconds and option counts from `answer_facts`; below 10 observations report `enough_data: false` and show nothing else"
+
+[[decision]]
+id = "ADR-04"
+title = "One weak-topic rule, decay on read, recompute on demand"
+status = "accepted"
+choice = "** `weak_topics(rows)` in the analytics domain is the only definition (mastery < 0.6, answers ≥ 5); decay toward 0.5 with a 60-day half-life is applied where mastery is read or updated, from `last_at`; `POST /analytics/mastery/rebuild` replays facts for one organisation"
+
+[[slice]]
+id = "UOW-01"
+title = "Answers carry timing, attempt number and no fact when unanswered"
+covers = ["AC-01", "AC-02"]
+demo = """
+1. Làm một bài, quay lại một câu, nộp → answer_facts có seconds_spent và first_attempt
+2. Mở bài luyện rồi bỏ dở → hết giờ tự nộp, mastery không đổi"""
+
+[[slice]]
+id = "UOW-02"
+title = "Item statistics per question, searchable"
+covers = ["AC-03", "AC-04"]
+demo = """
+1. Chi tiết câu hỏi: tỉ lệ đúng, đúng ngay lần đầu, độ phân biệt, thời gian trung vị, phương án đã chọn
+2. Lọc ngân hàng câu theo tỉ lệ đúng và số lượt"""
+
+[[slice]]
+id = "UOW-03"
+title = "One weak-topic rule, decay, recompute and a weekly snapshot"
+covers = ["AC-05", "AC-06", "AC-07"]
+demo = """
+1. Chuyên đề 2 lượt trả lời → 'chưa đủ dữ liệu', không vào kế hoạch ôn
+2. Rebuild dựng lại đúng số cũ; bảng tuần có dữ liệu sau backfill"""
+
+[[task]]
+id = "T-01-01"
+slice = "UOW-01"
+title = "Timing columns and the grading rule"
+estimate_h = 4.0
+touches = ["apps/api/app/shared/infrastructure/schema/assessment.py", "apps/api/app/modules/assessment/domain/entities.py", "apps/api/app/modules/assessment/application/common.py", "apps/api/app/modules/assessment/application/commands/save_answer.py", "apps/api/migrations/versions/0017_answer_telemetry.py"]
+tests = ["apps/api/tests/test_attempts_api.py", "apps/api/tests/unit/test_assessment_handlers.py"]
+done_when = ["Columns + migration", "Seconds clamped and accumulated", "No fact for an unanswered question"]
+
+[[task]]
+id = "T-01-02"
+slice = "UOW-01"
+title = "Runner reports seconds per question"
+estimate_h = 3.0
+depends_on = ["T-01-01"]
+touches = ["apps/web/src/hooks/page-hooks/exam-runner/use-exam-runner.ts", "apps/web/src/hooks/page-hooks/exam-runner/use-question-timer.ts", "apps/web/src/hooks/react-query/use-query-attempt.ts", "apps/web/src/services/attempt.service.ts", "apps/web/src/dtos/attempt.dto.ts"]
+tests = ["apps/web/src/__tests__/exam-runner.test.tsx"]
+done_when = ["Seconds sent with each save", "Returning to a question adds time"]
+
+[[task]]
+id = "T-02-01"
+slice = "UOW-02"
+title = "Item statistics read model and question detail"
+estimate_h = 4.0
+depends_on = ["T-01-01"]
+touches = ["apps/api/app/modules/bank/infrastructure/read_models.py", "apps/api/app/modules/bank/application/queries/question_stats.py", "apps/api/app/modules/bank/interface/router.py", "apps/api/app/modules/bank/domain/services/key_audit.py"]
+tests = ["apps/api/tests/test_item_stats.py", "apps/api/tests/test_key_audit.py"]
+done_when = ["Stats endpoint", "enough_data below 10 observations", "Key audit reuses the model"]
+
+[[task]]
+id = "T-02-02"
+slice = "UOW-02"
+title = "Search and sort the bank by observed difficulty"
+estimate_h = 3.0
+depends_on = ["T-02-01"]
+touches = ["apps/api/app/modules/bank/infrastructure/read_models.py", "apps/api/app/modules/bank/interface/schemas.py"]
+tests = ["apps/api/tests/test_item_stats.py"]
+done_when = ["stats_correct_ratio and stats_observations filter and sort"]
+
+[[task]]
+id = "T-02-03"
+slice = "UOW-02"
+title = "Question detail shows the statistics"
+estimate_h = 3.0
+depends_on = ["T-02-01"]
+touches = ["apps/web/src/services/question.service.ts", "apps/web/src/hooks/react-query/use-query-question.ts", "apps/web/src/components/page-components/BankDetail/QuestionStats/QuestionStats.tsx"]
+tests = ["apps/web/src/__tests__/question-edit.test.tsx"]
+done_when = ["Numbers with their observation count", "'Chưa đủ dữ liệu' under 10"]
+
+[[task]]
+id = "T-03-01"
+slice = "UOW-03"
+title = "One weak-topic rule and decay"
+estimate_h = 4.0
+depends_on = ["T-01-01"]
+touches = ["apps/api/app/modules/analytics/domain/services/mastery.py", "apps/api/app/modules/analytics/domain/services/practice.py", "apps/api/app/modules/analytics/application/common.py"]
+tests = ["apps/api/tests/unit/test_analytics_handlers.py", "apps/api/tests/test_mastery_api.py", "apps/api/tests/test_adaptive.py"]
+done_when = ["weak_topics() used everywhere", "Decay on read and update", "Planner ignores thin topics"]
+
+[[task]]
+id = "T-03-02"
+slice = "UOW-03"
+title = "Recompute endpoint"
+estimate_h = 3.0
+depends_on = ["T-03-01"]
+touches = ["apps/api/app/modules/analytics/interface/router.py", "apps/api/app/modules/analytics/application/commands/rebuild_mastery.py"]
+tests = ["apps/api/tests/test_mastery_rebuild.py"]
+done_when = ["Org admin only", "Replay reproduces the numbers"]
+
+[[task]]
+id = "T-03-03"
+slice = "UOW-03"
+title = "Weekly mastery snapshot, job and backfill"
+estimate_h = 4.0
+depends_on = ["T-03-01"]
+touches = ["apps/api/app/shared/infrastructure/schema/analytics.py", "apps/api/app/modules/analytics/application/commands/snapshot_week.py", "apps/api/app/worker/handlers.py", "apps/api/migrations/versions/0018_mastery_week.py"]
+tests = ["apps/api/tests/test_mastery_weekly.py"]
+done_when = ["Table + migration", "Weekly job", "Backfill from facts", "Series endpoint"]
+
+[[task]]
+id = "T-03-04"
+slice = "UOW-03"
+title = "Untagged questions are visible, not silent"
+estimate_h = 2.0
+depends_on = ["T-03-01"]
+touches = ["apps/api/app/modules/bank/infrastructure/read_models.py"]
+tests = ["apps/api/tests/test_bank_facets.py"]
+done_when = ["Facet/count of questions without a topic"]

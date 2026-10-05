@@ -1,0 +1,9 @@
+{
+  "type": "task_done_solo",
+  "seq": 10,
+  "at": "2026-09-24T12:30:44+07:00",
+  "by": "Loc Tran",
+  "imported": "ai-dlc",
+  "task": "T-02-02",
+  "reason": "the three drifting paths are apps/web files of UOW-01, being written by another agent in this checkout at the same time; T-02-02 changed only its declared apps/api paths"
+}

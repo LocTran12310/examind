@@ -1,0 +1,9 @@
+{
+  "type": "task_done_solo",
+  "seq": 17,
+  "at": "2026-09-25T00:02:57+07:00",
+  "by": "Loc Tran",
+  "imported": "ai-dlc",
+  "task": "T-03-01",
+  "reason": "difficulty_rules.py và difficulty_suggest.py trong cùng cây làm việc là của T-02-03, ticket sinh ra từ chính phép đo này và depends_on nó, nên không thể start trước khi ticket này đóng"
+}

@@ -1,0 +1,9 @@
+{
+  "type": "task_done_solo",
+  "seq": 17,
+  "at": "2026-09-25T20:38:19+07:00",
+  "by": "Loc Tran",
+  "imported": "ai-dlc",
+  "task": "T-01-02",
+  "reason": "file của năm ticket đã done trước đó; bộ kiểm so với toàn diff nhánh"
+}

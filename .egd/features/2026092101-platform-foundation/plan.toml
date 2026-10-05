@@ -1,0 +1,606 @@
+# Imported from ai-dlc (ai-dlc:2026092101-platform-foundation) on 2026-10-05.
+# ids are kept as they were, so tickets, commits and history still line up.
+
+[feature]
+title = "Platform foundation"
+tier = "standard"
+client = ""
+imported_from = "ai-dlc:2026092101-platform-foundation"
+
+[[assumption]]
+id = "A-01"
+text = "Org code is 3–32 chars of `[a-z0-9-]`, stored lower-case, matched case-insensitively (`TrungtamA` == `trungtama`)"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-21) — to confirm at final review"
+
+[[assumption]]
+id = "A-02"
+text = "Username unique per org, case-insensitive, `[a-z0-9._-]` 3–64 chars; auto-generated from full name without diacritics when CSV leaves it blank (`nguyenvana`, then `nguyenvana2`)"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-21) — to confirm at final review"
+
+[[assumption]]
+id = "A-03"
+text = "Roles are exactly `super_admin`, `org_admin`, `teacher`, `student`; one role per user"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-21) — to confirm at final review"
+
+[[assumption]]
+id = "A-04"
+text = "super_admin lives in a reserved org `system` that cannot be edited, suspended or deleted"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-21) — to confirm at final review"
+
+[[assumption]]
+id = "A-05"
+text = "Teachers may create students and reset student passwords, but not manage other teachers or admins"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-21) — to confirm at final review"
+
+[[assumption]]
+id = "A-06"
+text = "Access token 15 min, refresh token 30 days, both httpOnly SameSite=Lax cookies; refresh tokens stored hashed and revoked on org suspend / password reset"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-21) — to confirm at final review"
+
+[[assumption]]
+id = "A-07"
+text = "Lockout: 5 failed logins for the same (org, username) within 15 min → locked 15 min; per-IP limit 30/min"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-21) — to confirm at final review"
+
+[[assumption]]
+id = "A-08"
+text = "CSV columns: `full_name` (required), `username`, `role` (default student), `class`; UTF-8 with or without BOM; `.xlsx` also accepted; max 2000 rows"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-21) — to confirm at final review"
+
+[[assumption]]
+id = "A-09"
+text = "Temp passwords are 10 chars from an unambiguous alphabet, returned once in a downloadable CSV and never retrievable again"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-21) — to confirm at final review"
+
+[[assumption]]
+id = "A-10"
+text = "Topic tree is per organisation, seeded from a shared Toán 10–12 (GDPT 2018) template at org creation; nodes carry `level_kind` ∈ strand/topic/subtopic/type; max depth 5"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-21) — to confirm at final review"
+
+[[assumption]]
+id = "A-11"
+text = "Subjects, grades (6–12) and semesters (HK1/HK2) are fixed seed data per org in this feature; editing them is out of scope"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-21) — to confirm at final review"
+
+[[assumption]]
+id = "A-12"
+text = "Tags are per org with a group ∈ method/skill/source/custom; name unique per (org, group)"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-21) — to confirm at final review"
+
+[[assumption]]
+id = "A-13"
+text = "Deleting a topic node with children or (later) questions is refused; merging moves children + references to the target"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-21) — to confirm at final review"
+
+[[assumption]]
+id = "A-14"
+text = "UI language is Vietnamese only for MVP"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-21) — to confirm at final review"
+
+[[assumption]]
+id = "A-15"
+text = "Org soft delete sets `deleted_at`, frees nothing, blocks login; hard delete allowed only when the org has no users other than its admins"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-21) — to confirm at final review"
+
+[[assumption]]
+id = "A-16"
+text = "Seed super admin credentials come from env `SUPERADMIN_USERNAME`/`SUPERADMIN_PASSWORD` (dev default `admin` / `admin12345`) and must be changed on first login"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-21) — to confirm at final review"
+
+[[ac]]
+id = "AC-01"
+title = "Stack starts"
+story = "US-01 — Run the whole stack locally"
+given = "a clean checkout with .env copied from .env.example"
+when = "I run docker compose up -d"
+then = "postgres, minio, api, web and caddy become healthy, and GET /api/health returns 200 with {\"status\":\"ok\",\"db\":\"ok\",\"storage\":\"ok\"}"
+
+[[ac]]
+id = "AC-02"
+title = "Migrations and seed"
+story = "US-01 — Run the whole stack locally"
+given = "the database is empty"
+when = "the api container starts"
+then = "Alembic migrations run to head, and the system org and the super admin from env exist exactly once, even after restarts"
+
+[[ac]]
+id = "AC-03"
+title = "Happy path"
+story = "US-02 — Log in with organisation code"
+given = "an active org \"trungtama\" with user \"hs01\" and password \"Secret123!\""
+when = "I submit org \"TrungtamA\", username \"HS01\", password \"Secret123!\""
+then = "I am redirected to my role's home page, and access and refresh cookies are set httpOnly"
+
+[[ac]]
+id = "AC-04"
+title = "Generic failure"
+story = "US-02 — Log in with organisation code"
+given = "any of: unknown org, unknown user, wrong password, inactive user"
+when = "I submit the login form"
+then = "I see \"Sai tổ chức, tên đăng nhập hoặc mật khẩu\", and the response is identical for every case (status 401, same body)"
+
+[[ac]]
+id = "AC-05"
+title = "Suspended or deleted org"
+story = "US-02 — Log in with organisation code"
+given = "org \"trungtama\" is suspended or soft-deleted"
+when = "a user of that org logs in with correct credentials"
+then = "login is refused with \"Tổ chức đang bị khóa\", and any existing refresh tokens of that org no longer refresh"
+
+[[ac]]
+id = "AC-06"
+title = "Lockout"
+story = "US-02 — Log in with organisation code"
+given = "5 failed attempts for (trungtama, hs01) within 15 minutes"
+when = "a 6th attempt is made, even with the right password"
+then = "it is refused with status 429 until 15 minutes have passed"
+
+[[ac]]
+id = "AC-07"
+title = "Remember org code"
+story = "US-02 — Log in with organisation code"
+given = "I logged in successfully with org \"TrungtamA\" before on this browser"
+when = "I open /login again"
+then = "the org field is prefilled with \"TrungtamA\""
+
+[[ac]]
+id = "AC-08"
+title = "Session refresh and logout"
+story = "US-02 — Log in with organisation code"
+given = "my access token expired and my refresh token is valid"
+when = "the web app calls the API"
+then = "it refreshes transparently and the call succeeds, and after I log out the refresh token is revoked"
+
+[[ac]]
+id = "AC-09"
+title = "Forced change"
+story = "US-03 — Forced password change"
+given = "my account has must_change_password = true"
+when = "I log in"
+then = "every page except /change-password redirects there, and after I set a new password (≥ 8 chars, not equal to the old one) I reach my home page"
+
+[[ac]]
+id = "AC-10"
+title = "Create org with first admin"
+story = "US-04 — Super admin manages organisations"
+given = "I am super_admin"
+when = "I create org code \"TrungtamA\", name \"Trung tâm A\", admin username \"admin\""
+then = "the org exists with code \"trungtama\" and the seeded topic tree, subjects, grades, semesters, and I am shown the admin's temporary password once"
+
+[[ac]]
+id = "AC-11"
+title = "Duplicate or invalid code"
+story = "US-04 — Super admin manages organisations"
+given = "org \"trungtama\" exists"
+when = "I create another org with code \"TRUNGTAMA\" or \"trung tam!\""
+then = "I see a field error and nothing is created"
+
+[[ac]]
+id = "AC-12"
+title = "List and edit"
+story = "US-04 — Super admin manages organisations"
+given = "several orgs exist"
+when = "I open /admin/orgs"
+then = "I see code, name, status, user count and created date, searchable by code or name, and I can edit name and code (with a warning that users must use the new code)"
+
+[[ac]]
+id = "AC-13"
+title = "Suspend / reactivate / delete"
+story = "US-04 — Super admin manages organisations"
+given = "org \"trungtama\" is active"
+when = "I suspend it, then reactivate it I delete it"
+then = "logins are refused while suspended and allowed after reactivation it is soft-deleted and hidden from the default list, and the system org has no suspend or delete action"
+
+[[ac]]
+id = "AC-14"
+title = "Only super_admin"
+story = "US-04 — Super admin manages organisations"
+given = "I am org_admin, teacher or student"
+when = "I call any /api/admin/orgs endpoint"
+then = "I get 403"
+
+[[ac]]
+id = "AC-15"
+title = "Create, edit, deactivate a user"
+story = "US-05 — Org admin manages users and classes"
+given = "I am org_admin of \"trungtama\""
+when = "I create a teacher, edit their full name, then deactivate them"
+then = "the list reflects each change and the deactivated teacher cannot log in"
+
+[[ac]]
+id = "AC-16"
+title = "CSV import"
+story = "US-05 — Org admin manages users and classes"
+given = "a CSV with 30 rows of full_name and class, some usernames blank"
+when = "I import it"
+then = "30 students are created with unique usernames, assigned to their classes (created if missing), and I can download a CSV of username + temporary password exactly once"
+
+[[ac]]
+id = "AC-17"
+title = "CSV errors"
+story = "US-05 — Org admin manages users and classes"
+given = "a CSV where row 7 has no full_name and row 9 duplicates an existing username"
+when = "I preview the import"
+then = "rows 7 and 9 are reported with reasons and nothing is created until I fix or skip them"
+
+[[ac]]
+id = "AC-18"
+title = "Reset password"
+story = "US-05 — Org admin manages users and classes"
+given = "a student forgot their password"
+when = "a teacher or org_admin resets it"
+then = "a new temporary password is shown once, must_change_password is set, and old refresh tokens are revoked"
+
+[[ac]]
+id = "AC-19"
+title = "Tenant isolation"
+story = "US-05 — Org admin manages users and classes"
+given = "users exist in orgs A and B"
+when = "an org_admin of A lists, reads or edits users or classes"
+then = "they only ever see A's data, and requesting a B id returns 404"
+
+[[ac]]
+id = "AC-20"
+title = "Classes"
+story = "US-05 — Org admin manages users and classes"
+given = "I am org_admin or teacher"
+when = "I create class \"10A1\" (grade 10, school year 2026-2027) and add or remove students"
+then = "the class shows its members and a student can belong to several classes"
+
+[[ac]]
+id = "AC-21"
+title = "Browse and edit the tree"
+story = "US-06 — Topic tree and tags"
+given = "my org was seeded with the Toán 10–12 tree"
+when = "I open /org/topics"
+then = "I can expand \"Giải tích › Nguyên hàm\" and add child \"Nguyên hàm từng phần\", and I can rename, move (drag or \"move to\") and delete leaf nodes; paths update for the whole subtree"
+
+[[ac]]
+id = "AC-22"
+title = "Merge and guard"
+story = "US-06 — Topic tree and tags"
+given = "node X has children"
+when = "I delete X I merge X into Y"
+then = "it is refused with a message X's children move under Y and X disappears"
+
+[[ac]]
+id = "AC-23"
+title = "Tags"
+story = "US-06 — Topic tree and tags"
+given = "I am teacher or org_admin"
+when = "I create tag \"đổi biến\" in group method, rename it, and delete it"
+then = "the tag list per group reflects each change and duplicates in the same group are refused"
+
+[[ac]]
+id = "AC-24"
+title = "QuestionView"
+story = "US-07 — Render a question fully"
+given = "a question with LaTeX in the stem, an image in option C and a multi-step solution with an image"
+when = "it is rendered in mode \"review\" it is rendered in mode \"exam\""
+then = "math renders with KaTeX, images appear in their fields, answer and solution are visible answer and solution are hidden, and empty parts render no empty box"
+
+[[decision]]
+id = "ADR-01"
+title = "Self-host everything in one Docker Compose"
+status = "accepted"
+choice = "** Compose with postgres, minio, api, web, caddy (+ worker, ollama in later features); no BaaS"
+
+[[decision]]
+id = "ADR-02"
+title = "Org-code login with per-org usernames"
+status = "accepted"
+choice = "** Login key is (org code, username); `organization_id` UUID stays the internal FK; code editable"
+
+[[decision]]
+id = "ADR-03"
+title = "Tenancy enforced in the service layer"
+status = "accepted"
+choice = "** `OrgScope` dependency; every service query filters `organization_id`; cross-org ids return 404; isolation covered by tests"
+
+[[decision]]
+id = "ADR-04"
+title = "Topics as `ltree` materialised paths"
+status = "accepted"
+choice = "** `topics.path ltree` built from slugs of ids (`t<short-id>` labels) plus `parent_id`; move/merge rewrite subtree paths in one transaction"
+
+[[decision]]
+id = "ADR-05"
+title = "Cookie JWT through a same-origin reverse proxy"
+status = "accepted"
+choice = "** Caddy serves both under one origin; API sets httpOnly SameSite=Lax cookies; refresh tokens are opaque, hashed, rotated"
+
+[[decision]]
+id = "ADR-06"
+title = "Web tests outside route-group folders"
+status = "accepted"
+choice = "** Page-level tests live in `apps/web/src/__tests__/`; component tests sit next to components"
+
+[[decision]]
+id = "ADR-07"
+title = "Raster images only; SVG uploads rejected"
+status = "accepted"
+choice = "** Accept PNG/JPEG/GIF/WEBP by magic-byte sniffing, `X-Content-Type-Options: nosniff`, org-checked `GET /api/assets/{id}`"
+
+[[decision]]
+id = "ADR-08"
+title = "Dev ports and compose override"
+status = "accepted"
+choice = "** Caddy on 8088/8448; dev override exposes Postgres 55442, MinIO 59100/59101, API 58100; local `.env` sets `COMPOSE_FILE=docker-compose.yml:docker-compose.dev.yml`; the VM omits the override"
+
+[[slice]]
+id = "UOW-01"
+title = "Stack runs and users log in with org code"
+covers = ["AC-01", "AC-02", "AC-03", "AC-04", "AC-05", "AC-06", "AC-07", "AC-08", "AC-09"]
+demo = """
+1. cp .env.example .env && docker compose up -d --build
+2. Open http://localhost:8088/api/health → status ok, db ok, storage ok
+3. Open http://localhost:8088/login, enter org `system`, `admin`, `admin12345` → forced to /change-password
+4. Set a new password → land on the super admin home
+5. Log out, log in with a wrong password → generic error; reload /login → org field prefilled"""
+
+[[slice]]
+id = "UOW-02"
+title = "Super admin manages organisations"
+covers = ["AC-10", "AC-11", "AC-12", "AC-13", "AC-14"]
+demo = """
+1. Log in as super admin, open /admin/orgs
+2. Create org `TrungtamA` with admin `admin` → temporary password shown once
+3. Try to create `TRUNGTAMA` → field error
+4. Log in as trungtama/admin in a private window → forced password change → org admin home
+5. Suspend TrungtamA → that login is refused with 'Tổ chức đang bị khóa'; reactivate → allowed
+6. Soft delete a test org → hidden from list; system org shows no suspend/delete"""
+
+[[slice]]
+id = "UOW-03"
+title = "Org admin imports users and manages classes"
+covers = ["AC-15", "AC-16", "AC-17", "AC-18", "AC-19", "AC-20"]
+demo = """
+1. Log in as trungtama/admin, open /org/users, create a teacher, edit, deactivate
+2. Open /org/users/import, upload samples/students-30.csv → preview shows 30 valid rows
+3. Upload samples/students-bad.csv → rows with errors are listed, nothing created
+4. Commit the good file → download temp passwords CSV
+5. Log in as one imported student → forced password change
+6. Open /org/classes → class 10A1 lists its imported students; remove one
+7. Reset a student's password from the users page → new temp password shown once"""
+
+[[slice]]
+id = "UOW-04"
+title = "Topic tree, tags and full question rendering"
+covers = ["AC-21", "AC-22", "AC-23", "AC-24"]
+demo = """
+1. Log in as a teacher of trungtama, open /org/topics
+2. Expand Giải tích › Nguyên hàm, add 'Nguyên hàm từng phần', rename it, move it under Tích phân and back
+3. Try deleting 'Nguyên hàm' → refused; merge a test node into another → children moved
+4. Open /org/tags, create 'đổi biến' in Phương pháp, rename, try a duplicate → refused, delete
+5. Open /dev/question-preview → sample question renders KaTeX, image in option C, solution with image; toggle exam mode hides answer and solution"""
+
+[[task]]
+id = "T-01-01"
+slice = "UOW-01"
+title = "Compose stack, Dockerfiles, Caddy, verify script"
+estimate_h = 3.0
+touches = ["docker-compose.yml", "docker-compose.dev.yml", ".env.example", "infra/Caddyfile", "apps/api/Dockerfile", "apps/web/Dockerfile", "scripts/verify.sh", ".gitignore", "README.md"]
+tests = ["apps/api/tests/test_health.py"]
+done_when = ["`docker compose up -d --build` brings all services healthy", "verify.sh runs the given tests and returns their exit code", "`docker buildx build --platform linux/amd64,linux/arm64` succeeds for api and web images (or documented if buildx unavailable)"]
+
+[[task]]
+id = "T-01-02"
+slice = "UOW-01"
+title = "API skeleton, config, DB, errors, health, base migration, seed"
+estimate_h = 4.0
+depends_on = ["T-01-01"]
+touches = ["apps/api/pyproject.toml", "apps/api/app/main.py", "apps/api/app/core/config.py", "apps/api/app/core/db.py", "apps/api/app/core/errors.py", "apps/api/app/core/storage.py", "apps/api/app/models/__init__.py", "apps/api/app/models/org.py", "apps/api/app/models/user.py", "apps/api/app/models/audit.py", "apps/api/migrations/env.py", "apps/api/migrations/versions/0001_base.py", "apps/api/app/seed/bootstrap.py", "apps/api/tests/conftest.py"]
+tests = ["apps/api/tests/test_health.py", "apps/api/tests/test_seed.py"]
+done_when = ["/api/health reports db and storage", "Seed twice → exactly one system org and one super admin", "AppError handler returns the JSON error shape"]
+
+[[task]]
+id = "T-01-03"
+slice = "UOW-01"
+title = "Auth service: argon2, JWT, login, lockout, refresh rotation, change password"
+estimate_h = 3.0
+depends_on = ["T-01-02"]
+touches = ["apps/api/app/core/security.py", "apps/api/app/services/auth.py"]
+tests = ["apps/api/tests/test_auth_service.py"]
+done_when = ["Case-insensitive org/username login works", "Lockout after 5 failures", "Suspended org refused", "Refresh rotation + revoke covered by tests"]
+
+[[task]]
+id = "T-01-04"
+slice = "UOW-01"
+title = "Auth routes, cookies, deps (current_user, require_role, org scope)"
+estimate_h = 3.0
+depends_on = ["T-01-03"]
+touches = ["apps/api/app/routers/auth.py", "apps/api/app/deps.py", "apps/api/app/schemas/auth.py"]
+tests = ["apps/api/tests/test_auth_api.py"]
+done_when = ["Cookies httpOnly SameSite=Lax", "Login p95 < 300 ms measured in test (argon2 tuned)", "No password or token in logs"]
+
+[[task]]
+id = "T-01-05"
+slice = "UOW-01"
+title = "Next.js scaffold, UI primitives, API client"
+estimate_h = 3.0
+depends_on = ["T-01-01"]
+touches = ["apps/web/package.json", "apps/web/next.config.ts", "apps/web/src/app/layout.tsx", "apps/web/src/app/globals.css", "apps/web/src/components/ui/", "apps/web/src/lib/api.ts", "apps/web/src/lib/types.ts", "apps/web/vitest.config.ts"]
+tests = ["apps/web/src/lib/api.test.ts"]
+done_when = ["`pnpm build` succeeds", "api client retries once after refresh (unit test)"]
+
+[[task]]
+id = "T-01-06"
+slice = "UOW-01"
+title = "Login, change-password pages, authenticated layout and role home"
+estimate_h = 3.0
+depends_on = ["T-01-04", "T-01-05"]
+touches = ["apps/web/src/app/(auth)/login/page.tsx", "apps/web/src/app/(auth)/change-password/page.tsx", "apps/web/src/app/(app)/layout.tsx", "apps/web/src/app/(app)/page.tsx", "apps/web/src/lib/session.ts", "apps/web/src/middleware.ts"]
+tests = ["apps/web/src/__tests__/login.test.tsx"]
+done_when = ["Login form has org, username, password", "Org prefilled from last success", "must_change_password redirects to /change-password", "Nav shows links by role"]
+
+[[task]]
+id = "T-02-01"
+slice = "UOW-02"
+title = "Taxonomy, topic (ltree), tag schema and per-org seed template"
+estimate_h = 4.0
+depends_on = ["T-01-02"]
+touches = ["apps/api/app/models/taxonomy.py", "apps/api/migrations/versions/0002_taxonomy.py", "apps/api/app/seed/math_topics.py", "apps/api/app/seed/org_template.py"]
+tests = ["apps/api/tests/test_taxonomy_seed.py"]
+done_when = ["Seeding an org creates the full tree with correct paths", "Seeding is idempotent"]
+
+[[task]]
+id = "T-02-02"
+slice = "UOW-02"
+title = "Org service and /admin/orgs API"
+estimate_h = 4.0
+depends_on = ["T-02-01", "T-01-04"]
+touches = ["apps/api/app/services/orgs.py", "apps/api/app/routers/admin_orgs.py", "apps/api/app/schemas/orgs.py", "apps/api/app/services/audit.py"]
+tests = ["apps/api/tests/test_orgs_api.py"]
+done_when = ["Create returns temp admin password once", "Invalid/duplicate code → 422/409", "System org cannot be suspended/deleted", "Non super_admin → 403", "Audit rows written"]
+
+[[task]]
+id = "T-02-03"
+slice = "UOW-02"
+title = "Admin organisations UI"
+estimate_h = 4.0
+depends_on = ["T-02-02", "T-01-06"]
+touches = ["apps/web/src/app/(app)/admin/orgs/page.tsx", "apps/web/src/components/admin/OrgForm.tsx", "apps/web/src/components/admin/OrgTable.tsx", "apps/web/src/components/ui/"]
+tests = ["apps/web/src/__tests__/orgs.test.tsx"]
+done_when = ["All org actions reachable", "Temp password copy button", "Field errors rendered"]
+
+[[task]]
+id = "T-03-01"
+slice = "UOW-03"
+title = "User service + API: CRUD, deactivate, reset password, isolation"
+estimate_h = 4.0
+depends_on = ["T-02-02"]
+touches = ["apps/api/app/services/users.py", "apps/api/app/routers/users.py", "apps/api/app/schemas/users.py", "apps/api/app/core/passwords.py"]
+tests = ["apps/api/tests/test_users_api.py"]
+done_when = ["Cross-org id → 404", "Reset revokes refresh tokens", "Teacher cannot edit a teacher"]
+
+[[task]]
+id = "T-03-02"
+slice = "UOW-03"
+title = "CSV/XLSX import preview + commit, username generation"
+estimate_h = 4.0
+depends_on = ["T-03-01", "T-03-03"]
+touches = ["apps/api/app/services/user_import.py", "apps/api/app/routers/users.py", "samples/students-30.csv", "samples/students-bad.csv"]
+tests = ["apps/api/tests/test_import.py"]
+done_when = ["Diacritics stripped for usernames", "Duplicate handling", "Preview reports row errors, commit is all-or-nothing"]
+
+[[task]]
+id = "T-03-03"
+slice = "UOW-03"
+title = "Classes schema, service and API"
+estimate_h = 3.0
+depends_on = ["T-02-02"]
+touches = ["apps/api/app/models/school_class.py", "apps/api/migrations/versions/0003_classes.py", "apps/api/app/services/classes.py", "apps/api/app/routers/classes.py", "apps/api/app/schemas/classes.py"]
+tests = ["apps/api/tests/test_classes_api.py"]
+done_when = ["CRUD + members", "Isolation tests"]
+
+[[task]]
+id = "T-03-04"
+slice = "UOW-03"
+title = "Users UI: list, create, edit, deactivate, reset"
+estimate_h = 4.0
+depends_on = ["T-03-01", "T-01-06"]
+touches = ["apps/web/src/app/(app)/org/users/page.tsx", "apps/web/src/components/org/UserForm.tsx", "apps/web/src/components/org/UserTable.tsx", "apps/web/src/lib/hooks.ts"]
+tests = ["apps/web/src/__tests__/users.test.tsx"]
+done_when = ["Actions work for org_admin and teacher per role rules"]
+
+[[task]]
+id = "T-03-05"
+slice = "UOW-03"
+title = "Import UI with preview and temp-password download"
+estimate_h = 3.0
+depends_on = ["T-03-02", "T-03-04"]
+touches = ["apps/web/src/app/(app)/org/users/import/page.tsx", "apps/web/src/components/org/ImportWizard.tsx", "apps/web/src/lib/csv.ts"]
+tests = ["apps/web/src/__tests__/import.test.tsx"]
+done_when = ["Errors shown per row", "Credentials CSV downloads"]
+
+[[task]]
+id = "T-03-06"
+slice = "UOW-03"
+title = "Classes UI"
+estimate_h = 3.0
+depends_on = ["T-03-03", "T-03-04"]
+touches = ["apps/web/src/app/(app)/org/classes/page.tsx", "apps/web/src/app/(app)/org/classes/[id]/page.tsx", "apps/web/src/components/org/ClassForms.tsx", "apps/web/src/components/org/MemberManager.tsx"]
+tests = ["apps/web/src/__tests__/classes.test.tsx"]
+done_when = ["Members add/remove works"]
+
+[[task]]
+id = "T-04-01"
+slice = "UOW-04"
+title = "Topic service (create/rename/move/merge/delete) and tags API"
+estimate_h = 4.0
+depends_on = ["T-02-02"]
+touches = ["apps/api/app/services/topics.py", "apps/api/app/routers/topics.py", "apps/api/app/services/tags.py", "apps/api/app/routers/tags.py", "apps/api/app/routers/taxonomy.py", "apps/api/app/schemas/taxonomy.py"]
+tests = ["apps/api/tests/test_topics_api.py", "apps/api/tests/test_tags_api.py"]
+done_when = ["Move under own descendant refused", "Delete with children refused", "Merge moves children", "Tag uniqueness per group"]
+
+[[task]]
+id = "T-04-02"
+slice = "UOW-04"
+title = "Assets in MinIO, minimal question model, demo question seed"
+estimate_h = 3.0
+depends_on = ["T-02-01"]
+touches = ["apps/api/app/models/question.py", "apps/api/app/models/asset.py", "apps/api/migrations/versions/0004_questions.py", "apps/api/app/routers/assets.py", "apps/api/app/routers/questions.py", "apps/api/app/seed/demo_question.py"]
+tests = ["apps/api/tests/test_assets_api.py"]
+done_when = ["Upload + fetch asset with org check", "Demo question seeded for every org"]
+
+[[task]]
+id = "T-04-03"
+slice = "UOW-04"
+title = "Topic tree UI"
+estimate_h = 4.0
+depends_on = ["T-04-01", "T-01-06"]
+touches = ["apps/web/src/app/(app)/org/topics/page.tsx", "apps/web/src/components/topics/TopicTree.tsx", "apps/web/src/components/topics/tree.ts"]
+tests = ["apps/web/src/components/topics/TopicTree.test.tsx"]
+done_when = ["All operations reachable by keyboard and mouse"]
+
+[[task]]
+id = "T-04-04"
+slice = "UOW-04"
+title = "Tags UI"
+estimate_h = 2.0
+depends_on = ["T-04-01", "T-01-06"]
+touches = ["apps/web/src/app/(app)/org/tags/page.tsx", "apps/web/src/components/tags/TagManager.tsx"]
+tests = ["apps/web/src/__tests__/tags.test.tsx"]
+done_when = ["Duplicate error shown"]
+
+[[task]]
+id = "T-04-05"
+slice = "UOW-04"
+title = "QuestionView component and preview page"
+estimate_h = 4.0
+depends_on = ["T-04-02", "T-01-05"]
+touches = ["apps/web/src/components/question/QuestionView.tsx", "apps/web/src/components/question/Markdown.tsx", "apps/web/src/app/(app)/dev/question-preview/page.tsx"]
+tests = ["apps/web/src/components/question/QuestionView.test.tsx"]
+done_when = ["exam mode hides answer and solution", "empty parts render nothing", "images resolved in every part"]

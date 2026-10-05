@@ -1,0 +1,9 @@
+{
+  "type": "task_done_solo",
+  "seq": 9,
+  "at": "2026-09-24T15:06:01+07:00",
+  "by": "Loc Tran",
+  "imported": "ai-dlc",
+  "task": "T-01-02",
+  "reason": "cung mot file thuan cua trang nhu T-01-01 - cau noi ly do thieu la mot ham thuan (shortfallReason) nen o lib/page-libs/exam-detail/blueprint.ts, component chi dung layout"
+}

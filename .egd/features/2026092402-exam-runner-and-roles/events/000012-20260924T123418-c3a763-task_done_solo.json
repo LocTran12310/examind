@@ -1,0 +1,9 @@
+{
+  "type": "task_done_solo",
+  "seq": 12,
+  "at": "2026-09-24T12:34:18+07:00",
+  "by": "Loc Tran",
+  "imported": "ai-dlc",
+  "task": "T-01-02",
+  "reason": "Các file lệch đều là việc apps/api đang chạy song song của UOW-03 (T-03-01) trong cùng cây làm việc; T-01-02 chỉ sửa apps/web và các file web đều đã khai trong touches -"
+}

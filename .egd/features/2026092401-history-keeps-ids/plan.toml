@@ -1,0 +1,98 @@
+# Imported from ai-dlc (ai-dlc:2026092401-history-keeps-ids) on 2026-10-05.
+# ids are kept as they were, so tickets, commits and history still line up.
+
+[feature]
+title = "The history keeps the id of the question it is about"
+tier = "standard"
+client = ""
+imported_from = "ai-dlc:2026092401-history-keeps-ids"
+
+[[assumption]]
+id = "A-01"
+text = "The fix is to drop the foreign key on `review_events.question_id`, not to add a second column beside it"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-24). Two columns holding the same id would disagree the first time one of them was written alone; an audit log referring to a mutable table is where a foreign key does harm rather than good"
+
+[[assumption]]
+id = "A-02"
+text = "Rows already nulled cannot be recovered and are left as they are"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; the id is simply not in the database any more"
+
+[[assumption]]
+id = "A-03"
+text = "An undo blocked by a deleted question still refuses the whole batch, and now names the ids"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; naming is what was missing, not the refusal"
+
+[[assumption]]
+id = "A-04"
+text = "The downgrade re-creates the foreign key and, to be able to, nulls the ids of questions that no longer exist — so it is not loss-free, and says so"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; a downgrade that silently fails on a real database is worse than one that states its cost"
+
+[[ac]]
+id = "AC-01"
+title = "The id survives the deletion"
+story = "US-01 — A deleted question leaves its history intact"
+given = "a question with events in the history"
+when = "the question is deleted"
+then = "every one of its events keeps the question's id, and the deletion itself still succeeds"
+
+[[ac]]
+id = "AC-02"
+title = "Old rows stay readable"
+story = "US-01 — A deleted question leaves its history intact"
+given = "events whose question id was already nulled before this change"
+when = "the history is read or an undo is attempted"
+then = "they behave exactly as they do today, and nothing pretends to know which question they were about"
+
+[[ac]]
+id = "AC-03"
+title = "The questions are named"
+story = "US-02 — A refusal names what it cannot restore"
+given = "a batch one of whose questions has since been deleted"
+when = "I undo it"
+then = "the whole batch is refused and the refusal carries the ids it could not put back"
+
+[[decision]]
+id = "ADR-01"
+title = "An audit log holds ids, not foreign keys"
+status = "accepted"
+
+[[decision]]
+id = "ADR-02"
+title = "The downgrade states what it costs"
+status = "accepted"
+
+[[slice]]
+id = "UOW-01"
+title = "The history keeps the id of a deleted question, and the refusal names it"
+covers = ["AC-01", "AC-02", "AC-03"]
+demo = """
+1. Xóa một câu đã có lịch sử → các dòng review_events của nó vẫn giữ nguyên question_id
+2. Hoàn tác lượt sửa có câu đã xóa → từ chối cả lượt và nêu đúng id những câu không phục hồi được
+3. Dòng lịch sử cũ (id đã bị xóa trước migration) vẫn đọc được như trước"""
+
+[[task]]
+id = "T-01-01"
+slice = "UOW-01"
+title = "Drop the foreign key on review_events.question_id"
+estimate_h = 2.0
+touches = ["apps/api/alembic/versions", "apps/api/app/shared/infrastructure/schema/bank.py"]
+tests = ["apps/api/tests/test_schema_drift.py", "apps/api/tests/test_bank_api.py"]
+done_when = ["Migration up and down, the downgrade's cost stated in its docstring", "alembic check clean", "Deleting a question leaves its events untouched"]
+
+[[task]]
+id = "T-01-02"
+slice = "UOW-01"
+title = "The refusal names the questions it cannot put back"
+estimate_h = 2.0
+depends_on = ["T-01-01"]
+touches = ["apps/api/app/modules/bank/application/commands/undo_batch.py", "apps/api/app/modules/bank/domain/services/history.py"]
+tests = ["apps/api/tests/unit/test_bank_handlers.py", "apps/api/tests/test_bank_api.py"]
+done_when = ["questions_gone carries the ids", "Whole batch still refused", "lost_question kept for rows nulled before the migration, its docstring saying so"]

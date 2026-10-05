@@ -1,0 +1,179 @@
+# Imported from ai-dlc (ai-dlc:2026092303-review-ux) on 2026-10-05.
+# ids are kept as they were, so tickets, commits and history still line up.
+
+[feature]
+title = "Make reviewing a parsed paper readable and reversible"
+tier = "standard"
+client = ""
+imported_from = "ai-dlc:2026092303-review-ux"
+
+[[assumption]]
+id = "A-01"
+text = "A document has one readable state derived from its counts: `cần xem` (anything pending), `đang duyệt` (some approved, none pending), `xong` (every question decided) — a filterable, sortable column, with the detailed counts kept behind it"
+blocking = true
+status = "confirmed"
+resolution = "Confirmed by Loc Tran in chat (2026-09-23): \"nhiều label, không filter, quá rối\""
+
+[[assumption]]
+id = "A-02"
+text = "The 5% sample stays and is renamed \"Mẫu kiểm chứng\", with one sentence on screen saying what it is for"
+blocking = false
+status = "confirmed"
+resolution = "Confirmed by Loc Tran in chat (2026-09-23)"
+
+[[assumption]]
+id = "A-03"
+text = "The review page lists every question of the document with a state filter (mặc định \"Cần xem\"), and any question can be opened, edited and re-decided — including undoing an approval"
+blocking = true
+status = "confirmed"
+resolution = "Confirmed by Loc Tran in chat (2026-09-23)"
+
+[[assumption]]
+id = "A-04"
+text = "Points stay where they are (per type on the exam, per question override, scaled to 10); this feature only makes them visible and explains the total"
+blocking = false
+status = "confirmed"
+resolution = "Confirmed by Loc Tran in chat (2026-09-23): \"điểm đã đủ, chỉ khó tìm\""
+
+[[assumption]]
+id = "A-05"
+text = "Re-deciding a question is the existing bulk/status command; no new endpoint and no audit change beyond what a status change already records"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-23) — to confirm at final review"
+
+[[ac]]
+id = "AC-01"
+title = "One state, filterable"
+story = "US-01 — The list says what to do next"
+given = "the review list"
+when = "I look at a document"
+then = "it shows one state (Cần xem / Đang duyệt / Xong) with how many questions still wait, and I can filter and sort by that state"
+
+[[ac]]
+id = "AC-02"
+title = "The sample explains itself"
+story = "US-01 — The list says what to do next"
+given = "a document with questions drawn for the check sample"
+when = "I read its row"
+then = "the label says \"Mẫu kiểm chứng\" and one sentence explains it is 5% of the auto-approved questions, drawn to catch a wrong automatic decision"
+
+[[ac]]
+id = "AC-03"
+title = "Filter by state on the document"
+story = "US-02 — Every question stays reachable"
+given = "a document being reviewed"
+when = "I open it"
+then = "I see its questions filtered to \"Cần xem\" by default and can switch to Đã duyệt, Đã loại, Trùng or Tất cả"
+
+[[ac]]
+id = "AC-04"
+title = "Correct and re-decide"
+story = "US-02 — Every question stays reachable"
+given = "a question I already approved"
+when = "I open it from the document, edit its stem, options, key or solution and approve or reject it again"
+then = "the change is saved, its state changes accordingly and the counts of the document follow"
+
+[[ac]]
+id = "AC-05"
+title = "The decision is obvious"
+story = "US-02 — Every question stays reachable"
+given = "a question on the review page"
+when = "it is shown"
+then = "its current state is named on the row, and the action that changes it says what it will do"
+
+[[ac]]
+id = "AC-06"
+title = "The exam states its weighting"
+story = "US-03 — Points are where a teacher looks"
+given = "an exam built from a document"
+when = "I open it"
+then = "it shows the points of each part and the total, says how that maps to the 10-point scale, and the per-question points are editable from that same place"
+
+[[decision]]
+id = "ADR-01"
+title = "One derived state per document, the counts behind it"
+status = "accepted"
+choice = "** Derive `review_state` from the counts, make it the visible column and the filter, and keep the breakdown one click away"
+
+[[decision]]
+id = "ADR-02"
+title = "A decision is a state, not an event"
+status = "accepted"
+choice = "** The document page can show any state and re-decide through the same command that decided first; no undo stack, no new endpoint"
+
+[[decision]]
+id = "ADR-03"
+title = "The 5% sample keeps its purpose and gets a name"
+status = "accepted"
+choice = "** Rename to \"Mẫu kiểm chứng\" and say in one sentence what it is: 5% of the questions the machine approved by itself, drawn to catch it being wrong"
+
+[[slice]]
+id = "UOW-01"
+title = "One state per document, and every question reachable"
+covers = ["AC-01", "AC-03", "AC-04"]
+demo = """
+1. POST /review/documents/search lọc review_state=pending → chỉ đề còn việc
+2. POST /review/documents/{id}/questions/search state=approved → đọc lại câu đã duyệt"""
+
+[[slice]]
+id = "UOW-02"
+title = "The review list and page a teacher can read"
+covers = ["AC-01", "AC-02", "AC-03", "AC-04", "AC-05"]
+demo = """
+1. Danh sách: một trạng thái, lọc được, chi tiết đếm nằm trong popover, 'Mẫu kiểm chứng' có giải thích
+2. Trang đề: lọc Cần xem / Đã duyệt / Đã loại / Tất cả, sửa và duyệt lại một câu đã duyệt"""
+
+[[slice]]
+id = "UOW-03"
+title = "The exam states its own weighting"
+covers = ["AC-06"]
+demo = "1. Mở đề: điểm từng phần, tổng thô và quy về thang 10, sửa điểm từng câu ngay đó"
+
+[[task]]
+id = "T-01-01"
+slice = "UOW-01"
+title = "review_state and pending on the document list"
+estimate_h = 3.0
+touches = ["apps/api/app/modules/bank/infrastructure/read_models.py", "apps/api/app/modules/bank/interface/schemas.py", "apps/api/app/modules/bank/application/dto.py"]
+tests = ["apps/api/tests/test_review_api.py", "apps/api/tests/test_review_queue.py"]
+done_when = ["Derived state", "Filterable and sortable", "Counts still returned"]
+
+[[task]]
+id = "T-01-02"
+slice = "UOW-01"
+title = "A document's questions by state"
+estimate_h = 4.0
+depends_on = ["T-01-01"]
+touches = ["apps/api/app/modules/bank/application/queries/document_questions.py", "apps/api/app/modules/bank/interface/router.py", "apps/api/app/modules/bank/infrastructure/read_models.py"]
+tests = ["apps/api/tests/test_review_queue.py", "apps/api/tests/unit/test_bank_handlers.py"]
+done_when = ["state filter incl. all", "Paged", "422 on an unknown state", "Re-decide keeps counts right"]
+
+[[task]]
+id = "T-02-01"
+slice = "UOW-02"
+title = "The review list: one state, a filter, the sample explained"
+estimate_h = 4.0
+depends_on = ["T-01-01"]
+touches = ["apps/web/src/hooks/page-hooks/review/use-review-page.tsx", "apps/web/src/components/page-components/Review/ReviewCounts/ReviewCounts.tsx", "apps/web/src/constants/review.constant.ts"]
+tests = ["apps/web/src/__tests__/review-list.test.tsx"]
+done_when = ["State column + filter", "Counts in a popover", "Mẫu kiểm chứng explained on screen"]
+
+[[task]]
+id = "T-02-02"
+slice = "UOW-02"
+title = "The document page: filter, read back, edit, re-decide"
+estimate_h = 4.0
+depends_on = ["T-01-02", "T-02-01"]
+touches = ["apps/web/src/components/page-components/ReviewDocument/ReviewQueue/ReviewQueue.tsx", "apps/web/src/hooks/page-hooks/review-document/use-review-document.tsx", "apps/web/src/services/review.service.ts"]
+tests = ["apps/web/src/__tests__/review-document.test.tsx"]
+done_when = ["State filter", "Any question opens and edits", "Re-decide updates the counts", "Keyboard flow intact"]
+
+[[task]]
+id = "T-03-01"
+slice = "UOW-03"
+title = "Weighting strip on the exam"
+estimate_h = 3.0
+touches = ["apps/web/src/components/page-components/ExamDetail/ExamWeighting/ExamWeighting.tsx", "apps/web/src/hooks/page-hooks/exam-detail/use-exam-detail.tsx"]
+tests = ["apps/web/src/__tests__/exam-builder.test.tsx"]
+done_when = ["Points per part and total", "Says what it becomes on the 10 scale", "Per-question points reachable from there"]

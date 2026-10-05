@@ -1,0 +1,222 @@
+# Imported from ai-dlc (ai-dlc:2026092402-exam-runner-and-roles) on 2026-10-05.
+# ids are kept as they were, so tickets, commits and history still line up.
+
+[feature]
+title = "Màn hình làm bài đứng yên, xem được cả đề, và giáo viên thử được đề mình giao"
+tier = "standard"
+client = ""
+imported_from = "ai-dlc:2026092402-exam-runner-and-roles"
+
+[[assumption]]
+id = "A-01"
+text = "Khung làm bài giữ một bề rộng cố định cho mọi câu, không phụ thuộc nội dung"
+blocking = true
+status = "confirmed"
+resolution = "Loc Tran nêu trong chat (2026-09-24): \"Không center kiểu đó, sẽ bị nhảy layout\""
+
+[[assumption]]
+id = "A-02"
+text = "\"Toàn đề\" là một chế độ xem thứ hai, xếp dọc cả đề kèm ô trả lời, tự lưu như chế độ một câu; chế độ một câu vẫn còn"
+blocking = true
+status = "confirmed"
+resolution = "Loc Tran chọn trong chat (2026-09-24)"
+
+[[assumption]]
+id = "A-03"
+text = "Giáo viên chạy thử đề đã giao trên đúng màn hình của học sinh, có chấm và có đáp án, nhưng không ghi gì — không attempt, không fact, không mastery"
+blocking = true
+status = "confirmed"
+resolution = "Loc Tran chọn trong chat (2026-09-24): \"Chạy thử, không ghi gì\""
+
+[[assumption]]
+id = "A-04"
+text = "Vai trò lồng nhau: HS ⊂ GV ⊂ Admin, ở cả thanh điều hướng lẫn các endpoint phía học sinh"
+blocking = true
+status = "confirmed"
+resolution = "Loc Tran nêu trong chat (2026-09-24)"
+
+[[assumption]]
+id = "A-05"
+text = "Một giáo viên mở \"Bài được giao\" thấy đúng bài của chính mình — thường là rỗng — chứ không thấy bài của học sinh"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; \"xem bài của học sinh\" đã là báo cáo bài giao, không phải màn này"
+
+[[assumption]]
+id = "A-06"
+text = "Chạy thử không giới hạn số lần và không có đồng hồ đếm ngược"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; nó là bản xem trước có chấm, không phải một lượt thi"
+
+[[ac]]
+id = "AC-01"
+title = "Bề rộng không đổi theo nội dung"
+story = "US-01 — Khung làm bài đứng yên"
+given = "một đề có câu trắc nghiệm dài và câu trả lời ngắn"
+when = "học sinh chuyển qua lại giữa các câu"
+then = "khung câu hỏi và bảng câu giữ nguyên vị trí và bề rộng"
+
+[[ac]]
+id = "AC-02"
+title = "Chuyển giữa hai chế độ"
+story = "US-02 — Xem được cả đề"
+given = "đang làm bài"
+when = "chọn \"Toàn đề\""
+then = "mọi câu hiện theo thứ tự kèm ô trả lời, và chọn \"Một câu\" thì quay lại đúng câu đang làm"
+
+[[ac]]
+id = "AC-03"
+title = "Trả lời được ở chế độ toàn đề"
+story = "US-02 — Xem được cả đề"
+given = "đang ở chế độ toàn đề"
+when = "trả lời một câu bất kỳ"
+then = "câu đó được lưu như ở chế độ một câu, và bảng câu đánh dấu đã làm"
+
+[[ac]]
+id = "AC-04"
+title = "Mở được đề đã giao"
+story = "US-03 — Giáo viên chạy thử đề đã giao"
+given = "một bài đã giao cho lớp"
+when = "giáo viên chọn chạy thử"
+then = "đề mở ra đúng màn hình học sinh thấy, không lộ đáp án trước khi nộp"
+
+[[ac]]
+id = "AC-05"
+title = "Có điểm mà không ghi gì"
+story = "US-03 — Giáo viên chạy thử đề đã giao"
+given = "giáo viên đã trả lời và nộp bản chạy thử"
+when = "kết quả hiện ra"
+then = "có điểm và đáp án, và không một attempt, answer_fact hay mastery nào được tạo"
+
+[[ac]]
+id = "AC-06"
+title = "Điều hướng lồng nhau"
+story = "US-04 — Vai trò lồng nhau"
+given = "đăng nhập bằng giáo viên hoặc quản trị"
+when = "xem thanh điều hướng"
+then = "có đủ mục của học sinh, cộng phần của vai trò mình; quản trị có thêm phần của giáo viên"
+
+[[ac]]
+id = "AC-07"
+title = "Endpoint phía học sinh nhận nhân viên"
+story = "US-04 — Vai trò lồng nhau"
+given = "một giáo viên hoặc quản trị"
+when = "gọi các endpoint phía học sinh của chính mình"
+then = "được trả lời như một người dùng bình thường, không phải 403"
+
+[[decision]]
+id = "ADR-01"
+title = "Chạy thử không ghi gì"
+status = "accepted"
+
+[[decision]]
+id = "ADR-02"
+title = "Vai trò là tập lồng nhau, khai báo một chỗ"
+status = "accepted"
+
+[[decision]]
+id = "ADR-03"
+title = "Chế độ xem nằm trong state, không lên URL"
+status = "accepted"
+
+[[decision]]
+id = "ADR-04"
+title = "Đề của bản chạy thử đi qua cùng một hàm tước dữ liệu với attempt"
+status = "accepted"
+
+[[slice]]
+id = "UOW-01"
+title = "Khung làm bài đứng yên và xem được cả đề"
+covers = ["AC-01", "AC-02", "AC-03"]
+demo = """
+1. Chuyển qua lại mười câu: khung không đổi bề rộng
+2. Bật Toàn đề: cả đề hiện ra, trả lời ngay tại đó, bảng câu đánh dấu đã làm"""
+
+[[slice]]
+id = "UOW-02"
+title = "Vai trò lồng nhau: HS ⊂ GV ⊂ Admin"
+covers = ["AC-06", "AC-07"]
+demo = """
+1. Đăng nhập giáo viên: thanh điều hướng có cả mục của học sinh
+2. Giáo viên gọi endpoint phía học sinh của chính mình: 200, không phải 403"""
+
+[[slice]]
+id = "UOW-03"
+title = "Chạy thử đề đã giao, không ghi một dòng nào"
+covers = ["AC-04", "AC-05"]
+demo = """
+1. GET /assignments/{id}/paper: đề không lộ đáp án
+2. POST /assignments/{id}/trial: có điểm, và đếm attempt/answer_facts không đổi"""
+
+[[slice]]
+id = "UOW-04"
+title = "Giáo viên ngồi vào ghế học sinh"
+covers = ["AC-04", "AC-05"]
+demo = "1. Từ đề đã giao, chọn Làm thử, trả lời, nộp, thấy điểm và đáp án"
+
+[[task]]
+id = "T-01-01"
+slice = "UOW-01"
+title = "Khung làm bài giữ một bề rộng"
+estimate_h = 2.0
+touches = ["apps/web/src/components/page-components/ExamRunner/Runner/Runner.tsx"]
+tests = ["apps/web/src/__tests__/exam-runner.test.tsx"]
+done_when = ["Bề rộng không phụ thuộc nội dung câu", "Các trang khác cùng lỗi được soát và sửa"]
+
+[[task]]
+id = "T-01-02"
+slice = "UOW-01"
+title = "Chế độ Toàn đề"
+estimate_h = 4.0
+depends_on = ["T-01-01"]
+touches = ["apps/web/src/components/page-components/ExamRunner/Runner/Runner.tsx", "apps/web/src/components/page-components/ExamRunner/QuestionCard/QuestionCard.tsx", "apps/web/src/components/page-components/ExamRunner/PaperView/PaperView.tsx", "apps/web/src/hooks/page-hooks/exam-runner/use-exam-runner.ts", "apps/web/src/lib/page-libs/exam-runner/card-id.ts"]
+tests = ["apps/web/src/__tests__/exam-runner.test.tsx"]
+done_when = ["Hai chế độ chuyển qua lại", "Trả lời được ở chế độ toàn đề", "Tự lưu và bảng câu không đổi"]
+
+[[task]]
+id = "T-02-01"
+slice = "UOW-02"
+title = "Điều hướng theo vai trò lồng nhau"
+estimate_h = 2.0
+touches = ["apps/web/src/lib/common/nav.ts"]
+tests = ["apps/web/src/__tests__/nav.test.ts", "apps/web/src/__tests__/shell.test.tsx"]
+done_when = ["GV thấy mục của HS", "Admin thấy mục của GV", "homeFor giữ nguyên cho từng vai trò"]
+
+[[task]]
+id = "T-02-02"
+slice = "UOW-02"
+title = "Endpoint phía học sinh nhận nhân viên"
+estimate_h = 3.0
+touches = ["apps/api/app/modules/assessment/application/queries/my_assignments.py", "apps/api/app/modules/assessment/application/commands/start_attempt.py"]
+tests = ["apps/api/tests/test_assignments_api.py", "apps/api/tests/unit/test_assessment_handlers.py"]
+done_when = ["Không còn role != student", "Dữ liệu vẫn của chính người gọi", "Học sinh không đổi hành vi"]
+
+[[task]]
+id = "T-03-01"
+slice = "UOW-03"
+title = "GET /assignments/{id}/paper"
+estimate_h = 3.0
+touches = ["apps/api/app/modules/assessment/application/queries/assignment_paper.py", "apps/api/app/modules/assessment/application/queries/get_attempt.py", "apps/api/app/modules/assessment/application/common.py", "apps/api/app/modules/assessment/domain/services/attempt_rules.py", "apps/api/app/modules/assessment/interface/router.py", "apps/api/app/modules/assessment/interface/deps.py"]
+tests = ["apps/api/tests/test_assignments_api.py", "apps/api/tests/unit/test_assessment_handlers.py"]
+done_when = ["Đáp án và lời giải bị tước", "Thứ tự câu của đề", "staff_actor, org-scoped"]
+
+[[task]]
+id = "T-03-02"
+slice = "UOW-03"
+title = "POST /assignments/{id}/trial — chấm mà không ghi"
+estimate_h = 4.0
+depends_on = ["T-03-01"]
+touches = ["apps/api/app/modules/assessment/application/queries/trial_run.py", "apps/api/app/modules/assessment/application/queries/attempt_result.py", "apps/api/app/modules/assessment/application/common.py", "apps/api/app/modules/assessment/interface/router.py", "apps/api/app/modules/assessment/interface/deps.py", "apps/api/app/modules/assessment/interface/schemas.py"]
+tests = ["apps/api/tests/test_assignments_api.py", "apps/api/tests/unit/test_assessment_handlers.py"]
+done_when = ["Kết quả cùng hình dạng với result của attempt", "Test khẳng định đếm attempts và answer_facts không đổi", "Không commit nào được gọi"]
+
+[[task]]
+id = "T-04-01"
+slice = "UOW-04"
+title = "Làm thử từ đề đã giao"
+estimate_h = 4.0
+depends_on = ["T-01-02", "T-03-02"]
+touches = ["apps/web/src/components/page-components/ExamDetail/AssignedList/AssignedList.tsx", "apps/web/src/components/page-components/ExamTrial/ExamTrialPage.tsx", "apps/web/src/app/(app)/org/assignments/[id]/trial/page.tsx", "apps/web/src/hooks/page-hooks/exam-trial/use-exam-trial-page.ts", "apps/web/src/components/page-components/ExamRunner/Runner/Runner.tsx", "apps/web/src/hooks/page-hooks/exam-runner/use-exam-runner.ts", "apps/web/src/components/page-components/AttemptResult/ResultView/ResultView.tsx", "apps/web/src/services/assignment.service.ts", "apps/web/src/hooks/react-query/use-query-assignment.ts", "apps/web/src/interfaces/assignment.interface.ts", "apps/web/src/interfaces/attempt.interface.ts", "apps/web/src/dtos/assignment.dto.ts", "apps/web/src/constants/react-query-key.constant.ts"]
+tests = ["apps/web/src/__tests__/exam-trial.test.tsx"]
+done_when = ["Vào được từ danh sách Đã giao", "Runner dùng lại nguyên vẹn", "Kết quả hiện điểm và đáp án", "Màn hình nói rõ đây là bản chạy thử"]

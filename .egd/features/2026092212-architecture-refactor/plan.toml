@@ -1,0 +1,536 @@
+# Imported from ai-dlc (ai-dlc:2026092212-architecture-refactor) on 2026-10-05.
+# ids are kept as they were, so tickets, commits and history still line up.
+
+[feature]
+title = "Layered API modules and a query-driven web client"
+tier = "standard"
+client = ""
+imported_from = "ai-dlc:2026092212-architecture-refactor"
+
+[[assumption]]
+id = "A-01"
+text = "The API contract may change (web is the only client): list endpoints become `POST /<resource>/search` with typed filter objects and return `{data,total,page,limit}`; errors become `{code,message,details}`"
+blocking = true
+status = "confirmed"
+resolution = "Confirmed by Loc Tran in chat (2026-09-22): \"Cho phép đổi\""
+
+[[assumption]]
+id = "A-02"
+text = "JSON stays snake_case and auth stays in httpOnly cookies"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-03"
+text = "Next.js App Router stays; the folder convention is applied inside `src/`"
+blocking = true
+status = "confirmed"
+resolution = "Confirmed by Loc Tran in chat (2026-09-22)"
+
+[[assumption]]
+id = "A-04"
+text = "Every API module gets the four layers, simple CRUD included"
+blocking = true
+status = "confirmed"
+resolution = "Confirmed by Loc Tran in chat (2026-09-22)"
+
+[[assumption]]
+id = "A-05"
+text = "Domain objects are plain dataclasses mapped imperatively by SQLAlchemy; the schema and Alembic history do not change"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-06"
+text = "Table state stays in the URL; the web converts it to the search body"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-07"
+text = "Ingestion algorithms (MathType, splitter, header, vector images) move without behaviour change; the official golden numbers must not move"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-08"
+text = "Existing HTTP tests are updated for the new URLs/shapes only; their assertions keep their meaning"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[ac]]
+id = "AC-01"
+title = "Dependency rule enforced"
+story = "US-01 — Layered API modules"
+given = "the API package"
+when = "`lint-imports` runs"
+then = "every module keeps interface → application → domain, infrastructure depends only inward, domain imports no sqlalchemy/fastapi/pydantic/boto3, modules use only another module's application layer, and shared never imports modules"
+
+[[ac]]
+id = "AC-02"
+title = "Search contract"
+story = "US-01 — Layered API modules"
+given = "a list resource"
+when = "the client posts {page, limit, q, sort, filters} to /<resource>/search with string (* = + - !), compare (= < <= > >=), date-range or enum filters"
+then = "the answer is {data, total, page, limit}, the old GET list is gone, and an unknown field or operator answers 422 bad_filter"
+
+[[ac]]
+id = "AC-03"
+title = "Error shape"
+story = "US-01 — Layered API modules"
+given = "any failing request"
+when = "the API answers"
+then = "the body is {code, message, details: {fields?, requestId}} and the X-Request-Id header matches details.requestId"
+
+[[ac]]
+id = "AC-04"
+title = "One data path"
+story = "US-02 — Query-driven web client"
+given = "the web source"
+when = "lint runs"
+then = "only services/ call the http client, only hooks/react-query use React Query, routes hold no data logic, and useApi / reloadKey no longer exist"
+
+[[ac]]
+id = "AC-05"
+title = "Cache and invalidation"
+story = "US-02 — Query-driven web client"
+given = "a list and a form"
+when = "a record is created, edited or deleted, or the organisation is switched"
+then = "the affected queries refetch without a manual reload, and switching organisation clears the cache without a full page reload"
+
+[[ac]]
+id = "AC-06"
+title = "No regression"
+story = "US-03 — Same behaviour"
+given = "the refactored code"
+when = "the API suite, the official golden set and the web suite run and each page is walked in the browser"
+then = "they pass with the same results as before the refactor"
+
+[[ac]]
+id = "AC-07"
+title = "Architecture map"
+story = "US-04 — Documented structure"
+given = ".ai/architecture.md"
+when = "a developer adds a feature"
+then = "it names every folder, the file-naming rules and the dependency rules for web and API"
+
+[[ac]]
+id = "AC-08"
+title = "Own conventions"
+story = "US-04 — Documented structure"
+given = "docs, ADRs, code comments and commit messages written from now on"
+when = "they are searched for names of other projects"
+then = "nothing is found; the conventions read as Examind's own"
+
+[[decision]]
+id = "ADR-01"
+title = "Dataclass entities mapped imperatively on a shared physical schema"
+status = "accepted"
+choice = "** `shared/infrastructure/schema/*` holds the `Table` objects (the physical schema, also Alembic's metadata)"
+
+[[decision]]
+id = "ADR-02"
+title = "Commands through repositories and a unit of work, queries through read models"
+status = "accepted"
+choice = "** Command handlers load/save aggregates through repository ports and call `uow.commit()`"
+
+[[decision]]
+id = "ADR-03"
+title = "Search endpoint with typed filters"
+status = "accepted"
+choice = "** `POST /<resource>/search`; each filter is `{operator?, value?, from?, to?}` read by the column kind: text (`* = + - !`), number/date/day (`= < <= > >=` or from/to), enum/uuid/bool (`value`, a list = any of)"
+
+[[decision]]
+id = "ADR-04"
+title = "Error body and request id"
+status = "accepted"
+choice = "** `{code, message, details: {fields?, requestId}}`; middleware sets `X-Request-Id` (echoes a valid incoming one)"
+
+[[decision]]
+id = "ADR-05"
+title = "Dependency rules are linted"
+status = "accepted"
+choice = "** `import-linter` contracts (layers per module, forbidden framework imports in domain, modules talk through `application`, shared never imports modules) run in `scripts/verify.sh`; ESLint restricts imports on the web side"
+
+[[decision]]
+id = "ADR-06"
+title = "React Query owns server state"
+status = "accepted"
+choice = "** One QueryClient (staleTime 0, retry 1, no refetch on focus); keys in `constants/react-query-key.constant.ts` (`<ENTITY>_KEYS`, first element = resource); lists use `keepPreviousData`; mutations invalidate `<ENTITY>_KEYS.ALL`; switching organisation clears the cache"
+
+[[decision]]
+id = "ADR-07"
+title = "snake_case JSON and cookie sessions stay"
+status = "accepted"
+choice = "** Keep snake_case and httpOnly cookies"
+
+[[slice]]
+id = "UOW-01"
+title = "Layered foundation and the Tags slice (API + web)"
+covers = ["AC-01", "AC-02", "AC-03", "AC-04", "AC-05", "AC-08"]
+demo = """
+1. POST /api/tags/search with {filters:{name:{operator:'+',value:'ph'}}} → {data,total,page,limit}
+2. Trang Tags: lọc, sắp xếp, phân trang, tạo/sửa/xoá; bảng tự làm mới (không reloadKey)
+3. lint-imports: every contract kept"""
+
+[[slice]]
+id = "UOW-02"
+title = "Topics, taxonomy and the academic context"
+covers = ["AC-01", "AC-02", "AC-04", "AC-05", "AC-06"]
+demo = """
+1. Cây chuyên đề: thêm, đổi tên, chuyển, xoá
+2. Năm học: tạo, kỳ, lên lớp
+3. Lớp học: thêm học sinh"""
+
+[[slice]]
+id = "UOW-03"
+title = "Identity: sessions, users, organisations"
+covers = ["AC-01", "AC-02", "AC-04", "AC-05", "AC-06"]
+demo = """
+1. Đăng nhập, đổi mật khẩu, đổi tổ chức (không reload trang, cache xoá)
+2. Người dùng: tạo, nhập CSV"""
+
+[[slice]]
+id = "UOW-04"
+title = "Question bank and review"
+covers = ["AC-01", "AC-02", "AC-04", "AC-05", "AC-06"]
+demo = """
+1. Ngân hàng câu: môn, bộ lọc, chip, facets
+2. Duyệt câu: hàng đợi, sửa, đáp án"""
+
+[[slice]]
+id = "UOW-05"
+title = "Documents and ingestion"
+covers = ["AC-01", "AC-02", "AC-04", "AC-05", "AC-06"]
+demo = """
+1. Tải lại 18 đề: báo trùng
+2. Golden 18 đề giữ nguyên số liệu
+3. Tạo đề từ tài liệu"""
+
+[[slice]]
+id = "UOW-06"
+title = "Exams, assignments and attempts"
+covers = ["AC-01", "AC-02", "AC-04", "AC-05", "AC-06"]
+demo = """
+1. Tạo đề theo ma trận, sắp thứ tự, xem trước
+2. Giao bài, học sinh làm bài, xem kết quả, chấm tự luận"""
+
+[[slice]]
+id = "UOW-07"
+title = "Analytics, audit and removal of the old layout"
+covers = ["AC-01", "AC-02", "AC-04", "AC-05", "AC-06", "AC-07", "AC-08"]
+demo = """
+1. Báo cáo theo chuyên đề, thống kê cá nhân, luyện tập thích ứng
+2. Cây thư mục cũ không còn; lint sạch"""
+
+[[task]]
+id = "T-01-01"
+slice = "UOW-01"
+title = "Neutral wording in docs and comments"
+estimate_h = 1.0
+touches = [".ai/final-review.md", "apps/api/app/services/paging.py", "apps/web/src/components/data-table/FilterCell.tsx"]
+tests = ["apps/api/tests/test_health.py"]
+done_when = ["No other project named in docs, ADRs or comments"]
+
+[[task]]
+id = "T-01-02"
+slice = "UOW-01"
+title = "Shared kernel, error body, request id, import-linter"
+estimate_h = 4.0
+touches = ["apps/api/app/shared/domain/errors.py", "apps/api/app/shared/application/search.py", "apps/api/app/shared/infrastructure/sql_search.py", "apps/api/app/shared/interface/errors.py", "apps/api/app/shared/interface/request_id.py", "apps/api/.importlinter", "scripts/verify.sh"]
+tests = ["apps/api/tests/test_errors.py", "apps/api/tests/test_architecture.py"]
+done_when = ["Shared layers exist", "Errors answer {code,message,details}", "lint-imports runs in verify"]
+
+[[task]]
+id = "T-01-03"
+slice = "UOW-01"
+title = "taxonomy/tags module in four layers + POST /tags/search"
+estimate_h = 3.0
+depends_on = ["T-01-02"]
+touches = ["apps/api/app/modules/taxonomy/domain/entities.py", "apps/api/app/modules/taxonomy/application/commands/create_tag.py", "apps/api/app/modules/taxonomy/infrastructure/repositories.py", "apps/api/app/modules/taxonomy/interface/router.py"]
+tests = ["apps/api/tests/test_tags_api.py", "apps/api/tests/test_tags_subject.py", "apps/api/tests/test_search_contract.py", "apps/api/tests/unit/test_tag_handlers.py"]
+done_when = ["Tags CRUD + search through handlers", "Old tags router removed", "Handler unit tests with fake ports"]
+
+[[task]]
+id = "T-01-04"
+slice = "UOW-01"
+title = "Web skeleton: query client, http, search body, keys, lint boundaries"
+estimate_h = 3.0
+touches = ["apps/web/src/lib/common/http.ts", "apps/web/src/lib/common/query-client.ts", "apps/web/src/lib/common/search-body.ts", "apps/web/src/constants/react-query-key.constant.ts", "apps/web/eslint.config.mjs", "apps/web/src/__tests__/helpers.tsx"]
+tests = ["apps/web/src/lib/common/search-body.test.ts", "apps/web/src/lib/common/http.test.ts"]
+done_when = ["QueryClientProvider in the app layout", "Error body parsed", "Boundary lint rules"]
+
+[[task]]
+id = "T-01-05"
+slice = "UOW-01"
+title = "DataTable on React Query + Tags page slice"
+estimate_h = 3.0
+depends_on = ["T-01-03", "T-01-04"]
+touches = ["apps/web/src/components/common/DataTable/DataTable.tsx", "apps/web/src/services/tag.service.ts", "apps/web/src/hooks/react-query/use-query-tag.ts", "apps/web/src/components/page-components/Tags/TagsPage.tsx"]
+tests = ["apps/web/src/__tests__/tags.test.tsx", "apps/web/src/__tests__/data-table.test.tsx"]
+done_when = ["Tags page uses service → query hook → page component", "Mutations invalidate TAG_KEYS.ALL"]
+
+[[task]]
+id = "T-02-01"
+slice = "UOW-02"
+title = "taxonomy: subjects, grades, topics tree"
+estimate_h = 4.0
+depends_on = ["T-01-03"]
+touches = ["apps/api/app/modules/taxonomy/application/commands/move_topic.py", "apps/api/app/modules/taxonomy/infrastructure/read_models.py"]
+tests = ["apps/api/tests/test_topics_api.py", "apps/api/tests/test_taxonomy_seed.py"]
+done_when = ["Topics and taxonomy through handlers", "Old routers removed"]
+
+[[task]]
+id = "T-02-02"
+slice = "UOW-02"
+title = "academic: school years, terms, rollover"
+estimate_h = 4.0
+depends_on = ["T-01-02"]
+touches = ["apps/api/app/modules/academic/domain/entities.py", "apps/api/app/modules/academic/application/commands/rollover.py"]
+tests = ["apps/api/tests/test_school_years.py", "apps/api/tests/test_rollover.py"]
+done_when = ["Years and rollover through handlers"]
+
+[[task]]
+id = "T-02-03"
+slice = "UOW-02"
+title = "academic: classes, structure, students"
+estimate_h = 4.0
+depends_on = ["T-02-02"]
+touches = ["apps/api/app/modules/academic/application/commands/add_members.py", "apps/api/app/modules/academic/interface/router.py"]
+tests = ["apps/api/tests/test_classes_api.py", "apps/api/tests/test_structure.py", "apps/api/tests/test_year_history.py"]
+done_when = ["Classes, structure, student record through handlers"]
+
+[[task]]
+id = "T-02-04"
+slice = "UOW-02"
+title = "Web: topics and structure pages"
+estimate_h = 3.0
+depends_on = ["T-02-01", "T-01-05"]
+touches = ["apps/web/src/components/page-components/Topics/TopicsPage.tsx", "apps/web/src/services/topic.service.ts"]
+tests = ["apps/web/src/__tests__/structure.test.tsx"]
+done_when = ["Pages on query hooks"]
+
+[[task]]
+id = "T-02-05"
+slice = "UOW-02"
+title = "Web: school years, rollover, classes, student record, year store"
+estimate_h = 4.0
+depends_on = ["T-02-03", "T-01-05"]
+touches = ["apps/web/src/stores/common/year.store.ts", "apps/web/src/components/page-components/SchoolYears/SchoolYearsPage.tsx"]
+tests = ["apps/web/src/__tests__/school-years.test.tsx", "apps/web/src/__tests__/rollover.test.tsx", "apps/web/src/__tests__/classes.test.tsx"]
+done_when = ["Year choice in a store", "Pages on query hooks"]
+
+[[task]]
+id = "T-03-01"
+slice = "UOW-03"
+title = "identity: auth, sessions, me, password"
+estimate_h = 4.0
+depends_on = ["T-01-02"]
+touches = ["apps/api/app/modules/identity/application/commands/login.py", "apps/api/app/modules/identity/interface/deps.py"]
+tests = ["apps/api/tests/test_auth_api.py", "apps/api/tests/test_auth_service.py"]
+done_when = ["Auth through handlers", "Actor dependency"]
+
+[[task]]
+id = "T-03-02"
+slice = "UOW-03"
+title = "identity: users, import, organisations, membership"
+estimate_h = 4.0
+depends_on = ["T-03-01"]
+touches = ["apps/api/app/modules/identity/application/commands/import_users.py", "apps/api/app/modules/identity/infrastructure/read_models.py"]
+tests = ["apps/api/tests/test_users_api.py", "apps/api/tests/test_import.py", "apps/api/tests/test_orgs_api.py"]
+done_when = ["Users/orgs through handlers + search"]
+
+[[task]]
+id = "T-03-03"
+slice = "UOW-03"
+title = "Web: shell, login, password, org switch clears cache"
+estimate_h = 3.0
+depends_on = ["T-03-01", "T-01-05"]
+touches = ["apps/web/src/components/layout/AppShell/AppShell.tsx", "apps/web/src/services/auth.service.ts"]
+tests = ["apps/web/src/__tests__/login.test.tsx", "apps/web/src/__tests__/shell.test.tsx"]
+done_when = ["Org switch without reload, cache cleared"]
+
+[[task]]
+id = "T-03-04"
+slice = "UOW-03"
+title = "Web: users, import, admin pages"
+estimate_h = 3.0
+depends_on = ["T-03-02", "T-03-03"]
+touches = ["apps/web/src/components/page-components/Users/UsersPage.tsx", "apps/web/src/services/user.service.ts"]
+tests = ["apps/web/src/__tests__/users.test.tsx", "apps/web/src/__tests__/import.test.tsx", "apps/web/src/__tests__/admin.test.tsx"]
+done_when = ["Pages on query hooks"]
+
+[[task]]
+id = "T-04-01"
+slice = "UOW-04"
+title = "bank: question aggregate and commands"
+estimate_h = 4.0
+depends_on = ["T-02-01"]
+touches = ["apps/api/app/modules/bank/domain/entities.py", "apps/api/app/modules/bank/application/commands/update_question.py"]
+tests = ["apps/api/tests/test_bank_api.py", "apps/api/tests/test_review_bulk.py"]
+done_when = ["Question writes through handlers"]
+
+[[task]]
+id = "T-04-02"
+slice = "UOW-04"
+title = "bank: search and facets read model"
+estimate_h = 4.0
+depends_on = ["T-04-01"]
+touches = ["apps/api/app/modules/bank/infrastructure/read_models.py"]
+tests = ["apps/api/tests/test_bank_facets.py", "apps/api/tests/test_filter_operators.py"]
+done_when = ["Search + facets on the search contract"]
+
+[[task]]
+id = "T-04-03"
+slice = "UOW-04"
+title = "bank: review, triage, answer key, key audit"
+estimate_h = 4.0
+depends_on = ["T-04-01"]
+touches = ["apps/api/app/modules/bank/application/commands/review_question.py"]
+tests = ["apps/api/tests/test_review_api.py", "apps/api/tests/test_review_queue.py", "apps/api/tests/test_key_audit.py", "apps/api/tests/test_triage.py"]
+done_when = ["Review through handlers"]
+
+[[task]]
+id = "T-04-04"
+slice = "UOW-04"
+title = "Web: bank list page"
+estimate_h = 4.0
+depends_on = ["T-04-02", "T-02-04"]
+touches = ["apps/web/src/components/page-components/Bank/BankPage.tsx", "apps/web/src/services/question.service.ts"]
+tests = ["apps/web/src/__tests__/bank.test.tsx"]
+done_when = ["Bank on query hooks"]
+
+[[task]]
+id = "T-04-05"
+slice = "UOW-04"
+title = "Web: question detail/form and review"
+estimate_h = 4.0
+depends_on = ["T-04-03", "T-04-04"]
+touches = ["apps/web/src/components/page-components/Review/ReviewPage.tsx"]
+tests = ["apps/web/src/__tests__/question-edit.test.tsx", "apps/web/src/__tests__/review-list.test.tsx"]
+done_when = ["Pages on query hooks"]
+
+[[task]]
+id = "T-05-01"
+slice = "UOW-05"
+title = "ingestion: pure services to domain, I/O to adapters"
+estimate_h = 4.0
+depends_on = ["T-01-02"]
+touches = ["apps/api/app/modules/ingestion/domain/services/splitter.py", "apps/api/app/modules/ingestion/infrastructure/adapters/vector_images.py"]
+tests = ["apps/api/tests/test_mtef.py", "apps/api/tests/test_splitter_thpt.py", "apps/api/tests/test_golden_official.py"]
+done_when = ["Golden numbers unchanged"]
+
+[[task]]
+id = "T-05-02"
+slice = "UOW-05"
+title = "ingestion: documents commands/queries + worker"
+estimate_h = 4.0
+depends_on = ["T-05-01", "T-04-01"]
+touches = ["apps/api/app/modules/ingestion/application/commands/upload_document.py", "apps/api/app/worker/main.py"]
+tests = ["apps/api/tests/test_documents_api.py", "apps/api/tests/test_document_duplicates.py"]
+done_when = ["Documents through handlers; worker calls commands"]
+
+[[task]]
+id = "T-05-03"
+slice = "UOW-05"
+title = "ingestion: assets, AI models, settings"
+estimate_h = 3.0
+depends_on = ["T-05-01"]
+touches = ["apps/api/app/modules/ingestion/application/commands/save_ai_model.py"]
+tests = ["apps/api/tests/test_assets_api.py", "apps/api/tests/test_ai_models_api.py"]
+done_when = ["Through handlers"]
+
+[[task]]
+id = "T-05-04"
+slice = "UOW-05"
+title = "Web: documents list, detail, upload"
+estimate_h = 4.0
+depends_on = ["T-05-02", "T-01-05"]
+touches = ["apps/web/src/components/page-components/Documents/DocumentsPage.tsx", "apps/web/src/services/document.service.ts"]
+tests = ["apps/web/src/__tests__/documents.test.tsx"]
+done_when = ["Polling via refetchInterval"]
+
+[[task]]
+id = "T-05-05"
+slice = "UOW-05"
+title = "Web: AI models and processing settings"
+estimate_h = 2.0
+depends_on = ["T-05-03", "T-01-05"]
+touches = ["apps/web/src/services/ai-model.service.ts"]
+tests = ["apps/web/src/__tests__/processing-config.test.tsx", "apps/web/src/__tests__/ai-models.test.tsx"]
+done_when = ["Pages on query hooks"]
+
+[[task]]
+id = "T-06-01"
+slice = "UOW-06"
+title = "assessment: exams"
+estimate_h = 4.0
+depends_on = ["T-04-01"]
+touches = ["apps/api/app/modules/assessment/application/commands/build_exam.py"]
+tests = ["apps/api/tests/test_exams_api.py", "apps/api/tests/test_exam_from_document.py"]
+done_when = ["Exams through handlers"]
+
+[[task]]
+id = "T-06-02"
+slice = "UOW-06"
+title = "assessment: assignments, attempts, scoring"
+estimate_h = 4.0
+depends_on = ["T-06-01", "T-02-03"]
+touches = ["apps/api/app/modules/assessment/domain/services/scoring.py"]
+tests = ["apps/api/tests/test_assignments_api.py", "apps/api/tests/test_attempts_api.py", "apps/api/tests/test_scoring.py"]
+done_when = ["Attempts through handlers"]
+
+[[task]]
+id = "T-06-03"
+slice = "UOW-06"
+title = "Web: exams list and detail"
+estimate_h = 4.0
+depends_on = ["T-06-01", "T-04-04"]
+touches = ["apps/web/src/components/page-components/Exams/ExamsPage.tsx", "apps/web/src/services/exam.service.ts"]
+tests = ["apps/web/src/__tests__/exams.test.tsx", "apps/web/src/__tests__/exam-builder.test.tsx"]
+done_when = ["Pages on query hooks"]
+
+[[task]]
+id = "T-06-04"
+slice = "UOW-06"
+title = "Web: assign, runner, results, student home"
+estimate_h = 4.0
+depends_on = ["T-06-02", "T-06-03"]
+touches = ["apps/web/src/components/page-components/ExamRunner/ExamRunnerPage.tsx"]
+tests = ["apps/web/src/__tests__/assign.test.tsx", "apps/web/src/__tests__/result.test.tsx"]
+done_when = ["Pages on query hooks"]
+
+[[task]]
+id = "T-07-01"
+slice = "UOW-07"
+title = "analytics and audit modules"
+estimate_h = 4.0
+depends_on = ["T-06-02"]
+touches = ["apps/api/app/modules/analytics/infrastructure/read_models.py", "apps/api/app/modules/audit/interface/router.py"]
+tests = ["apps/api/tests/test_stats_api.py", "apps/api/tests/test_adaptive.py", "apps/api/tests/test_audit_api.py"]
+done_when = ["Through handlers"]
+
+[[task]]
+id = "T-07-02"
+slice = "UOW-07"
+title = "Web: reports, my stats, adaptive"
+estimate_h = 3.0
+depends_on = ["T-07-01", "T-06-04"]
+touches = ["apps/web/src/services/stats.service.ts"]
+tests = ["apps/web/src/__tests__/reports.test.tsx", "apps/web/src/__tests__/practice.test.tsx", "apps/web/src/__tests__/my-stats.test.tsx"]
+done_when = ["Pages on query hooks"]
+
+[[task]]
+id = "T-07-03"
+slice = "UOW-07"
+title = "Remove the old layout, final lint rules, architecture map"
+estimate_h = 3.0
+depends_on = ["T-07-02", "T-05-04", "T-05-05", "T-03-04", "T-02-05", "T-04-05"]
+touches = [".ai/architecture.md", ".ai/final-review.md"]
+tests = ["apps/api/tests/test_architecture.py", "apps/web/src/__tests__/architecture.test.ts"]
+done_when = ["Old folders gone", "Map rewritten", "Full suites + golden pass"]

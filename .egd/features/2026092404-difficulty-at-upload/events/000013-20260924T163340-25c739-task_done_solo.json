@@ -1,0 +1,9 @@
+{
+  "type": "task_done_solo",
+  "seq": 13,
+  "at": "2026-09-24T16:33:40+07:00",
+  "by": "Loc Tran",
+  "imported": "ai-dlc",
+  "task": "T-02-01",
+  "reason": "T-02-02 is built in the same working tree (the stage, its port and the wiring); the two ingestion tests now answer the difficulty request the same model is asked, and the blueprint test records the shortfall that stopped being one"
+}

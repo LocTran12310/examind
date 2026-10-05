@@ -1,0 +1,186 @@
+# Imported from ai-dlc (ai-dlc:2026092211-ui-standards) on 2026-10-05.
+# ids are kept as they were, so tickets, commits and history still line up.
+
+[feature]
+title = "Duplicate uploads, Filter operators, business time zone, shadcn everywhere"
+tier = "standard"
+client = ""
+imported_from = "ai-dlc:2026092211-ui-standards"
+
+[[assumption]]
+id = "A-01"
+text = "Same content (SHA-256) is never stored twice; the choice is skip (default) or re-parse the existing document. Same name + different content: replace the newest same-name document (default), keep both, or skip"
+blocking = true
+status = "confirmed"
+resolution = "Confirmed by Loc Tran in chat (2026-09-22): \"không có options ghi đè hay bỏ qua\" — defaults accepted under blanket pre-approval"
+
+[[assumption]]
+id = "A-02"
+text = "Operators and labels (text * = + - !, compare = < ≤ > ≥); Examind keeps them in the URL as `<col>_op` instead of a POST body, because list state lives in the URL"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-03"
+text = "Text equality is accent/case-insensitive (not an exact match); dates default to a range (existing links) with = < ≤ > ≥ for one day"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-04"
+text = "Business zone Asia/Ho_Chi_Minh (setting BUSINESS_TZ): display, day filters, school-year/term of an answer, default school year; timestamps stay UTC timestamptz, API ISO `Z`; datetime inputs send +07:00"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22)"
+
+[[assumption]]
+id = "A-05"
+text = "Reordering stays within a PHẦN (the server orders by section)"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[ac]]
+id = "AC-01"
+title = "Choose per file"
+story = "US-01 — No silent duplicate uploads"
+given = "files already uploaded (same content) or with the name of an uploaded document"
+when = "I pick them in the upload form"
+then = "each shows what it matches and a choice (skip / re-parse; replace / keep both / skip), skipped files are not sent, the same content is never stored twice"
+
+[[ac]]
+id = "AC-02"
+title = "Operators"
+story = "US-02 — Filter operators"
+given = "a list with text, number and date filters"
+when = "I pick an operator from the symbol menu next to a filter"
+then = "the URL carries `<col>_op`, the server applies it (unknown operator → 422), and dates also offer a range"
+
+[[ac]]
+id = "AC-03"
+title = "Display and day filters"
+story = "US-03 — Business time zone"
+given = "a timestamp 2026-09-21T17:30Z"
+when = "it is shown or a list is filtered on 22/09/2026"
+then = "it shows 22/09/2026 00:30 and matches that day, in any browser or server zone"
+
+[[ac]]
+id = "AC-04"
+title = "Draft ordering"
+story = "US-04 — Exam order saved once"
+given = "an exam"
+when = "I choose \"Sắp xếp thứ tự\", swap câu 1 with câu 3, move one down, then save"
+then = "nothing is saved until \"Lưu thứ tự\", one request carries the whole order, and moves stay inside a part"
+
+[[ac]]
+id = "AC-05"
+title = "No raw controls"
+story = "US-05 — Consistent shadcn UI"
+given = "the app pages and components"
+when = "they render buttons, inputs, labels, tables, collapsibles or keys"
+then = "they use the shadcn components (raw tags only inside asChild)"
+
+[[ac]]
+id = "AC-06"
+title = "Preview fills the dialog"
+story = "US-05 — Consistent shadcn UI"
+given = "the exam preview dialog maximised"
+when = "it renders"
+then = "the questions fill the dialog and scroll inside it, without an empty band"
+
+[[decision]]
+id = "ADR-01"
+title = "Filter operators in URL params"
+status = "accepted"
+choice = "** Fixed symbols/labels, serialized as `<col>_op`"
+
+[[decision]]
+id = "ADR-02"
+title = "Business time zone Asia/Ho_Chi_Minh"
+status = "accepted"
+choice = "** Fixed zone for display and day bounds; explicit offsets on input"
+
+[[decision]]
+id = "ADR-03"
+title = "Content hash + name for duplicates"
+status = "accepted"
+choice = "** Hash decides \"same file\", name decides \"new version\"; the user chooses per file"
+
+[[slice]]
+id = "UOW-01"
+title = "Duplicate uploads: check, skip, re-parse, replace, keep both"
+covers = ["AC-01"]
+demo = "1. Upload a reference file again → 'Đã có file giống hệt' → Bỏ qua → nothing stored"
+
+[[slice]]
+id = "UOW-02"
+title = "Filter operators and business time zone"
+covers = ["AC-02", "AC-03"]
+demo = """
+1. Người dùng: Họ tên + Bắt đầu bằng 'nguyen'
+2. Tạo lúc = 22/09 finds 00:30 Hà Nội"""
+
+[[slice]]
+id = "UOW-03"
+title = "Exam order draft, shadcn consistency, preview dialog"
+covers = ["AC-04", "AC-05", "AC-06"]
+demo = """
+1. Sắp xếp thứ tự → swap → Lưu thứ tự (1 request)
+2. Preview maximised fills the dialog"""
+
+[[task]]
+id = "T-01-01"
+slice = "UOW-01"
+title = "API check + on_duplicate/replace_id"
+estimate_h = 3.0
+touches = ["apps/api/app/services/documents.py", "apps/api/app/routers/documents.py", "apps/api/app/schemas/documents.py", "scripts/golden_live.py"]
+tests = ["apps/api/tests/test_document_duplicates.py", "apps/api/tests/test_documents_api.py"]
+done_when = ["Check", "Skip/reparse/replace/keep both"]
+
+[[task]]
+id = "T-01-02"
+slice = "UOW-01"
+title = "Upload form: hash, check, per-file choice"
+estimate_h = 3.0
+depends_on = ["T-01-01"]
+touches = ["apps/web/src/components/documents/UploadForm.tsx"]
+tests = ["apps/web/src/__tests__/documents.test.tsx", "apps/web/src/__tests__/processing-config.test.tsx"]
+done_when = ["Choices", "Skipped not sent"]
+
+[[task]]
+id = "T-02-01"
+slice = "UOW-02"
+title = "Server operators + business day bounds"
+estimate_h = 3.0
+touches = ["apps/api/app/services/paging.py", "apps/api/app/core/timezone.py", "apps/api/app/core/config.py", "apps/api/app/services/school_years.py", "apps/api/app/services/classes.py"]
+tests = ["apps/api/tests/test_filter_operators.py", "apps/api/tests/test_paging.py", "apps/api/tests/test_school_years.py"]
+done_when = ["Ops", "422", "Day bounds"]
+
+[[task]]
+id = "T-02-02"
+slice = "UOW-02"
+title = "FilterCell operator menu + lib/datetime"
+estimate_h = 3.0
+touches = ["apps/web/src/components/data-table/FilterCell.tsx", "apps/web/src/lib/datetime.ts", "apps/web/src/lib/dates.ts"]
+tests = ["apps/web/src/__tests__/data-table.test.tsx", "apps/web/src/lib/datetime.test.ts"]
+done_when = ["Menu", "Formatter"]
+
+[[task]]
+id = "T-03-01"
+slice = "UOW-03"
+title = "Exam order draft; preview dialog body"
+estimate_h = 3.0
+touches = ["apps/web/src/components/exams/ExamQuestions.tsx", "apps/web/src/app/(app)/org/exams/[id]/page.tsx"]
+tests = ["apps/web/src/__tests__/exam-builder.test.tsx"]
+done_when = ["Draft", "Save once", "Preview fills"]
+
+[[task]]
+id = "T-03-02"
+slice = "UOW-03"
+title = "Raw tags → shadcn across app"
+estimate_h = 4.0
+touches = ["apps/web/src/components/question/QuestionView.tsx", "apps/web/src/components/structure/StructureTree.tsx", "apps/web/src/components/documents/ProcessingConfig.tsx", "apps/web/src/components/reports/Heatmap.tsx"]
+tests = ["apps/web/src/__tests__/bank.test.tsx", "apps/web/src/__tests__/exams.test.tsx", "apps/web/src/components/question/QuestionView.test.tsx"]
+done_when = ["No raw controls"]

@@ -1,0 +1,10 @@
+{
+  "type": "feature_created",
+  "seq": 1,
+  "at": "2026-09-24T09:46:06+07:00",
+  "by": "Loc Tran",
+  "imported": "ai-dlc",
+  "tier": "standard",
+  "rules": 1,
+  "source": ".ai/features/2026092401-history-keeps-ids"
+}

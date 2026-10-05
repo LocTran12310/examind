@@ -1,0 +1,7 @@
+secrets.env
+.auth/
+.lock
+BOARD.md
+board.html
+features/*/runs/
+features/*/reports/

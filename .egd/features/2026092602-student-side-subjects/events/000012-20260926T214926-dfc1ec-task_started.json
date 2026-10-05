@@ -1,0 +1,8 @@
+{
+  "type": "task_started",
+  "seq": 12,
+  "at": "2026-09-26T21:49:26+07:00",
+  "by": "Claude Opus 5",
+  "imported": "ai-dlc",
+  "task": "T-02-01"
+}

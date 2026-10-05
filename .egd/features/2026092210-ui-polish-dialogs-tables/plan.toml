@@ -1,0 +1,149 @@
+# Imported from ai-dlc (ai-dlc:2026092210-ui-polish-dialogs-tables) on 2026-10-05.
+# ids are kept as they were, so tickets, commits and history still line up.
+
+[feature]
+title = "Dialogs, tables, navigation and small screens for dense screens"
+tier = "standard"
+client = ""
+imported_from = "ai-dlc:2026092210-ui-polish-dialogs-tables"
+
+[[assumption]]
+id = "A-01"
+text = "Every FormDialog gets ⤢ maximise (also double-click on the title) and edge/corner resizing; sizes reset when the dialog closes"
+blocking = false
+status = "confirmed"
+resolution = "Confirmed by Loc Tran in chat (2026-09-22): \"Modal/Dialog thêm chức năng phóng to, Kéo ở cạnh cho to/nhỏ được\""
+
+[[assumption]]
+id = "A-02"
+text = "Back links and \"Hủy/Lưu\" returns go to the last URL of that list in this tab (sessionStorage), falling back to the plain list"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-03"
+text = "The save shortcut listens to the physical Enter key (`code`) with ⌘ or Ctrl, so Vietnamese IME composition does not swallow it; the hint shows ⌘ on Apple devices"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-04"
+text = "Question editor topics are limited to the question's subject when it has one (as in the bank, F10)"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[ac]]
+id = "AC-01"
+title = "Maximise and resize"
+story = "US-01 — Resizable dialogs"
+given = "a form dialog is open"
+when = "I press \"Phóng to\" (or double-click its title), then drag its right, left or bottom edge or a corner"
+then = "it fills the window, returns with \"Thu nhỏ\", and follows the drag within the window"
+
+[[ac]]
+id = "AC-02"
+title = "Borders and zebra rows"
+story = "US-02 — Readable tables"
+given = "any DataTable list"
+when = "it renders"
+then = "columns are separated by borders, even rows have a tinted background, and the header plus filter row stay on top while the body scrolls"
+
+[[ac]]
+id = "AC-03"
+title = "Same page and filters"
+story = "US-03 — Back keeps the list state"
+given = "page 2 of a list with a filter"
+when = "I open a row's detail page and press its \"←\" link (or Hủy / after creating)"
+then = "I am back on page 2 with the same filter and sort"
+
+[[ac]]
+id = "AC-04"
+title = "Topic tree"
+story = "US-04 — Question editor"
+given = "I edit a question"
+when = "I press \"Chọn chuyên đề\""
+then = "I see the subject's topic tree with search, and choosing a node sets it as the primary topic"
+
+[[ac]]
+id = "AC-05"
+title = "⌘ + Enter"
+story = "US-04 — Question editor"
+given = "the question editor on a Mac (also while typing Vietnamese)"
+when = "I press ⌘ + Enter"
+then = "the question is saved; the button shows \"⌘ Enter\" on Apple devices and \"Ctrl + Enter\" elsewhere"
+
+[[ac]]
+id = "AC-06"
+title = "Small screens"
+story = "US-05 — Compact spacing"
+given = "a screen narrower than 640 px"
+when = "a list page is shown"
+then = "the page padding is at most 8 px and the header/table gaps are reduced, larger screens keep moderate spacing"
+
+[[decision]]
+id = "ADR-01"
+title = "Resizing in the app wrapper, not the shadcn file"
+status = "accepted"
+choice = "** FormDialog adds handles and inline size around shadcn DialogContent"
+
+[[decision]]
+id = "ADR-02"
+title = "List memory in sessionStorage"
+status = "accepted"
+choice = "** The table query hook records the list URL; back links read it"
+
+[[slice]]
+id = "UOW-01"
+title = "Resizable dialogs, bordered zebra tables, compact spacing"
+covers = ["AC-01", "AC-02", "AC-06"]
+demo = """
+1. Tags → Thêm tag → ⤢ Phóng to → Thu nhỏ → drag the right edge
+2. Người dùng list: column borders, zebra rows
+3. Phone width: page padding 8 px"""
+
+[[slice]]
+id = "UOW-02"
+title = "Back keeps list state; topic tree and ⌘+Enter in the question editor"
+covers = ["AC-03", "AC-04", "AC-05"]
+demo = """
+1. Bank page 2 + filter → open a question → ← returns to page 2
+2. Sửa câu → Chọn chuyên đề shows the tree → pick → ⌘ Enter saves"""
+
+[[task]]
+id = "T-01-01"
+slice = "UOW-01"
+title = "FormDialog maximise + edge/corner resize"
+estimate_h = 3.0
+touches = ["apps/web/src/components/app/FormDialog.tsx"]
+tests = ["apps/web/src/__tests__/form-dialog.test.tsx"]
+done_when = ["Maximise", "Resize edges", "Clamp"]
+
+[[task]]
+id = "T-01-02"
+slice = "UOW-01"
+title = "DataTable borders + zebra; compact spacing"
+estimate_h = 2.0
+touches = ["apps/web/src/components/data-table/DataTable.tsx", "apps/web/src/app/(app)/AppShell.tsx", "apps/web/src/components/app/PageHeader.tsx"]
+tests = ["apps/web/src/__tests__/data-table.test.tsx"]
+done_when = ["Borders", "Zebra", "Spacing"]
+
+[[task]]
+id = "T-02-01"
+slice = "UOW-02"
+title = "List memory + BackLink on detail pages"
+estimate_h = 2.0
+touches = ["apps/web/src/lib/list-memory.ts", "apps/web/src/components/app/BackLink.tsx", "apps/web/src/components/data-table/useTableQuery.ts", "apps/web/src/app/(app)/org/bank/[id]/page.tsx", "apps/web/src/app/(app)/org/bank/new/page.tsx", "apps/web/src/app/(app)/org/exams/[id]/page.tsx", "apps/web/src/components/documents/DocumentDetail.tsx"]
+tests = ["apps/web/src/__tests__/list-memory.test.tsx"]
+done_when = ["Stored per list", "Back links use it"]
+
+[[task]]
+id = "T-02-02"
+slice = "UOW-02"
+title = "Topic tree picker + ⌘/Ctrl+Enter in question editors"
+estimate_h = 3.0
+touches = ["apps/web/src/components/topics/TopicTreePick.tsx", "apps/web/src/lib/shortcuts.ts", "apps/web/src/components/bank/QuestionForm.tsx", "apps/web/src/components/review/QuestionEditor.tsx"]
+tests = ["apps/web/src/__tests__/question-edit.test.tsx", "apps/web/src/__tests__/bank-bulk.test.tsx", "apps/web/src/__tests__/exam-builder.test.tsx"]
+done_when = ["Tree", "Cmd+Enter", "Hint"]

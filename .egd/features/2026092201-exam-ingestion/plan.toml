@@ -1,0 +1,558 @@
+# Imported from ai-dlc (ai-dlc:2026092201-exam-ingestion) on 2026-10-05.
+# ids are kept as they were, so tickets, commits and history still line up.
+
+[feature]
+title = "Exam ingestion"
+tier = "standard"
+client = ""
+imported_from = "ai-dlc:2026092201-exam-ingestion"
+
+[[assumption]]
+id = "A-01"
+text = "Vietnamese exams mark questions with `Câu N` (optionally `Câu N.`, `Câu N:`, `Câu N (0,25 điểm)`), options with `A.`–`D.` (also `A)`), true/false statements with `a)`–`d)`"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-02"
+text = "Answers appear as one of: inline `Đáp án: C` / `Chọn C`; an answer-key table/list at the end (`1.A 2.C`, or a table); or the correct option underlined/bold/coloured in Word"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-03"
+text = "Solutions appear either right after each question (`Lời giải`, `Hướng dẫn giải`, `Giải`) or in a trailing section whose items restart numbering at `Câu 1`"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-04"
+text = "THPT 2025 structure: `PHẦN I` MCQ, `PHẦN II` true/false (4 statements), `PHẦN III` short answer; older exams are all-MCQ; essays exist in school exams (`Bài N`)"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-05"
+text = "Docx equations are OMML (Word 2007+); Pandoc converts them to TeX. MathType objects stay images"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-06"
+text = "Scans are printed text; Tesseract `vie` gives usable text; formulas in scans are imperfect and flagged low-confidence"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-07"
+text = "Max upload 30 MB, 60 pages; .docx, .pdf, .png, .jpg accepted; .doc (binary) rejected with a hint to save as .docx"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-08"
+text = "Same file (sha256) uploaded twice in one org returns the existing document instead of parsing again"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-09"
+text = "Worker processes at most `INGEST_CONCURRENCY` (default 1) jobs; a job retries up to 2 times with backoff; a stuck job (locked > 15 min) is re-queued"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-10"
+text = "LLM providers: `ollama` (native API), `openai` (any OpenAI-compatible server incl. LM Studio, vLLM, Gemini's OpenAI endpoint), `anthropic`; API keys encrypted at rest with a key from env `APP_ENCRYPTION_KEY`"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-11"
+text = "System-wide models (organization_id NULL) are managed by super_admin and visible to every org; org models by org_admin"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-12"
+text = "Parsed questions are stored as `status = draft` with `confidence` 0–1 and `issues[]`; approval happens in `question-review`"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-13"
+text = "Topic suggestion in this feature: keyword match against leaf topic names (always) + LLM choice among leaf topics when a text model is configured; stored as `question_topics.source = 'auto'` with a score"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[assumption]]
+id = "A-14"
+text = "Re-parsing a document replaces its draft questions; questions already approved are never deleted by a re-parse"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-22) — to confirm at final review"
+
+[[ac]]
+id = "AC-01"
+title = "Upload queues a job"
+story = "US-01 — Upload an exam file with its metadata"
+given = "I am a teacher of \"trungtama\""
+when = "I upload \"de-mau-toan10.docx\" with subject Toán, grade 10, semester HK1, kind \"Giữa kỳ\""
+then = "a document appears in /org/documents with status \"Đang chờ\" then \"Đang xử lý\" then \"Đã tách\", and the original file is stored in object storage"
+
+[[ac]]
+id = "AC-02"
+title = "Validation"
+story = "US-01 — Upload an exam file with its metadata"
+given = "a file that is .doc, larger than 30 MB, or not a document/image"
+when = "I upload it"
+then = "I see a field error explaining what is accepted and nothing is queued"
+
+[[ac]]
+id = "AC-03"
+title = "Duplicate file"
+story = "US-01 — Upload an exam file with its metadata"
+given = "\"de-mau-toan10.docx\" was already uploaded in my org"
+when = "I upload the same bytes again"
+then = "I am taken to the existing document with a notice \"File này đã được tải lên\""
+
+[[ac]]
+id = "AC-04"
+title = "Worker robustness"
+story = "US-01 — Upload an exam file with its metadata"
+given = "the worker crashes or a parser raises while processing"
+when = "the job is retried twice and still fails"
+then = "the document status is \"Lỗi\" with a readable error and the stack trace is only in logs, and a job locked for more than 15 minutes is picked up again"
+
+[[ac]]
+id = "AC-05"
+title = "MCQ split"
+story = "US-02 — Split Word exams into complete questions"
+given = "a docx with 40 questions \"Câu 1.\" … \"Câu 40.\" each with options A–D"
+when = "it is parsed"
+then = "40 questions exist with number, stem and 4 options in order, type mcq"
+
+[[ac]]
+id = "AC-06"
+title = "Math and images"
+story = "US-02 — Split Word exams into complete questions"
+given = "questions containing Word equations and inline pictures (in stem, in an option, in a solution)"
+when = "they are parsed"
+then = "equations become $…$ LaTeX and each picture becomes an asset referenced in the right part"
+
+[[ac]]
+id = "AC-07"
+title = "Answers from inline marks, answer key, or formatting"
+story = "US-02 — Split Word exams into complete questions"
+given = "answers given as \"Đáp án: C\" / \"Chọn C\" after a question, or a trailing answer key \"1.A 2.C …\" or a table, or the correct option underlined/bold"
+when = "the document is parsed"
+then = "each question's answer is set and the answer source is recorded"
+
+[[ac]]
+id = "AC-08"
+title = "Solutions inline or trailing"
+story = "US-02 — Split Word exams into complete questions"
+given = "solutions after each question (\"Lời giải\", \"Hướng dẫn giải\") or in a trailing \"HƯỚNG DẪN GIẢI\" section numbered from Câu 1"
+when = "the document is parsed"
+then = "each solution is attached to its question and no duplicate questions are created"
+
+[[ac]]
+id = "AC-09"
+title = "THPT 2025 parts"
+story = "US-02 — Split Word exams into complete questions"
+given = "a docx with PHẦN I (MCQ), PHẦN II (true/false a–d) and PHẦN III (short answer)"
+when = "it is parsed"
+then = "types are mcq, true_false (4 statements with Đ/S when given) and short_answer (value) respectively, numbered within their part"
+
+[[ac]]
+id = "AC-10"
+title = "Confidence and issues"
+story = "US-02 — Split Word exams into complete questions"
+given = "a question with 3 options, or no answer, or an unreadable fragment"
+when = "it is parsed"
+then = "its confidence is below 0.85 and issues lists \"thiếu phương án\", \"thiếu đáp án\", etc., and well-formed questions score ≥ 0.85"
+
+[[ac]]
+id = "AC-11"
+title = "Text PDF"
+story = "US-03 — Read PDFs and scans"
+given = "a PDF with a text layer and embedded figures"
+when = "it is parsed"
+then = "text is extracted in reading order, figures are cropped into assets placed where they appear, and splitting works as for docx"
+
+[[ac]]
+id = "AC-12"
+title = "Scanned PDF or image"
+story = "US-03 — Read PDFs and scans"
+given = "a PDF without a text layer, or a PNG/JPG photo of a printed exam"
+when = "it is parsed with OCR engine \"tesseract\""
+then = "text is OCR'd in Vietnamese, questions are split, and every question from OCR has an \"OCR\" issue flag and confidence ≤ 0.8"
+
+[[ac]]
+id = "AC-13"
+title = "Model registry"
+story = "US-04 — Choose AI models instead of hard-coding them"
+given = "I am org_admin"
+when = "I add a model {provider ollama, model qwen2.5:7b, base URL http://ollama:11434, capability text}"
+then = "it appears in /org/ai-models with a Free badge, and I can enable, disable, edit and delete it, and API keys are never returned by the API after saving"
+
+[[ac]]
+id = "AC-14"
+title = "Discover and test"
+story = "US-04 — Choose AI models instead of hard-coding them"
+given = "an Ollama server is reachable"
+when = "I click \"Phát hiện model Ollama\""
+then = "locally pulled models are listed and can be added in one click, and \"Kiểm tra\" on a model returns ok with latency or the provider's error"
+
+[[ac]]
+id = "AC-15"
+title = "System models"
+story = "US-04 — Choose AI models instead of hard-coding them"
+given = "super_admin registered a system-wide model"
+when = "any org lists available models"
+then = "that model is included, marked \"Hệ thống\", and org admins cannot edit it"
+
+[[ac]]
+id = "AC-16"
+title = "Choose at upload"
+story = "US-04 — Choose AI models instead of hard-coding them"
+given = "enabled models exist"
+when = "I upload a file and open \"Cấu hình xử lý\""
+then = "I can choose split mode (rule only / rule + AI fallback / AI all), OCR engine (auto / tesseract / AI vision) and the models for splitting and tagging, and the choice is stored on the document and on each question (parse_method, parse_model)"
+
+[[ac]]
+id = "AC-17"
+title = "Org defaults"
+story = "US-04 — Choose AI models instead of hard-coding them"
+given = "I am org_admin"
+when = "I save default split mode, OCR engine, models and auto-approve threshold for my org"
+then = "new uploads start with these defaults"
+
+[[ac]]
+id = "AC-18"
+title = "Fallback"
+story = "US-05 — AI fallback for hard questions"
+given = "mode \"rule + AI fallback\" and a model is configured"
+when = "a question's rule-based confidence is below the threshold"
+then = "the model is asked (JSON schema) to split that block, its result replaces the rule result when valid, and parse_method is \"llm\""
+
+[[ac]]
+id = "AC-19"
+title = "Model failure"
+story = "US-05 — AI fallback for hard questions"
+given = "the model times out or returns invalid JSON"
+when = "the fallback runs"
+then = "the next configured model is tried, and if none succeeds the rule result is kept with issue \"AI không phản hồi\""
+
+[[ac]]
+id = "AC-20"
+title = "Re-parse"
+story = "US-05 — AI fallback for hard questions"
+given = "a parsed document"
+when = "I re-parse it with another model or mode"
+then = "its draft questions are replaced, approved questions are kept, and the new config is recorded"
+
+[[ac]]
+id = "AC-21"
+title = "Inherit metadata"
+story = "US-06 — Suggested topics and metadata on every question"
+given = "the document was uploaded with Toán, grade 10, HK1, \"Giữa kỳ\", source name \"THPT Chu Văn An\""
+when = "questions are created"
+then = "each has subject, grade, semester, exam kind and a source tag \"THPT Chu Văn An\""
+
+[[ac]]
+id = "AC-22"
+title = "Suggested topic"
+story = "US-06 — Suggested topics and metadata on every question"
+given = "leaf topics exist in the org's tree"
+when = "a question mentions \"nguyên hàm\" / \"tích phân\" / \"parabol\" …"
+then = "a primary topic suggestion with a score is stored (keyword rules; the tagging model when configured), shown on the document page"
+
+[[decision]]
+id = "ADR-01"
+title = "Postgres job queue"
+status = "accepted"
+choice = "** `jobs` table + `FOR UPDATE SKIP LOCKED`, `worker` service polling every 2 s, `INGEST_CONCURRENCY` threads, stale-lock recovery at 15 min, 3 attempts"
+
+[[decision]]
+id = "ADR-02"
+title = "Canonical line stream between extractors and the splitter"
+status = "accepted"
+choice = "** Extractors emit Markdown lines (math as `$…$`, images as `asset:` refs, underline/bold spans kept); the splitter is a pure function over lines and is unit-tested without files"
+
+[[decision]]
+id = "ADR-03"
+title = "Thin LLM adapters instead of LiteLLM"
+status = "accepted"
+choice = "** `app/ingestion/llm.py` with three adapters over httpx, JSON-mode prompting and a validator; providers are rows in `ai_models`"
+
+[[decision]]
+id = "ADR-04"
+title = "pdfplumber + pypdfium2 for PDFs"
+status = "accepted"
+choice = "** pdfplumber (MIT) for words/lines/image boxes, pypdfium2 (Apache/BSD) to render pages and crops"
+
+[[decision]]
+id = "ADR-05"
+title = "Tesseract as default OCR, AI vision optional"
+status = "accepted"
+choice = "** `tesseract-ocr-vie` in the image, invoked via CLI (TSV with confidences); `vision` engine sends page images to a vision-capable registry model"
+
+[[decision]]
+id = "ADR-06"
+title = "API tests run inside the api image"
+status = "accepted"
+choice = "** `api` Dockerfile gets a `test` stage (dev deps); compose profile `test` service `api-test` mounts `apps/api`; `scripts/verify.sh` runs pytest there"
+
+[[decision]]
+id = "ADR-07"
+title = "Encrypted provider keys"
+status = "accepted"
+choice = "** Fernet with `APP_ENCRYPTION_KEY` (env); API returns only `has_key`"
+
+[[decision]]
+id = "ADR-08"
+title = "Pillow allowed in the API image"
+status = "accepted"
+choice = "** Use Pillow (already a pdfplumber dependency); the stdlib PNG writer stays for generated demo images"
+
+[[decision]]
+id = "ADR-09"
+title = "Bounded LLM generations and schema-constrained output"
+status = "accepted"
+choice = "** `num_predict`/`max_tokens` = 1500, Ollama structured outputs with a JSON schema, normalisation of common drifts (type aliases, numeric labels), timeout from `LLM_TIMEOUT_SECONDS`"
+
+[[slice]]
+id = "UOW-01"
+title = "A Word exam becomes complete draft questions"
+covers = ["AC-01", "AC-02", "AC-03", "AC-04", "AC-05", "AC-06", "AC-07", "AC-08", "AC-09", "AC-10", "AC-21"]
+demo = """
+1. docker compose up -d --build (worker included)
+2. Log in as a trungtama teacher, open /org/documents
+3. Upload samples/exams/de-mau-toan10.docx with Toán · Lớp 10 · HK1 · Giữa kỳ
+4. Status goes Đang chờ → Đang xử lý → Đã tách (40 câu) within a minute
+5. Open the document: every question shows stem, 4 options, answer, solution; equations render; the figure in Câu 5's option C and in Câu 12's solution appear
+6. Upload the same file again → redirected to the existing document with 'File này đã được tải lên'
+7. Upload a .doc → field error
+8. Upload samples/exams/de-thpt2025-toan.docx → PHẦN I mcq, PHẦN II true/false with Đ/S, PHẦN III short answers"""
+
+[[slice]]
+id = "UOW-02"
+title = "Text PDFs and scanned exams are read"
+covers = ["AC-11", "AC-12"]
+demo = """
+1. Upload samples/exams/de-mau-toan10.pdf → 40 questions, figure cropped into the right question
+2. Upload samples/exams/de-scan.png (and de-scan.pdf) → questions split, each flagged 'OCR' with confidence ≤ 0.8"""
+
+[[slice]]
+id = "UOW-03"
+title = "Admins register AI models; teachers choose them per upload"
+covers = ["AC-13", "AC-14", "AC-15", "AC-16", "AC-17", "AC-18", "AC-19", "AC-20"]
+demo = """
+1. As org_admin open /org/ai-models → 'Phát hiện model Ollama' lists pulled models; add one; 'Kiểm tra' → ok
+2. Add an OpenAI-compatible model with an API key → list shows 'Có khóa', key never shown
+3. As super_admin add a system model → org admin sees it as 'Hệ thống', cannot edit
+4. Open /org/settings/ingestion, set default mode 'Quy tắc + AI' and the model
+5. Upload samples/exams/de-kho.docx with 'Cấu hình xử lý' → rule+AI → low-confidence questions show parse_method AI and the model name
+6. Stop the model server, re-parse → questions keep rule results with issue 'AI không phản hồi'"""
+
+[[slice]]
+id = "UOW-04"
+title = "Parsed questions carry metadata and a suggested topic"
+covers = ["AC-21", "AC-22"]
+demo = """
+1. Open the parsed de-mau-toan10 document
+2. Each question shows Toán · Lớp 10 · HK1 · Giữa kỳ, source tag, and a suggested topic chip (e.g. 'Hàm số bậc hai và đồ thị' 0.8)
+3. With a tagging model configured, re-parse → suggestions marked AI"""
+
+[[task]]
+id = "T-01-01"
+slice = "UOW-01"
+title = "Image with pandoc/tesseract, worker + api-test services, verify.sh in container"
+estimate_h = 2.0
+touches = ["apps/api/Dockerfile", "docker-compose.yml", "docker-compose.dev.yml", "scripts/verify.sh", ".env.example", "apps/api/pyproject.toml"]
+tests = ["apps/api/tests/test_health.py"]
+done_when = ["`docker compose up` starts worker healthy", "verify.sh runs API tests inside the container", "`pandoc --version` and `tesseract --list-langs | grep vie` work in the image"]
+
+[[task]]
+id = "T-01-02"
+slice = "UOW-01"
+title = "Schema: jobs, source_documents, question provenance, question_topics/tags"
+estimate_h = 3.0
+depends_on = ["T-01-01"]
+touches = ["apps/api/migrations/versions/0005_ingestion.py", "apps/api/app/models/document.py", "apps/api/app/models/job.py", "apps/api/app/models/question.py", "apps/api/app/models/asset.py", "apps/api/app/models/__init__.py"]
+tests = ["apps/api/tests/test_ingestion_schema.py"]
+done_when = ["Migration up/down clean", "unique (org, file_hash) on documents", "question_topics PK and is_primary partial unique index"]
+
+[[task]]
+id = "T-01-03"
+slice = "UOW-01"
+title = "Postgres job queue and worker loop (retries, stale locks)"
+estimate_h = 2.0
+depends_on = ["T-01-02"]
+touches = ["apps/api/app/worker/queue.py", "apps/api/app/worker/main.py"]
+tests = ["apps/api/tests/test_jobs.py"]
+done_when = ["Two workers never claim the same job", "Failure retried with backoff then marked failed", "Stale lock re-queued"]
+
+[[task]]
+id = "T-01-04"
+slice = "UOW-01"
+title = "Rule-based splitter over the line stream"
+estimate_h = 4.0
+depends_on = ["T-01-01"]
+touches = ["apps/api/app/ingestion/__init__.py", "apps/api/app/ingestion/lines.py", "apps/api/app/ingestion/splitter.py"]
+tests = ["apps/api/tests/test_splitter.py"]
+done_when = ["All listed layouts covered by tests", "Confidence ≥ 0.85 for well-formed, < 0.85 with issues otherwise"]
+
+[[task]]
+id = "T-01-05"
+slice = "UOW-01"
+title = "Sample exam files (docx) generator"
+estimate_h = 2.0
+depends_on = ["T-01-01"]
+touches = ["apps/api/scripts/make_samples.py", "samples/exams/"]
+tests = ["apps/api/tests/test_samples.py"]
+done_when = ["Samples committed and reproducible"]
+
+[[task]]
+id = "T-01-06"
+slice = "UOW-01"
+title = "Docx extractor via Pandoc (math, images, underline marks)"
+estimate_h = 3.0
+depends_on = ["T-01-04", "T-01-05"]
+touches = ["apps/api/app/ingestion/docx.py", "apps/api/app/ingestion/assets.py"]
+tests = ["apps/api/tests/test_docx_extract.py"]
+done_when = ["Math lines contain $…$", "Images become asset refs at their position", "Underlined option label detected"]
+
+[[task]]
+id = "T-01-07"
+slice = "UOW-01"
+title = "Documents API + ingest pipeline (persist, metadata, source tag) + golden test"
+estimate_h = 4.0
+depends_on = ["T-01-03", "T-01-06"]
+touches = ["apps/api/app/routers/documents.py", "apps/api/app/schemas/documents.py", "apps/api/app/services/documents.py", "apps/api/app/ingestion/pipeline.py", "apps/api/app/ingestion/jobs.py", "apps/api/app/services/ingestion_settings.py", "apps/api/app/routers/__init__.py"]
+tests = ["apps/api/tests/test_documents_api.py", "apps/api/tests/test_ingestion_golden.py"]
+done_when = ["Golden: ≥ 95% questions exact on de-mau-toan10.docx", "Parse time < 60 s asserted", "Re-parse keeps approved questions"]
+
+[[task]]
+id = "T-01-08"
+slice = "UOW-01"
+title = "Documents UI: upload, list with live status, detail with parsed questions"
+estimate_h = 3.0
+depends_on = ["T-01-07"]
+touches = ["apps/web/src/app/(app)/org/documents/page.tsx", "apps/web/src/app/(app)/org/documents/[id]/page.tsx", "apps/web/src/components/documents/UploadForm.tsx", "apps/web/src/components/documents/DocumentList.tsx", "apps/web/src/components/documents/ParsedQuestion.tsx", "apps/web/src/lib/types.ts", "apps/web/src/lib/nav.ts"]
+tests = ["apps/web/src/__tests__/documents.test.tsx"]
+done_when = ["Upload with metadata", "Duplicate notice", "Errors shown", "Detail renders questions"]
+
+[[task]]
+id = "T-02-01"
+slice = "UOW-02"
+title = "Text PDF extractor (reading order, columns, image crops)"
+estimate_h = 4.0
+depends_on = ["T-01-07"]
+touches = ["apps/api/app/ingestion/pdf.py", "apps/api/scripts/make_samples.py", "samples/exams/"]
+tests = ["apps/api/tests/test_pdf_extract.py"]
+done_when = ["Reading order correct on 1- and 2-column samples", "Figures cropped at their position"]
+
+[[task]]
+id = "T-02-02"
+slice = "UOW-02"
+title = "OCR provider interface + Tesseract; scanned PDF and image path"
+estimate_h = 4.0
+depends_on = ["T-02-01"]
+touches = ["apps/api/app/ingestion/ocr.py", "apps/api/app/ingestion/extractors.py", "apps/api/app/ingestion/jobs.py", "apps/api/app/ingestion/pipeline.py", "apps/api/scripts/make_samples.py", "samples/exams/"]
+tests = ["apps/api/tests/test_ocr.py"]
+done_when = ["Scan sample splits into questions", "OCR flag + confidence cap"]
+
+[[task]]
+id = "T-03-01"
+slice = "UOW-03"
+title = "ai_models registry: schema, encryption, CRUD API, permissions"
+estimate_h = 4.0
+depends_on = ["T-01-02"]
+touches = ["apps/api/migrations/versions/0006_ai_models.py", "apps/api/app/models/ai_model.py", "apps/api/app/core/crypto.py", "apps/api/app/services/ai_models.py", "apps/api/app/routers/ai_models.py", "apps/api/app/schemas/ai_models.py"]
+tests = ["apps/api/tests/test_ai_models_api.py"]
+done_when = ["Keys never returned", "Org isolation", "System models read-only for org admins"]
+
+[[task]]
+id = "T-03-02"
+slice = "UOW-03"
+title = "LLM adapters (Ollama, OpenAI-compatible, Anthropic), discover and test"
+estimate_h = 4.0
+depends_on = ["T-03-01"]
+touches = ["apps/api/app/ingestion/llm.py", "apps/api/app/routers/ai_models.py"]
+tests = ["apps/api/tests/test_llm.py"]
+done_when = ["Three adapters pass stub tests", "discover lists Ollama tags", "test endpoint reports latency/errors"]
+
+[[task]]
+id = "T-03-03"
+slice = "UOW-03"
+title = "AI fallback in pipeline, model chain, vision OCR engine, re-parse"
+estimate_h = 4.0
+depends_on = ["T-03-02", "T-02-02"]
+touches = ["apps/api/app/ingestion/pipeline.py", "apps/api/app/ingestion/ai_split.py", "apps/api/app/ingestion/ocr.py", "apps/api/app/ingestion/splitter.py", "apps/api/app/ingestion/jobs.py", "apps/api/app/routers/documents.py", "apps/api/app/services/documents.py"]
+tests = ["apps/api/tests/test_ai_fallback.py"]
+done_when = ["Low-confidence blocks re-split by the model", "Chain fallback + issue on total failure", "Re-parse with new config"]
+
+[[task]]
+id = "T-03-04"
+slice = "UOW-03"
+title = "Org ingestion defaults API"
+estimate_h = 2.0
+depends_on = ["T-03-01"]
+touches = ["apps/api/app/routers/org_settings.py", "apps/api/app/services/ingestion_settings.py"]
+tests = ["apps/api/tests/test_ingestion_settings.py"]
+done_when = ["GET for staff, PUT for org_admin", "Invalid model ids refused"]
+
+[[task]]
+id = "T-03-05"
+slice = "UOW-03"
+title = "AI models UI (list, add, discover Ollama, test, edit, delete)"
+estimate_h = 4.0
+depends_on = ["T-03-02", "T-01-08"]
+touches = ["apps/web/src/app/(app)/org/ai-models/page.tsx", "apps/web/src/components/ai/ModelForm.tsx", "apps/web/src/components/ai/ModelTable.tsx"]
+tests = ["apps/web/src/__tests__/ai-models.test.tsx"]
+done_when = ["All actions reachable", "Free/paid + has-key badges"]
+
+[[task]]
+id = "T-03-06"
+slice = "UOW-03"
+title = "Upload 'Cấu hình xử lý', org defaults page, re-parse action"
+estimate_h = 4.0
+depends_on = ["T-03-04", "T-03-05", "T-03-03"]
+touches = ["apps/web/src/components/documents/ProcessingConfig.tsx", "apps/web/src/components/documents/UploadForm.tsx", "apps/web/src/app/(app)/org/settings/ingestion/page.tsx", "apps/web/src/app/(app)/org/documents/[id]/page.tsx", "apps/web/src/lib/nav.ts"]
+tests = ["apps/web/src/__tests__/processing-config.test.tsx"]
+done_when = ["Config sent with upload and re-parse", "Defaults page saves"]
+
+[[task]]
+id = "T-04-01"
+slice = "UOW-04"
+title = "Topic suggester: keyword rules + LLM tagger; persist question_topics"
+estimate_h = 4.0
+depends_on = ["T-01-07", "T-03-03"]
+touches = ["apps/api/app/ingestion/topic_suggest.py", "apps/api/app/ingestion/pipeline.py"]
+tests = ["apps/api/tests/test_topic_suggest.py"]
+done_when = ["Sample questions get sensible primary topics", "LLM choice validated against leaf ids"]
+
+[[task]]
+id = "T-04-02"
+slice = "UOW-04"
+title = "Document page shows metadata, source tag and suggested topics"
+estimate_h = 2.0
+depends_on = ["T-04-01", "T-01-08"]
+touches = ["apps/web/src/components/documents/ParsedQuestion.tsx"]
+tests = ["apps/web/src/__tests__/parsed-question.test.tsx"]
+done_when = ["Chips render", "Score shown"]

@@ -1,0 +1,48 @@
+# ai-dlc verification steps for this feature are in .ai/features/2026092208-official-exam-ingestion/07-verification.md.
+# Evidence for Read official exam files (THPT 2025 thi thử) correctly. One [[proof]] verifies one or more acceptance criteria.
+# kind: test | http | cli | ui. Run with `egd proof run`.
+
+# [[proof]]
+# id = "P-1"
+# kind = "http"
+# title = "Checkout returns a pending order with the right total"
+# verifies = ["AC-1.1"]
+# envs = ["local", "staging"]      # default: every enabled env
+#
+# [[proof.step]]
+# name = "sign in"
+# method = "POST"
+# path = "/api/auth/login"
+# json = { email = "${QA_EMAIL}", password = "${QA_PASSWORD}" }
+# expect = { status = 200 }
+# capture = { token = "$.accessToken" }
+#
+# [[proof.step]]
+# name = "create order"
+# method = "POST"
+# path = "/api/orders"
+# headers = { Authorization = "Bearer {token}" }
+# json = { items = [{ sku = "A1", qty = 2 }] }
+# expect.status = 201
+# expect.json = { "$.total" = 300000, "$.status" = "pending", "$.id" = { exists = true } }
+
+# [[proof]]
+# id = "P-2"
+# kind = "cli"
+# title = "Migration is reversible"
+# verifies = ["AC-1.1"]
+# [[proof.step]]
+# run = "pnpm db:migrate && pnpm db:rollback && pnpm db:migrate"
+# expect = { exit = 0 }
+
+# [[proof]]
+# id = "P-3"
+# kind = "ui"
+# title = "Confirmation page shows the total"
+# verifies = ["AC-1.1"]
+# viewports = ["desktop", "mobile"]
+# [[proof.step]]
+# name = "confirmation"
+# goto = "/orders/latest"
+# wait_for = "text=Pending"
+# expect = { visible = ["text=300,000"] }

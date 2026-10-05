@@ -1,0 +1,231 @@
+# Imported from ai-dlc (ai-dlc:2026092302-topic-coverage) on 2026-10-05.
+# ids are kept as they were, so tickets, commits and history still line up.
+
+[feature]
+title = "Every question belongs to a topic, or someone is asked about it"
+tier = "standard"
+client = ""
+imported_from = "ai-dlc:2026092302-topic-coverage"
+
+[[assumption]]
+id = "A-01"
+text = "Suggestions are computed on demand (no stored suggestion rows): keyword cues first, then kNN over already-tagged questions of the same subject, returning the three best candidates with their score and where they came from"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-23)"
+
+[[assumption]]
+id = "A-02"
+text = "A question the pipeline could not classify is stored `needs_review` instead of `auto_approved`, whatever its parsing confidence; the review reason says \"chưa gắn chuyên đề\""
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-23) — it is what let 101 questions go silent"
+
+[[assumption]]
+id = "A-03"
+text = "The tagging queue is a screen of its own under Duyệt câu hỏi, not a new mode inside the review queue: the work is one decision per question and benefits from bulk apply"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-23) — to confirm at final review"
+
+[[assumption]]
+id = "A-04"
+text = "The existing 101 auto-approved untagged questions keep their status; tagging them does not push them back to review"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-23)"
+
+[[assumption]]
+id = "A-05"
+text = "~~The tagging model (LLM) is not called from the queue~~ — superseded 2026-09-23 by measurement: keyword + kNN covered 14 of 102 questions (13 kNN, 2 keyword), because the backlog is exactly what the cues already failed on. The model is now called for questions the rules cannot place"
+blocking = false
+status = "resolved"
+resolution = "Measured on the live backlog during UOW-01; G3 reopened and UOW-03 added (Loc Tran, chat 2026-09-23)"
+
+[[assumption]]
+id = "A-06"
+text = "The model suggests, never decides: its candidates are shown with source `ai`, a teacher still confirms, and a model failure or timeout degrades to the rule-based candidates instead of failing the request"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-23)"
+
+[[assumption]]
+id = "A-07"
+text = "Model suggestions are asked for one visible page at a time (batches of ~10 questions per call, as ingestion does), only for questions with no candidate or a weak best candidate"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval by Loc Tran (chat, 2026-09-23)"
+
+[[ac]]
+id = "AC-01"
+title = "The queue"
+story = "US-01 — Find and clear the backlog"
+given = "questions with no topic in my organisation"
+when = "I open \"Chưa gắn chuyên đề\""
+then = "I see them newest first with their subject and source document, the count remaining, and I can filter by document and subject"
+
+[[ac]]
+id = "AC-02"
+title = "Suggestions"
+story = "US-01 — Find and clear the backlog"
+given = "a question in the queue"
+when = "it is shown"
+then = "up to three suggested topics appear with their score and origin (từ khóa / tương tự), and choosing one assigns it as the primary topic and removes the question from the queue"
+
+[[ac]]
+id = "AC-03"
+title = "Bulk apply"
+story = "US-01 — Find and clear the backlog"
+given = "several questions I have selected"
+when = "I apply a topic to them"
+then = "all of them get it as primary topic in one request and the remaining count drops accordingly"
+
+[[ac]]
+id = "AC-04"
+title = "Untagged means review"
+story = "US-02 — The backlog stops refilling"
+given = "a document whose questions the classifier cannot place"
+when = "ingestion stores them"
+then = "they are needs_review with the reason \"chưa gắn chuyên đề\", never auto_approved, and they appear in the tagging queue"
+
+[[ac]]
+id = "AC-05"
+title = "Coverage"
+story = "US-03 — Progress is visible"
+given = "the bank of a subject"
+when = "I look at the tagging queue or the bank facets"
+then = "I see how many questions have no topic and how many of them are from each document"
+
+[[ac]]
+id = "AC-06"
+title = "The model fills the gap"
+story = "US-04 — Suggestions for what the rules cannot place"
+given = "a question with no candidate from the cues or from similar questions"
+when = "the queue asks for suggestions and the organisation has an enabled text model"
+then = "up to three candidates come back marked \"AI\", inside the question's subject tree, and a teacher still has to confirm one"
+
+[[ac]]
+id = "AC-07"
+title = "A model problem never blocks the work"
+story = "US-04 — Suggestions for what the rules cannot place"
+given = "the model is disabled, unreachable or slow"
+when = "suggestions are requested"
+then = "the answer still arrives with whatever the rules found, the response says the model was not used, and nothing in the queue breaks"
+
+[[decision]]
+id = "ADR-01"
+title = "Suggestions are computed, never stored"
+status = "accepted"
+choice = "** `POST /questions/suggest-topics` runs the existing rules on demand and returns candidates with score and origin; only a human decision is written, with `source='manual'`"
+
+[[decision]]
+id = "ADR-02"
+title = "An unclassified question waits for review"
+status = "accepted"
+choice = "** Ingestion stores a question with no topic as `needs_review`, with the reason in the document log"
+
+[[decision]]
+id = "ADR-03"
+title = "The bank reaches the classifier through ingestion's application API"
+status = "accepted"
+choice = "** `ingestion.application.api.suggest_for(...)` is the only entry point; bank defines a port and an adapter wired at the composition root, as it already does for taxonomy and identity"
+
+[[decision]]
+id = "ADR-04"
+title = "The model suggests where the rules are silent"
+status = "accepted"
+choice = "** `suggest_for` keeps the rule candidates first and, for questions with none or with a best score below `WEAK_KEYWORD`, asks the organisation's enabled tagging model in batches (the ingestion stage's prompt and `_resolve` are reused, not re-written)"
+
+[[slice]]
+id = "UOW-01"
+title = "Untagged questions are listable, suggestible and no longer silent"
+covers = ["AC-01", "AC-02", "AC-04", "AC-05"]
+demo = """
+1. POST /questions/search {has_topic:false} → 102 câu
+2. POST /questions/suggest-topics → 3 gợi ý kèm điểm và nguồn cho mỗi câu
+3. Tải lại một đề mà máy không phân loại được → câu vào hàng chờ duyệt, không auto_approved"""
+
+[[slice]]
+id = "UOW-02"
+title = "The tagging queue clears the backlog"
+covers = ["AC-01", "AC-02", "AC-03", "AC-05"]
+demo = """
+1. Duyệt câu hỏi › Chưa gắn chuyên đề: chọn gợi ý bằng phím 1/2/3, số còn lại giảm
+2. Chọn nhiều câu → Gán chuyên đề cho N câu"""
+
+[[slice]]
+id = "UOW-03"
+title = "The model suggests where the rules are silent"
+covers = ["AC-06", "AC-07"]
+demo = """
+1. Câu không có ứng viên nào từ luật → gợi ý gắn nhãn AI, nằm trong cây chuyên đề của môn
+2. Tắt model hoặc model treo → vẫn trả về gợi ý theo luật, model_used=false"""
+
+[[task]]
+id = "T-01-01"
+slice = "UOW-01"
+title = "has_topic filter and the per-document count"
+estimate_h = 3.0
+touches = ["apps/api/app/modules/bank/infrastructure/read_models.py", "apps/api/app/modules/bank/interface/schemas.py"]
+tests = ["apps/api/tests/test_topic_coverage.py", "apps/api/tests/test_bank_facets.py"]
+done_when = ["has_topic filters the search", "Untagged count per document"]
+
+[[task]]
+id = "T-01-02"
+slice = "UOW-01"
+title = "Suggestion endpoint reusing the ingestion rules"
+estimate_h = 4.0
+depends_on = ["T-01-01"]
+touches = ["apps/api/app/modules/ingestion/application/api.py", "apps/api/app/modules/bank/domain/ports.py", "apps/api/app/modules/bank/application/queries/suggest_topics.py", "apps/api/app/modules/bank/infrastructure/adapters/suggestions.py", "apps/api/app/modules/bank/interface/router.py", "apps/api/app/main.py"]
+tests = ["apps/api/tests/test_topic_coverage.py", "apps/api/tests/unit/test_bank_handlers.py"]
+done_when = ["Three candidates with score and source", "≤50 ids per request", "Layer rules stay green"]
+
+[[task]]
+id = "T-01-03"
+slice = "UOW-01"
+title = "An unclassified question waits for review"
+estimate_h = 3.0
+depends_on = ["T-01-02"]
+touches = ["apps/api/app/modules/ingestion/application/stages/topic_suggest.py", "apps/api/app/modules/ingestion/application/commands/ingest_document.py"]
+tests = ["apps/api/tests/test_topic_suggest.py", "apps/api/tests/test_documents_api.py"]
+done_when = ["needs_review when no topic", "Reason in the document log", "Golden numbers unchanged"]
+
+[[task]]
+id = "T-02-01"
+slice = "UOW-02"
+title = "Queue screen with suggestions and keyboard flow"
+estimate_h = 4.0
+depends_on = ["T-01-02"]
+touches = ["apps/web/src/services/question.service.ts", "apps/web/src/hooks/react-query/use-query-question.ts", "apps/web/src/hooks/page-hooks/tagging-queue/use-tagging-queue.tsx", "apps/web/src/components/page-components/TaggingQueue/TaggingQueuePage.tsx", "apps/web/src/lib/common/nav.ts"]
+tests = ["apps/web/src/__tests__/tagging-queue.test.tsx"]
+done_when = ["Suggestions as buttons", "1/2/3 picks", "Remaining count"]
+
+[[task]]
+id = "T-02-02"
+slice = "UOW-02"
+title = "Bulk apply and the live backlog cleared"
+estimate_h = 3.0
+depends_on = ["T-02-01"]
+touches = ["apps/web/src/components/page-components/TaggingQueue/BulkTopicBar/BulkTopicBar.tsx"]
+tests = ["apps/web/src/__tests__/tagging-queue.test.tsx"]
+done_when = ["One request per bulk apply", "Counter drops", "Backlog worked through on the live stack"]
+
+[[task]]
+id = "T-03-01"
+slice = "UOW-03"
+title = "Model pass in suggest_for, degrading on failure"
+estimate_h = 4.0
+depends_on = ["T-01-02"]
+touches = ["apps/api/app/modules/ingestion/application/api.py", "apps/api/app/modules/ingestion/domain/services/topic_rules.py", "apps/api/app/modules/bank/interface/schemas.py", "apps/api/app/modules/bank/application/queries/suggest_topics.py"]
+tests = ["apps/api/tests/test_topic_coverage.py", "apps/api/tests/unit/test_bank_handlers.py"]
+done_when = ["ai candidates inside the subject tree", "Batched per ~10 questions", "model_used flag", "Failure degrades to rules"]
+
+[[task]]
+id = "T-03-02"
+slice = "UOW-03"
+title = "Measure it on the real backlog"
+estimate_h = 2.0
+depends_on = ["T-03-01"]
+touches = ["apps/api/scripts/suggestion_report.py"]
+tests = ["apps/api/tests/test_topic_coverage.py"]
+done_when = ["Coverage and agreement measured over the untagged backlog", "Numbers written into 07-demo-evidence.md"]

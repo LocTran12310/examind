@@ -1,0 +1,269 @@
+# Imported from ai-dlc (ai-dlc:2026092601-exam-labels-and-roster-fill) on 2026-10-05.
+# ids are kept as they were, so tickets, commits and history still line up.
+
+[feature]
+title = "đề thuộc khối nào, ôn cá nhân đã giao gì, và xếp lớp không phải gõ từng em"
+tier = "standard"
+client = ""
+imported_from = "ai-dlc:2026092601-exam-labels-and-roster-fill"
+
+[[assumption]]
+id = "A-01"
+text = "\"Lớp\" của một đề là khối (10/11/12) lấy từ `taxonomy.grades`, không phải một lớp học cụ thể như 12A1"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; cột đã tên là \"Lớp\", lọc `kind: number`, và `exams.grade` là `int` — một lớp cụ thể sẽ là `class_id`, không phải con số này"
+
+[[assumption]]
+id = "A-02"
+text = "Môn và Lớp đều không bắt buộc khi tạo đề"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; API để cả hai `None`, và một đề nháp chưa biết dạy khối nào vẫn phải tạo được. Đặt sau ở trang soạn đề"
+
+[[assumption]]
+id = "A-03"
+text = "Ô \"Đề ôn cá nhân\" hiện lượt giao gần nhất đầy đủ, cộng một dòng đếm khi có nhiều hơn một"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; liệt kê hết làm bảng 25 dòng cao gấp ba mà câu hỏi thường trực chỉ là \"em ấy đang phải làm đề nào\" — xem ADR-02"
+
+[[assumption]]
+id = "A-04"
+text = "\"Quá hạn\" = `close_at` đã qua và em ấy chưa nộp"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; đã nộp rồi thì hạn không còn nghĩa gì để cảnh báo"
+
+[[assumption]]
+id = "A-05"
+text = "Thêm từ lớp cũ: mặc định tích sẵn mọi học sinh của lớp nguồn, bỏ tích được từng em"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; anh viết \"chọn toàn lớp\" — mặc định phải là cả lớp, còn bỏ ra vài em là ngoại lệ"
+
+[[assumption]]
+id = "A-06"
+text = "Lớp nguồn chọn được là mọi lớp khác của tổ chức, mọi năm học, mới trước"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; giới hạn vào năm liền trước là đoán: một lớp mới có thể gom từ hai lớp cũ, hoặc từ lớp cùng năm khi tách lớp"
+
+[[assumption]]
+id = "A-07"
+text = "Học sinh đã ở trong lớp đích thì bỏ qua im lặng, không phải lỗi"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; `add_members` đã idempotent, và người dùng thêm lần hai vì không chắc lần một xong chưa"
+
+[[assumption]]
+id = "A-08"
+text = "Đổi Môn của một đề đã có câu hỏi vẫn cho phép"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; xem ADR-03 — câu đã có giữ nguyên, môn chỉ đổi phạm vi ma trận, và màn hình nói ra điều đó"
+
+[[assumption]]
+id = "A-09"
+text = "Tên đề ôn cá nhân link sang báo cáo bài giao (`/org/assignments/{id}`), không sang trang đề"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; người dạy bấm vào để xem em ấy làm ra sao, không phải để sửa đề"
+
+[[ac]]
+id = "AC-01"
+title = "Đặt Môn và Lớp ngay khi tạo đề"
+story = "US-01 — Đề thuộc môn nào, khối nào"
+given = "tôi mở \"Tạo đề\""
+when = "tôi nhập tên, chọn môn Toán và khối 11 rồi tạo"
+then = "đề mới mang môn Toán và khối 11, and danh sách đề hiện \"11\" ở cột Lớp"
+
+[[ac]]
+id = "AC-02"
+title = "Sửa được sau, ngay trên trang soạn đề"
+story = "US-01 — Đề thuộc môn nào, khối nào"
+given = "một đề đang không có môn và không có khối"
+when = "tôi mở trang soạn đề và chọn môn, chọn khối"
+then = "đề được lưu ngay, không cần nút Lưu riêng, and ma trận của đề chỉ mở chuyên đề của môn vừa chọn"
+
+[[ac]]
+id = "AC-03"
+title = "Đổi môn của đề đã có câu hỏi thì nói rõ hệ quả"
+story = "US-01 — Đề thuộc môn nào, khối nào"
+given = "một đề đã có câu hỏi trong đó"
+when = "tôi nhìn ô chọn Môn"
+then = "màn hình nói rằng đổi môn chỉ đổi phạm vi ma trận, câu đã có giữ nguyên"
+
+[[ac]]
+id = "AC-12"
+title = "Bỏ trống lại được"
+story = "US-01 — Đề thuộc môn nào, khối nào"
+given = "một đề đang có khối 11"
+when = "tôi chọn lại \"Chưa chọn\" ở ô Lớp"
+then = "đề không còn khối nào, and một lần sửa không gửi khoá ấy thì khối giữ nguyên"
+
+[[ac]]
+id = "AC-04"
+title = "Ô \"Đề ôn cá nhân\" nói đủ bốn thứ"
+story = "US-02 — Biết đã giao đề ôn cá nhân nào, bao giờ, còn hạn không"
+given = "một học sinh đã được giao một đề ôn cá nhân"
+when = "tôi mở tab Tổng quan của lớp"
+then = "ô của em ấy hiện tên đề, ngày giao, hạn nộp và trạng thái, and tên đề mở được báo cáo của bài giao ấy"
+
+[[ac]]
+id = "AC-05"
+title = "Quá hạn mà chưa nộp thì nhìn ra ngay"
+story = "US-02 — Biết đã giao đề ôn cá nhân nào, bao giờ, còn hạn không"
+given = "hạn của bài giao đã qua và em ấy chưa nộp"
+when = "tôi xem ô của em ấy"
+then = "trạng thái nói là quá hạn, and một em đã nộp thì không bị gọi là quá hạn dù hạn đã qua"
+
+[[ac]]
+id = "AC-06"
+title = "Giao nhiều đề thì màn hình nói ra là có nhiều"
+story = "US-02 — Biết đã giao đề ôn cá nhân nào, bao giờ, còn hạn không"
+given = "một học sinh đã được giao ba đề ôn cá nhân"
+when = "tôi xem ô của em ấy"
+then = "ô hiện đề mới nhất và nói còn 2 đề trước đó"
+
+[[ac]]
+id = "AC-07"
+title = "Chưa giao lần nào thì nói chưa giao"
+story = "US-02 — Biết đã giao đề ôn cá nhân nào, bao giờ, còn hạn không"
+given = "một học sinh chưa được giao đề ôn cá nhân nào"
+when = "tôi xem ô của em ấy"
+then = "ô nói là chưa giao, không để trống"
+
+[[ac]]
+id = "AC-08"
+title = "Chọn lớp cũ, thấy cả danh sách, thêm một lần"
+story = "US-03 — Rót một lớp mới từ một lớp cũ trong một lần"
+given = "tôi đang ở lớp mới và mở \"Thêm học sinh\""
+when = "tôi chuyển sang \"Từ lớp cũ\" và chọn một lớp tôi bấm thêm"
+then = "mọi học sinh của lớp ấy hiện ra và được tích sẵn tất cả các em được tích vào lớp trong một lần gọi"
+
+[[ac]]
+id = "AC-09"
+title = "Bỏ tích được từng em"
+story = "US-03 — Rót một lớp mới từ một lớp cũ trong một lần"
+given = "danh sách học sinh của lớp nguồn đang tích sẵn"
+when = "tôi bỏ tích hai em rồi bấm thêm"
+then = "chỉ những em còn tích được thêm"
+
+[[ac]]
+id = "AC-10"
+title = "Em đã ở trong lớp đích thì không thêm lại"
+story = "US-03 — Rót một lớp mới từ một lớp cũ trong một lần"
+given = "vài em của lớp nguồn đã có trong lớp đích"
+when = "tôi mở danh sách lớp nguồn"
+then = "những em ấy được đánh dấu là đã ở trong lớp và không tích được"
+
+[[ac]]
+id = "AC-11"
+title = "Việc chuyển cả năm học vẫn ở chỗ của nó"
+story = "US-03 — Rót một lớp mới từ một lớp cũ trong một lần"
+given = "tôi đang ở hộp \"Thêm học sinh\""
+when = "tôi đọc phần \"Từ lớp cũ\""
+then = "màn hình chỉ sang \"Chuyển năm học\" cho trường hợp chuyển cả năm"
+
+[[decision]]
+id = "ADR-01"
+title = "Môn và Lớp là thứ giáo viên đặt, không suy từ câu hỏi"
+status = "accepted"
+
+[[decision]]
+id = "ADR-02"
+title = "Ô ôn cá nhân: lượt mới nhất đầy đủ, cộng một con số đếm"
+status = "accepted"
+
+[[decision]]
+id = "ADR-03"
+title = "Đổi môn của đề đã có câu hỏi: cho phép, và nói ra hệ quả"
+status = "accepted"
+
+[[decision]]
+id = "ADR-04"
+title = "\"Thêm từ lớp cũ\" đứng cạnh \"Chuyển năm học\", không thay nó"
+status = "accepted"
+
+[[slice]]
+id = "UOW-01"
+title = "Đề nói được nó thuộc môn nào, khối nào"
+covers = ["AC-01", "AC-02", "AC-03", "AC-12"]
+demo = """
+1. Tạo đề mới với môn Toán và khối 11: danh sách hiện 11 ở cột Lớp
+2. Mở một đề cũ, chọn môn và khối, số được lưu ngay
+3. Ma trận của đề chỉ mở chuyên đề của môn đã chọn"""
+
+[[slice]]
+id = "UOW-02"
+title = "Ô đề ôn cá nhân nói đủ: đề nào, bao giờ, còn hạn không, mấy đề"
+covers = ["AC-04", "AC-05", "AC-06", "AC-07"]
+demo = """
+1. Tab Tổng quan của lớp: ô của một em hiện tên đề, ngày giao, hạn và trạng thái
+2. Một em quá hạn mà chưa nộp thì nhìn ra ngay
+3. Em được giao ba đề thì ô nói còn 2 đề trước đó"""
+
+[[slice]]
+id = "UOW-03"
+title = "Rót một lớp mới từ một lớp cũ trong một lần bấm"
+covers = ["AC-08", "AC-09", "AC-10", "AC-11"]
+demo = """
+1. Hộp Thêm học sinh có hai đường: tìm từng em, và từ một lớp cũ
+2. Chọn một lớp cũ: cả danh sách hiện ra, tích sẵn, thêm một lần
+3. Em đã ở trong lớp đích được đánh dấu và không tích được"""
+
+[[task]]
+id = "T-01-01"
+slice = "UOW-01"
+title = "Môn và Lớp ở form tạo đề"
+estimate_h = 3.0
+touches = ["apps/web/src/components/page-components/Exams/NewExamForm/NewExamForm.tsx", "apps/web/src/hooks/page-hooks/exams/use-new-exam-form.ts", "apps/web/src/dtos/exam.dto.ts"]
+tests = ["apps/web/src/__tests__/exams.test.tsx"]
+done_when = ["Tạo được đề kèm môn và khối", "Bỏ trống vẫn tạo được", "Cột Lớp của danh sách hiện số"]
+
+[[task]]
+id = "T-01-02"
+slice = "UOW-01"
+title = "Sửa môn và khối tại chỗ trên trang soạn đề"
+estimate_h = 3.0
+touches = ["apps/web/src/components/page-components/ExamDetail/ExamLabels/ExamLabels.tsx", "apps/web/src/components/page-components/ExamDetail/ExamDetailPage.tsx", "apps/web/src/hooks/page-hooks/exam-detail/use-exam-detail-page.ts"]
+tests = ["apps/web/src/__tests__/exam-builder.test.tsx"]
+done_when = ["Chọn là lưu, không có nút Lưu riêng", "Ma trận đổi theo môn vừa chọn", "Đề đã có câu hỏi thì có câu cảnh báo"]
+
+[[task]]
+id = "T-01-03"
+slice = "UOW-01"
+title = "Bỏ trống lại được môn hoặc khối"
+estimate_h = 2.0
+touches = ["apps/api/app/modules/assessment/application/commands/update_exam.py"]
+tests = ["apps/api/tests/test_exams_api.py"]
+done_when = ["Gửi null thì xoá được giá trị", "Không gửi khoá thì giữ nguyên", "Có test cho cả hai"]
+
+[[task]]
+id = "T-02-01"
+slice = "UOW-02"
+title = "Read model trả ngày giao, hạn và số lượt ôn cá nhân"
+estimate_h = 4.0
+touches = ["apps/api/app/modules/assessment/infrastructure/read_models.py", "apps/api/app/modules/assessment/application/dto.py", "apps/api/app/modules/analytics/domain/value_objects.py", "apps/api/app/modules/analytics/infrastructure/adapters/assessment.py", "apps/api/app/modules/analytics/application/queries/class_overview.py"]
+tests = ["apps/api/tests/test_practice_api.py", "apps/api/tests/unit/test_analytics_handlers.py"]
+done_when = ["Trả tên đề, assignment_id, open_at, close_at, status và tổng số lượt", "Chưa giao lần nào thì trả null", "Học sinh của tổ chức khác không lọt vào"]
+
+[[task]]
+id = "T-02-02"
+slice = "UOW-02"
+title = "Ô đề ôn cá nhân trên bảng tổng quan lớp"
+estimate_h = 3.0
+depends_on = ["T-02-01"]
+touches = ["apps/web/src/components/page-components/ClassDetail/ClassOverview/ClassOverview.tsx", "apps/web/src/interfaces/mastery.interface.ts"]
+tests = ["apps/web/src/__tests__/mastery.test.tsx"]
+done_when = ["Tên đề, ngày giao, hạn, trạng thái", "Quá hạn mà chưa nộp thì nhìn ra", "Nhiều đề thì nói còn mấy đề", "Chưa giao thì nói chưa giao"]
+
+[[task]]
+id = "T-03-01"
+slice = "UOW-03"
+title = "Thêm cả một lớp cũ vào lớp đang mở"
+estimate_h = 4.0
+touches = ["apps/web/src/components/page-components/Classes/MemberManager/MemberManager.tsx", "apps/web/src/components/page-components/Classes/FromClass/FromClass.tsx", "apps/web/src/hooks/page-hooks/classes/use-member-manager.ts"]
+tests = ["apps/web/src/__tests__/classes.test.tsx"]
+done_when = ["Chọn lớp cũ thấy cả danh sách, tích sẵn", "Thêm một lần một lời gọi", "Bỏ tích được từng em", "Em đã ở trong lớp bị khoá", "Có lối chỉ sang Chuyển năm học"]

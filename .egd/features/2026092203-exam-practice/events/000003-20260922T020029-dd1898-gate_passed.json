@@ -1,0 +1,10 @@
+{
+  "type": "gate_passed",
+  "seq": 3,
+  "at": "2026-09-22T02:00:29+07:00",
+  "by": "Loc Tran",
+  "imported": "ai-dlc",
+  "gate": "clarify",
+  "note": "12 assumptions, none blocking-and-pending; 22 acceptance criteria defined",
+  "scope": "0315d80a30332ba4"
+}

@@ -1,0 +1,10 @@
+{
+  "type": "feature_created",
+  "seq": 1,
+  "at": "2026-09-23T17:36:07+07:00",
+  "by": "Loc Tran",
+  "imported": "ai-dlc",
+  "tier": "standard",
+  "rules": 1,
+  "source": ".ai/features/2026092304-pickers-builder"
+}

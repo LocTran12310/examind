@@ -1,0 +1,13 @@
+{
+  "type": "gate_passed",
+  "seq": 4,
+  "at": "2026-10-05T09:50:05+00:00",
+  "by": "Loc Tran",
+  "gate": "slice",
+  "scope": "56fe0f0ab27f4736",
+  "planned_tasks": [
+    "T-1.1",
+    "T-1.2"
+  ],
+  "planned_proofs": []
+}

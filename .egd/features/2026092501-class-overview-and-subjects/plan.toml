@@ -1,0 +1,228 @@
+# Imported from ai-dlc (ai-dlc:2026092501-class-overview-and-subjects) on 2026-10-05.
+# ids are kept as they were, so tickets, commits and history still line up.
+
+[feature]
+title = "nhìn được cả lớp, và biết một học sinh đã làm gì lúc nào"
+tier = "standard"
+client = ""
+imported_from = "ai-dlc:2026092501-class-overview-and-subjects"
+
+[[assumption]]
+id = "A-01"
+text = "\"Bao nhiêu phút\" là `submitted_at − started_at` (giờ treo tường), không phải tổng `seconds_spent` của từng câu"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; đúng chữ anh viết — \"từ lúc start đến lúc nộp\". Hai đại lượng khác nhau: `seconds_spent` đo thời gian một câu ở trên màn hình và bị kẹp theo cửa sổ lượt làm (F14 ADR-01), còn cái này đo cả lượt"
+
+[[assumption]]
+id = "A-02"
+text = "Một lượt bị hệ thống tự nộp khi hết giờ vẫn hiện trong lịch sử, có dấu riêng"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; giấu nó đi thì cột thời gian sẽ nói dối về những lượt bỏ dở"
+
+[[assumption]]
+id = "A-03"
+text = "Trên dữ liệu seed mọi lượt sẽ hiện 0 phút, và đó là đúng"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; script seed trả lời cả bài trong chưa tới một giây, nên hiệu số thật sự bằng 0. Không sửa seed cho số đẹp — một cột thời gian bịa còn tệ hơn một cột thời gian trống"
+
+[[assumption]]
+id = "A-04"
+text = "\"Tổng quan cả lớp\" là tab thứ hai cạnh danh sách học sinh, không phải một trang mới"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; anh viết \"Chi tiết section thêm tab\""
+
+[[assumption]]
+id = "A-05"
+text = "Tổng quan lớp gồm: số bài giao và số bài đã nộp, điểm trung bình, phổ điểm, và chuyên đề lớp yếu nhất"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; đây là bốn thứ Báo cáo đã trả lời được khi lọc theo lớp, chỉ là đang bắt người ta rời trang để lấy"
+
+[[assumption]]
+id = "A-06"
+text = "Bộ chọn môn ở Báo cáo giữ nguyên lựa chọn \"Mọi môn\" làm mặc định"
+blocking = true
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; đổi mặc định là đổi **nghĩa** của con số trang chủ báo cáo mà không ai được báo. Thêm lựa chọn thì an toàn, đổi mặc định thì không"
+
+[[assumption]]
+id = "A-07"
+text = "Ở \"Mọi môn\", cây chuyên đề nhóm theo môn thay vì phẳng"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; đây chính là thứ anh nêu — phẳng thì không biết môn nào với môn nào"
+
+[[assumption]]
+id = "A-08"
+text = "Thứ tự menu mới: Năm học · Cơ cấu trường · Lớp học · Người dùng"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; đúng thứ tự anh viết"
+
+[[assumption]]
+id = "A-09"
+text = "Lịch sử làm bài đọc được bởi giáo viên và quản trị (trang hồ sơ), và bởi chính học sinh về mình"
+blocking = false
+status = "confirmed"
+resolution = "Accepted under blanket pre-approval; theo đúng quy tắc vai lồng nhau đã chốt ở F20"
+
+[[ac]]
+id = "AC-01"
+title = "Lịch sử làm bài trên hồ sơ học sinh"
+story = "US-01 — Biết một học sinh đã làm gì, lúc nào, mất bao lâu"
+given = "một học sinh đã nộp vài bài"
+when = "tôi mở hồ sơ em ấy"
+then = "tôi thấy từng lượt làm bài: tên đề, lúc bắt đầu, lúc nộp, số phút từ bắt đầu đến nộp, và điểm"
+
+[[ac]]
+id = "AC-02"
+title = "Lượt bị tự nộp vẫn hiện, và nói rõ là tự nộp"
+story = "US-01 — Biết một học sinh đã làm gì, lúc nào, mất bao lâu"
+given = "một lượt làm bài hết giờ và bị hệ thống tự nộp"
+when = "tôi xem lịch sử làm bài"
+then = "lượt ấy vẫn nằm trong danh sách và được đánh dấu là tự nộp, không bị giấu đi"
+
+[[ac]]
+id = "AC-03"
+title = "Tab tổng quan của lớp"
+story = "US-02 — Nhìn được cả lớp mà không phải rời trang"
+given = "một lớp đã có bài giao và bài nộp"
+when = "tôi mở lớp ấy"
+then = "tôi chọn được giữa \"Học sinh\" và \"Tổng quan\", và Tổng quan cho tôi số bài giao, số bài đã nộp, điểm trung bình, phổ điểm và những chuyên đề cả lớp yếu nhất"
+
+[[ac]]
+id = "AC-04"
+title = "Lớp chưa có bài nộp thì nói thẳng"
+story = "US-02 — Nhìn được cả lớp mà không phải rời trang"
+given = "một lớp chưa ai nộp bài"
+when = "tôi mở tab Tổng quan"
+then = "màn hình nói rõ chưa có dữ liệu, không hiện một con số 0 trông như đã đo"
+
+[[ac]]
+id = "AC-05"
+title = "Chọn môn, và mặc định không đổi nghĩa"
+story = "US-03 — Báo cáo còn đọc được khi trung tâm dạy nhiều môn"
+given = "trung tâm có nhiều hơn một môn"
+when = "tôi mở Báo cáo theo chuyên đề"
+then = "mặc định vẫn là mọi môn như trước, và tôi chọn được một môn để chỉ xem môn ấy"
+
+[[ac]]
+id = "AC-06"
+title = "Ở \"Mọi môn\", mỗi môn một khối"
+story = "US-03 — Báo cáo còn đọc được khi trung tâm dạy nhiều môn"
+given = "báo cáo đang ở \"Mọi môn\""
+when = "tôi xem cây chuyên đề"
+then = "các mạch kiến thức được nhóm dưới môn của chúng, không nằm phẳng cạnh nhau"
+
+[[ac]]
+id = "AC-07"
+title = "Thứ tự nhóm \"Lớp & học sinh\""
+story = "US-04 — Menu đi theo trình tự làm việc"
+given = "(see the requirement)"
+when = "tôi nhìn thanh điều hướng"
+then = "nhóm \"Lớp & học sinh\" theo thứ tự Năm học · Cơ cấu trường · Lớp học · Người dùng"
+
+[[decision]]
+id = "ADR-01"
+title = "Lịch sử làm bài là một list theo đúng hợp đồng search"
+status = "accepted"
+
+[[decision]]
+id = "ADR-02"
+title = "Số phút tính lúc đọc"
+status = "accepted"
+
+[[decision]]
+id = "ADR-03"
+title = "Tổng quan lớp là một read model, không phải một chồng lời gọi"
+status = "accepted"
+
+[[decision]]
+id = "ADR-04"
+title = "Bộ chọn môn thêm lựa chọn, không đổi mặc định"
+status = "accepted"
+
+[[slice]]
+id = "UOW-01"
+title = "Một học sinh đã làm gì, lúc nào, mất bao lâu"
+covers = ["AC-01", "AC-02"]
+demo = """
+1. Mở hồ sơ một học sinh: danh sách lượt làm bài với đề, giờ bắt đầu, giờ nộp, số phút, điểm
+2. Một lượt bị tự nộp vẫn nằm đó và mang dấu riêng"""
+
+[[slice]]
+id = "UOW-02"
+title = "Nhìn được cả lớp ngay trên trang lớp"
+covers = ["AC-03", "AC-04", "AC-07"]
+demo = """
+1. Mở một lớp, chuyển sang tab Tổng quan: bài giao, đã nộp, điểm trung bình, phổ điểm, chuyên đề yếu
+2. Lớp chưa ai nộp thì nói chưa có dữ liệu, không hiện số 0
+3. Menu Lớp & học sinh theo thứ tự Năm học, Cơ cấu trường, Lớp học, Người dùng"""
+
+[[slice]]
+id = "UOW-03"
+title = "Báo cáo còn đọc được khi có nhiều môn"
+covers = ["AC-05", "AC-06"]
+demo = """
+1. Báo cáo mặc định vẫn là mọi môn, chọn được một môn
+2. Ở mọi môn, các mạch kiến thức nhóm dưới môn của chúng"""
+
+[[task]]
+id = "T-01-01"
+slice = "UOW-01"
+title = "Read model liệt kê lượt làm bài"
+estimate_h = 4.0
+touches = ["apps/api/app/modules/assessment/infrastructure/read_models.py", "apps/api/app/modules/assessment/application/queries/search_attempts.py", "apps/api/app/modules/assessment/application/ports.py", "apps/api/app/modules/assessment/application/dto.py", "apps/api/app/modules/assessment/interface/schemas.py", "apps/api/app/modules/assessment/interface/deps.py", "apps/api/app/modules/assessment/interface/router.py"]
+tests = ["apps/api/tests/test_assignments_api.py", "apps/api/tests/unit/test_assessment_handlers.py"]
+done_when = ["Trả về đề, giờ bắt đầu, giờ nộp, số phút, điểm", "Lượt tự nộp có dấu riêng", "Học sinh không đọc được lượt của bạn khác"]
+
+[[task]]
+id = "T-01-02"
+slice = "UOW-01"
+title = "Lịch sử làm bài trên hồ sơ học sinh"
+estimate_h = 3.0
+depends_on = ["T-01-01"]
+touches = ["apps/web/src/components/page-components/StudentRecord/AttemptHistory/AttemptHistory.tsx", "apps/web/src/components/page-components/StudentRecord/StudentRecordPage.tsx", "apps/web/src/hooks/react-query/use-query-attempts.ts", "apps/web/src/constants/react-query-key.constant.ts", "apps/web/src/services/attempt.service.ts", "apps/web/src/interfaces/attempt.interface.ts"]
+tests = ["apps/web/src/__tests__/student-record.test.tsx"]
+done_when = ["Bảng có đề, bắt đầu, nộp, số phút, điểm", "Lượt tự nộp nhìn ra được", "Chưa có lượt nào thì nói rõ"]
+
+[[task]]
+id = "T-02-01"
+slice = "UOW-02"
+title = "Read model tổng quan một lớp"
+estimate_h = 4.0
+touches = ["apps/api/app/modules/analytics/infrastructure/read_models.py", "apps/api/app/modules/analytics/application/queries/class_summary.py", "apps/api/app/modules/analytics/application/ports.py", "apps/api/app/modules/analytics/interface/deps.py", "apps/api/app/modules/analytics/interface/router.py"]
+tests = ["apps/api/tests/test_stats_api.py"]
+done_when = ["Bài giao, đã nộp, trung bình, phổ điểm, chuyên đề yếu", "Lớp rỗng trả về rỗng chứ không lỗi", "Lớp của tổ chức khác là NotFound"]
+
+[[task]]
+id = "T-02-02"
+slice = "UOW-02"
+title = "Tab Học sinh và Tổng quan trên trang lớp"
+estimate_h = 4.0
+depends_on = ["T-02-01"]
+touches = ["apps/web/src/components/page-components/ClassDetail/ClassSummary/ClassSummary.tsx", "apps/web/src/components/page-components/ClassDetail/ClassDetailPage.tsx", "apps/web/src/hooks/page-hooks/class-detail/use-class-detail-page.ts", "apps/web/src/hooks/react-query/use-query-class.ts", "apps/web/src/constants/react-query-key.constant.ts", "apps/web/src/services/class.service.ts", "apps/web/src/interfaces/mastery.interface.ts"]
+tests = ["apps/web/src/__tests__/class-detail.test.tsx"]
+done_when = ["Chuyển được giữa hai tab", "Tổng quan hiện đủ bốn nhóm số", "Lớp rỗng nói chưa có dữ liệu"]
+
+[[task]]
+id = "T-02-03"
+slice = "UOW-02"
+title = "Thứ tự menu Lớp & học sinh"
+estimate_h = 1.0
+touches = ["apps/web/src/lib/common/nav.ts"]
+tests = ["apps/web/src/__tests__/nav.test.ts"]
+done_when = ["Đúng thứ tự", "Có test ghim thứ tự"]
+
+[[task]]
+id = "T-03-01"
+slice = "UOW-03"
+title = "Chọn môn ở báo cáo, mặc định không đổi"
+estimate_h = 4.0
+touches = ["apps/web/src/components/page-components/Reports/ReportsPage.tsx", "apps/web/src/components/common/TopicStatsTree/TopicStatsTree.tsx", "apps/web/src/hooks/page-hooks/reports/use-reports-page.ts", "apps/web/src/interfaces/stats.interface.ts", "apps/api/app/modules/analytics/infrastructure/read_models.py", "apps/api/app/modules/analytics/application/queries/topic_stats.py"]
+tests = ["apps/web/src/__tests__/reports.test.tsx", "apps/web/src/__tests__/report-views.test.tsx"]
+done_when = ["Mặc định vẫn là mọi môn", "Chọn một môn thì chỉ còn môn ấy", "Ở mọi môn các mạch nhóm dưới môn của chúng"]

@@ -1,0 +1,9 @@
+{
+  "type": "task_done_solo",
+  "seq": 25,
+  "at": "2026-09-25T11:53:19+07:00",
+  "by": "Loc Tran",
+  "imported": "ai-dlc",
+  "task": "T-04-01",
+  "reason": "apps/api/scripts/difficulty_report.py là cờ --batch của việc đo (T-03-01), không thuộc ticket web này"
+}

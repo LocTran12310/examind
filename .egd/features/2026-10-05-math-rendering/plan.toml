@@ -1,0 +1,110 @@
+# Plan for Math rendering. Edited by people; read by `egd`.
+# Ids: A-n assumptions · AC-n.n criteria · D-n decisions · S-n slices · T-n.n tasks
+
+[feature]
+title = "Math rendering"
+tier = "lite"            # lite | standard | full
+client = ""              # who accepts this work
+
+# ---- clarify -----------------------------------------------------------
+# Every question you did not ask is an assumption. Blocking = being wrong
+# forces rework. Resolve blocking ones before `clarify`.
+#
+# [[assumption]]
+# id = "A-1"
+# text = "Prices are in VND only"
+# confidence = "medium"   # low | medium | high
+# blocking = true
+# status = "open"         # open | confirmed | rejected
+# resolution = ""         # required once confirmed or rejected
+
+# [[ac]]
+# id = "AC-1.1"
+# story = "As a buyer I want to see my order total"
+# given = "a cart with 2 × A1 at 150,000"
+# when = "the buyer checks out"
+# then = "the order total is 300,000 and the order is pending"
+# levels = ["integration", "e2e"]   # test strategy: unit | integration | e2e | manual
+
+# ---- design ------------------------------------------------------------
+# [[decision]]
+# id = "D-1"
+# title = "Compute totals on the server"
+# status = "accepted"     # proposed | accepted | superseded
+# context = "Client-side totals drift from tax rules"
+# choice = "API returns the computed total"
+# rejected = ["compute in the browser"]
+# consequences = "Checkout needs one more round trip"
+
+# ---- slice -------------------------------------------------------------
+# A slice is demoable on its own. Tasks are ≤ limits.task_hours.
+#
+# [[slice]]
+# id = "S-1"
+# title = "Checkout creates a pending order"
+# covers = ["AC-1.1"]
+# demo = """
+# 1. Add 2 × A1 to the cart
+# 2. Check out
+# 3. The confirmation shows 300,000 and status Pending
+# """
+#
+# [[task]]
+# id = "T-1.1"
+# slice = "S-1"
+# title = "POST /orders computes the total"
+# estimate_h = 3
+# depends_on = []
+# touches = ["src/orders/**"]
+# tests = ["src/orders/orders.test.ts"]
+# done_when = ["returns 201 with total and status", "rejects an empty cart with 422"]
+
+[[ac]]
+id = "AC-1.1"
+story = "Học sinh đọc công thức trong câu hỏi và lời giải"
+given = "trang web nạp CSS katex và Markdown render công thức bằng rehype-katex"
+when = "ứng dụng được build"
+then = "CSS và bộ render là cùng một gói katex (cùng phiên bản), nên \\frac{1}{\\sin^2 x} không có tử số chồng lên nét phân số và số mũ không đè lên chữ"
+levels = ["unit", "manual"]
+
+[[ac]]
+id = "AC-1.2"
+given = "một lời giải đã lưu chứa $-Ở góc phần tư thứ tư thì : \\sin\\alpha<0$"
+when = "Markdown hiển thị nó"
+then = "cụm chữ tiếng Việt được render trong \\text{…}: đứng, giữ dấu cách (đọc được 'Ở góc phần tư thứ tư thì'), còn \\sin\\alpha<0 vẫn là công thức"
+levels = ["unit", "manual"]
+
+[[ac]]
+id = "AC-1.3"
+given = "công thức chỉ có ký hiệu toán (x, \\alpha, α, π, ×, ÷) hoặc chữ đã nằm trong \\text{…}/\\mathrm{…}"
+when = "Markdown hiển thị nó"
+then = "nguồn LaTeX đưa vào KaTeX không đổi một ký tự"
+levels = ["unit"]
+
+[[slice]]
+id = "S-1"
+title = "Công thức trong lời giải đọc được"
+covers = ["AC-1.1", "AC-1.2", "AC-1.3"]
+demo = """
+1. Mở một câu có lời giải chứa \\frac{1}{\\sin^2 x} và \\frac{11}{\\sqrt{10}}
+2. Phân số, số mũ, căn không chồng lên nhau, không đè dòng trên/dưới
+3. Mở câu 'Chọn D' có cụm 'Ở góc phần tư thứ tư thì' trong $…$
+4. Cụm chữ đứng, có dấu cách; sin α < 0 vẫn là công thức"""
+
+[[task]]
+id = "T-1.1"
+slice = "S-1"
+title = "CSS katex cùng phiên bản với bộ render"
+estimate_h = 1
+touches = ["apps/web/package.json", "apps/web/pnpm-lock.yaml", "apps/web/src/__tests__/markdown.test.tsx"]
+tests = ["apps/web/src/__tests__/markdown.test.tsx"]
+done_when = ["apps/web chỉ còn một phiên bản katex, khớp dải rehype-katex khai báo", "test hỏng nếu CSS và bộ render lệch phiên bản"]
+
+[[task]]
+id = "T-1.2"
+slice = "S-1"
+title = "Chữ tiếng Việt trong $…$ render bằng \\text{}"
+estimate_h = 3
+touches = ["apps/web/src/lib/common/markdown.ts", "apps/web/src/components/common/Markdown/Markdown.tsx", "apps/web/src/__tests__/markdown.test.tsx"]
+tests = ["apps/web/src/__tests__/markdown.test.tsx"]
+done_when = ["cụm tiếng Việt trong inline và display math được bọc \\text{} kèm dấu cách ở biên", "công thức thuần ký hiệu và \\text{}/\\mathrm{} có sẵn không đổi"]
