@@ -45,3 +45,88 @@
 # goto = "/orders/latest"
 # wait_for = "text=Pending"
 # expect = { visible = ["text=300,000"] }
+
+[[proof]]
+id = "P-1"
+kind = "cli"
+title = "Mọi class bộ render katex viết ra đều có trong CSS mà layout nạp"
+verifies = ["AC-1.1"]
+
+[[proof.step]]
+name = "Mọi class bộ render katex viết ra đều có trong CSS mà layout nạp"
+run = "cd apps/web && pnpm exec vitest run src/__tests__/markdown.test.tsx -t 'math-rendering AC-1.1'"
+expect = { exit = 0, contains = "Tests  1 passed" }
+
+[[proof]]
+id = "P-2"
+kind = "cli"
+title = "Câu tiếng Việt trong $…$ được cắt ra thành chữ, giữ dấu cách"
+verifies = ["AC-1.2"]
+
+[[proof.step]]
+name = "Câu tiếng Việt trong $…$ được cắt ra thành chữ, giữ dấu cách"
+run = "cd apps/web && pnpm exec vitest run src/__tests__/markdown.test.tsx -t 'math-rendering AC-1.2'"
+expect = { exit = 0, contains = "Tests  2 passed" }
+
+[[proof]]
+id = "P-3"
+kind = "cli"
+title = "Công thức chỉ có ký hiệu và \\text{}/\\mathrm{} có sẵn không đổi một ký tự"
+verifies = ["AC-1.3"]
+
+[[proof.step]]
+name = "Công thức chỉ có ký hiệu và \\text{}/\\mathrm{} có sẵn không đổi một ký tự"
+run = "cd apps/web && pnpm exec vitest run src/__tests__/markdown.test.tsx -t 'math-rendering AC-1.3'"
+expect = { exit = 0, contains = "Tests  1 passed" }
+
+[[proof]]
+id = "P-4"
+kind = "ui"
+title = "Hai lời giải trong ảnh báo lỗi, xem trước trên form soạn câu hỏi"
+verifies = ["AC-1.1", "AC-1.2"]
+viewports = ["desktop", "mobile"]
+
+[[proof.step]]
+name = "đăng nhập"
+goto = "/login"
+fill = { "input[name=org_code]" = "${LOCAL_ORG}", "input[name=username]" = "${LOCAL_USER}", "input[name=password]" = "${LOCAL_PASSWORD}" }
+click = "button[type=submit]"
+wait_for = "text=Ngân hàng câu hỏi"
+screenshot = false
+
+[[proof.step]]
+name = "form soạn câu hỏi"
+goto = "/org/bank/new"
+wait_for = "[data-testid=solution]"
+screenshot = false
+
+# only typed into the editor, never saved — the preview is the same Markdown component the student sees
+[[proof.step]]
+name = "xem trước lời giải"
+fill = { "[data-testid=solution]" = '''**Đáp án:** $3,48$
+
+$T=5\cos \left( 2\pi -x \right)-4\sin \left( 2025\pi +x \right)=5\cos x-4\sin \left( \pi +x \right)=5\cos x+4\sin x$
+
+Có $1+{{\cot }^{2}}x=\frac{1}{{{\sin }^{2}}x}\Leftrightarrow 1+{{\left( -3 \right)}^{2}}=\frac{1}{{{\sin }^{2}}x}\Leftrightarrow {{\sin }^{2}}x=\frac{1}{10}$.
+
+Giả thiết $\frac{3\pi }{2}<x<2\pi $ nên $\sin x<0$. Vậy $\sin x=-\frac{1}{\sqrt{10}}$.
+
+$\cot x=\frac{\cos x}{\sin x}\Rightarrow \cos x=\cot x.\sin x=\left( -3 \right)\left( -\frac{1}{\sqrt{10}} \right)=\frac{3}{\sqrt{10}}$.
+
+$T=5\cos x+4\sin x=5.\frac{3}{\sqrt{10}}+4.\left( -\frac{1}{\sqrt{10}} \right)=\frac{11}{\sqrt{10}}\simeq 3,48$.
+
+**Chọn D**
+
+$-Ở góc phần tư thứ tư thì : \sin \alpha <0;\cos \alpha >0;\tan \alpha <0;\cot \alpha <0.$
+
+$\Rightarrow $ chỉ có **C** thỏa mãn.''' }
+wait_for = "[data-testid=solution-preview] .katex"
+screenshot = false
+
+# on a phone the preview sits below the editor: clicking it scrolls it into the frame the screenshot keeps
+[[proof.step]]
+name = "khung xem trước"
+click = "[data-testid=solution-preview]"
+full_page = false
+# the Vietnamese is a text node of the paragraph itself, not letters inside KaTeX
+expect = { visible = ["xpath=//div[@data-testid='solution-preview']//p[contains(text(), 'Ở góc phần tư thứ tư thì')]", "[data-testid=solution-preview] .katex-html"], hidden = ["[data-testid=solution-preview] .katex-error"] }

@@ -1,0 +1,29 @@
+{
+  "type": "proof_run",
+  "seq": 11,
+  "at": "2026-10-05T11:32:53+00:00",
+  "by": "Loc Tran",
+  "proof": "P-1",
+  "env": "repo",
+  "kind": "cli",
+  "verifies": [
+    "AC-1.1"
+  ],
+  "status": "pass",
+  "reason": "",
+  "sha": "17fe68a2ea40640f6e3008c8af4d047edbbe785f",
+  "dirty": false,
+  "run": "20261005T113251-7f01",
+  "required": true,
+  "def": "7afe8284804a0071",
+  "artifacts": [
+    "runs/20261005T113251-7f01/P-1@repo/transcript.md"
+  ],
+  "steps": [
+    {
+      "name": "Mọi class bộ render katex viết ra đều có trong CSS mà layout nạp",
+      "status": "pass",
+      "ms": 1490
+    }
+  ]
+}

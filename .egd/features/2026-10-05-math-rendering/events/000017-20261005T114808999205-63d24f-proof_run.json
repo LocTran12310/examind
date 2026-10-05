@@ -1,0 +1,68 @@
+{
+  "type": "proof_run",
+  "seq": 17,
+  "at": "2026-10-05T11:48:08+00:00",
+  "by": "Loc Tran",
+  "proof": "P-4",
+  "env": "local",
+  "kind": "ui",
+  "verifies": [
+    "AC-1.1",
+    "AC-1.2"
+  ],
+  "status": "pass",
+  "reason": "",
+  "sha": "5a34ab572d7c75194d401e608eb6631142d4f279",
+  "dirty": false,
+  "run": "20261005T114804-3d84",
+  "required": true,
+  "def": "704db9859cfc1016",
+  "artifacts": [
+    "runs/20261005T114804-3d84/P-4@local/contact-sheet.png",
+    "runs/20261005T114804-3d84/P-4@local/desktop-04-khung-xem-tr-c.png",
+    "runs/20261005T114804-3d84/P-4@local/mobile-04-khung-xem-tr-c.png",
+    "runs/20261005T114804-3d84/P-4@local/transcript.md"
+  ],
+  "steps": [
+    {
+      "name": "desktop:đăng nhập",
+      "status": "pass",
+      "ms": 1128
+    },
+    {
+      "name": "desktop:form soạn câu hỏi",
+      "status": "pass",
+      "ms": 687
+    },
+    {
+      "name": "desktop:xem trước lời giải",
+      "status": "pass",
+      "ms": 104
+    },
+    {
+      "name": "desktop:khung xem trước",
+      "status": "pass",
+      "ms": 118
+    },
+    {
+      "name": "mobile:đăng nhập",
+      "status": "pass",
+      "ms": 829
+    },
+    {
+      "name": "mobile:form soạn câu hỏi",
+      "status": "pass",
+      "ms": 683
+    },
+    {
+      "name": "mobile:xem trước lời giải",
+      "status": "pass",
+      "ms": 88
+    },
+    {
+      "name": "mobile:khung xem trước",
+      "status": "pass",
+      "ms": 64
+    }
+  ]
+}

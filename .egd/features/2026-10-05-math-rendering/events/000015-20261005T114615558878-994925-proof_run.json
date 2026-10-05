@@ -1,0 +1,42 @@
+{
+  "type": "proof_run",
+  "seq": 15,
+  "at": "2026-10-05T11:46:15+00:00",
+  "by": "Loc Tran",
+  "proof": "P-4",
+  "env": "local",
+  "kind": "ui",
+  "verifies": [
+    "AC-1.1",
+    "AC-1.2"
+  ],
+  "status": "fail",
+  "reason": "mobile · form soạn câu hỏi: step ran — Page.wait_for_selector: Timeout 15000ms exceeded.",
+  "sha": "6a60c63d2a6c51e3d1da81d341eb08016f4f1d83",
+  "dirty": false,
+  "run": "20261005T114557-7cba",
+  "required": true,
+  "def": "fba99df9eb6f8b75",
+  "artifacts": [
+    "runs/20261005T114557-7cba/P-4@local/contact-sheet.png",
+    "runs/20261005T114557-7cba/P-4@local/desktop-02-xem-tr-c-l-i-gi-i.png",
+    "runs/20261005T114557-7cba/P-4@local/transcript.md"
+  ],
+  "steps": [
+    {
+      "name": "desktop:form soạn câu hỏi",
+      "status": "pass",
+      "ms": 975
+    },
+    {
+      "name": "desktop:xem trước lời giải",
+      "status": "pass",
+      "ms": 209
+    },
+    {
+      "name": "mobile:form soạn câu hỏi",
+      "status": "fail",
+      "ms": 15085
+    }
+  ]
+}

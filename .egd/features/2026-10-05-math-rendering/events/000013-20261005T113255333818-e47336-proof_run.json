@@ -1,0 +1,29 @@
+{
+  "type": "proof_run",
+  "seq": 13,
+  "at": "2026-10-05T11:32:55+00:00",
+  "by": "Loc Tran",
+  "proof": "P-3",
+  "env": "repo",
+  "kind": "cli",
+  "verifies": [
+    "AC-1.3"
+  ],
+  "status": "pass",
+  "reason": "",
+  "sha": "17fe68a2ea40640f6e3008c8af4d047edbbe785f",
+  "dirty": false,
+  "run": "20261005T113251-7f01",
+  "required": true,
+  "def": "d940389f5932cbab",
+  "artifacts": [
+    "runs/20261005T113251-7f01/P-3@repo/transcript.md"
+  ],
+  "steps": [
+    {
+      "name": "Công thức chỉ có ký hiệu và \\text{}/\\mathrm{} có sẵn không đổi một ký tự",
+      "status": "pass",
+      "ms": 983
+    }
+  ]
+}
