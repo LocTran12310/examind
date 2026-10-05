@@ -45,3 +45,36 @@
 # goto = "/orders/latest"
 # wait_for = "text=Pending"
 # expect = { visible = ["text=300,000"] }
+
+[[proof]]
+id = "P-1"
+kind = "cli"
+title = "Mọi class bộ render katex viết ra đều có trong CSS mà layout nạp"
+verifies = ["AC-1.1"]
+
+[[proof.step]]
+name = "Mọi class bộ render katex viết ra đều có trong CSS mà layout nạp"
+run = "cd apps/web && pnpm exec vitest run src/__tests__/markdown.test.tsx -t 'math-rendering AC-1.1'"
+expect = { exit = 0, contains = "Tests  1 passed" }
+
+[[proof]]
+id = "P-2"
+kind = "cli"
+title = "Câu tiếng Việt trong $…$ được cắt ra thành chữ, giữ dấu cách"
+verifies = ["AC-1.2"]
+
+[[proof.step]]
+name = "Câu tiếng Việt trong $…$ được cắt ra thành chữ, giữ dấu cách"
+run = "cd apps/web && pnpm exec vitest run src/__tests__/markdown.test.tsx -t 'math-rendering AC-1.2'"
+expect = { exit = 0, contains = "Tests  2 passed" }
+
+[[proof]]
+id = "P-3"
+kind = "cli"
+title = "Công thức chỉ có ký hiệu và \\text{}/\\mathrm{} có sẵn không đổi một ký tự"
+verifies = ["AC-1.3"]
+
+[[proof.step]]
+name = "Công thức chỉ có ký hiệu và \\text{}/\\mathrm{} có sẵn không đổi một ký tự"
+run = "cd apps/web && pnpm exec vitest run src/__tests__/markdown.test.tsx -t 'math-rendering AC-1.3'"
+expect = { exit = 0, contains = "Tests  1 passed" }
