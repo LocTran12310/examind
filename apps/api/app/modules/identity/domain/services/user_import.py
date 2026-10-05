@@ -6,8 +6,8 @@ column beside its key, and a role cell through `ROLE_ALIASES`, which holds the l
 That is what makes a file the product exported importable again without anyone translating anything: the label **is**
 the key, as far as reading a file is concerned. A key-only header still works, so a file written by a script is read
 the same way."""
-import re
 from dataclasses import dataclass, field
+import re
 
 from app.modules.identity.domain.entities import ORG_ROLES
 from app.modules.identity.domain.services.accounts import USERNAME_RE, can_manage
