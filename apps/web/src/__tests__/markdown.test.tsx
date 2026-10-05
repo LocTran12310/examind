@@ -1,4 +1,6 @@
 import { render, screen } from "@testing-library/react";
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { describe, expect, it } from "vitest";
 import { Markdown } from "@/components/common/Markdown/Markdown";
 import { asPhrase } from "@/lib/common/markdown";
@@ -44,5 +46,19 @@ describe("Markdown", () => {
     const { container } = render(<Markdown>9.</Markdown>);
     expect(container.querySelector("ol")).not.toBeNull();     // an ordered list…
     expect(container.textContent?.trim()).toBe("");           // …with nothing in it
+  });
+});
+
+describe("Markdown formulas", () => {
+  // the stylesheet layout.tsx loads must be the one that matches the HTML the renderer writes: katex 0.18 renamed
+  // `.base`/`.strut`/`.sizing`, and 0.16 markup under 0.18 CSS stacked numerators onto the fraction bar
+  it("renders with classes the loaded stylesheet styles (math-rendering AC-1.1)", () => {
+    const css = readFileSync(createRequire(import.meta.url).resolve("katex/dist/katex.css"), "utf8");
+    const { container } = render(<Markdown>{"$T=\\frac{1}{\\sin^2 x}+\\left(-\\frac{3}{\\sqrt{10}}\\right)$"}</Markdown>);
+    const used = new Set([...container.querySelectorAll(".katex-html [class]")].flatMap((e) => [...e.classList]));
+    const atoms = /^m(ord|rel|open|close|op|bin|inner|punct|tight)$/;   // semantic tags with no rule of their own
+    const unstyled = [...used].filter((c) => !atoms.test(c) && !new RegExp(`\\.${c}(?![\\w-])`).test(css));
+    expect(used.has("strut")).toBe(true);
+    expect(unstyled).toEqual([]);
   });
 });
