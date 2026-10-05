@@ -1,0 +1,58 @@
+{
+  "type": "proof_run",
+  "seq": 16,
+  "at": "2026-10-05T11:47:42+00:00",
+  "by": "Loc Tran",
+  "proof": "P-4",
+  "env": "local",
+  "kind": "ui",
+  "verifies": [
+    "AC-1.1",
+    "AC-1.2"
+  ],
+  "status": "pass",
+  "reason": "",
+  "sha": "5aeaa999be06d379e031e8f556f18c4982cbf027",
+  "dirty": false,
+  "run": "20261005T114737-d360",
+  "required": true,
+  "def": "ca161c2e9320de3f",
+  "artifacts": [
+    "runs/20261005T114737-d360/P-4@local/contact-sheet.png",
+    "runs/20261005T114737-d360/P-4@local/desktop-03-xem-tr-c-l-i-gi-i.png",
+    "runs/20261005T114737-d360/P-4@local/mobile-03-xem-tr-c-l-i-gi-i.png",
+    "runs/20261005T114737-d360/P-4@local/transcript.md"
+  ],
+  "steps": [
+    {
+      "name": "desktop:đăng nhập",
+      "status": "pass",
+      "ms": 1139
+    },
+    {
+      "name": "desktop:form soạn câu hỏi",
+      "status": "pass",
+      "ms": 729
+    },
+    {
+      "name": "desktop:xem trước lời giải",
+      "status": "pass",
+      "ms": 179
+    },
+    {
+      "name": "mobile:đăng nhập",
+      "status": "pass",
+      "ms": 836
+    },
+    {
+      "name": "mobile:form soạn câu hỏi",
+      "status": "pass",
+      "ms": 676
+    },
+    {
+      "name": "mobile:xem trước lời giải",
+      "status": "pass",
+      "ms": 138
+    }
+  ]
+}
